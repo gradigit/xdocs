@@ -26,7 +26,7 @@ Default store root: `./cex-docs/` (override via `--docs-dir` everywhere).
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e .
 
 cex-api-docs init --docs-dir ./cex-docs
 ```
@@ -43,8 +43,8 @@ cex-api-docs crawl --url "https://example.com/docs" --domain-scope "example.com"
 ## Find Sources
 
 ```bash
-cex-api-docs search-pages --query "rate limit" --docs-dir ./cex-docs
-cex-api-docs get-page --url "https://..." --docs-dir ./cex-docs
+cex-api-docs search-pages "rate limit" --docs-dir ./cex-docs
+cex-api-docs get-page "https://..." --docs-dir ./cex-docs
 ```
 
 ## Extract Endpoints (Agent Responsibility)
@@ -60,8 +60,8 @@ cex-api-docs get-page --url "https://..." --docs-dir ./cex-docs
 ## Ingest Endpoints (Deterministic)
 
 ```bash
-cex-api-docs save-endpoint --file endpoint.json --docs-dir ./cex-docs
-cex-api-docs search-endpoints --query "balance" --exchange binance --docs-dir ./cex-docs
+cex-api-docs save-endpoint endpoint.json --docs-dir ./cex-docs
+cex-api-docs search-endpoints "balance" --exchange binance --docs-dir ./cex-docs
 ```
 
 ## Answer Questions
@@ -69,8 +69,9 @@ cex-api-docs search-endpoints --query "balance" --exchange binance --docs-dir ./
 Use `answer` for a cite-only assembled response (no new facts).
 
 ```bash
-cex-api-docs answer --question "..." --docs-dir ./cex-docs
+cex-api-docs answer "..." --docs-dir ./cex-docs
+# If prompted for clarification, re-run with:
+cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
 ```
 
 If a question is ambiguous (e.g., “Binance unified trading endpoint”), the tool must return `needs_clarification` with concrete section choices derived from what is present in the local store.
-
