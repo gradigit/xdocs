@@ -2,20 +2,20 @@ exchanges:
   - exchange_id: binance
     display_name: Binance
     allowed_domains:
-      - binance-docs.github.io
+      - developers.binance.com
     sections:
       - section_id: spot
         base_urls: ["https://api.binance.com"]
-        seed_urls: ["https://binance-docs.github.io/apidocs/spot/en/"]
+        seed_urls: ["https://developers.binance.com/docs/binance-spot-api-docs/"]
       - section_id: futures_usdm
         base_urls: ["https://fapi.binance.com"]
-        seed_urls: ["https://binance-docs.github.io/apidocs/futures/en/"]
+        seed_urls: ["https://developers.binance.com/docs/derivatives/usds-margined-futures/"]
       - section_id: futures_coinm
         base_urls: ["https://dapi.binance.com"]
-        seed_urls: ["https://binance-docs.github.io/apidocs/delivery/en/"]
+        seed_urls: ["https://developers.binance.com/docs/derivatives/coin-margined-futures/"]
       - section_id: portfolio_margin
         base_urls: ["https://papi.binance.com"]
-        seed_urls: ["https://binance-docs.github.io/apidocs/pm/en/"]
+        seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin/"]
 
   - exchange_id: okx
     display_name: OKX
@@ -163,4 +163,3 @@ exchanges:
       - section_id: rest
         base_urls: ["https://api.korbit.co.kr/v1"]
         seed_urls: ["https://apidocs.korbit.co.kr/"]
-
