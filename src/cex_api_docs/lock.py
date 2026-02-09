@@ -7,21 +7,17 @@ import os
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import IO, Iterator
 
 from .errors import CexApiDocsError
+from .timeutil import now_iso_utc
 
 
 @dataclass(frozen=True, slots=True)
 class WriteLock:
     path: Path
     file: IO[str]
-
-
-def _now_iso_utc() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
 def _try_flock_exclusive_nonblocking(f: IO[str]) -> bool:
@@ -59,7 +55,7 @@ def acquire_write_lock(lock_path: Path, timeout_s: float) -> Iterator[WriteLock]
                     json.dumps(
                         {
                             "pid": os.getpid(),
-                            "acquired_at": _now_iso_utc(),
+                            "acquired_at": now_iso_utc(),
                         },
                         sort_keys=True,
                     )
@@ -91,4 +87,3 @@ def acquire_write_lock(lock_path: Path, timeout_s: float) -> Iterator[WriteLock]
                 f.close()
             except OSError:
                 pass
-

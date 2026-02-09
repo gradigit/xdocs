@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p1
 issue_id: "003"
 tags: [crawler, robots, indexing, diff, pages]
@@ -53,9 +53,9 @@ Implement:
 
 ## Acceptance Criteria
 
-- [ ] Fixture crawl integration test passes offline
-- [ ] `search-pages` returns ranked results with snippets
-- [ ] `diff` reports updated/new/stale pages stably
+- [x] Fixture crawl integration test passes offline
+- [x] `search-pages` returns ranked results with snippets
+- [x] `diff` reports updated/new/stale pages stably
 
 ## Work Log
 
@@ -66,3 +66,11 @@ Implement:
 **Actions:**
 - Created crawl/index/diff todo
 
+### 2026-02-10 - Completed
+
+**By:** Codex
+
+**Actions:**
+- Implemented `crawl`, `search-pages`, `get-page`, `diff`, `fts-optimize`, `fts-rebuild`
+- Added offline integration test using local HTTP fixture server
+- Captured required page metadata and deterministic hashing (raw/content/path)
