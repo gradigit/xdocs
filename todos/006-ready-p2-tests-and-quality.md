@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p2
 issue_id: "006"
 tags: [tests, pytest, quality]
@@ -25,8 +25,8 @@ Lock down deterministic behavior and contracts with tests:
 
 ## Acceptance Criteria
 
-- [ ] Test suite runs locally with `pytest`
-- [ ] Core contracts are covered by tests
+- [x] Test suite runs locally with `pytest`
+- [x] Core contracts are covered by tests
 
 ## Work Log
 
@@ -37,3 +37,10 @@ Lock down deterministic behavior and contracts with tests:
 **Actions:**
 - Created tests todo
 
+### 2026-02-10 - Completed
+
+**By:** Codex
+
+**Actions:**
+- Added unit + integration tests covering init/locking, crawl/search/diff, endpoint ingest + review queue, and answer clarification/derived wiring
+- Verified `pytest` runs green on the unittest-based suite
