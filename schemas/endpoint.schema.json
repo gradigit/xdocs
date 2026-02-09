@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Endpoint Record",
+  "type": "object",
+  "required": ["exchange", "section", "protocol", "endpoint_id", "sources", "extraction"],
+  "properties": {
+    "exchange": { "type": "string" },
+    "section": { "type": "string" },
+    "protocol": { "type": "string", "enum": ["http", "ws", "rpc", "other"] },
+    "endpoint_id": { "type": "string" },
+    "http": {
+      "type": ["object", "null"],
+      "properties": {
+        "method": { "type": "string" },
+        "path": { "type": "string" },
+        "base_url": { "type": "string" },
+        "api_version": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "description": { "type": ["string", "null"] },
+    "required_permissions": { "type": ["object", "null"], "additionalProperties": true },
+    "rate_limit": { "type": ["object", "null"], "additionalProperties": true },
+    "error_codes": { "type": ["array", "null"], "items": { "type": "object" } },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["url", "crawled_at", "content_hash", "path_hash", "excerpt", "excerpt_start", "excerpt_end"],
+        "properties": {
+          "url": { "type": "string" },
+          "crawled_at": { "type": "string" },
+          "content_hash": { "type": "string" },
+          "path_hash": { "type": "string" },
+          "excerpt": { "type": "string" },
+          "excerpt_start": { "type": "integer", "minimum": 0 },
+          "excerpt_end": { "type": "integer", "minimum": 0 },
+          "field_name": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "required": ["model", "temperature", "prompt_hash", "input_content_hash"],
+      "properties": {
+        "model": { "type": "string" },
+        "temperature": { "type": "number" },
+        "prompt_hash": { "type": "string" },
+        "input_content_hash": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

@@ -1,0 +1,166 @@
+exchanges:
+  - exchange_id: binance
+    display_name: Binance
+    allowed_domains:
+      - binance-docs.github.io
+    sections:
+      - section_id: spot
+        base_urls: ["https://api.binance.com"]
+        seed_urls: ["https://binance-docs.github.io/apidocs/spot/en/"]
+      - section_id: futures_usdm
+        base_urls: ["https://fapi.binance.com"]
+        seed_urls: ["https://binance-docs.github.io/apidocs/futures/en/"]
+      - section_id: futures_coinm
+        base_urls: ["https://dapi.binance.com"]
+        seed_urls: ["https://binance-docs.github.io/apidocs/delivery/en/"]
+      - section_id: portfolio_margin
+        base_urls: ["https://papi.binance.com"]
+        seed_urls: ["https://binance-docs.github.io/apidocs/pm/en/"]
+
+  - exchange_id: okx
+    display_name: OKX
+    allowed_domains:
+      - www.okx.com
+    sections:
+      - section_id: rest
+        base_urls: ["https://www.okx.com"]
+        seed_urls: ["https://www.okx.com/docs-v5/en/"]
+      - section_id: websocket
+        base_urls: ["wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/private", "wss://ws.okx.com:8443/ws/v5/business"]
+        seed_urls: ["https://www.okx.com/docs-v5/en/#websocket-api"]
+
+  - exchange_id: bybit
+    display_name: Bybit
+    allowed_domains:
+      - bybit-exchange.github.io
+    sections:
+      - section_id: v5
+        base_urls: ["https://api.bybit.com"]
+        seed_urls: ["https://bybit-exchange.github.io/docs/v5/intro"]
+      - section_id: websocket
+        base_urls: ["wss://stream.bybit.com/v5/public", "wss://stream.bybit.com/v5/private"]
+        seed_urls: ["https://bybit-exchange.github.io/docs/v5/ws/connect"]
+
+  - exchange_id: bitget
+    display_name: Bitget
+    allowed_domains:
+      - www.bitget.com
+    sections:
+      - section_id: v2
+        base_urls: ["https://api.bitget.com"]
+        seed_urls: ["https://www.bitget.com/api-doc/common/intro"]
+
+  - exchange_id: gateio
+    display_name: Gate.io
+    allowed_domains:
+      - www.gate.io
+    sections:
+      - section_id: v4
+        base_urls: ["https://api.gateio.ws/api/v4"]
+        seed_urls: ["https://www.gate.io/docs/developers/apiv4/"]
+
+  - exchange_id: kucoin
+    display_name: KuCoin
+    allowed_domains:
+      - www.kucoin.com
+    sections:
+      - section_id: spot
+        base_urls: ["https://api.kucoin.com"]
+        seed_urls: ["https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order"]
+      - section_id: futures
+        base_urls: ["https://api-futures.kucoin.com"]
+        seed_urls: ["https://www.kucoin.com/docs/rest/futures-trading/orders/place-order"]
+
+  - exchange_id: htx
+    display_name: HTX
+    allowed_domains:
+      - www.htx.com
+    sections:
+      - section_id: spot
+        base_urls: ["https://api.huobi.pro"]
+        seed_urls: ["https://www.htx.com/en-us/opend/newApiPages/"]
+
+  - exchange_id: cryptocom
+    display_name: Crypto.com
+    allowed_domains:
+      - exchange-docs.crypto.com
+    sections:
+      - section_id: exchange
+        base_urls: ["https://api.crypto.com/exchange/v1"]
+        seed_urls: ["https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html"]
+
+  - exchange_id: bitstamp
+    display_name: Bitstamp
+    allowed_domains:
+      - www.bitstamp.net
+    sections:
+      - section_id: rest
+        base_urls: ["https://www.bitstamp.net/api"]
+        seed_urls: ["https://www.bitstamp.net/api/"]
+
+  - exchange_id: bitfinex
+    display_name: Bitfinex
+    allowed_domains:
+      - docs.bitfinex.com
+    sections:
+      - section_id: v2
+        base_urls: ["https://api-pub.bitfinex.com/v2"]
+        seed_urls: ["https://docs.bitfinex.com/reference/rest-public-platform-status"]
+
+  - exchange_id: dydx
+    display_name: dYdX
+    allowed_domains:
+      - docs.dydx.exchange
+    sections:
+      - section_id: docs
+        base_urls: ["https://indexer.dydx.trade/v4"]
+        seed_urls: ["https://docs.dydx.exchange/"]
+
+  - exchange_id: hyperliquid
+    display_name: Hyperliquid
+    allowed_domains:
+      - hyperliquid.gitbook.io
+    sections:
+      - section_id: api
+        base_urls: ["https://api.hyperliquid.xyz"]
+        seed_urls: ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"]
+
+  - exchange_id: upbit
+    display_name: Upbit
+    allowed_domains:
+      - docs.upbit.com
+    sections:
+      - section_id: rest_en
+        base_urls: ["https://api.upbit.com/v1"]
+        seed_urls: ["https://docs.upbit.com/reference"]
+      - section_id: rest_ko
+        base_urls: ["https://api.upbit.com/v1"]
+        seed_urls: ["https://docs.upbit.com/ko/reference"]
+
+  - exchange_id: bithumb
+    display_name: Bithumb
+    allowed_domains:
+      - apidocs.bithumb.com
+    sections:
+      - section_id: rest
+        base_urls: ["https://api.bithumb.com"]
+        seed_urls: ["https://apidocs.bithumb.com/"]
+
+  - exchange_id: coinone
+    display_name: Coinone
+    allowed_domains:
+      - docs.coinone.co.kr
+    sections:
+      - section_id: rest
+        base_urls: ["https://api.coinone.co.kr"]
+        seed_urls: ["https://docs.coinone.co.kr/"]
+
+  - exchange_id: korbit
+    display_name: Korbit
+    allowed_domains:
+      - apidocs.korbit.co.kr
+    sections:
+      - section_id: rest
+        base_urls: ["https://api.korbit.co.kr/v1"]
+        seed_urls: ["https://apidocs.korbit.co.kr/"]
+

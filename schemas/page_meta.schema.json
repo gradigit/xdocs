@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Page Metadata",
+  "type": "object",
+  "required": [
+    "url",
+    "final_url",
+    "canonical_url",
+    "crawled_at",
+    "http_status",
+    "content_type",
+    "raw_hash",
+    "content_hash",
+    "path_hash",
+    "render_mode",
+    "extractor"
+  ],
+  "properties": {
+    "url": { "type": "string" },
+    "final_url": { "type": "string" },
+    "canonical_url": { "type": "string" },
+    "redirect_chain": { "type": "array", "items": { "type": "string" } },
+    "crawled_at": { "type": "string" },
+    "http_status": { "type": "integer" },
+    "content_type": { "type": "string" },
+    "raw_hash": { "type": "string" },
+    "content_hash": { "type": "string" },
+    "prev_content_hash": { "type": ["string", "null"] },
+    "path_hash": { "type": "string" },
+    "render_mode": { "type": "string", "enum": ["http", "playwright"] },
+    "title": { "type": ["string", "null"] },
+    "word_count": { "type": ["integer", "null"] },
+    "extractor": {
+      "type": "object",
+      "required": ["name", "version", "config", "config_hash"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "config": { "type": "object" },
+        "config_hash": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

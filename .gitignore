@@ -1,0 +1,16 @@
+.DS_Store
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Local doc store (must never be committed)
+cex-docs/
+
