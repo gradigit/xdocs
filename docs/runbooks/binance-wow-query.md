@@ -11,7 +11,7 @@ Query:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e .
 
 cex-api-docs init --docs-dir ./cex-docs
 ```
@@ -28,9 +28,9 @@ If the user’s meaning of “unified trading” requires additional sections, c
 ## 3) Locate Sources (Rate Limits + Permissions)
 
 ```bash
-cex-api-docs search-pages --query "rate limit" --docs-dir ./cex-docs
-cex-api-docs search-pages --query "portfolio margin" --docs-dir ./cex-docs
-cex-api-docs search-pages --query "API key permission" --docs-dir ./cex-docs
+cex-api-docs search-pages "rate limit" --docs-dir ./cex-docs
+cex-api-docs search-pages "portfolio margin" --docs-dir ./cex-docs
+cex-api-docs search-pages "API key permission" --docs-dir ./cex-docs
 ```
 
 ## 4) Agent Extraction (Endpoint JSON)
@@ -45,13 +45,15 @@ Critical:
 ## 5) Ingest Endpoints
 
 ```bash
-cex-api-docs save-endpoint --file ./endpoint.json --docs-dir ./cex-docs
+cex-api-docs save-endpoint ./endpoint.json --docs-dir ./cex-docs
 ```
 
 ## 6) Produce Cite-Only Answer
 
 ```bash
-cex-api-docs answer --question "<wow query text>" --docs-dir ./cex-docs
+cex-api-docs answer "<wow query text>" --docs-dir ./cex-docs
+# If needed, re-run with clarification:
+cex-api-docs answer "<wow query text>" --clarification binance:portfolio_margin --docs-dir ./cex-docs
 ```
 
 Expected behavior:
@@ -59,4 +61,3 @@ Expected behavior:
 - After clarification, returns cite-only claims.
 - Any numeric “difference” is `[DERIVED]` and links to cited input claims.
 - Missing facts return `unknown` / `undocumented` / `conflict` with citations to what was searched.
-

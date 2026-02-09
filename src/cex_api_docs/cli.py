@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from .errors import CexApiDocsError
+from .answer import answer_question
 from .crawler import crawl_store
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
@@ -81,6 +82,10 @@ def main(argv: list[str] | None = None) -> None:
     rr = sub.add_parser("review-resolve", help="Resolve a review queue item", parents=[common])
     rr.add_argument("id", type=int)
     rr.add_argument("--resolution", default=None)
+
+    ap = sub.add_parser("answer", help="Assemble cite-only answers from local store", parents=[common])
+    ap.add_argument("question")
+    ap.add_argument("--clarification", default=None, help="Clarification selection id (e.g. binance:portfolio_margin)")
 
     args = parser.parse_args(argv)
 
@@ -206,6 +211,11 @@ def main(argv: list[str] | None = None) -> None:
                 resolution=args.resolution,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": item})
+            raise SystemExit(0)
+
+        if args.cmd == "answer":
+            result = answer_question(docs_dir=args.docs_dir, question=args.question, clarification=args.clarification)
+            _print_json(result)
             raise SystemExit(0)
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})
