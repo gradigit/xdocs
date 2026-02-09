@@ -1,0 +1,424 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from jsonschema import Draft202012Validator
+
+from .db import open_db
+from .errors import CexApiDocsError
+from .fs import atomic_write_text
+from .hashing import sha256_hex_text
+from .lock import acquire_write_lock
+from .timeutil import now_iso_utc
+from .urlcanon import canonicalize_url
+
+
+HARD_MAX_EXCERPT_CHARS = 600
+
+
+def _load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_endpoint_schema(schema_path: Path) -> Draft202012Validator:
+    schema = _load_json(schema_path)
+    return Draft202012Validator(schema)
+
+
+def compute_endpoint_id(record: dict[str, Any]) -> str:
+    exchange = str(record.get("exchange", "")).strip()
+    section = str(record.get("section", "")).strip()
+    protocol = str(record.get("protocol", "")).strip()
+
+    http = record.get("http") or {}
+    if protocol == "http" and isinstance(http, dict):
+        method = str(http.get("method", "")).upper()
+        path = str(http.get("path", ""))
+        base_url = str(http.get("base_url", ""))
+        api_version = http.get("api_version")
+        api_version_str = "" if api_version is None else str(api_version)
+    else:
+        method = ""
+        path = ""
+        base_url = ""
+        api_version_str = ""
+
+    raw = f"{exchange}|{section}|{protocol}|{base_url}|{api_version_str}|{method}|{path}"
+    return sha256_hex_text(raw)
+
+
+def _require_store_db(docs_dir: str) -> Path:
+    db_path = Path(docs_dir) / "db" / "docs.db"
+    if not db_path.exists():
+        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
+    return db_path
+
+
+def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
+    url = str(citation.get("url", ""))
+    canonical = canonicalize_url(url)
+    want_path_hash = str(citation.get("path_hash", ""))
+    want_content_hash = str(citation.get("content_hash", ""))
+
+    start = int(citation.get("excerpt_start", 0))
+    end = int(citation.get("excerpt_end", 0))
+    excerpt = str(citation.get("excerpt", ""))
+
+    if end <= start:
+        raise CexApiDocsError(
+            code="EBADCITE",
+            message="Invalid citation excerpt offsets (end must be > start).",
+            details={"canonical_url": canonical, "excerpt_start": start, "excerpt_end": end},
+        )
+    if len(excerpt) > HARD_MAX_EXCERPT_CHARS:
+        raise CexApiDocsError(
+            code="EBADCITE",
+            message="Citation excerpt exceeds hard max length.",
+            details={"canonical_url": canonical, "excerpt_len": len(excerpt), "hard_max": HARD_MAX_EXCERPT_CHARS},
+        )
+
+    row = conn.execute(
+        "SELECT canonical_url, path_hash, content_hash, markdown_path FROM pages WHERE canonical_url = ?;",
+        (canonical,),
+    ).fetchone()
+    if row is None:
+        raise CexApiDocsError(code="ESOURCE", message="Citation URL not found in local store.", details={"canonical_url": canonical})
+
+    if want_path_hash and str(row["path_hash"]) != want_path_hash:
+        raise CexApiDocsError(
+            code="ESOURCE",
+            message="Citation path_hash does not match stored page.",
+            details={"canonical_url": canonical, "want": want_path_hash, "got": row["path_hash"]},
+        )
+    if want_content_hash and str(row["content_hash"]) != want_content_hash:
+        raise CexApiDocsError(
+            code="ESOURCE",
+            message="Citation content_hash does not match stored page.",
+            details={"canonical_url": canonical, "want": want_content_hash, "got": row["content_hash"]},
+        )
+
+    md_path = Path(row["markdown_path"]) if row["markdown_path"] else None
+    if not md_path or not md_path.exists():
+        raise CexApiDocsError(code="ESOURCE", message="Citation page has no stored markdown.", details={"canonical_url": canonical})
+
+    md = md_path.read_text(encoding="utf-8")
+    if end > len(md):
+        raise CexApiDocsError(
+            code="EBADCITE",
+            message="Citation excerpt_end is out of bounds for stored markdown.",
+            details={"canonical_url": canonical, "excerpt_end": end, "markdown_len": len(md)},
+        )
+
+    got = md[start:end]
+    if got != excerpt:
+        raise CexApiDocsError(
+            code="EBADCITE",
+            message="Citation excerpt does not match stored markdown at provided offsets.",
+            details={"canonical_url": canonical, "excerpt_start": start, "excerpt_end": end},
+        )
+
+
+def save_endpoint(
+    *,
+    docs_dir: str,
+    lock_timeout_s: float,
+    endpoint_json_path: Path,
+    schema_path: Path,
+) -> dict[str, Any]:
+    db_path = _require_store_db(docs_dir)
+    lock_path = Path(docs_dir) / "db" / ".write.lock"
+
+    record = _load_json(endpoint_json_path)
+    if not isinstance(record, dict):
+        raise CexApiDocsError(code="EBADJSON", message="Endpoint JSON must be an object.", details={"path": str(endpoint_json_path)})
+
+    validator = load_endpoint_schema(schema_path)
+    errors = sorted(validator.iter_errors(record), key=lambda e: e.path)
+    if errors:
+        raise CexApiDocsError(
+            code="ESCHEMA",
+            message="Endpoint JSON failed schema validation.",
+            details={"path": str(endpoint_json_path), "errors": [e.message for e in errors[:10]]},
+        )
+
+    computed_id = compute_endpoint_id(record)
+    provided_id = str(record.get("endpoint_id", ""))
+    if provided_id != computed_id:
+        raise CexApiDocsError(
+            code="EIDMISMATCH",
+            message="endpoint_id does not match computed identity.",
+            details={"provided": provided_id, "computed": computed_id},
+        )
+
+    exchange = str(record.get("exchange"))
+    section = str(record.get("section"))
+    protocol = str(record.get("protocol"))
+    http = record.get("http") or {}
+    method = str(http.get("method")) if isinstance(http, dict) and http.get("method") is not None else None
+    path = str(http.get("path")) if isinstance(http, dict) and http.get("path") is not None else None
+    base_url = str(http.get("base_url")) if isinstance(http, dict) and http.get("base_url") is not None else None
+    api_version = http.get("api_version") if isinstance(http, dict) else None
+    api_version_str = None if api_version is None else str(api_version)
+    description = record.get("description")
+    description_str = None if description is None else str(description)
+
+    sources = record.get("sources") or []
+    if not isinstance(sources, list) or not sources:
+        raise CexApiDocsError(code="EBADSRC", message="Endpoint record must include sources[] with at least one item.")
+
+    updated_at = now_iso_utc()
+
+    with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
+        conn = open_db(db_path)
+        try:
+            # Verify citations against the local store.
+            for c in sources:
+                if not isinstance(c, dict):
+                    raise CexApiDocsError(code="EBADSRC", message="sources[] must contain objects.")
+                _verify_citation_against_store(conn=conn, citation=c)
+
+            # Persist endpoint JSON to disk.
+            endpoint_dir = Path(docs_dir) / "endpoints" / exchange / section
+            endpoint_path = endpoint_dir / f"{computed_id}.json"
+            atomic_write_text(endpoint_path, json.dumps(record, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
+
+            # Upsert endpoints row without REPLACE (preserve rowid).
+            with conn:
+                existing = conn.execute("SELECT rowid FROM endpoints WHERE endpoint_id = ?;", (computed_id,)).fetchone()
+                if existing is None:
+                    cur = conn.execute(
+                        """
+INSERT INTO endpoints (
+  endpoint_id, exchange, section, protocol, method, path, base_url, api_version,
+  description, json, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+""",
+                        (
+                            computed_id,
+                            exchange,
+                            section,
+                            protocol,
+                            method,
+                            path,
+                            base_url,
+                            api_version_str,
+                            description_str,
+                            json.dumps(record, sort_keys=True, ensure_ascii=False),
+                            updated_at,
+                        ),
+                    )
+                    endpoint_rowid = int(cur.lastrowid)
+                else:
+                    endpoint_rowid = int(existing["rowid"])
+                    conn.execute(
+                        """
+UPDATE endpoints
+SET exchange = ?, section = ?, protocol = ?, method = ?, path = ?, base_url = ?, api_version = ?,
+    description = ?, json = ?, updated_at = ?
+WHERE endpoint_id = ?;
+""",
+                        (
+                            exchange,
+                            section,
+                            protocol,
+                            method,
+                            path,
+                            base_url,
+                            api_version_str,
+                            description_str,
+                            json.dumps(record, sort_keys=True, ensure_ascii=False),
+                            updated_at,
+                            computed_id,
+                        ),
+                    )
+
+                # Endpoint sources mapping (field_name must exist).
+                for c in sources:
+                    field = c.get("field_name")
+                    if not field:
+                        continue
+                    canonical = canonicalize_url(str(c.get("url", "")))
+                    content_hash = str(c.get("content_hash", ""))
+                    conn.execute(
+                        """
+INSERT OR IGNORE INTO endpoint_sources (
+  endpoint_id, field_name, page_canonical_url, page_content_hash, created_at
+) VALUES (?, ?, ?, ?, ?);
+""",
+                        (computed_id, str(field), canonical, content_hash, updated_at),
+                    )
+
+                # Review queue rules: if high-risk fields present but missing per-field sources.
+                source_fields = {str(c.get("field_name")) for c in sources if c.get("field_name")}
+                for field_name in ("required_permissions", "rate_limit", "error_codes"):
+                    if record.get(field_name) is not None and field_name not in source_fields:
+                        conn.execute(
+                            """
+INSERT INTO review_queue (
+  kind, endpoint_id, field_name, reason, status, created_at, details_json
+) VALUES (?, ?, ?, ?, 'open', ?, ?);
+""",
+                            (
+                                "missing_field_citation",
+                                computed_id,
+                                field_name,
+                                f"{field_name} present but no source citation provided",
+                                updated_at,
+                                json.dumps({"endpoint_path": str(endpoint_path)}, sort_keys=True),
+                            ),
+                        )
+
+                # Update endpoints_fts (rowid = endpoints.rowid).
+                search_text = json.dumps(
+                    {
+                        "description": description_str,
+                        "required_permissions": record.get("required_permissions"),
+                        "rate_limit": record.get("rate_limit"),
+                        "error_codes": record.get("error_codes"),
+                    },
+                    sort_keys=True,
+                    ensure_ascii=False,
+                )
+                conn.execute("DELETE FROM endpoints_fts WHERE rowid = ?;", (endpoint_rowid,))
+                conn.execute(
+                    """
+INSERT INTO endpoints_fts (
+  rowid, endpoint_id, exchange, section, method, path, search_text
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+""",
+                    (
+                        endpoint_rowid,
+                        computed_id,
+                        exchange,
+                        section,
+                        method or "",
+                        path or "",
+                        search_text,
+                    ),
+                )
+
+            conn.commit()
+            return {"endpoint_id": computed_id, "path": str(endpoint_path), "updated_at": updated_at}
+        finally:
+            conn.close()
+
+
+def search_endpoints(
+    *,
+    docs_dir: str,
+    query: str,
+    exchange: str | None = None,
+    section: str | None = None,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    db_path = _require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        where = ["endpoints_fts MATCH ?"]
+        params: list[Any] = [query]
+        if exchange:
+            where.append("endpoints_fts.exchange = ?")
+            params.append(exchange)
+        if section:
+            where.append("endpoints_fts.section = ?")
+            params.append(section)
+        params.append(int(limit))
+
+        sql = f"""
+SELECT
+  endpoints_fts.endpoint_id,
+  endpoints_fts.exchange,
+  endpoints_fts.section,
+  endpoints_fts.method,
+  endpoints_fts.path,
+  snippet(endpoints_fts, 5, '[', ']', '...', 12) AS snippet,
+  bm25(endpoints_fts) AS rank
+FROM endpoints_fts
+WHERE {' AND '.join(where)}
+ORDER BY rank
+LIMIT ?;
+"""
+        cur = conn.execute(sql, tuple(params))
+        out: list[dict[str, Any]] = []
+        for r in cur.fetchall():
+            out.append(
+                {
+                    "endpoint_id": r["endpoint_id"],
+                    "exchange": r["exchange"],
+                    "section": r["section"],
+                    "method": r["method"],
+                    "path": r["path"],
+                    "snippet": r["snippet"],
+                    "rank": r["rank"],
+                }
+            )
+        return out
+    finally:
+        conn.close()
+
+
+def review_list(*, docs_dir: str, status: str = "open", limit: int = 50) -> list[dict[str, Any]]:
+    db_path = _require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        cur = conn.execute(
+            """
+SELECT id, kind, endpoint_id, field_name, reason, status, created_at, resolved_at
+FROM review_queue
+WHERE status = ?
+ORDER BY created_at DESC
+LIMIT ?;
+""",
+            (status, int(limit)),
+        )
+        return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def review_show(*, docs_dir: str, review_id: int) -> dict[str, Any]:
+    db_path = _require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        row = conn.execute("SELECT * FROM review_queue WHERE id = ?;", (int(review_id),)).fetchone()
+        if row is None:
+            raise CexApiDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def review_resolve(*, docs_dir: str, lock_timeout_s: float, review_id: int, resolution: str | None = None) -> dict[str, Any]:
+    db_path = _require_store_db(docs_dir)
+    lock_path = Path(docs_dir) / "db" / ".write.lock"
+    with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
+        conn = open_db(db_path)
+        try:
+            resolved_at = now_iso_utc()
+            with conn:
+                row = conn.execute("SELECT id, details_json FROM review_queue WHERE id = ?;", (int(review_id),)).fetchone()
+                if row is None:
+                    raise CexApiDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
+                details = {}
+                if row["details_json"]:
+                    try:
+                        details = json.loads(row["details_json"])
+                    except Exception:
+                        details = {"_raw": row["details_json"]}
+                if resolution:
+                    details["resolution"] = resolution
+                    details["resolved_at"] = resolved_at
+                conn.execute(
+                    """
+UPDATE review_queue
+SET status = 'resolved', resolved_at = ?, details_json = ?
+WHERE id = ?;
+""",
+                    (resolved_at, json.dumps(details, sort_keys=True, ensure_ascii=False), int(review_id)),
+                )
+            conn.commit()
+            return {"id": int(review_id), "resolved_at": resolved_at, "resolution": resolution}
+        finally:
+            conn.close()

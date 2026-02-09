@@ -386,7 +386,7 @@ Expose stable functions mirroring CLI:
 - [x] Phase 0: Repo bootstrap artifacts (`pyproject.toml`, `schema/schema.sql`, `schemas/*.json`, `data/exchanges.yaml`, `skills/cex-api-docs/SKILL.md`, `docs/runbooks/binance-wow-query.md`)
 - [x] Phase 1: Store + DB + FTS (`init`, schema apply, FTS5 check, schema versioning, lockfile)
 - [x] Phase 2: Crawl + Page Index (`crawl`, persistence, `search-pages`, `get-page`, `diff`, `fts-*`)
-- [ ] Phase 3: Endpoint Ingest + Query (`save-endpoint`, `search-endpoints`, review queue, endpoint_sources)
+- [x] Phase 3: Endpoint Ingest + Query (`save-endpoint`, `search-endpoints`, review queue, endpoint_sources)
 - [ ] Phase 4: Answer + Binance demo (`answer` output schema + runbook reproducibility)
 - [ ] Phase 5: Tests and quality gates (unit + integration tests)
 

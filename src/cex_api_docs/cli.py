@@ -7,6 +7,7 @@ import sys
 
 from .errors import CexApiDocsError
 from .crawler import crawl_store
+from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
 from .registry import load_registry
 from .store import init_store
@@ -60,6 +61,26 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("fts-optimize", help="Optimize SQLite FTS indexes", parents=[common])
     sub.add_parser("fts-rebuild", help="Rebuild SQLite FTS indexes from stored markdown", parents=[common])
+
+    se = sub.add_parser("save-endpoint", help="Validate + ingest endpoint JSON", parents=[common])
+    se.add_argument("endpoint_json_path")
+
+    sep = sub.add_parser("search-endpoints", help="Full-text search ingested endpoints", parents=[common])
+    sep.add_argument("query")
+    sep.add_argument("--exchange", default=None)
+    sep.add_argument("--section", default=None)
+    sep.add_argument("--limit", type=int, default=10)
+
+    rl = sub.add_parser("review-list", help="List review queue items", parents=[common])
+    rl.add_argument("--status", default="open", choices=["open", "resolved"])
+    rl.add_argument("--limit", type=int, default=50)
+
+    rs = sub.add_parser("review-show", help="Show a review queue item", parents=[common])
+    rs.add_argument("id", type=int)
+
+    rr = sub.add_parser("review-resolve", help="Resolve a review queue item", parents=[common])
+    rr.add_argument("id", type=int)
+    rr.add_argument("--resolution", default=None)
 
     args = parser.parse_args(argv)
 
@@ -143,6 +164,48 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "fts-rebuild":
             r = fts_rebuild(docs_dir=args.docs_dir, lock_timeout_s=float(args.lock_timeout_s))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "save-endpoint":
+            repo_root = Path(__file__).resolve().parents[2]
+            r = save_endpoint(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                endpoint_json_path=Path(args.endpoint_json_path),
+                schema_path=repo_root / "schemas" / "endpoint.schema.json",
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "search-endpoints":
+            matches = search_endpoints(
+                docs_dir=args.docs_dir,
+                query=args.query,
+                exchange=args.exchange,
+                section=args.section,
+                limit=int(args.limit),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches}})
+            raise SystemExit(0)
+
+        if args.cmd == "review-list":
+            items = review_list(docs_dir=args.docs_dir, status=args.status, limit=int(args.limit))
+            _print_json({"ok": True, "schema_version": "v1", "result": {"items": items}})
+            raise SystemExit(0)
+
+        if args.cmd == "review-show":
+            item = review_show(docs_dir=args.docs_dir, review_id=int(args.id))
+            _print_json({"ok": True, "schema_version": "v1", "result": item})
+            raise SystemExit(0)
+
+        if args.cmd == "review-resolve":
+            item = review_resolve(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                review_id=int(args.id),
+                resolution=args.resolution,
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": item})
             raise SystemExit(0)
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})

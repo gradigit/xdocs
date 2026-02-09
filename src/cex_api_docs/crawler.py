@@ -314,6 +314,41 @@ WHERE id = ?;
                                 page_id,
                             ),
                         )
+
+                        # If the page content changed, enqueue re-review for endpoints citing the prior content hash.
+                        if prev_content_hash and prev_content_hash != content_hash:
+                            impacted = conn.execute(
+                                """
+SELECT DISTINCT endpoint_id, field_name
+FROM endpoint_sources
+WHERE page_canonical_url = ? AND page_content_hash = ?;
+""",
+                                (canonical_url, prev_content_hash),
+                            ).fetchall()
+                            for imp in impacted:
+                                conn.execute(
+                                    """
+INSERT INTO review_queue (
+  kind, endpoint_id, field_name, reason, status, created_at, details_json
+) VALUES (?, ?, ?, ?, 'open', ?, ?);
+""",
+                                    (
+                                        "source_changed",
+                                        imp["endpoint_id"],
+                                        imp["field_name"],
+                                        "Source page changed; re-review required",
+                                        crawled_at,
+                                        json.dumps(
+                                            {
+                                                "page_canonical_url": canonical_url,
+                                                "old_content_hash": prev_content_hash,
+                                                "new_content_hash": content_hash,
+                                                "crawl_run_id": crawl_run_id,
+                                            },
+                                            sort_keys=True,
+                                        ),
+                                    ),
+                                )
                     else:
                         cur2 = conn.execute(
                             """

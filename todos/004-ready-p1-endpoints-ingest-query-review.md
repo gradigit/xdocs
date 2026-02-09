@@ -1,5 +1,5 @@
 ---
-status: ready
+status: complete
 priority: p1
 issue_id: "004"
 tags: [endpoints, jsonschema, ingest, review-queue, fts]
@@ -48,9 +48,9 @@ Implement deterministic ingestion of agent-produced endpoint JSON into disk + SQ
 
 ## Acceptance Criteria
 
-- [ ] Ingest rejects endpoint JSON missing required provenance or excerpts for asserted high-risk fields
-- [ ] `search-endpoints` supports exchange/section/method/path keyword queries
-- [ ] Review queue can be resolved and persists state
+- [x] Ingest rejects endpoint JSON missing required provenance or excerpts for asserted high-risk fields
+- [x] `search-endpoints` supports exchange/section/method/path keyword queries
+- [x] Review queue can be resolved and persists state
 
 ## Work Log
 
@@ -61,3 +61,11 @@ Implement deterministic ingestion of agent-produced endpoint JSON into disk + SQ
 **Actions:**
 - Created endpoints ingest/query todo
 
+### 2026-02-10 - Completed
+
+**By:** Codex
+
+**Actions:**
+- Implemented `save-endpoint`, `search-endpoints`, `review-*` commands with strict citation verification
+- Persisted endpoint JSON to disk + SQLite + FTS, and wrote `endpoint_sources` mappings
+- Added tests covering ingestion, search, and review queue resolution
