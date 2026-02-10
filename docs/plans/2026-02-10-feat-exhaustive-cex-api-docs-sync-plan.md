@@ -279,7 +279,7 @@ Acceptance:
 
 - [x] Implement `sync` command (one JSON artifact per run)
 - [x] Implement `report` (JSON -> Markdown) for human summaries
-- [ ] Add a `scripts/` runner for macOS cron/launchd that:
+- [x] Add a `scripts/` runner for macOS cron/launchd that:
   - runs `sync`
   - writes a timestamped report file
   - exits non-zero only for true failures (not for “undocumented fields”)
