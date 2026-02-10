@@ -53,11 +53,11 @@ exchanges:
   - exchange_id: gateio
     display_name: Gate.io
     allowed_domains:
-      - www.gate.io
+      - www.gate.com
     sections:
       - section_id: v4
         base_urls: ["https://api.gateio.ws/api/v4"]
-        seed_urls: ["https://www.gate.io/docs/developers/apiv4/"]
+        seed_urls: ["https://www.gate.com/docs/apiv4/index.html"]
 
   - exchange_id: kucoin
     display_name: KuCoin
@@ -74,11 +74,11 @@ exchanges:
   - exchange_id: htx
     display_name: HTX
     allowed_domains:
-      - www.htx.com
+      - huobiapi.github.io
     sections:
       - section_id: spot
         base_urls: ["https://api.huobi.pro"]
-        seed_urls: ["https://www.htx.com/en-us/opend/newApiPages/"]
+        seed_urls: ["https://huobiapi.github.io/docs/spot/v1/en/"]
 
   - exchange_id: cryptocom
     display_name: Crypto.com

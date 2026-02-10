@@ -7,6 +7,7 @@ import sys
 
 from .errors import CexApiDocsError
 from .answer import answer_question
+from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .fsck import fsck_store
@@ -85,6 +86,17 @@ def main(argv: list[str] | None = None) -> None:
     vr.add_argument("--max-bytes", type=int, default=10_000_000)
     vr.add_argument("--max-redirects", type=int, default=5)
     vr.add_argument("--retries", type=int, default=1)
+    vr.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+
+    vbu = sub.add_parser(
+        "validate-base-urls",
+        help="Validate registry base_urls are reachable (networked; unauthenticated only)",
+        parents=[common],
+    )
+    vbu.add_argument("--exchange", default=None, help="Exchange id to validate (default: all)")
+    vbu.add_argument("--section", default=None, help="Section id to validate (default: all)")
+    vbu.add_argument("--timeout-s", type=float, default=10.0)
+    vbu.add_argument("--retries", type=int, default=1)
 
     fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
     fsck_p.add_argument("--limit", type=int, default=200)
@@ -209,6 +221,19 @@ def main(argv: list[str] | None = None) -> None:
                 timeout_s=float(args.timeout_s),
                 max_bytes=int(args.max_bytes),
                 max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                render_mode=str(args.render),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "validate-base-urls":
+            repo_root = Path(__file__).resolve().parents[2]
+            r = validate_base_urls(
+                registry_path=repo_root / "data" / "exchanges.yaml",
+                exchange=args.exchange,
+                section=args.section,
+                timeout_s=float(args.timeout_s),
                 retries=int(args.retries),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})

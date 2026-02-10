@@ -12,6 +12,12 @@ from .timeutil import now_iso_utc
 
 USER_AGENT = "cex-api-docs"
 
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
+
 
 @dataclass(frozen=True, slots=True)
 class RobotsDecision:
@@ -43,6 +49,19 @@ def fetch_robots_policy(session: requests.Session, *, url: str, timeout_s: float
     fetched_at = now_iso_utc()
     try:
         resp = session.get(robots_url, timeout=timeout_s, headers={"User-Agent": USER_AGENT})
+        # Some sites return 403 for certain UA strings; retry with other common UAs.
+        if int(resp.status_code) == 403:
+            try:
+                resp.close()
+            except Exception:
+                pass
+            resp = session.get(robots_url, timeout=timeout_s)
+        if int(resp.status_code) == 403:
+            try:
+                resp.close()
+            except Exception:
+                pass
+            resp = session.get(robots_url, timeout=timeout_s, headers={"User-Agent": _BROWSER_UA})
     except Exception as e:
         return (lambda _u: False), RobotsDecision(
             policy="disallow_all",

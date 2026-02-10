@@ -12,6 +12,15 @@ from .errors import CexApiDocsError
 from .robots import USER_AGENT
 
 
+# Some doc sites block unknown/bot UA strings, while others block browser-like UAs.
+# We only use these to retrieve public docs content (no authenticated API calls).
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
+
+
 @dataclass(frozen=True, slots=True)
 class FetchResult:
     url: str
@@ -49,6 +58,19 @@ def _host_allowed(host: str, allowed_domains: set[str]) -> bool:
         if host == dd or host.endswith("." + dd):
             return True
     return False
+
+
+def _get(session: requests.Session, *, url: str, timeout_s: float, user_agent: str | None) -> requests.Response:
+    headers: dict[str, str] = {}
+    if user_agent:
+        headers["User-Agent"] = user_agent
+    return session.get(
+        url,
+        timeout=timeout_s,
+        allow_redirects=False,
+        stream=True,
+        headers=headers,
+    )
 
 
 def fetch(
@@ -92,13 +114,24 @@ def fetch(
                     )
                 seen.add(current_url)
 
-                resp = session.get(
-                    current_url,
-                    timeout=timeout_s,
-                    allow_redirects=False,
-                    stream=True,
-                    headers={"User-Agent": USER_AGENT},
-                )
+                # Some doc sites block custom/bot UA strings, while others block python-requests.
+                # Try our identifying UA first, then fall back to other common UAs on 403.
+                # Order matters (example: gate.com allows python-requests UA but blocks browser UAs).
+                resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=USER_AGENT)
+                if int(resp.status_code) == 403:
+                    try:
+                        resp.close()
+                    except Exception:
+                        pass
+                    # requests' default UA (python-requests/...) when no UA header is provided.
+                    resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=None)
+                if int(resp.status_code) == 403:
+                    try:
+                        resp.close()
+                    except Exception:
+                        pass
+                    # Browser-like UA to satisfy WAFs that block non-browser UAs.
+                    resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=_BROWSER_UA)
 
                 status = int(resp.status_code)
                 if status in (301, 302, 303, 307, 308) and resp.headers.get("location"):

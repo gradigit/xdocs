@@ -48,6 +48,15 @@ Quick health-check for all 16 exchanges in `data/exchanges.yaml` (networked):
 cex-api-docs validate-registry
 ```
 
+## Validate Base URLs (API Endpoints)
+
+Reachability check for `base_urls` in `data/exchanges.yaml` (networked; unauthenticated only).
+For `wss://` base URLs, this is DNS-only (no websocket handshake).
+
+```bash
+cex-api-docs validate-base-urls
+```
+
 ## Find Sources
 
 ```bash

@@ -26,6 +26,12 @@ Validate the 16-exchange registry seeds/domains (networked):
 cex-api-docs validate-registry
 ```
 
+Validate that registry `base_urls` are reachable (networked; unauthenticated only):
+
+```bash
+cex-api-docs validate-base-urls
+```
+
 ## Store Integrity Check
 
 Detect DB/file inconsistencies (detection-only):

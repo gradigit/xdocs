@@ -97,7 +97,9 @@ def _looks_like_permissions_requirement(text: str) -> bool:
             r"\brequired\s+permissions?\b|"
             r"\bpermissions?\s*[:\-]\s*\w|"
             r"\bapi\s+key\s+permissions?\b|"
-            r"\bpermission\s+required\b",
+            r"\bpermission\s+required\b|"
+            r"\benable\s+reading\b|"
+            r"\benable\s+withdrawals?\b",
             text,
         )
     )
@@ -274,18 +276,30 @@ def answer_question(
         # Part 2: API key permissions (only if the question asks).
         if wants_perm:
             pm_prefix = seed_prefixes.get("portfolio_margin")
-            if not pm_prefix:
-                notes.append("Binance portfolio_margin section seed not found in registry.")
-                missing.append("required_permissions")
-            else:
+            prefixes: list[str] = []
+            if pm_prefix:
+                prefixes.append(pm_prefix)
+            # Portfolio margin key permissions are often described in general derivatives onboarding docs.
+            prefixes.append("https://developers.binance.com/docs/derivatives/")
+            spot_prefix = seed_prefixes.get("spot")
+            if spot_prefix:
+                prefixes.append(spot_prefix)
+
+            # De-dupe while preserving order.
+            seen_p: set[str] = set()
+            prefixes = [p for p in prefixes if p and not (p in seen_p or seen_p.add(p))]
+
+            picked: dict[str, Any] | None = None
+            picked_excerpt: tuple[str, int, int] | None = None
+            picked_prefix: str | None = None
+
+            for prefix in prefixes:
                 candidates = _search_pages(
                     conn,
-                    query="permissions OR permission OR \"api key permissions\" OR \"required permissions\"",
-                    url_prefix=pm_prefix,
-                    limit=8,
+                    query="permissions OR permission OR \"api key permissions\" OR \"required permissions\" OR \"enable reading\" OR \"enable withdrawals\"",
+                    url_prefix=prefix,
+                    limit=10,
                 )
-                picked: dict[str, Any] | None = None
-                picked_excerpt: tuple[str, int, int] | None = None
                 for cand in candidates:
                     md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
                     if not md_path or not md_path.exists():
@@ -293,30 +307,37 @@ def answer_question(
                     md = md_path.read_text(encoding="utf-8")
                     if not _looks_like_permissions_requirement(md):
                         continue
-                    excerpt, start, end = _make_excerpt(md, needle_re=re.compile(r"permissions?|api\s+key\s+permissions?|required\s+permissions?", re.IGNORECASE))
+                    excerpt, start, end = _make_excerpt(
+                        md,
+                        needle_re=re.compile(r"permissions?|api\s+key\s+permissions?|required\s+permissions?|enable\s+reading|enable\s+withdrawals?", re.IGNORECASE),
+                    )
                     if not _looks_like_permissions_requirement(excerpt):
                         continue
                     picked = cand
                     picked_excerpt = (excerpt, start, end)
+                    picked_prefix = prefix
+                    break
+                if picked and picked_excerpt:
                     break
 
-                if not picked or not picked_excerpt:
-                    notes.append("No Portfolio Margin docs page contained an explicit permissions requirement in local store.")
-                    missing.append("required_permissions")
-                else:
-                    excerpt, start, end = picked_excerpt
-                    citation = {
-                        "url": picked["canonical_url"],
-                        "crawled_at": picked["crawled_at"],
-                        "content_hash": picked["content_hash"],
-                        "path_hash": picked["path_hash"],
-                        "excerpt": excerpt,
-                        "excerpt_start": start,
-                        "excerpt_end": end,
-                        "field_name": "required_permissions",
-                    }
-                    claims.append(_claim(f"c{c}", text=f"[portfolio_margin] {excerpt}", citation=citation))
-                    c += 1
+            if not picked or not picked_excerpt:
+                notes.append("No crawled Binance docs page contained an explicit API key permissions requirement in local store.")
+                missing.append("required_permissions")
+            else:
+                excerpt, start, end = picked_excerpt
+                citation = {
+                    "url": picked["canonical_url"],
+                    "crawled_at": picked["crawled_at"],
+                    "content_hash": picked["content_hash"],
+                    "path_hash": picked["path_hash"],
+                    "excerpt": excerpt,
+                    "excerpt_start": start,
+                    "excerpt_end": end,
+                    "field_name": "required_permissions",
+                }
+                label = "portfolio_margin" if (picked_prefix == pm_prefix) else "binance_docs"
+                claims.append(_claim(f"c{c}", text=f"[{label}] {excerpt}", citation=citation))
+                c += 1
 
         # Status policy: only "ok" when every requested part is cite-backed.
         if wants_rate and unified_section and "rate_limit_comparison" in missing:

@@ -20,6 +20,7 @@ from .hashing import sha256_hex_bytes, sha256_hex_text
 from .httpfetch import FetchResult, fetch
 from .lock import acquire_write_lock
 from .markdown import extractor_info_v1, html_to_markdown, normalize_markdown
+from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
@@ -121,8 +122,6 @@ def crawl_store(
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
-    if render_mode != "http":
-        raise CexApiDocsError(code="ENOTIMPL", message="Playwright rendering not implemented yet (v1).", details={"render_mode": render_mode})
 
     root = Path(docs_dir)
     db_path = root / "db" / "docs.db"
@@ -160,6 +159,7 @@ def crawl_store(
 
             session = requests.Session()
             allow_hosts = {d.lower() for d in allowed_domains}
+            pw: PlaywrightFetcher | None = None
 
             robots_cache: dict[str, Any] = {}
 
@@ -204,15 +204,72 @@ def crawl_store(
                     continue
 
                 try:
-                    fr: FetchResult = fetch(
-                        session,
-                        url=url,
-                        timeout_s=cfg.timeout_s,
-                        max_bytes=cfg.max_bytes,
-                        max_redirects=cfg.max_redirects,
-                        retries=cfg.retries,
-                        allowed_domains=allow_hosts,
-                    )
+                    fr: FetchResult | None = None
+                    used_render_mode = "http"
+
+                    def extract(fr0: FetchResult) -> tuple[str, str | None, str, int]:
+                        html0 = _decode_body(fr0.body, fr0.content_type)
+                        title0 = _extract_title(html0)
+
+                        md_norm0 = ""
+                        if "text/html" in fr0.content_type.lower() or fr0.content_type.lower().startswith("text/"):
+                            md_raw0 = html_to_markdown(html0, base_url=fr0.final_url)
+                            md_norm0 = normalize_markdown(md_raw0)
+
+                        wc0 = len(md_norm0.split())
+                        return html0, title0, md_norm0, wc0
+
+                    def needs_playwright(fr0: FetchResult, md_norm0: str, wc0: int) -> bool:
+                        # Heuristics: JS-heavy doc pages often return empty markdown in HTTP mode.
+                        if int(fr0.http_status) >= 400:
+                            return True
+                        if wc0 <= 0 or not md_norm0.strip():
+                            return True
+                        return False
+
+                    html = ""
+                    title = None
+                    markdown_norm = ""
+                    word_count = 0
+
+                    if cfg.render_mode in ("http", "auto"):
+                        fr = fetch(
+                            session,
+                            url=url,
+                            timeout_s=cfg.timeout_s,
+                            max_bytes=cfg.max_bytes,
+                            max_redirects=cfg.max_redirects,
+                            retries=cfg.retries,
+                            allowed_domains=allow_hosts,
+                        )
+                        used_render_mode = "http"
+                        html, title, markdown_norm, word_count = extract(fr)
+
+                    if cfg.render_mode in ("playwright", "auto"):
+                        # Always use Playwright when explicitly requested.
+                        do_pw = cfg.render_mode == "playwright"
+                        if fr is not None and cfg.render_mode == "auto":
+                            do_pw = needs_playwright(fr, markdown_norm, word_count)
+
+                        if do_pw:
+                            if pw is None:
+                                pw = PlaywrightFetcher(allowed_domains=allow_hosts).open()
+                            fr_pw = pw.fetch(
+                                url=url,
+                                timeout_s=cfg.timeout_s,
+                                max_bytes=cfg.max_bytes,
+                                retries=cfg.retries,
+                            )
+                            html_pw, title_pw, md_pw, wc_pw = extract(fr_pw)
+
+                            # Prefer the rendered result when it produced more content or when HTTP fetch errored.
+                            if fr is None or int(fr.http_status) >= 400 or wc_pw > word_count:
+                                fr = fr_pw
+                                used_render_mode = "playwright"
+                                html, title, markdown_norm, word_count = html_pw, title_pw, md_pw, wc_pw
+
+                    if fr is None:  # pragma: no cover
+                        raise CexApiDocsError(code="ENET", message="No fetch result produced.", details={"url": url})
                 except CexApiDocsError as e:
                     errors.append({"url": url, "error": e.to_json()})
                     continue
@@ -225,17 +282,8 @@ def crawl_store(
                 path_hash = sha256_hex_text(canonical_url)
                 crawled_at = now_iso_utc()
                 raw_hash = sha256_hex_bytes(fr.body)
-
-                html = _decode_body(fr.body, fr.content_type)
-                title = _extract_title(html)
-
-                markdown_norm = ""
-                if "text/html" in fr.content_type.lower() or fr.content_type.lower().startswith("text/"):
-                    markdown_raw = html_to_markdown(html, base_url=final_url)
-                    markdown_norm = normalize_markdown(markdown_raw)
-
+                # html/title/markdown_norm/word_count extracted during fetch.
                 content_hash = sha256_hex_text(markdown_norm)
-                word_count = len(markdown_norm.split())
 
                 raw_path = root / "raw" / domain / f"{path_hash}.bin"
                 md_path = root / "pages" / domain / f"{path_hash}.md"
@@ -259,7 +307,7 @@ def crawl_store(
                     "content_hash": content_hash,
                     "prev_content_hash": None,
                     "path_hash": path_hash,
-                    "render_mode": "http",
+                    "render_mode": used_render_mode,
                     "title": title,
                     "word_count": word_count,
                     "headers": fr.headers,
@@ -298,7 +346,7 @@ WHERE id = ?;
                                 title,
                                 fr.http_status,
                                 fr.content_type,
-                                "http",
+                                used_render_mode,
                                 raw_hash,
                                 content_hash,
                                 prev_content_hash,
@@ -371,7 +419,7 @@ INSERT INTO pages (
                                 title,
                                 fr.http_status,
                                 fr.content_type,
-                                "http",
+                                used_render_mode,
                                 raw_hash,
                                 content_hash,
                                 None,
@@ -473,3 +521,5 @@ INSERT INTO page_versions (
             }
         finally:
             conn.close()
+            if pw is not None:
+                pw.close()
