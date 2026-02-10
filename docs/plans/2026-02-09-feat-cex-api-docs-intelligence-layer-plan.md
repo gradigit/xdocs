@@ -13,7 +13,7 @@ Build an AI-native system for crawling, understanding, and structuring cryptocur
 - `doc-crawler`: general-purpose doc crawler and SQLite FTS5 index
 - `cex-api-docs`: CEX/DEX-specific extraction layer (endpoints, rate limits, permissions, canonical ops mapping, CCXT cross-reference, bilingual support)
 
-This plan is grounded on the existing draft package in `cex-api-docs-plan-handoff/`.
+This plan is grounded on the existing draft package in `docs/archive/cex-api-docs-plan-handoff/`.
 
 ## Enhancement Summary
 
@@ -28,14 +28,14 @@ This plan is grounded on the existing draft package in `cex-api-docs-plan-handof
 
 ## Current State (Local Research)
 
-- Repo root currently contains only `cex-api-docs-plan-handoff/` plus a few macOS metadata files.
-- Draft briefing: `cex-api-docs-plan-handoff/CLAUDE.md`
-- Draft skill package: `cex-api-docs-plan-handoff/doc-crawler/doc-crawler/`
-- Draft skill package: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/`
-- Key reference doc: `cex-api-docs-plan-handoff/doc-crawler/doc-crawler/references/storage-schema.md`
-- Key reference doc: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/endpoint-schema.md`
-- Key reference doc: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/canonical-ops.md`
-- Key reference doc: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/exchanges.md`
+- Reference-only drafts live under `docs/archive/cex-api-docs-plan-handoff/`.
+- Draft briefing: `docs/archive/cex-api-docs-plan-handoff/CLAUDE.md`
+- Draft skill package: `docs/archive/cex-api-docs-plan-handoff/doc-crawler/doc-crawler/`
+- Draft skill package: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/`
+- Key reference doc: `docs/archive/cex-api-docs-plan-handoff/doc-crawler/doc-crawler/references/storage-schema.md`
+- Key reference doc: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/endpoint-schema.md`
+- Key reference doc: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/canonical-ops.md`
+- Key reference doc: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/exchanges.md`
 - Institutional learnings were not found because `docs/solutions/` does not exist yet in this repo.
 
 Notable gaps spotted in the draft (to address during implementation):
@@ -217,7 +217,7 @@ flowchart TD
 
 ### Critical Questions Requiring Clarification
 
-1. Should this repo become the canonical home for the two skills (migrating out of `cex-api-docs-plan-handoff/`), or do you want to keep the handoff folder and publish from there?
+1. Should this repo become the canonical home for the two skills (migrating out of `docs/archive/cex-api-docs-plan-handoff/`), or do you want to keep the handoff folder and publish from there?
 2. Where should the default storage live for crawls and extracted data?
 3. What is the minimum "done" for the MVP exchange (Bybit)?
 4. Do you want Slack notifications in `cex_update.py` as part of MVP, or keep alerts stdout-only initially?
@@ -228,8 +228,8 @@ flowchart TD
 ### Phase 0: Repo Bootstrap (Structure and Docs)
 
 - [ ] Create top-level `README.md` describing the project, the AI-native split, and a quickstart.
-- [ ] Create a top-level `CLAUDE.md` capturing "what is decided" (mirroring `cex-api-docs-plan-handoff/CLAUDE.md`).
-- [ ] Migrate draft skill packages from `cex-api-docs-plan-handoff/` into the target repo layout.
+- [ ] Create a top-level `CLAUDE.md` capturing "what is decided" (mirroring `docs/archive/cex-api-docs-plan-handoff/CLAUDE.md`).
+- [ ] Migrate draft skill packages from `docs/archive/cex-api-docs-plan-handoff/` into the target repo layout.
 - [ ] Add `docs/runbooks/` with step-by-step instructions for running a crawl and validating output.
 - [ ] Make the exchange registry machine-readable for automation:
 - [ ] Add a source-of-truth file (example: `cex-api-docs/references/exchanges.yaml`) that `cex_update.py` can parse without scraping markdown.
@@ -394,10 +394,10 @@ python3 cex-api-docs/scripts/cex_search.py --canonical "get_open_orders" --docs-
 
 ## References (Internal)
 
-- Draft briefing: `cex-api-docs-plan-handoff/CLAUDE.md`
-- `doc-crawler` draft skill: `cex-api-docs-plan-handoff/doc-crawler/doc-crawler/SKILL.md`
-- `doc-crawler` storage schema: `cex-api-docs-plan-handoff/doc-crawler/doc-crawler/references/storage-schema.md`
-- `cex-api-docs` draft skill: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/SKILL.md`
-- Endpoint schema: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/endpoint-schema.md`
-- Canonical ops: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/canonical-ops.md`
-- Exchange registry: `cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/exchanges.md`
+- Draft briefing: `docs/archive/cex-api-docs-plan-handoff/CLAUDE.md`
+- `doc-crawler` draft skill: `docs/archive/cex-api-docs-plan-handoff/doc-crawler/doc-crawler/SKILL.md`
+- `doc-crawler` storage schema: `docs/archive/cex-api-docs-plan-handoff/doc-crawler/doc-crawler/references/storage-schema.md`
+- `cex-api-docs` draft skill: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/SKILL.md`
+- Endpoint schema: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/endpoint-schema.md`
+- Canonical ops: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/canonical-ops.md`
+- Exchange registry: `docs/archive/cex-api-docs-plan-handoff/cex-api-docs/cex-api-docs/references/exchanges.md`

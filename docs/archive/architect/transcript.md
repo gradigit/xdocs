@@ -20,7 +20,7 @@ Key intent from prior drafts (treat as design notes/pseudocode, not implemented 
 
 Existing materials in this repo (reference only):
 - Draft plan: `docs/plans/2026-02-09-feat-cex-api-docs-intelligence-layer-plan.md`
-- Prior handoff notes: `cex-api-docs-plan-handoff/` (contains reference schemas and draft scripts that should be treated as pseudocode)
+- Prior handoff notes: `docs/archive/cex-api-docs-plan-handoff/` (contains reference schemas and draft scripts that should be treated as pseudocode)
 
 User clarification: the “pre existing code” is effectively pseudocode; nothing has been built yet.
 
@@ -274,7 +274,7 @@ If per-field provenance is missing, the tool must be conservative: output `undoc
 
 ### Fixes Applied
 
-- Updated `architect/prompt.md` to include packaging/install requirements, crawl safety defaults, explicit citations output contract, and optional excerpts for key fields.
+- Updated `docs/archive/architect/prompt.md` to include packaging/install requirements, crawl safety defaults, explicit citations output contract, and optional excerpts for key fields.
 - Re-emphasized single-writer ingestion as a default for SQLite.
 
 ---

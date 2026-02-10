@@ -3,7 +3,7 @@
 You are implementing a **greenfield** project in the repo `cex-api-docs/`.
 
 Important context:
-- The folder `cex-api-docs-plan-handoff/` contains prior drafts and pseudocode. Treat it as **reference only**. Nothing is implemented yet.
+- The folder `docs/archive/cex-api-docs-plan-handoff/` contains prior drafts and pseudocode. Treat it as **reference only**. Nothing is implemented yet.
 - This tool is for **internal team use** and must prioritize **information accuracy** and **frictionless retrieval**.
 
 ## One-Sentence Description

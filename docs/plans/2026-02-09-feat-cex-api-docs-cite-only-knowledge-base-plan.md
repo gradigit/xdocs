@@ -10,7 +10,7 @@ date: 2026-02-09
 
 Build a local-only, cite-only CEX API documentation knowledge base (Python library + JSON-first CLI + Claude Code skill) that crawls official exchange docs, stores raw + extracted content deterministically, indexes via SQLite FTS5, and enables agents to answer endpoint/rate-limit/permission questions with strict provenance.
 
-This is greenfield. Everything under `cex-api-docs-plan-handoff/` is reference-only and must not be treated as implemented code or as a dependency baseline.
+This is greenfield. Everything under `docs/archive/cex-api-docs-plan-handoff/` is reference-only and must not be treated as implemented code or as a dependency baseline.
 
 ## Why This Exists
 
@@ -561,7 +561,7 @@ Non-goals for tests:
 
 ## References (Internal)
 
-- Spec: `architect/prompt.md`
-- Rationale and gap analysis: `architect/transcript.md`
+- Spec: `docs/archive/architect/prompt.md`
+- Rationale and gap analysis: `docs/archive/architect/transcript.md`
 - Prior plan (superseded): `docs/plans/2026-02-09-feat-cex-api-docs-intelligence-layer-plan.md`
-- Reference-only drafts: `cex-api-docs-plan-handoff/`
+- Reference-only drafts: `docs/archive/cex-api-docs-plan-handoff/`

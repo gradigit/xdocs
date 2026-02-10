@@ -14,10 +14,10 @@ We need a greenfield, reproducible project skeleton for the cite-only CEX API do
 
 ## Findings
 
-- Repo is greenfield; reference-only drafts live under `cex-api-docs-plan-handoff/`.
+- Repo is greenfield; reference-only drafts live under `docs/archive/cex-api-docs-plan-handoff/`.
 - Authoritative plan/spec:
   - `docs/plans/2026-02-09-feat-cex-api-docs-cite-only-knowledge-base-plan.md`
-  - `architect/prompt.md`
+  - `docs/archive/architect/prompt.md`
 
 ## Proposed Solutions
 
