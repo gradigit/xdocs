@@ -11,6 +11,9 @@ dist/
 build/
 *.egg-info/
 
+# Local agent artifacts (never commit)
+.claude/
+
 # Local doc store (must never be committed)
 cex-docs/
 cex-docs-*/
