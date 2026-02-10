@@ -5,12 +5,14 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 import sys
+from typing import Any
 
 from .errors import CexApiDocsError
 from .answer import answer_question
 from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
 from .coverage import endpoint_coverage
+from .discover_sources import discover_sources
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .ingest_page import ingest_page
 from .inventory import create_inventory, latest_inventory_id
@@ -84,6 +86,14 @@ def main(argv: list[str] | None = None) -> None:
     dp = sub.add_parser("diff", help="Report new/updated/stale pages for a crawl run", parents=[common])
     dp.add_argument("--crawl-run-id", type=int, default=None)
     dp.add_argument("--limit", type=int, default=50)
+
+    ds = sub.add_parser("discover-sources", help="Discover sitemap/spec URLs from registry seed pages (best-effort)", parents=[common])
+    ds.add_argument("--exchange", required=True)
+    ds.add_argument("--section", default=None, help="Section id under the exchange (default: all sections)")
+    ds.add_argument("--timeout-s", type=float, default=20.0)
+    ds.add_argument("--max-bytes", type=int, default=10_000_000)
+    ds.add_argument("--max-redirects", type=int, default=5)
+    ds.add_argument("--retries", type=int, default=1)
 
     inv_p = sub.add_parser("inventory", help="Deterministically enumerate doc URLs for an exchange section", parents=[common])
     inv_p.add_argument("--exchange", required=True, help="Exchange id from data/exchanges.yaml")
@@ -287,6 +297,31 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "diff":
             d = diff_pages(docs_dir=args.docs_dir, crawl_run_id=args.crawl_run_id, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": d})
+            raise SystemExit(0)
+
+        if args.cmd == "discover-sources":
+            repo_root = Path(__file__).resolve().parents[2]
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            ex = reg.get_exchange(str(args.exchange))
+
+            results: list[dict[str, Any]] = []
+            for sec in ex.sections:
+                if args.section and sec.section_id != str(args.section):
+                    continue
+                results.append(
+                    discover_sources(
+                        exchange=ex.exchange_id,
+                        section=sec.section_id,
+                        seed_urls=sec.seed_urls,
+                        allowed_domains=ex.allowed_domains,
+                        timeout_s=float(args.timeout_s),
+                        max_bytes=int(args.max_bytes),
+                        max_redirects=int(args.max_redirects),
+                        retries=int(args.retries),
+                    )
+                )
+
+            _print_json({"ok": True, "schema_version": "v1", "result": {"results": results}})
             raise SystemExit(0)
 
         if args.cmd == "inventory":

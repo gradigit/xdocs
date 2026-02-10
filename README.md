@@ -142,6 +142,7 @@ All commands print machine-readable JSON with a stable `schema_version` (current
 Key commands:
 - `init`: initialize directories + SQLite schema
 - `crawl`: crawl docs and store pages + metadata
+- `discover-sources`: mine registry seed pages for sitemap/spec URLs (best-effort bootstrap)
 - `inventory`: enumerate doc URLs for a section (best-effort, deterministic)
 - `fetch-inventory`: fetch every URL from an inventory
 - `sync`: inventory + fetch orchestration (cron-friendly JSON output)

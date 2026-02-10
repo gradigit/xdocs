@@ -227,7 +227,7 @@ Acceptance:
 
 ### Phase 1: Inventory-Based Exhaustive Fetch
 
-- [ ] Implement `discover-sources` (bootstrap)
+- [x] Implement `discover-sources` (bootstrap)
 - [x] Implement `inventory` with at least:
   - sitemap parsing (`sitemap.xml`, `sitemap-index.xml`)
   - doc-site heuristics for common stacks (GitBook/Docusaurus/ReadMe/SwaggerUI) to find sitemap/spec URLs
