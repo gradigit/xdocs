@@ -1,52 +1,18 @@
 from __future__ import annotations
 
-import contextlib
-import os
 import tempfile
-import threading
 import unittest
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from cex_api_docs.crawler import crawl_store
 from cex_api_docs.pages import diff_pages, search_pages
 from cex_api_docs.store import init_store
+from tests.http_server import serve_directory, serve_handler
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-
-
-@contextlib.contextmanager
-def serve_directory(path: Path):
-    class QuietHandler(SimpleHTTPRequestHandler):
-        def log_message(self, _format: str, *_args) -> None:
-            return
-
-    class FastThreadingHTTPServer(ThreadingHTTPServer):
-        # Avoid reverse-DNS lookup in socket.getfqdn(host) on macOS,
-        # which can block tests for ~30s on misconfigured networks.
-        def server_bind(self) -> None:  # type: ignore[override]
-            self.socket.bind(self.server_address)
-            self.server_address = self.socket.getsockname()
-            host, port = self.server_address[:2]
-            self.server_name = host
-            self.server_port = port
-
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        httpd = FastThreadingHTTPServer(("127.0.0.1", 0), QuietHandler)
-        host, port = httpd.server_address
-        t = threading.Thread(target=httpd.serve_forever, daemon=True)
-        t.start()
-        try:
-            yield f"http://{host}:{port}"
-        finally:
-            httpd.shutdown()
-            httpd.server_close()
-            t.join(timeout=2)
-    finally:
-        os.chdir(cwd)
 
 
 class TestCrawl(unittest.TestCase):
@@ -111,6 +77,58 @@ class TestCrawl(unittest.TestCase):
 
             d = diff_pages(docs_dir=str(docs_dir), crawl_run_id=r["crawl_run_id"], limit=10)
             self.assertGreaterEqual(d["counts"]["new"], 2)
+
+    def test_redirect_to_disallowed_host_is_blocked(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+
+            class DisallowedHandler(BaseHTTPRequestHandler):
+                hits = 0
+
+                def log_message(self, _format: str, *_args) -> None:  # pragma: no cover
+                    return
+
+                def do_GET(self) -> None:  # type: ignore[override]
+                    type(self).hits += 1
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(b"<html><body>disallowed</body></html>\n")
+
+            with serve_handler(DisallowedHandler) as disallowed_base:
+                disallowed_url = f"{disallowed_base}/target"
+
+                class AllowedHandler(BaseHTTPRequestHandler):
+                    def log_message(self, _format: str, *_args) -> None:  # pragma: no cover
+                        return
+
+                    def do_GET(self) -> None:  # type: ignore[override]
+                        self.send_response(302)
+                        self.send_header("Location", disallowed_url)
+                        self.end_headers()
+
+                with serve_handler(AllowedHandler) as allowed_base:
+                    port = urlsplit(allowed_base).port
+                    assert port is not None
+                    seed = f"http://localhost:{port}/start"
+                    r = crawl_store(
+                        docs_dir=str(docs_dir),
+                        schema_version="v1",
+                        lock_timeout_s=1.0,
+                        seeds=[seed],
+                        allowed_domains=["localhost"],
+                        max_depth=0,
+                        max_pages=10,
+                        delay_s=0.0,
+                        timeout_s=5.0,
+                        ignore_robots=True,
+                        render_mode="http",
+                    )
+
+            self.assertEqual(r["counts"]["stored"], 0)
+            self.assertGreaterEqual(r["counts"]["errors"], 1)
+            self.assertEqual(DisallowedHandler.hits, 0)
 
 
 if __name__ == "__main__":

@@ -234,6 +234,10 @@ WHERE endpoint_id = ?;
                         ),
                     )
 
+                # Keep endpoint_sources consistent with the endpoint's current sources.
+                # The sources[] array is treated as the full, current set of citations.
+                conn.execute("DELETE FROM endpoint_sources WHERE endpoint_id = ?;", (computed_id,))
+
                 # Endpoint sources mapping (field_name must exist).
                 for c in sources:
                     field = c.get("field_name")

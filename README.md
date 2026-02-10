@@ -18,9 +18,24 @@ cex-api-docs --help
 cex-api-docs init --docs-dir ./cex-docs
 ```
 
+## Registry Health Check
+
+Validate the 16-exchange registry seeds/domains (networked):
+
+```bash
+cex-api-docs validate-registry
+```
+
+## Store Integrity Check
+
+Detect DB/file inconsistencies (detection-only):
+
+```bash
+cex-api-docs fsck --docs-dir ./cex-docs
+```
+
 ## Core Rules
 
 - No unsupported claims: every factual output must include citations with excerpts.
 - If a fact is not backed by stored sources: return `unknown` / `undocumented` / `conflict`.
 - v1 never stores real exchange API keys and never calls authenticated exchange endpoints.
-

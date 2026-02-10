@@ -40,11 +40,27 @@ cex-api-docs crawl --exchange binance --section spot --docs-dir ./cex-docs
 cex-api-docs crawl --url "https://example.com/docs" --domain-scope "example.com" --docs-dir ./cex-docs
 ```
 
+## Validate Registry (Domains/Seeds)
+
+Quick health-check for all 16 exchanges in `data/exchanges.yaml` (networked):
+
+```bash
+cex-api-docs validate-registry
+```
+
 ## Find Sources
 
 ```bash
 cex-api-docs search-pages "rate limit" --docs-dir ./cex-docs
 cex-api-docs get-page "https://..." --docs-dir ./cex-docs
+```
+
+## Store Integrity Check
+
+Detect DB/file inconsistencies (detection-only):
+
+```bash
+cex-api-docs fsck --docs-dir ./cex-docs
 ```
 
 ## Extract Endpoints (Agent Responsibility)

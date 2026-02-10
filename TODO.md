@@ -1,17 +1,15 @@
 # TODO
 
-## Current Phase: Mode 2 plan iteration
+This repo uses file-based todos in `todos/` as the source of truth.
 
-### In Progress
-- [ ] Generate an execution plan (forging-plans Mode 2) based on `architect/prompt.md` and save it to `architect/plan.md`
+## Where To Look
 
-### Completed
-- [x] Forged prompt saved to `architect/prompt.md`
-- [x] Transcript saved to `architect/transcript.md`
-- [x] Forge state saved to `architect/STATE.md`
+- Current plan/spec: `docs/plans/2026-02-09-feat-cex-api-docs-cite-only-knowledge-base-plan.md`
+- Demo runbook: `docs/runbooks/binance-wow-query.md`
+- Work queue: `todos/`
 
-### Blocked / Issues
-- None
+## Quick View
 
-### Deviations from Plan
-- None
+```bash
+ls todos/*-pending-*.md
+```

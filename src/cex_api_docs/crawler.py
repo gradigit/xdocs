@@ -211,6 +211,7 @@ def crawl_store(
                         max_bytes=cfg.max_bytes,
                         max_redirects=cfg.max_redirects,
                         retries=cfg.retries,
+                        allowed_domains=allow_hosts,
                     )
                 except CexApiDocsError as e:
                     errors.append({"url": url, "error": e.to_json()})

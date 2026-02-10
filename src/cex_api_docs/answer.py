@@ -70,14 +70,53 @@ def _claim(claim_id: str, *, text: str, citation: dict[str, Any]) -> dict[str, A
 
 
 def _extract_weight_from_excerpt(excerpt: str) -> int | None:
-    # Very conservative: look for "weight ... <int>" patterns.
-    m = re.search(r"\bweight\b[^0-9]{0,20}(\d{1,9})\b", excerpt, flags=re.IGNORECASE)
+    # Conservative: require an obvious "weight is 10" / "weight: 10" pattern.
+    m = re.search(r"\bweight\b\s*(?:is|=|:)?\s*(\d{1,9})\b", excerpt, flags=re.IGNORECASE)
     if not m:
         return None
     try:
         return int(m.group(1))
     except ValueError:
         return None
+
+
+def _wants_rate_limit(norm: str) -> bool:
+    return bool(re.search(r"\brate\s+limit\b|\bweight\b", norm, flags=re.IGNORECASE))
+
+
+def _wants_permissions(norm: str) -> bool:
+    return bool(re.search(r"\bpermissions?\b|\bapi\s+key\b|\bscopes?\b", norm, flags=re.IGNORECASE))
+
+
+def _looks_like_permissions_requirement(text: str) -> bool:
+    # Stay conservative: do not label something "required_permissions" unless the excerpt
+    # is clearly about permissions as a requirement (not merely mentioning API keys).
+    return bool(
+        re.search(
+            r"(?im)^\s*#+\s*permissions?\b|"
+            r"\brequired\s+permissions?\b|"
+            r"\bpermissions?\s*[:\-]\s*\w|"
+            r"\bapi\s+key\s+permissions?\b|"
+            r"\bpermission\s+required\b",
+            text,
+        )
+    )
+
+
+def _search_pages(conn, *, query: str, url_prefix: str, limit: int = 5) -> list[dict[str, Any]]:
+    cur = conn.execute(
+        """
+SELECT
+  p.canonical_url, p.crawled_at, p.content_hash, p.path_hash, p.markdown_path
+FROM pages_fts
+JOIN pages p ON pages_fts.rowid = p.id
+WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
+ORDER BY bm25(pages_fts)
+LIMIT ?;
+""",
+        (query, url_prefix + "%", int(limit)),
+    )
+    return [dict(r) for r in cur.fetchall()]
 
 
 def answer_question(
@@ -165,48 +204,59 @@ def answer_question(
 
         claims: list[dict[str, Any]] = []
         notes: list[str] = []
+        missing: list[str] = []
         c = 1
 
-        # Part 1: rate limit difference between unified section and spot.
-        if unified_section:
-            rate_limit_claims: list[tuple[str, str]] = []  # (claim_id, excerpt_text)
-            for section_id, query in ((unified_section, "rate limit"), ("spot", "rate limit")):
+        wants_rate = _wants_rate_limit(norm)
+        wants_perm = _wants_permissions(norm)
+
+        # Part 1: rate-limit comparison between unified section and spot.
+        rate_limit_claims: list[tuple[str, str]] = []  # (claim_id, excerpt_text)
+        if wants_rate and unified_section:
+            for section_id, query in ((unified_section, "rate limit OR weight"), ("spot", "rate limit OR weight")):
                 prefix = seed_prefixes.get(section_id)
                 if not prefix:
                     notes.append(f"No registry seed URL for binance section '{section_id}'.")
                     continue
-                top = _search_top_page(conn, query=query, url_prefix=prefix)
-                if not top:
+                candidates = _search_pages(conn, query=query, url_prefix=prefix, limit=5)
+                if not candidates:
                     notes.append(f"No crawled pages found for query '{query}' under {prefix}.")
                     continue
-                md_path = Path(top["markdown_path"]) if top.get("markdown_path") else None
-                if not md_path or not md_path.exists():
-                    notes.append(f"Missing markdown for {top['canonical_url']}.")
+                picked: dict[str, Any] | None = None
+                picked_excerpt: tuple[str, int, int] | None = None
+                for cand in candidates:
+                    md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
+                    if not md_path or not md_path.exists():
+                        continue
+                    md = md_path.read_text(encoding="utf-8")
+                    if not re.search(r"rate\s+limit|\bweight\b", md, flags=re.IGNORECASE):
+                        continue
+                    picked = cand
+                    picked_excerpt = _make_excerpt(md, needle_re=re.compile(r"rate\s+limit|\bweight\b", re.IGNORECASE))
+                    break
+                if not picked or not picked_excerpt:
+                    notes.append(f"No stored markdown under {prefix} contained obvious rate-limit text.")
                     continue
-                md = md_path.read_text(encoding="utf-8")
-                excerpt, start, end = _make_excerpt(md, needle_re=re.compile(r"rate\s+limit", re.IGNORECASE))
+
+                excerpt, start, end = picked_excerpt
                 citation = {
-                    "url": top["canonical_url"],
-                    "crawled_at": top["crawled_at"],
-                    "content_hash": top["content_hash"],
-                    "path_hash": top["path_hash"],
+                    "url": picked["canonical_url"],
+                    "crawled_at": picked["crawled_at"],
+                    "content_hash": picked["content_hash"],
+                    "path_hash": picked["path_hash"],
                     "excerpt": excerpt,
                     "excerpt_start": start,
                     "excerpt_end": end,
                     "field_name": "rate_limit",
                 }
-                claims.append(
-                    _claim(
-                        f"c{c}",
-                        text=f"[{section_id}] {excerpt}",
-                        citation=citation,
-                    )
-                )
+                claims.append(_claim(f"c{c}", text=f"[{section_id}] {excerpt}", citation=citation))
                 rate_limit_claims.append((f"c{c}", excerpt))
                 c += 1
 
-            # Derived diff when both excerpts contain an explicit numeric weight.
-            if len(rate_limit_claims) == 2:
+            if len(rate_limit_claims) != 2:
+                missing.append("rate_limit_comparison")
+            else:
+                # Derived diff when both excerpts contain an explicit numeric weight.
                 w1 = _extract_weight_from_excerpt(rate_limit_claims[0][1])
                 w2 = _extract_weight_from_excerpt(rate_limit_claims[1][1])
                 if w1 is not None and w2 is not None:
@@ -221,20 +271,45 @@ def answer_question(
                     )
                     c += 1
 
-        # Part 2: Portfolio Margin API key permissions for balance lookup (best-effort cite-only).
-        pm_prefix = seed_prefixes.get("portfolio_margin")
-        if pm_prefix:
-            top = _search_top_page(conn, query="permission OR permissions OR api key", url_prefix=pm_prefix)
-            if top:
-                md_path = Path(top["markdown_path"]) if top.get("markdown_path") else None
-                if md_path and md_path.exists():
+        # Part 2: API key permissions (only if the question asks).
+        if wants_perm:
+            pm_prefix = seed_prefixes.get("portfolio_margin")
+            if not pm_prefix:
+                notes.append("Binance portfolio_margin section seed not found in registry.")
+                missing.append("required_permissions")
+            else:
+                candidates = _search_pages(
+                    conn,
+                    query="permissions OR permission OR \"api key permissions\" OR \"required permissions\"",
+                    url_prefix=pm_prefix,
+                    limit=8,
+                )
+                picked: dict[str, Any] | None = None
+                picked_excerpt: tuple[str, int, int] | None = None
+                for cand in candidates:
+                    md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
+                    if not md_path or not md_path.exists():
+                        continue
                     md = md_path.read_text(encoding="utf-8")
-                    excerpt, start, end = _make_excerpt(md, needle_re=re.compile(r"permission|api\s+key", re.IGNORECASE))
+                    if not _looks_like_permissions_requirement(md):
+                        continue
+                    excerpt, start, end = _make_excerpt(md, needle_re=re.compile(r"permissions?|api\s+key\s+permissions?|required\s+permissions?", re.IGNORECASE))
+                    if not _looks_like_permissions_requirement(excerpt):
+                        continue
+                    picked = cand
+                    picked_excerpt = (excerpt, start, end)
+                    break
+
+                if not picked or not picked_excerpt:
+                    notes.append("No Portfolio Margin docs page contained an explicit permissions requirement in local store.")
+                    missing.append("required_permissions")
+                else:
+                    excerpt, start, end = picked_excerpt
                     citation = {
-                        "url": top["canonical_url"],
-                        "crawled_at": top["crawled_at"],
-                        "content_hash": top["content_hash"],
-                        "path_hash": top["path_hash"],
+                        "url": picked["canonical_url"],
+                        "crawled_at": picked["crawled_at"],
+                        "content_hash": picked["content_hash"],
+                        "path_hash": picked["path_hash"],
                         "excerpt": excerpt,
                         "excerpt_start": start,
                         "excerpt_end": end,
@@ -242,14 +317,15 @@ def answer_question(
                     }
                     claims.append(_claim(f"c{c}", text=f"[portfolio_margin] {excerpt}", citation=citation))
                     c += 1
-                else:
-                    notes.append(f"Missing markdown for {top['canonical_url']}.")
-            else:
-                notes.append("No Portfolio Margin docs page matched permission query in local store.")
-        else:
-            notes.append("Binance portfolio_margin section seed not found in registry.")
 
-        status = "ok" if claims else "unknown"
+        # Status policy: only "ok" when every requested part is cite-backed.
+        if wants_rate and unified_section and "rate_limit_comparison" in missing:
+            status = "unknown"
+        elif wants_perm and "required_permissions" in missing:
+            status = "unknown"
+        else:
+            status = "ok" if claims else "unknown"
+
         return {
             "ok": True,
             "schema_version": "v1",
@@ -259,6 +335,7 @@ def answer_question(
             "clarification": None,
             "claims": claims,
             "notes": notes,
+            "missing": missing,
         }
     finally:
         conn.close()

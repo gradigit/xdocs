@@ -111,10 +111,11 @@ exchanges:
     display_name: dYdX
     allowed_domains:
       - docs.dydx.exchange
+      - docs.dydx.xyz
     sections:
       - section_id: docs
         base_urls: ["https://indexer.dydx.trade/v4"]
-        seed_urls: ["https://docs.dydx.exchange/"]
+        seed_urls: ["https://docs.dydx.xyz/"]
 
   - exchange_id: hyperliquid
     display_name: Hyperliquid
@@ -158,8 +159,8 @@ exchanges:
   - exchange_id: korbit
     display_name: Korbit
     allowed_domains:
-      - apidocs.korbit.co.kr
+      - docs.korbit.co.kr
     sections:
       - section_id: rest
         base_urls: ["https://api.korbit.co.kr/v1"]
-        seed_urls: ["https://apidocs.korbit.co.kr/"]
+        seed_urls: ["https://docs.korbit.co.kr/"]

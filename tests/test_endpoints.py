@@ -1,52 +1,19 @@
 from __future__ import annotations
 
-import contextlib
 import json
-import os
 import tempfile
-import threading
 import unittest
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from cex_api_docs.crawler import crawl_store
 from cex_api_docs.endpoints import compute_endpoint_id, review_list, review_resolve, save_endpoint, search_endpoints
 from cex_api_docs.pages import get_page
 from cex_api_docs.store import init_store
+from cex_api_docs.db import open_db
+from tests.http_server import serve_directory
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-
-
-@contextlib.contextmanager
-def serve_directory(path: Path):
-    class QuietHandler(SimpleHTTPRequestHandler):
-        def log_message(self, _format: str, *_args) -> None:
-            return
-
-    class FastThreadingHTTPServer(ThreadingHTTPServer):
-        def server_bind(self) -> None:  # type: ignore[override]
-            self.socket.bind(self.server_address)
-            self.server_address = self.socket.getsockname()
-            host, port = self.server_address[:2]
-            self.server_name = host
-            self.server_port = port
-
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        httpd = FastThreadingHTTPServer(("127.0.0.1", 0), QuietHandler)
-        host, port = httpd.server_address
-        t = threading.Thread(target=httpd.serve_forever, daemon=True)
-        t.start()
-        try:
-            yield f"http://{host}:{port}"
-        finally:
-            httpd.shutdown()
-            httpd.server_close()
-            t.join(timeout=2)
-    finally:
-        os.chdir(cwd)
 
 
 class TestEndpoints(unittest.TestCase):
@@ -56,11 +23,15 @@ class TestEndpoints(unittest.TestCase):
             fixture.mkdir(parents=True, exist_ok=True)
 
             (fixture / "index.html").write_text(
-                "<html><head><title>Index</title></head><body><a href=\"/page2.html\">Page2</a></body></html>\n",
+                "<html><head><title>Index</title></head><body><a href=\"/page2.html\">Page2</a><a href=\"/page3.html\">Page3</a></body></html>\n",
                 encoding="utf-8",
             )
             (fixture / "page2.html").write_text(
                 "<html><head><title>Page2</title></head><body><p>Rate limit weight is 10 per second.</p></body></html>\n",
+                encoding="utf-8",
+            )
+            (fixture / "page3.html").write_text(
+                "<html><head><title>Page3</title></head><body><p>Rate limit weight is 20 per second.</p></body></html>\n",
                 encoding="utf-8",
             )
 
@@ -132,6 +103,54 @@ class TestEndpoints(unittest.TestCase):
             matches = search_endpoints(docs_dir=str(docs_dir), query="weight", exchange="binance", section="spot", limit=10)
             self.assertTrue(any(m["endpoint_id"] == record["endpoint_id"] for m in matches))
 
+            # Saving the same endpoint again should not leave stale endpoint_sources mappings.
+            page3_url = f"{base_url}/page3.html"
+            page3 = get_page(docs_dir=str(docs_dir), url=page3_url)
+            md3 = page3["markdown"]
+            meta3 = page3["meta"]
+            needle3 = "Rate limit weight is 20 per second."
+            start3 = md3.index(needle3)
+            end3 = start3 + len(needle3)
+            excerpt3 = md3[start3:end3]
+
+            record_update = dict(record)
+            record_update["sources"] = [
+                {
+                    "url": page3_url,
+                    "crawled_at": meta3["crawled_at"],
+                    "content_hash": meta3["content_hash"],
+                    "path_hash": meta3["path_hash"],
+                    "excerpt": excerpt3,
+                    "excerpt_start": start3,
+                    "excerpt_end": end3,
+                    "field_name": "rate_limit",
+                }
+            ]
+            record_update["endpoint_id"] = compute_endpoint_id(record_update)
+
+            endpoint_path_update = Path(tmp) / "endpoint-update.json"
+            endpoint_path_update.write_text(
+                json.dumps(record_update, sort_keys=True, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            save_endpoint(
+                docs_dir=str(docs_dir),
+                lock_timeout_s=1.0,
+                endpoint_json_path=endpoint_path_update,
+                schema_path=REPO_ROOT / "schemas" / "endpoint.schema.json",
+            )
+
+            conn = open_db(Path(docs_dir) / "db" / "docs.db")
+            try:
+                rows = conn.execute(
+                    "SELECT page_canonical_url FROM endpoint_sources WHERE endpoint_id = ? AND field_name = 'rate_limit';",
+                    (record["endpoint_id"],),
+                ).fetchall()
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0]["page_canonical_url"], page3_url)
+            finally:
+                conn.close()
+
             # Save another endpoint missing per-field citation to trigger review queue.
             record2 = dict(record)
             record2["http"] = {"method": "GET", "path": "/api/v3/ping", "base_url": "https://api.binance.com", "api_version": None}
@@ -171,4 +190,3 @@ class TestEndpoints(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

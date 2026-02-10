@@ -9,14 +9,29 @@ from .errors import CexApiDocsError
 from .answer import answer_question
 from .crawler import crawl_store
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
+from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
 from .registry import load_registry
+from .registry_validate import validate_registry
 from .store import init_store
 
 
 def _print_json(obj: object) -> None:
     json.dump(obj, sys.stdout, ensure_ascii=False, indent=2, sort_keys=True)
     sys.stdout.write("\n")
+
+
+def _dedupe_preserve_order(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for it in items:
+        if not it:
+            continue
+        if it in seen:
+            continue
+        seen.add(it)
+        out.append(it)
+    return out
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -63,6 +78,18 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("fts-optimize", help="Optimize SQLite FTS indexes", parents=[common])
     sub.add_parser("fts-rebuild", help="Rebuild SQLite FTS indexes from stored markdown", parents=[common])
 
+    vr = sub.add_parser("validate-registry", help="Validate data/exchanges.yaml seeds and allowlists (networked)", parents=[common])
+    vr.add_argument("--exchange", default=None, help="Exchange id to validate (default: all)")
+    vr.add_argument("--section", default=None, help="Section id to validate (default: all)")
+    vr.add_argument("--timeout-s", type=float, default=20.0)
+    vr.add_argument("--max-bytes", type=int, default=10_000_000)
+    vr.add_argument("--max-redirects", type=int, default=5)
+    vr.add_argument("--retries", type=int, default=1)
+
+    fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
+    fsck_p.add_argument("--limit", type=int, default=200)
+    fsck_p.add_argument("--scan-orphans", action="store_true", help="Scan raw/pages/meta directories for orphan files (can be slow)")
+
     se = sub.add_parser("save-endpoint", help="Validate + ingest endpoint JSON", parents=[common])
     se.add_argument("endpoint_json_path")
 
@@ -107,13 +134,15 @@ def main(argv: list[str] | None = None) -> None:
             if args.exchange:
                 reg = load_registry(repo_root / "data" / "exchanges.yaml")
                 ex = reg.get_exchange(args.exchange)
-                allowed_domains = list(set(allowed_domains + ex.allowed_domains))
+                allowed_domains = _dedupe_preserve_order([d.lower() for d in (allowed_domains + ex.allowed_domains) if d])
                 if args.section:
                     sec = reg.get_section(args.exchange, args.section)
                     seeds.extend(sec.seed_urls)
                 else:
                     for sec in ex.sections:
                         seeds.extend(sec.seed_urls)
+
+            seeds = _dedupe_preserve_order([s for s in seeds if s])
 
             if not seeds:
                 raise CexApiDocsError(
@@ -168,6 +197,25 @@ def main(argv: list[str] | None = None) -> None:
 
         if args.cmd == "fts-rebuild":
             r = fts_rebuild(docs_dir=args.docs_dir, lock_timeout_s=float(args.lock_timeout_s))
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "validate-registry":
+            repo_root = Path(__file__).resolve().parents[2]
+            r = validate_registry(
+                registry_path=repo_root / "data" / "exchanges.yaml",
+                exchange=args.exchange,
+                section=args.section,
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "fsck":
+            r = fsck_store(docs_dir=args.docs_dir, limit=int(args.limit), scan_orphans=bool(args.scan_orphans))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
 

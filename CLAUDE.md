@@ -6,7 +6,7 @@ A local-only, cite-only CEX API documentation knowledge base (library + CLI + ag
 
 ## Build Commands
 
-Greenfield. The implementation should provide a simple macOS setup path. Expected commands (subject to change once code exists):
+Quick setup (macOS):
 
 ```bash
 python3 -m venv .venv
@@ -18,10 +18,11 @@ cex-api-docs --help
 
 ## Project Structure
 
-- `architect/` Planning artifacts. `architect/prompt.md` is the current specification.
+- `docs/plans/` Authoritative plans and design decisions.
+- `docs/runbooks/` Demo/run instructions.
 - `data/` Machine-readable configuration, including `data/exchanges.yaml`.
 - `skills/` Claude Code skill definitions (for agent usage).
-- `docs/` Plans, runbooks, and other documentation.
+- `todos/` File-based work tracking (source of truth for follow-ups).
 
 ## Conventions
 
@@ -30,22 +31,9 @@ cex-api-docs --help
 - Agent boundary: agent does interpretation and extraction; code does deterministic I/O and validation.
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
 
-## architect/ Directory
-
-Read `architect/prompt.md` for the current build specification.
-
-Notes:
-- `architect/plan.md` does not exist yet. It will be created during forging-plans Mode 2 (plan iteration).
-- `architect/transcript.md` contains Q&A, research, and challenge results.
-- `architect/STATE.md` tracks where the forging workflow left off.
-
 ## Current Phase
 
-Phase: not started (planning complete, execution not started)
-Next step: create an execution plan (forging-plans Mode 2) from `architect/prompt.md`
+Phase: MVP implemented (crawler + search + endpoint ingest + answer + tests)
 
-## Phase Progress
-
-- Phase 1: Plan iteration (pending)
-- Phase 2: Implementation (pending)
-- Phase 3: Demo wow query (pending)
+Next steps live in `todos/` (prioritized), and the “wow query” demo runbook is at:
+- `docs/runbooks/binance-wow-query.md`
