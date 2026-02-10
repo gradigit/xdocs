@@ -114,7 +114,17 @@ def run_sync(
     )
 
     sections_run: list[dict[str, Any]] = []
-    totals = {"inventories": 0, "inventory_urls": 0, "fetched": 0, "stored": 0, "skipped": 0, "errors": 0}
+    totals = {
+        "inventories": 0,
+        "inventory_urls": 0,
+        "fetched": 0,
+        "stored": 0,
+        "skipped": 0,
+        "errors": 0,
+        "new_pages": 0,
+        "updated_pages": 0,
+        "unchanged_pages": 0,
+    }
 
     for ex in reg.exchanges:
         if exchange and ex.exchange_id != exchange:
@@ -162,6 +172,9 @@ def run_sync(
             totals["fetched"] += int(fetch_res["counts"]["fetched"])
             totals["stored"] += int(fetch_res["counts"]["stored"])
             totals["skipped"] += int(fetch_res["counts"]["skipped"])
+            totals["new_pages"] += int(fetch_res["counts"].get("new_pages") or 0)
+            totals["updated_pages"] += int(fetch_res["counts"].get("updated_pages") or 0)
+            totals["unchanged_pages"] += int(fetch_res["counts"].get("unchanged_pages") or 0)
             totals["errors"] += int(fetch_res["counts"]["errors"]) + int(inv.counts["errors"])
 
             sections_run.append(
@@ -193,4 +206,3 @@ def run_sync(
         "totals": totals,
         "sections": sections_run,
     }
-

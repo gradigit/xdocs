@@ -1,12 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Any
-
-
-def _fmt_ts(ts: str | None) -> str:
-    return ts or ""
 
 
 def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -> str:
@@ -22,13 +17,26 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
         lines.append(f"- **Started:** `{started_at}`")
     if ended_at:
         lines.append(f"- **Ended:** `{ended_at}`")
-    lines.append(f"- **Totals:** inventories={totals.get('inventories')}, inventory_urls={totals.get('inventory_urls')}, fetched={totals.get('fetched')}, stored={totals.get('stored')}, skipped={totals.get('skipped')}, errors={totals.get('errors')}")
+    lines.append(
+        "- **Totals:** "
+        f"inventories={totals.get('inventories')}, "
+        f"inventory_urls={totals.get('inventory_urls')}, "
+        f"fetched={totals.get('fetched')}, "
+        f"stored={totals.get('stored')}, "
+        f"new_pages={totals.get('new_pages')}, "
+        f"updated_pages={totals.get('updated_pages')}, "
+        f"unchanged_pages={totals.get('unchanged_pages')}, "
+        f"skipped={totals.get('skipped')}, "
+        f"errors={totals.get('errors')}"
+    )
     lines.append("")
 
     lines.append("## Per Exchange/Section")
     lines.append("")
-    lines.append("| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | Skipped | Errors | Inventory ID | Crawl Run |")
-    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append(
+        "| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | New | Updated | Unchanged | Skipped | Errors | Inventory ID | Crawl Run |"
+    )
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
 
     for s in sections:
         ex = s.get("exchange_id")
@@ -48,6 +56,9 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
                     str(inv_diff.get("removed") or 0),
                     str(counts.get("fetched") or 0),
                     str(counts.get("stored") or 0),
+                    str(counts.get("new_pages") or 0),
+                    str(counts.get("updated_pages") or 0),
+                    str(counts.get("unchanged_pages") or 0),
                     str(counts.get("skipped") or 0),
                     str(counts.get("errors") or 0),
                     str(inv.get("inventory_id") or ""),
@@ -88,4 +99,3 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
     lines.append("- Inventory enumeration uses sitemaps when available; sections with low inventory URL counts likely need explicit `doc_sources` additions or browser-assisted ingestion (`ingest-page`).")
 
     return "\n".join(lines) + "\n"
-

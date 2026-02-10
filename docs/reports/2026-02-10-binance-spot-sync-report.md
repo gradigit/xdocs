@@ -1,14 +1,14 @@
 # CEX API Docs Sync Report
 
-- **Started:** `2026-02-10T08:11:14+00:00`
-- **Ended:** `2026-02-10T08:11:17+00:00`
-- **Totals:** inventories=1, inventory_urls=93, fetched=5, stored=5, skipped=0, errors=0
+- **Started:** `2026-02-10T08:19:35+00:00`
+- **Ended:** `2026-02-10T08:19:39+00:00`
+- **Totals:** inventories=1, inventory_urls=93, fetched=5, stored=5, new_pages=0, updated_pages=0, unchanged_pages=5, skipped=0, errors=0
 
 ## Per Exchange/Section
 
-| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | Skipped | Errors | Inventory ID | Crawl Run |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| binance | spot | 93 | 0 | 0 | 5 | 5 | 0 | 0 | 3 | 9 |
+| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | New | Updated | Unchanged | Skipped | Errors | Inventory ID | Crawl Run |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| binance | spot | 93 | 0 | 0 | 5 | 5 | 0 | 0 | 5 | 0 | 0 | 4 | 10 |
 
 ## Errors (Sample)
 

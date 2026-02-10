@@ -140,6 +140,9 @@ ORDER BY canonical_url ASC;
             fetched = 0
             stored = 0
             skipped = 0
+            new_pages = 0
+            updated_pages = 0
+            unchanged_pages = 0
             errors: list[dict[str, Any]] = []
 
             for ent in entries:
@@ -228,6 +231,12 @@ WHERE id = ?;
                     )
 
                     stored += 1
+                    if rec.get("prev_content_hash") is None:
+                        new_pages += 1
+                    elif rec.get("prev_content_hash") != rec.get("content_hash"):
+                        updated_pages += 1
+                    else:
+                        unchanged_pages += 1
                     with conn:
                         conn.execute(
                             """
@@ -304,11 +313,19 @@ WHERE id = ?;
                 "ended_at": ended_at,
                 "config": asdict(cfg),
                 "robots": robots_decisions,
-                "counts": {"entries": len(entries), "fetched": fetched, "stored": stored, "skipped": skipped, "errors": len(errors)},
+                "counts": {
+                    "entries": len(entries),
+                    "fetched": fetched,
+                    "stored": stored,
+                    "skipped": skipped,
+                    "errors": len(errors),
+                    "new_pages": new_pages,
+                    "updated_pages": updated_pages,
+                    "unchanged_pages": unchanged_pages,
+                },
                 "errors": errors[:50],
             }
         finally:
             conn.close()
             if pw is not None:
                 pw.close()
-
