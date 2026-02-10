@@ -24,11 +24,11 @@ After reading these files, you’ll have full context to continue.
 
 ### Current State
 
-- Branch: `feat/exhaustive-sync`
+- Branch: `main`
 - Local store lives under `./cex-docs/` (gitignored; never commit).
 - Local DB (`./cex-docs/db/docs.db`) contains many completed inventories/fetches, but **not yet all exchanges/sections** are fully inventoried and fetched (notably dYdX and a few remaining sections).
 - Tests: `./.venv/bin/pytest -q` passes (20 tests).
-- Last commit: `690bc9b` — WIP: harden inventory sync + docs manifest
+- Last commit: `f0bed45` — docs: add HANDOFF
 
 ### What's Next
 
