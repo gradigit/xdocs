@@ -3,12 +3,12 @@
 # Manual edits are preserved on re-scan
 
 version: "1.0"
-last_synced: "2026-02-10T15:28:20Z"
+last_synced: "2026-02-11T12:00:00Z"
 
 files:
   - path: CLAUDE.md
     type: claude-instructions
-    last_updated: "2026-02-10T15:28:20Z"
+    last_updated: "2026-02-11T12:00:00Z"
     references:
       - data/exchanges.yaml
       - docs/runbooks/binance-wow-query.md
@@ -208,6 +208,15 @@ files:
       - p.*
       - src/cex_api_docs/stale_citations.py
       - tests/test_stale_citations.py
+  - path: docs/reports/poc-playwright-vs-http-binance.md
+    type: other
+    last_updated: "2026-02-11T12:00:00Z"
+    references:
+      - src/cex_api_docs/httpfetch.py
+      - src/cex_api_docs/page_store.py
+      - src/cex_api_docs/inventory_fetch.py
+      - src/cex_api_docs/playwrightfetch.py
+      - data/exchanges.yaml
   - path: docs/solutions/patterns/critical-patterns.md
     type: other
     last_updated: "2026-02-10T04:57:44.379514Z"

@@ -1,9 +1,9 @@
 ---
 name: cex-api-docs
 description: >
-  Cite-only CEX API docs knowledge base. Crawl official exchange documentation into a local store,
-  extract endpoint JSON with per-field provenance, ingest deterministically into SQLite FTS5, and
-  answer questions with claim-level citations only.
+  Cite-only CEX API docs knowledge base. Sync official exchange documentation into a local
+  SQLite FTS5 store via deterministic inventory+fetch pipeline, extract endpoint JSON with
+  per-field provenance, and answer questions with claim-level citations only.
 ---
 
 # CEX API Docs (Cite-Only)
@@ -31,13 +31,48 @@ pip install -e .
 cex-api-docs init --docs-dir ./cex-docs
 ```
 
-## Crawl Docs
+## Sync Docs (Primary Workflow)
 
-Use registry seeds from `data/exchanges.yaml`, or provide a direct URL + domain scope.
+Deterministic pipeline: inventory (enumerate URLs) then fetch (download + store).
+Use `sync` for the combined orchestration, or run each step separately.
 
 ```bash
-cex-api-docs crawl --exchange binance --section spot --docs-dir ./cex-docs
-cex-api-docs crawl --url "https://example.com/docs" --domain-scope "example.com" --docs-dir ./cex-docs
+# Full sync (inventory + fetch); cron-friendly JSON output
+cex-api-docs sync --docs-dir ./cex-docs
+
+# With JS rendering for sites that require it
+cex-api-docs sync --docs-dir ./cex-docs --render auto
+
+# Resume interrupted sync (reuse inventories, fetch only pending/error entries)
+cex-api-docs sync --docs-dir ./cex-docs --resume
+
+# Parallel fetch (N concurrent workers with per-domain rate limiting)
+cex-api-docs sync --docs-dir ./cex-docs --concurrency 4
+```
+
+### Step-by-Step Alternative
+
+```bash
+# Step 1: Build inventory for a specific exchange section
+cex-api-docs inventory --exchange binance --section spot --docs-dir ./cex-docs
+
+# Step 2: Fetch all inventory URLs into the store
+cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs
+
+# Both steps support --resume and --concurrency
+cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
+```
+
+> **Note:** The legacy `crawl` command still works but emits a deprecation warning. Use `sync` instead.
+
+## Store Report
+
+```bash
+# Full store overview (pages, inventories, endpoints, review queue)
+cex-api-docs store-report --docs-dir ./cex-docs
+
+# Scoped to one exchange section, output to file
+cex-api-docs store-report --exchange binance --section spot --output report.md
 ```
 
 ## Validate Registry (Domains/Seeds)
@@ -59,7 +94,7 @@ cex-api-docs validate-base-urls
 
 ## Troubleshooting (403 / WAF / Seed Drift)
 
-If `validate-registry` or `crawl` fails due to UA-dependent 403s or doc host drift, see:
+If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift, see:
 
 - `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
 
@@ -70,12 +105,30 @@ cex-api-docs search-pages "rate limit" --docs-dir ./cex-docs
 cex-api-docs get-page "https://..." --docs-dir ./cex-docs
 ```
 
-## Store Integrity Check
-
-Detect DB/file inconsistencies (detection-only):
+## Store Integrity & Quality
 
 ```bash
+# Detect DB/file inconsistencies (detection-only)
 cex-api-docs fsck --docs-dir ./cex-docs
+
+# Coverage gap analysis
+cex-api-docs coverage --docs-dir ./cex-docs
+cex-api-docs coverage-gaps --docs-dir ./cex-docs
+cex-api-docs coverage-gaps-list --docs-dir ./cex-docs
+
+# Detect stale endpoint citations vs current sources
+cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+
+# FTS index maintenance
+cex-api-docs fts-optimize --docs-dir ./cex-docs
+cex-api-docs fts-rebuild --docs-dir ./cex-docs
+```
+
+## Import Specs
+
+```bash
+cex-api-docs import-openapi spec.yaml --docs-dir ./cex-docs
+cex-api-docs import-postman collection.json --docs-dir ./cex-docs
 ```
 
 ## Extract Endpoints (Agent Responsibility)
@@ -95,6 +148,14 @@ cex-api-docs save-endpoint endpoint.json --docs-dir ./cex-docs
 cex-api-docs search-endpoints "balance" --exchange binance --docs-dir ./cex-docs
 ```
 
+## Review Queue
+
+```bash
+cex-api-docs review-list --docs-dir ./cex-docs
+cex-api-docs review-show <id> --docs-dir ./cex-docs
+cex-api-docs review-resolve <id> --docs-dir ./cex-docs
+```
+
 ## Answer Questions
 
 Use `answer` for a cite-only assembled response (no new facts).
@@ -105,4 +166,4 @@ cex-api-docs answer "..." --docs-dir ./cex-docs
 cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
 ```
 
-If a question is ambiguous (e.g., “Binance unified trading endpoint”), the tool must return `needs_clarification` with concrete section choices derived from what is present in the local store.
+If a question is ambiguous (e.g., "Binance unified trading endpoint"), the tool must return `needs_clarification` with concrete section choices derived from what is present in the local store.
