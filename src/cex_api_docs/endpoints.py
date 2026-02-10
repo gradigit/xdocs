@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
+import sqlite3
 from typing import Any
 
 from jsonschema import Draft202012Validator
@@ -161,13 +163,7 @@ def save_endpoint(
         raise CexApiDocsError(code="EBADJSON", message="Endpoint JSON must be an object.", details={"path": str(endpoint_json_path)})
 
     validator = load_endpoint_schema(schema_path)
-    errors = sorted(validator.iter_errors(record), key=lambda e: e.path)
-    if errors:
-        raise CexApiDocsError(
-            code="ESCHEMA",
-            message="Endpoint JSON failed schema validation.",
-            details={"path": str(endpoint_json_path), "errors": [e.message for e in errors[:10]]},
-        )
+    _validate_endpoint_record_schema(validator=validator, record=record, path=str(endpoint_json_path))
 
     computed_id = compute_endpoint_id(record)
     provided_id = str(record.get("endpoint_id", ""))
@@ -214,182 +210,343 @@ def save_endpoint(
     with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
         conn = open_db(db_path)
         try:
-            # Verify citations against the local store.
-            for c in sources:
-                if not isinstance(c, dict):
-                    raise CexApiDocsError(code="EBADSRC", message="sources[] must contain objects.")
-                _verify_citation_against_store(conn=conn, citation=c)
+            res = _save_endpoint_record(
+                conn=conn,
+                docs_dir=docs_dir,
+                record=record,
+                computed_id=computed_id,
+                exchange=exchange,
+                section=section,
+                protocol=protocol,
+                method=method,
+                path=path,
+                base_url=base_url,
+                api_version_str=api_version_str,
+                description_str=description_str,
+                sources=sources,
+                field_status=field_status,
+                updated_at=updated_at,
+            )
+            conn.commit()
+            return res
+        finally:
+            conn.close()
 
-            def _get_field_value(key: str) -> Any:
-                # Dotted keys allow nested field status, e.g. "http.method".
-                if "." in key:
-                    prefix, rest = key.split(".", 1)
-                    obj = record.get(prefix)
-                    if isinstance(obj, dict):
-                        return obj.get(rest)
-                    return None
-                return record.get(key)
 
-            documented_fields = [str(k) for k, v in field_status.items() if str(v) == "documented"]
-            source_fields = {str(c.get("field_name")) for c in sources if c.get("field_name")}
+def save_endpoints_bulk(
+    *,
+    docs_dir: str,
+    lock_timeout_s: float,
+    schema_path: Path,
+    records: list[dict[str, Any]],
+    continue_on_error: bool = True,
+) -> dict[str, Any]:
+    """
+    Bulk ingest endpoints under a single write lock + DB connection.
 
-            missing_citations = sorted([f for f in documented_fields if f not in source_fields])
-            if missing_citations:
-                raise CexApiDocsError(
-                    code="EBADCITE",
-                    message="Documented fields are missing required citations.",
-                    details={"endpoint_id": computed_id, "missing_field_names": missing_citations},
-                )
+    This is primarily used by deterministic importers (OpenAPI/Postman).
+    """
+    db_path = _require_store_db(docs_dir)
+    lock_path = Path(docs_dir) / "db" / ".write.lock"
 
-            missing_values: list[str] = []
-            for f in documented_fields:
-                v = _get_field_value(f)
-                if v is None:
-                    missing_values.append(f)
-                elif isinstance(v, str) and not v.strip():
-                    missing_values.append(f)
-            if missing_values:
-                raise CexApiDocsError(
-                    code="EBADFIELDSTATUS",
-                    message="Documented fields must have non-empty values.",
-                    details={"endpoint_id": computed_id, "missing_values": sorted(missing_values)},
-                )
+    validator = load_endpoint_schema(schema_path)
 
-            # Persist endpoint JSON to disk.
-            endpoint_dir = Path(docs_dir) / "endpoints" / exchange / section
-            endpoint_path = endpoint_dir / f"{computed_id}.json"
-            atomic_write_text(endpoint_path, json.dumps(record, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
+    counts = {"ok": 0, "errors": 0, "total": int(len(records))}
+    errors: list[dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
-            # Upsert endpoints row without REPLACE (preserve rowid).
-            with conn:
-                existing = conn.execute("SELECT rowid FROM endpoints WHERE endpoint_id = ?;", (computed_id,)).fetchone()
-                if existing is None:
-                    cur = conn.execute(
-                        """
+    with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
+        conn = open_db(db_path)
+        try:
+            for i, record in enumerate(records):
+                try:
+                    if not isinstance(record, dict):
+                        raise CexApiDocsError(code="EBADJSON", message="Endpoint record must be an object.", details={"index": i})
+
+                    _validate_endpoint_record_schema(validator=validator, record=record, path=f"<bulk:{i}>")
+
+                    computed_id = compute_endpoint_id(record)
+                    provided_id = str(record.get("endpoint_id", ""))
+                    if provided_id != computed_id:
+                        raise CexApiDocsError(
+                            code="EIDMISMATCH",
+                            message="endpoint_id does not match computed identity.",
+                            details={"index": i, "provided": provided_id, "computed": computed_id},
+                        )
+
+                    exchange = str(record.get("exchange"))
+                    section = str(record.get("section"))
+                    protocol = str(record.get("protocol"))
+
+                    http = record.get("http") or {}
+                    method = str(http.get("method")) if isinstance(http, dict) and http.get("method") is not None else None
+                    path = str(http.get("path")) if isinstance(http, dict) and http.get("path") is not None else None
+                    base_url = str(http.get("base_url")) if isinstance(http, dict) and http.get("base_url") is not None else None
+                    api_version = http.get("api_version") if isinstance(http, dict) else None
+                    api_version_str = None if api_version is None else str(api_version)
+                    description = record.get("description")
+                    description_str = None if description is None else str(description)
+
+                    sources = record.get("sources") or []
+                    if not isinstance(sources, list):
+                        raise CexApiDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
+
+                    field_status = record.get("field_status")
+                    if not isinstance(field_status, dict):
+                        raise CexApiDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
+
+                    if protocol == "http":
+                        if not isinstance(record.get("http"), dict):
+                            raise CexApiDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
+                        missing = [k for k in REQUIRED_HTTP_FIELD_STATUS_KEYS if k not in field_status]
+                        if missing:
+                            raise CexApiDocsError(
+                                code="EBADFIELDSTATUS",
+                                message="field_status{} is missing required keys for protocol=http.",
+                                details={"endpoint_id": computed_id, "missing_keys": missing},
+                            )
+
+                    updated_at = now_iso_utc()
+
+                    res = _save_endpoint_record(
+                        conn=conn,
+                        docs_dir=docs_dir,
+                        record=record,
+                        computed_id=computed_id,
+                        exchange=exchange,
+                        section=section,
+                        protocol=protocol,
+                        method=method,
+                        path=path,
+                        base_url=base_url,
+                        api_version_str=api_version_str,
+                        description_str=description_str,
+                        sources=sources,
+                        field_status=field_status,
+                        updated_at=updated_at,
+                    )
+                    results.append(res)
+                    counts["ok"] += 1
+                except Exception as e:
+                    counts["errors"] += 1
+                    if isinstance(e, CexApiDocsError):
+                        errors.append({"index": i, "code": e.code, "message": e.message, "details": e.details})
+                    else:
+                        errors.append({"index": i, "code": "EUNEXPECTED", "message": str(e), "details": {}})
+                    if not continue_on_error:
+                        break
+
+            conn.commit()
+        finally:
+            conn.close()
+
+    return {"cmd": "save-endpoints-bulk", "schema_version": "v1", "docs_dir": docs_dir, "counts": counts, "errors": errors[:50], "results": results}
+
+
+def _validate_endpoint_record_schema(*, validator: Draft202012Validator, record: dict[str, Any], path: str) -> None:
+    errors = sorted(validator.iter_errors(record), key=lambda e: e.path)
+    if errors:
+        raise CexApiDocsError(
+            code="ESCHEMA",
+            message="Endpoint JSON failed schema validation.",
+            details={"path": path, "errors": [e.message for e in errors[:10]]},
+        )
+
+
+def _get_field_value(record: dict[str, Any], key: str) -> Any:
+    # Dotted keys allow nested field status, e.g. "http.method".
+    if "." in key:
+        prefix, rest = key.split(".", 1)
+        obj = record.get(prefix)
+        if isinstance(obj, dict):
+            return obj.get(rest)
+        return None
+    return record.get(key)
+
+
+def _save_endpoint_record(
+    *,
+    conn,
+    docs_dir: str,
+    record: dict[str, Any],
+    computed_id: str,
+    exchange: str,
+    section: str,
+    protocol: str,
+    method: str | None,
+    path: str | None,
+    base_url: str | None,
+    api_version_str: str | None,
+    description_str: str | None,
+    sources: list[Any],
+    field_status: dict[str, Any],
+    updated_at: str,
+) -> dict[str, Any]:
+    # Verify citations against the local store.
+    for c in sources:
+        if not isinstance(c, dict):
+            raise CexApiDocsError(code="EBADSRC", message="sources[] must contain objects.")
+        _verify_citation_against_store(conn=conn, citation=c)
+
+    documented_fields = [str(k) for k, v in field_status.items() if str(v) == "documented"]
+    source_fields = {str(c.get("field_name")) for c in sources if isinstance(c, dict) and c.get("field_name")}
+
+    missing_citations = sorted([f for f in documented_fields if f not in source_fields])
+    if missing_citations:
+        raise CexApiDocsError(
+            code="EBADCITE",
+            message="Documented fields are missing required citations.",
+            details={"endpoint_id": computed_id, "missing_field_names": missing_citations},
+        )
+
+    missing_values: list[str] = []
+    for f in documented_fields:
+        v = _get_field_value(record, f)
+        if v is None:
+            missing_values.append(f)
+        elif isinstance(v, str) and not v.strip():
+            missing_values.append(f)
+    if missing_values:
+        raise CexApiDocsError(
+            code="EBADFIELDSTATUS",
+            message="Documented fields must have non-empty values.",
+            details={"endpoint_id": computed_id, "missing_values": sorted(missing_values)},
+        )
+
+    # Persist endpoint JSON to disk.
+    endpoint_dir = Path(docs_dir) / "endpoints" / exchange / section
+    endpoint_path = endpoint_dir / f"{computed_id}.json"
+    atomic_write_text(endpoint_path, json.dumps(record, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
+
+    # Upsert endpoints row without REPLACE (preserve rowid).
+    with conn:
+        existing = conn.execute("SELECT rowid FROM endpoints WHERE endpoint_id = ?;", (computed_id,)).fetchone()
+        if existing is None:
+            cur = conn.execute(
+                """
 INSERT INTO endpoints (
   endpoint_id, exchange, section, protocol, method, path, base_url, api_version,
   description, json, updated_at
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """,
-                        (
-                            computed_id,
-                            exchange,
-                            section,
-                            protocol,
-                            method,
-                            path,
-                            base_url,
-                            api_version_str,
-                            description_str,
-                            json.dumps(record, sort_keys=True, ensure_ascii=False),
-                            updated_at,
-                        ),
-                    )
-                    endpoint_rowid = int(cur.lastrowid)
-                else:
-                    endpoint_rowid = int(existing["rowid"])
-                    conn.execute(
-                        """
+                (
+                    computed_id,
+                    exchange,
+                    section,
+                    protocol,
+                    method,
+                    path,
+                    base_url,
+                    api_version_str,
+                    description_str,
+                    json.dumps(record, sort_keys=True, ensure_ascii=False),
+                    updated_at,
+                ),
+            )
+            endpoint_rowid = int(cur.lastrowid)
+        else:
+            endpoint_rowid = int(existing["rowid"])
+            conn.execute(
+                """
 UPDATE endpoints
 SET exchange = ?, section = ?, protocol = ?, method = ?, path = ?, base_url = ?, api_version = ?,
     description = ?, json = ?, updated_at = ?
 WHERE endpoint_id = ?;
 """,
-                        (
-                            exchange,
-                            section,
-                            protocol,
-                            method,
-                            path,
-                            base_url,
-                            api_version_str,
-                            description_str,
-                            json.dumps(record, sort_keys=True, ensure_ascii=False),
-                            updated_at,
-                            computed_id,
-                        ),
-                    )
+                (
+                    exchange,
+                    section,
+                    protocol,
+                    method,
+                    path,
+                    base_url,
+                    api_version_str,
+                    description_str,
+                    json.dumps(record, sort_keys=True, ensure_ascii=False),
+                    updated_at,
+                    computed_id,
+                ),
+            )
 
-                # Keep endpoint_sources consistent with the endpoint's current sources.
-                # The sources[] array is treated as the full, current set of citations.
-                conn.execute("DELETE FROM endpoint_sources WHERE endpoint_id = ?;", (computed_id,))
+        # Keep endpoint_sources consistent with the endpoint's current sources.
+        # The sources[] array is treated as the full, current set of citations.
+        conn.execute("DELETE FROM endpoint_sources WHERE endpoint_id = ?;", (computed_id,))
 
-                # Endpoint sources mapping (field_name must exist).
-                for c in sources:
-                    field = c.get("field_name")
-                    if not field:
-                        continue
-                    canonical = canonicalize_url(str(c.get("url", "")))
-                    content_hash = str(c.get("content_hash", ""))
-                    conn.execute(
-                        """
+        # Endpoint sources mapping (field_name must exist).
+        for c in sources:
+            if not isinstance(c, dict):
+                continue
+            field = c.get("field_name")
+            if not field:
+                continue
+            canonical = canonicalize_url(str(c.get("url", "")))
+            content_hash = str(c.get("content_hash", ""))
+            conn.execute(
+                """
 INSERT OR IGNORE INTO endpoint_sources (
   endpoint_id, field_name, page_canonical_url, page_content_hash, created_at
 ) VALUES (?, ?, ?, ?, ?);
 """,
-                        (computed_id, str(field), canonical, content_hash, updated_at),
-                    )
+                (computed_id, str(field), canonical, content_hash, updated_at),
+            )
 
-                # Review queue rules: inconsistent field_status vs values (high-risk fields only).
-                for field_name, status in field_status.items():
-                    k = str(field_name)
-                    st = str(status)
-                    if k not in INCONSISTENT_STATUS_REVIEW_FIELDS:
-                        continue
-                    v = _get_field_value(k)
-                    if v is None:
-                        continue
-                    if st in ("undocumented", "unknown"):
-                        conn.execute(
-                            """
+        # Review queue rules: inconsistent field_status vs values (high-risk fields only).
+        for field_name, status in field_status.items():
+            k = str(field_name)
+            st = str(status)
+            if k not in INCONSISTENT_STATUS_REVIEW_FIELDS:
+                continue
+            v = _get_field_value(record, k)
+            if v is None:
+                continue
+            if st in ("undocumented", "unknown"):
+                conn.execute(
+                    """
 INSERT INTO review_queue (
   kind, endpoint_id, field_name, reason, status, created_at, details_json
 ) VALUES (?, ?, ?, ?, 'open', ?, ?);
 """,
-                            (
-                                "inconsistent_field_status",
-                                computed_id,
-                                k,
-                                "Field has a value but field_status is not documented",
-                                updated_at,
-                                json.dumps({"field_status": st, "endpoint_path": str(endpoint_path)}, sort_keys=True),
-                            ),
-                        )
-
-                # Update endpoints_fts (rowid = endpoints.rowid).
-                search_text = json.dumps(
-                    {
-                        "description": description_str,
-                        "required_permissions": record.get("required_permissions"),
-                        "rate_limit": record.get("rate_limit"),
-                        "error_codes": record.get("error_codes"),
-                        "field_status": field_status,
-                    },
-                    sort_keys=True,
-                    ensure_ascii=False,
+                    (
+                        "inconsistent_field_status",
+                        computed_id,
+                        k,
+                        "Field has a value but field_status is not documented",
+                        updated_at,
+                        json.dumps({"field_status": st, "endpoint_path": str(endpoint_path)}, sort_keys=True),
+                    ),
                 )
-                conn.execute("DELETE FROM endpoints_fts WHERE rowid = ?;", (endpoint_rowid,))
-                conn.execute(
-                    """
+
+        # Update endpoints_fts (rowid = endpoints.rowid).
+        search_text = json.dumps(
+            {
+                "description": description_str,
+                "required_permissions": record.get("required_permissions"),
+                "rate_limit": record.get("rate_limit"),
+                "error_codes": record.get("error_codes"),
+                "field_status": field_status,
+            },
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        conn.execute("DELETE FROM endpoints_fts WHERE rowid = ?;", (endpoint_rowid,))
+        conn.execute(
+            """
 INSERT INTO endpoints_fts (
   rowid, endpoint_id, exchange, section, method, path, search_text
 ) VALUES (?, ?, ?, ?, ?, ?, ?);
 """,
-                    (
-                        endpoint_rowid,
-                        computed_id,
-                        exchange,
-                        section,
-                        method or "",
-                        path or "",
-                        search_text,
-                    ),
-                )
+            (
+                endpoint_rowid,
+                computed_id,
+                exchange,
+                section,
+                method or "",
+                path or "",
+                search_text,
+            ),
+        )
 
-            conn.commit()
-            return {"endpoint_id": computed_id, "path": str(endpoint_path), "updated_at": updated_at}
-        finally:
-            conn.close()
+    return {"endpoint_id": computed_id, "path": str(endpoint_path), "updated_at": updated_at}
 
 
 def search_endpoints(
@@ -427,7 +584,19 @@ WHERE {' AND '.join(where)}
 ORDER BY rank
 LIMIT ?;
 """
-        cur = conn.execute(sql, tuple(params))
+        try:
+            cur = conn.execute(sql, tuple(params))
+        except sqlite3.OperationalError as e:
+            # FTS5 query syntax is picky; users often paste paths like "/api/v3/time".
+            # Retry with a sanitized token query (best-effort).
+            msg = str(e)
+            if "fts5" not in msg.lower() or "syntax error" not in msg.lower():
+                raise
+            sanitized = " ".join(re.findall(r"[A-Za-z0-9_]+", query))
+            if not sanitized:
+                raise
+            params[0] = sanitized
+            cur = conn.execute(sql, tuple(params))
         out: list[dict[str, Any]] = []
         for r in cur.fetchall():
             out.append(

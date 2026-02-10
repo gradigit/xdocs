@@ -10,10 +10,13 @@ from .errors import CexApiDocsError
 from .answer import answer_question
 from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
+from .coverage import endpoint_coverage
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .ingest_page import ingest_page
 from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
+from .openapi_import import import_openapi
+from .postman_import import import_postman
 from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
 from .report import render_sync_markdown
@@ -156,6 +159,35 @@ def main(argv: list[str] | None = None) -> None:
     fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
     fsck_p.add_argument("--limit", type=int, default=200)
     fsck_p.add_argument("--scan-orphans", action="store_true", help="Scan raw/pages/meta directories for orphan files (can be slow)")
+
+    io = sub.add_parser("import-openapi", help="Import OpenAPI (Swagger) spec into endpoint DB", parents=[common])
+    io.add_argument("--exchange", required=True)
+    io.add_argument("--section", required=True)
+    io.add_argument("--url", required=True, help="OpenAPI spec URL (json/yaml)")
+    io.add_argument("--base-url", default=None, help="Override base_url used for endpoint identity (default: servers[0].url)")
+    io.add_argument("--api-version", default=None)
+    io.add_argument("--timeout-s", type=float, default=20.0)
+    io.add_argument("--max-bytes", type=int, default=50_000_000)
+    io.add_argument("--max-redirects", type=int, default=5)
+    io.add_argument("--retries", type=int, default=1)
+    io.add_argument("--continue-on-error", action="store_true", help="Continue importing other endpoints after an error")
+
+    pm = sub.add_parser("import-postman", help="Import Postman collection JSON into endpoint DB", parents=[common])
+    pm.add_argument("--exchange", required=True)
+    pm.add_argument("--section", required=True)
+    pm.add_argument("--url", required=True, help="Postman collection URL (json)")
+    pm.add_argument("--base-url", default=None, help="Optional base_url prefix used to derive per-request path")
+    pm.add_argument("--api-version", default=None)
+    pm.add_argument("--timeout-s", type=float, default=20.0)
+    pm.add_argument("--max-bytes", type=int, default=50_000_000)
+    pm.add_argument("--max-redirects", type=int, default=5)
+    pm.add_argument("--retries", type=int, default=1)
+    pm.add_argument("--continue-on-error", action="store_true", help="Continue importing other endpoints after an error")
+
+    cov = sub.add_parser("coverage", help="Aggregate endpoint field_status coverage", parents=[common])
+    cov.add_argument("--exchange", default=None)
+    cov.add_argument("--section", default=None)
+    cov.add_argument("--limit-samples", type=int, default=5)
 
     se = sub.add_parser("save-endpoint", help="Validate + ingest endpoint JSON", parents=[common])
     se.add_argument("endpoint_json_path")
@@ -407,6 +439,52 @@ def main(argv: list[str] | None = None) -> None:
 
         if args.cmd == "fsck":
             r = fsck_store(docs_dir=args.docs_dir, limit=int(args.limit), scan_orphans=bool(args.scan_orphans))
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "import-openapi":
+            r = import_openapi(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange=args.exchange,
+                section=args.section,
+                url=args.url,
+                base_url=args.base_url,
+                api_version=args.api_version,
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                continue_on_error=bool(args.continue_on_error),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "import-postman":
+            r = import_postman(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange=args.exchange,
+                section=args.section,
+                url=args.url,
+                base_url=args.base_url,
+                api_version=args.api_version,
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                continue_on_error=bool(args.continue_on_error),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "coverage":
+            r = endpoint_coverage(
+                docs_dir=args.docs_dir,
+                exchange=args.exchange,
+                section=args.section,
+                limit_samples=int(args.limit_samples),
+            )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
 

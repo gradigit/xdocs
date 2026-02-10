@@ -149,7 +149,9 @@ Key commands:
 - `ingest-page`: ingest browser-captured HTML/markdown into the canonical store
 - `search-pages`, `get-page`: query stored sources
 - `validate-registry`, `validate-base-urls`: reconfirm registry truth
+- `import-openapi`, `import-postman`: deterministically import endpoint skeletons from machine-readable specs (recommended when available)
 - `save-endpoint`, `search-endpoints`: ingest/search structured endpoint records
+- `coverage`: aggregate endpoint `field_status` coverage (unknown/undocumented/documented counts)
 - `review-list`, `review-show`, `review-resolve`: manage review queue
 - `answer`: assemble cite-only answers from the local store
 - `fsck`: detect store inconsistencies
@@ -182,8 +184,24 @@ This project supports ingesting agent-generated endpoint records into SQLite for
 - Schema: `schemas/endpoint.schema.json`
 - Ingest: `cex-api-docs save-endpoint path/to/endpoint.json`
 - Search: `cex-api-docs search-endpoints "subaccount balance" --exchange binance`
+- Coverage: `cex-api-docs coverage --exchange binance`
 
 The expectation is that endpoint JSON includes per-field provenance for high-risk fields (permissions, rate limits, etc.): URL, crawl hashes, and a mechanically-verifiable excerpt.
+
+### Machine-Readable Spec Imports (Preferred)
+
+When an exchange publishes an OpenAPI/Swagger spec or a Postman collection, you can import it deterministically into the endpoint DB:
+
+```bash
+cex-api-docs import-openapi --exchange binance --section spot --url "https://example.com/openapi.yaml" --base-url "https://api.binance.com"
+cex-api-docs import-postman --exchange binance --section spot --url "https://example.com/collection.json" --base-url "https://api.binance.com"
+```
+
+These imports:
+- ingest the spec into the canonical store (so citations are verifiable)
+- create one endpoint record per operation/request
+- set `field_status` for a standard required field set
+- mark only fields with verifiable citations as `documented` (everything else defaults to `unknown`)
 
 ## Store Layout
 
