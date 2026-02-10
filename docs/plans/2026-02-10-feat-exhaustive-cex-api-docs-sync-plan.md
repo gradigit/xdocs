@@ -242,7 +242,7 @@ Acceptance:
 
 - [x] Implement `ingest-page` that writes into the normal store + DB
 - [x] Add `render_mode=ingest` metadata and include tool provenance
-- [ ] Document a runbook: “When a URL can’t be fetched deterministically, capture HTML and ingest it”
+- [x] Document a runbook: “When a URL can’t be fetched deterministically, capture HTML and ingest it”
 
 Acceptance:
 - A page captured via a browser can be ingested and then appears in `search-pages`/`get-page` with stable hashes and FTS indexing.
