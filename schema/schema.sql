@@ -155,3 +155,16 @@ CREATE TABLE IF NOT EXISTS inventory_entries (
 
 CREATE INDEX IF NOT EXISTS inventory_entries_inventory_id_idx ON inventory_entries(inventory_id);
 CREATE INDEX IF NOT EXISTS inventory_entries_status_idx ON inventory_entries(status);
+
+-- Aggregated endpoint completeness gaps. This is a scale-safe alternative to
+-- creating per-endpoint review items for missing fields.
+CREATE TABLE IF NOT EXISTS coverage_gaps (
+  exchange TEXT NOT NULL,
+  section TEXT NOT NULL,
+  protocol TEXT NOT NULL,
+  field_name TEXT NOT NULL,
+  status_counts_json TEXT NOT NULL,        -- JSON: {"documented": 10, "unknown": 2, ...}
+  sample_endpoint_ids_json TEXT NOT NULL,  -- JSON: {"unknown": ["..."], "undocumented": ["..."]}
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (exchange, section, protocol, field_name)
+);

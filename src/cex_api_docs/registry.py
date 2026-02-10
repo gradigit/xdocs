@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -10,10 +10,31 @@ from .errors import CexApiDocsError
 
 
 @dataclass(frozen=True, slots=True)
+class DocSource:
+    # Planned kinds: sitemap|openapi|postman|asyncapi|nav_index|other
+    kind: str
+    url: str
+    scope: str | None = None  # optional path/url prefix constraint
+    notes: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class InventoryPolicy:
+    # inventory: sitemap-based enumeration (default)
+    # link_follow: deterministic link extraction from seed pages (fallback for docs without sitemaps)
+    mode: str = "inventory"  # inventory|link_follow
+    max_pages: int | None = None
+    render_mode: str | None = None  # http|playwright|auto (None => use CLI default)
+    scope_prefixes: list[str] = field(default_factory=list)  # optional explicit URL prefixes
+
+
+@dataclass(frozen=True, slots=True)
 class ExchangeSection:
     section_id: str
     base_urls: list[str]
     seed_urls: list[str]
+    doc_sources: list[DocSource] = field(default_factory=list)
+    inventory_policy: InventoryPolicy = field(default_factory=InventoryPolicy)
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,11 +84,42 @@ def load_registry(registry_path: Path) -> Registry:
         for sec in ex.get("sections", []) or []:
             if not isinstance(sec, dict):
                 continue
+
+            # Optional doc sources (sitemaps/specs) for better exhaustiveness.
+            doc_sources: list[DocSource] = []
+            for ds in sec.get("doc_sources", []) or []:
+                if not isinstance(ds, dict):
+                    continue
+                url = str(ds.get("url", "")).strip()
+                kind = str(ds.get("kind", "")).strip()
+                if not url or not kind:
+                    continue
+                doc_sources.append(
+                    DocSource(
+                        kind=kind,
+                        url=url,
+                        scope=str(ds.get("scope")).strip() if ds.get("scope") else None,
+                        notes=str(ds.get("notes")).strip() if ds.get("notes") else None,
+                    )
+                )
+
+            pol_raw = sec.get("inventory_policy") or {}
+            if not isinstance(pol_raw, dict):
+                pol_raw = {}
+            inv_policy = InventoryPolicy(
+                mode=str(pol_raw.get("mode") or "inventory"),
+                max_pages=int(pol_raw["max_pages"]) if pol_raw.get("max_pages") is not None else None,
+                render_mode=str(pol_raw["render_mode"]).strip() if pol_raw.get("render_mode") else None,
+                scope_prefixes=[str(x) for x in (pol_raw.get("scope_prefixes") or []) if x],
+            )
+
             sections.append(
                 ExchangeSection(
                     section_id=str(sec.get("section_id", "")),
                     base_urls=list(sec.get("base_urls", []) or []),
                     seed_urls=list(sec.get("seed_urls", []) or []),
+                    doc_sources=doc_sources,
+                    inventory_policy=inv_policy,
                 )
             )
         exchanges.append(
@@ -80,4 +132,3 @@ def load_registry(registry_path: Path) -> Registry:
         )
 
     return Registry(exchanges=exchanges)
-

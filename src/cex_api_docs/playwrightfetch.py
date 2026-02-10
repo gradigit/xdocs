@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ipaddress
 import random
+import socket
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -12,6 +14,50 @@ from .httpfetch import FetchResult, _host_allowed, _is_http_url
 
 def _host(url: str) -> str:
     return (urlsplit(url).hostname or "").lower()
+
+
+def _is_localhostish(host: str) -> bool:
+    host = (host or "").strip().lower()
+    return host == "localhost" or host.endswith(".localhost")
+
+
+def _is_public_ip_literal(host: str) -> bool:
+    """
+    Return True only for globally-routable IP literals.
+
+    This blocks loopback/private/link-local/reserved/multicast/unspecified ranges.
+    """
+    try:
+        ip = ipaddress.ip_address(host)
+    except Exception:
+        return False
+    return bool(ip.is_global)
+
+
+def _resolves_to_non_public_ip(host: str) -> bool:
+    """
+    Best-effort DNS rebinding defense for subresource requests.
+
+    If a hostname resolves to any non-global IP, treat it as unsafe.
+    If resolution fails, treat it as unsafe (conservative).
+    """
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except Exception:
+        return True
+
+    for info in infos:
+        try:
+            addr = info[4][0]
+        except Exception:
+            continue
+        try:
+            ip = ipaddress.ip_address(addr)
+        except Exception:
+            continue
+        if not ip.is_global:
+            return True
+    return False
 
 
 def _try_import_playwright_sync():
@@ -107,6 +153,7 @@ class PlaywrightFetcher:
                 page.set_default_timeout(int(timeout_s * 1000))
 
                 nav_chain: list[str] = []
+                host_safety_cache: dict[str, bool] = {}
 
                 def _on_frame_nav(frame) -> None:  # pragma: no cover (timing-sensitive)
                     try:
@@ -119,8 +166,33 @@ class PlaywrightFetcher:
 
                 page.on("framenavigated", _on_frame_nav)
 
+                def _host_is_safe(h: str) -> bool:
+                    h = (h or "").lower()
+                    if not h:
+                        return True
+                    if _is_localhostish(h):
+                        return False
+                    # IP literal: block anything not globally routable.
+                    try:
+                        ipaddress.ip_address(h)
+                        return _is_public_ip_literal(h)
+                    except Exception:
+                        pass
+                    if h in host_safety_cache:
+                        return host_safety_cache[h]
+                    ok = not _resolves_to_non_public_ip(h)
+                    host_safety_cache[h] = bool(ok)
+                    return bool(ok)
+
                 def _route(route, request) -> None:  # pragma: no cover (timing-sensitive)
                     try:
+                        # SSRF hardening: block localhost/private/link-local destinations for all requests.
+                        # Do not block non-network schemes (data/blob/about) which have no host.
+                        req_host = _host(request.url)
+                        if req_host and not _host_is_safe(req_host):
+                            route.abort()
+                            return
+
                         if request.is_navigation_request():
                             h = _host(request.url)
                             if not _host_allowed(h, self.allowed_domains):

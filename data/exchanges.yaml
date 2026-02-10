@@ -57,7 +57,11 @@ exchanges:
     sections:
       - section_id: v4
         base_urls: ["https://api.gateio.ws/api/v4"]
-        seed_urls: ["https://www.gate.com/docs/apiv4/index.html"]
+        seed_urls: ["https://www.gate.com/docs/developers/apiv4/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 2000
 
   - exchange_id: kucoin
     display_name: KuCoin
@@ -67,9 +71,21 @@ exchanges:
       - section_id: spot
         base_urls: ["https://api.kucoin.com"]
         seed_urls: ["https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 5000
+          scope_prefixes:
+            - "https://www.kucoin.com/docs-new/"
       - section_id: futures
         base_urls: ["https://api-futures.kucoin.com"]
         seed_urls: ["https://www.kucoin.com/docs/rest/futures-trading/orders/place-order"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 5000
+          scope_prefixes:
+            - "https://www.kucoin.com/docs-new/"
 
   - exchange_id: htx
     display_name: HTX
@@ -79,6 +95,10 @@ exchanges:
       - section_id: spot
         base_urls: ["https://api.huobi.pro"]
         seed_urls: ["https://huobiapi.github.io/docs/spot/v1/en/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 5000
 
   - exchange_id: cryptocom
     display_name: Crypto.com
@@ -88,6 +108,10 @@ exchanges:
       - section_id: exchange
         base_urls: ["https://api.crypto.com/exchange/v1"]
         seed_urls: ["https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 2000
 
   - exchange_id: bitstamp
     display_name: Bitstamp
@@ -97,6 +121,10 @@ exchanges:
       - section_id: rest
         base_urls: ["https://www.bitstamp.net/api"]
         seed_urls: ["https://www.bitstamp.net/api/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 2000
 
   - exchange_id: bitfinex
     display_name: Bitfinex
@@ -106,6 +134,10 @@ exchanges:
       - section_id: v2
         base_urls: ["https://api-pub.bitfinex.com/v2"]
         seed_urls: ["https://docs.bitfinex.com/reference/rest-public-platform-status"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 300
 
   - exchange_id: dydx
     display_name: dYdX
@@ -116,6 +148,10 @@ exchanges:
       - section_id: docs
         base_urls: ["https://indexer.dydx.trade/v4"]
         seed_urls: ["https://docs.dydx.xyz/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 500
 
   - exchange_id: hyperliquid
     display_name: Hyperliquid
@@ -134,9 +170,21 @@ exchanges:
       - section_id: rest_en
         base_urls: ["https://api.upbit.com/v1"]
         seed_urls: ["https://docs.upbit.com/reference"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 300
+          scope_prefixes:
+            - "https://docs.upbit.com/kr/reference/"
       - section_id: rest_ko
         base_urls: ["https://api.upbit.com/v1"]
         seed_urls: ["https://docs.upbit.com/ko/reference"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 300
+          scope_prefixes:
+            - "https://docs.upbit.com/kr/reference/"
 
   - exchange_id: bithumb
     display_name: Bithumb
@@ -146,6 +194,10 @@ exchanges:
       - section_id: rest
         base_urls: ["https://api.bithumb.com"]
         seed_urls: ["https://apidocs.bithumb.com/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 300
 
   - exchange_id: coinone
     display_name: Coinone
@@ -155,6 +207,10 @@ exchanges:
       - section_id: rest
         base_urls: ["https://api.coinone.co.kr"]
         seed_urls: ["https://docs.coinone.co.kr/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 300
 
   - exchange_id: korbit
     display_name: Korbit
@@ -164,3 +220,7 @@ exchanges:
       - section_id: rest
         base_urls: ["https://api.korbit.co.kr/v1"]
         seed_urls: ["https://docs.korbit.co.kr/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 5000

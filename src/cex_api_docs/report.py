@@ -9,6 +9,7 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
     ended_at = str(sync_result.get("ended_at") or "")
     totals = sync_result.get("totals") or {}
     sections = sync_result.get("sections") or []
+    post = sync_result.get("post") or {}
 
     lines: list[str] = []
     lines.append(f"# CEX API Docs Sync Report")
@@ -92,10 +93,40 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
         if len(err_lines) > max_errors:
             lines.append(f"- ... truncated (showing {max_errors})")
 
+    # Optional post-processing summaries.
+    if isinstance(post, dict) and post:
+        cov = post.get("coverage_gaps") or {}
+        stale = post.get("stale_citations") or {}
+
+        if isinstance(cov, dict) and cov.get("counts"):
+            c = cov.get("counts") or {}
+            lines.append("")
+            lines.append("## Endpoint Coverage Gaps (Aggregated)")
+            lines.append("")
+            lines.append(
+                "- **Coverage rows:** "
+                f"endpoints={c.get('endpoints')}, rows={c.get('rows')}, rows_with_gaps={c.get('rows_with_gaps')}"
+            )
+            lines.append("- Use `cex-api-docs coverage-gaps-list` to drill into field-level samples.")
+
+        if isinstance(stale, dict) and stale.get("counts"):
+            c = stale.get("counts") or {}
+            lines.append("")
+            lines.append("## Stale Citations (Sweep)")
+            lines.append("")
+            lines.append(
+                "- **Findings:** "
+                f"total={c.get('total_findings')}, stale={c.get('stale_citation')}, missing_source={c.get('missing_source')}, review_items_created={c.get('review_items_created')}"
+            )
+            lines.append("- Use `cex-api-docs review-list --status open` to triage.")
+
     lines.append("")
     lines.append("## Notes")
     lines.append("")
     lines.append("- This report is generated from the deterministic `sync` JSON output.")
-    lines.append("- Inventory enumeration uses sitemaps when available; sections with low inventory URL counts likely need explicit `doc_sources` additions or browser-assisted ingestion (`ingest-page`).")
+    lines.append(
+        "- Inventory enumeration uses sitemaps when available and can fall back to deterministic link-follow inventories when configured in the registry."
+    )
+    lines.append("- For JS-heavy docs or WAF edge cases, use `--render auto` (Playwright optional) or browser capture + `ingest-page`.")
 
     return "\n".join(lines) + "\n"

@@ -251,7 +251,7 @@ Acceptance:
 
 - [x] Implement `import-openapi` (JSON/YAML)
 - [x] Implement `import-postman`
-- [ ] Implement `import-asyncapi` (or defer if too heavy; keep as stub + plan)
+- [x] Implement `import-asyncapi` (or defer if too heavy; keep as stub + plan)
 - [x] Store endpoint skeletons as endpoint JSON with `field_status` defaults:
   - if spec provides field, mark `documented` with spec citation if available
   - else mark `undocumented` or `unknown` with a flag for review
@@ -264,10 +264,10 @@ Acceptance:
 
 - [x] Extend `schemas/endpoint.schema.json` with `field_status` + `variants`
 - [x] Update `save-endpoint` validation rules accordingly
-- [ ] Implement aggregated coverage gaps:
+- [x] Implement aggregated coverage gaps:
   - create one review item per `(exchange, section, field)` summarizing missing/undocumented counts
   - provide a drill-down command to list sample endpoint_ids
-- [ ] Implement `detect-stale-citations` and create targeted review items
+- [x] Implement `detect-stale-citations` and create targeted review items
 
 Acceptance:
 - A full sync run can output:

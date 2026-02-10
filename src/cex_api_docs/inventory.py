@@ -2,18 +2,23 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import requests
+from bs4 import BeautifulSoup
 
 from .db import open_db
 from .errors import CexApiDocsError
 from .hashing import sha256_hex_text
 from .httpfetch import fetch
 from .lock import acquire_write_lock
+from .playwrightfetch import PlaywrightFetcher
+from .robots import fetch_robots_policy
+from .registry import DocSource, InventoryPolicy
 from .sitemaps import SitemapParseResult, iter_unique, parse_sitemap_bytes
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
@@ -25,12 +30,18 @@ class InventoryConfig:
     section_id: str
     allowed_domains: list[str]
     seed_urls: list[str]
+    doc_sources: list[dict[str, Any]]
+    inventory_policy: dict[str, Any]
+    link_follow_max_pages_override: int | None
     scope_prefixes: list[str]
     timeout_s: float
     max_bytes: int
+    link_follow_max_bytes: int
     max_redirects: int
     retries: int
     ignore_robots: bool
+    delay_s: float
+    default_render_mode: str
 
 
 def _require_store_db(docs_dir: str) -> Path:
@@ -60,15 +71,20 @@ def _robot_sitemaps(session: requests.Session, *, base_url: str, timeout_s: floa
     robots_url = urlunsplit((scheme, netloc, "/robots.txt", "", ""))
 
     try:
-        resp = session.get(robots_url, timeout=float(timeout_s), allow_redirects=True, stream=False)
-        text = resp.text or ""
+        # Use the shared HTTP fetcher so we get the same UA fallback behavior that
+        # makes registry validation/crawling robust (some sites 403 python-requests).
+        fr = fetch(
+            session,
+            url=robots_url,
+            timeout_s=float(timeout_s),
+            max_bytes=1_000_000,
+            max_redirects=3,
+            retries=0,
+            allowed_domains=None,
+        )
+        text = (fr.body or b"").decode("utf-8", errors="replace")
     except Exception:
         return []
-    finally:
-        try:
-            resp.close()  # type: ignore[name-defined]
-        except Exception:
-            pass
 
     out: list[str] = []
     for line in text.splitlines():
@@ -160,6 +176,58 @@ def _in_scope(url: str, *, scope_prefixes: list[str]) -> bool:
     return False
 
 
+def _extract_links(html: str, *, base_url: str) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    out: list[str] = []
+    for a in soup.find_all("a"):
+        href = a.get("href")
+        if not href or not isinstance(href, str):
+            continue
+        u = urljoin(base_url, href)
+        if u.startswith("http://") or u.startswith("https://"):
+            out.append(u)
+    return out
+
+
+def _decode_html(body: bytes) -> str:
+    # Inventory link extraction is best-effort; prefer "replace" over hard failure.
+    try:
+        return body.decode("utf-8", errors="replace")
+    except Exception:  # pragma: no cover
+        return str(body)
+
+
+def _scope_prefix_from_path(prefix: str, *, seed_urls: list[str]) -> str | None:
+    """
+    Convert a scope prefix that may be:
+    - full URL prefix (https://host/path/)
+    - absolute path (/docs/...)
+    into a canonical URL prefix.
+    """
+    s = (prefix or "").strip()
+    if not s:
+        return None
+    if s.startswith("http://") or s.startswith("https://"):
+        try:
+            c = canonicalize_url(s)
+        except Exception:
+            return None
+        if not c.endswith("/") and (urlsplit(c).path or "/") not in ("", "/"):
+            c += "/"
+        return c
+    if s.startswith("/") and seed_urls:
+        try:
+            base = canonicalize_url(seed_urls[0])
+        except Exception:
+            return None
+        p = urlsplit(base)
+        full = urlunsplit((p.scheme, p.netloc, s, "", ""))
+        if not full.endswith("/") and (urlsplit(full).path or "/") not in ("", "/"):
+            full += "/"
+        return full
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class InventoryResult:
     inventory_id: int
@@ -248,9 +316,15 @@ def create_inventory(
     seed_urls: list[str],
     timeout_s: float = 20.0,
     max_bytes: int = 50_000_000,
+    link_follow_max_bytes: int | None = None,
     max_redirects: int = 5,
     retries: int = 1,
     ignore_robots: bool = False,
+    delay_s: float = 0.25,
+    default_render_mode: str = "http",
+    doc_sources: list[DocSource] | None = None,
+    inventory_policy: InventoryPolicy | None = None,
+    link_follow_max_pages_override: int | None = None,
     include_urls: bool = False,
     sample_limit: int = 20,
 ) -> InventoryResult:
@@ -268,44 +342,77 @@ def create_inventory(
 
     allow = {d.lower() for d in (allowed_domains or []) if d}
     seeds = [s for s in (seed_urls or []) if s]
-    scopes = scope_prefixes_from_seeds(seeds)
+    ds_list = list(doc_sources or [])
+    pol = inventory_policy or InventoryPolicy()
+
+    derived_scopes = scope_prefixes_from_seeds(seeds)
+    explicit_scopes: list[str] = []
+
+    # Optional explicit scope prefixes from policy and per-source scope constraints.
+    for sp in pol.scope_prefixes:
+        p = _scope_prefix_from_path(sp, seed_urls=seeds)
+        if p:
+            explicit_scopes.append(p)
+    for ds in ds_list:
+        if ds.scope:
+            p = _scope_prefix_from_path(ds.scope, seed_urls=seeds)
+            if p:
+                explicit_scopes.append(p)
+
+    scopes = explicit_scopes if explicit_scopes else derived_scopes
+    scopes = sorted(iter_unique(scopes))
 
     cfg = InventoryConfig(
         exchange_id=exchange_id,
         section_id=section_id,
         allowed_domains=sorted(allow),
         seed_urls=seeds,
+        doc_sources=[asdict(ds) for ds in ds_list],
+        inventory_policy=asdict(pol),
+        link_follow_max_pages_override=None if link_follow_max_pages_override is None else max(1, int(link_follow_max_pages_override)),
         scope_prefixes=scopes,
         timeout_s=float(timeout_s),
         max_bytes=int(max_bytes),
+        link_follow_max_bytes=int(link_follow_max_bytes) if link_follow_max_bytes is not None else min(int(max_bytes), 5_000_000),
         max_redirects=int(max_redirects),
         retries=int(retries),
         ignore_robots=bool(ignore_robots),
+        delay_s=float(delay_s),
+        default_render_mode=str(default_render_mode),
     )
 
     generated_at = now_iso_utc()
     errors: list[dict[str, Any]] = []
 
-    # 1) Discover sitemap candidates.
+    visited_sitemaps: list[str] = []
+    urls: list[str] = []
     robot_sitemaps: list[str] = []
-    for s in seeds[:3]:
-        # Only need one robots file per host; take first few seeds as hints.
-        robot_sitemaps.extend(_robot_sitemaps(session, base_url=s, timeout_s=cfg.timeout_s))
-    robot_sitemaps = iter_unique(robot_sitemaps)
+    candidates: list[str] = []
 
-    candidates = iter_unique(robot_sitemaps + _common_sitemap_candidates(seeds))
+    if pol.mode not in ("inventory", "link_follow"):
+        raise CexApiDocsError(code="EBADARG", message="Invalid inventory_policy.mode.", details={"mode": pol.mode})
 
-    # 2) Walk sitemap graph to get URLs (best-effort).
-    visited_sitemaps, urls, sitemap_errors = _walk_sitemaps(
-        session,
-        sitemap_urls=candidates,
-        allowed_domains=allow,
-        timeout_s=cfg.timeout_s,
-        max_bytes=cfg.max_bytes,
-        max_redirects=cfg.max_redirects,
-        retries=cfg.retries,
-    )
-    errors.extend(sitemap_errors)
+    if pol.mode == "inventory":
+        # 1) Discover sitemap candidates.
+        for s in seeds[:3]:
+            # Only need one robots file per host; take first few seeds as hints.
+            robot_sitemaps.extend(_robot_sitemaps(session, base_url=s, timeout_s=cfg.timeout_s))
+        robot_sitemaps = iter_unique(robot_sitemaps)
+
+        ds_sitemaps = [ds.url for ds in ds_list if ds.kind == "sitemap" and ds.url]
+        candidates = iter_unique(robot_sitemaps + ds_sitemaps + _common_sitemap_candidates(seeds))
+
+        # 2) Walk sitemap graph to get URLs (best-effort).
+        visited_sitemaps, urls, sitemap_errors = _walk_sitemaps(
+            session,
+            sitemap_urls=candidates,
+            allowed_domains=allow,
+            timeout_s=cfg.timeout_s,
+            max_bytes=cfg.max_bytes,
+            max_redirects=cfg.max_redirects,
+            retries=cfg.retries,
+        )
+        errors.extend(sitemap_errors)
 
     # 3) Canonicalize + filter by allowlist and scope prefixes.
     urls_canon: list[str] = []
@@ -327,18 +434,170 @@ def create_inventory(
             c = canonicalize_url(s)
         except Exception:
             continue
-        if _in_scope(c, scope_prefixes=scopes):
-            urls_canon.append(c)
+        urls_canon.append(c)
 
     urls_final = sorted(iter_unique(urls_canon))
+
+    link_follow_visited = 0
+    link_follow_discovered = 0
+    link_follow_skipped_robots = 0
+    link_follow_queue_max = 0
+    link_follow_queue_dropped = 0
+    link_follow_max_queue = 0
+
+    if pol.mode == "link_follow":
+        # Deterministic link-follow inventory (fallback for docs without usable sitemaps).
+        max_pages = int(pol.max_pages) if pol.max_pages is not None else 5000
+        if max_pages <= 0:
+            max_pages = 1
+        if cfg.link_follow_max_pages_override is not None:
+            max_pages = min(max_pages, int(cfg.link_follow_max_pages_override))
+
+        render_mode = (pol.render_mode or cfg.default_render_mode or "http").strip()
+        if render_mode not in ("http", "playwright", "auto"):
+            raise CexApiDocsError(code="EBADARG", message="Invalid inventory_policy.render_mode.", details={"render_mode": render_mode})
+
+        import heapq
+
+        pw: PlaywrightFetcher | None = None
+        robots_cache: dict[str, Any] = {}
+        seen: set[str] = set()
+        queued: set[str] = set()
+        heap: list[str] = []
+
+        for u in urls_final:
+            queued.add(u)
+            heapq.heappush(heap, u)
+
+        def robots_can_fetch(u: str) -> bool:
+            if cfg.ignore_robots:
+                return True
+            h = _host(u)
+            if not h:
+                return False
+            if h not in robots_cache:
+                robots_cache[h] = fetch_robots_policy(session, url=u, timeout_s=cfg.timeout_s)
+            can_fetch_fn, _decision = robots_cache[h]
+            return bool(can_fetch_fn(u))
+
+        def _needs_pw(status: int, links0: list[str]) -> bool:
+            if status >= 400:
+                return True
+            if not links0:
+                return True
+            return False
+
+        max_queue = max_pages * 20
+        if max_queue < max_pages:
+            max_queue = max_pages
+        if max_queue > 200_000:
+            max_queue = 200_000
+        link_follow_max_queue = int(max_queue)
+        link_follow_queue_max = len(queued)
+
+        while heap and len(seen) < max_pages:
+            cur = heapq.heappop(heap)
+            if cur in seen:
+                continue
+            seen.add(cur)
+            link_follow_visited += 1
+
+            try:
+                if not robots_can_fetch(cur):
+                    link_follow_skipped_robots += 1
+                    continue
+
+                fr = None
+                links: list[str] = []
+
+                if render_mode in ("http", "auto"):
+                    fr = fetch(
+                        session,
+                        url=cur,
+                        timeout_s=float(cfg.timeout_s),
+                        max_bytes=int(cfg.link_follow_max_bytes),
+                        max_redirects=int(cfg.max_redirects),
+                        retries=int(cfg.retries),
+                        allowed_domains=allow,
+                    )
+                    html = _decode_html(fr.body)
+                    links = _extract_links(html, base_url=fr.final_url)
+
+                if render_mode in ("playwright", "auto"):
+                    do_pw = render_mode == "playwright"
+                    if fr is not None and render_mode == "auto":
+                        do_pw = _needs_pw(int(fr.http_status), links)
+                    if do_pw:
+                        try:
+                            if pw is None:
+                                pw = PlaywrightFetcher(allowed_domains=allow).open()
+                            fr_pw = pw.fetch(url=cur, timeout_s=float(cfg.timeout_s), max_bytes=int(cfg.link_follow_max_bytes), retries=int(cfg.retries))
+                            html_pw = _decode_html(fr_pw.body)
+                            links_pw = _extract_links(html_pw, base_url=fr_pw.final_url)
+                            if fr is None or _needs_pw(int(fr.http_status), links) or len(links_pw) > len(links):
+                                fr = fr_pw
+                                links = links_pw
+                        except CexApiDocsError:
+                            # If Playwright is unavailable or fails, keep the HTTP result.
+                            pass
+
+                # Canonicalize + filter discovered links.
+                new_links: list[str] = []
+                for u in links:
+                    try:
+                        c = canonicalize_url(u)
+                    except Exception:
+                        continue
+                    h = _host(c)
+                    if allow and h and not (h in allow or any(h.endswith("." + d) for d in allow)):
+                        continue
+                    if not _in_scope(c, scope_prefixes=scopes):
+                        continue
+                    if c in seen or c in queued:
+                        continue
+                    if len(queued) >= int(max_queue):
+                        link_follow_queue_dropped += 1
+                        continue
+                    queued.add(c)
+                    new_links.append(c)
+
+                link_follow_discovered += len(new_links)
+                for nl in sorted(iter_unique(new_links)):
+                    heapq.heappush(heap, nl)
+            except Exception:
+                # Best-effort; keep the URL in inventory but don't fail the whole run.
+                continue
+            finally:
+                link_follow_queue_max = max(link_follow_queue_max, len(queued))
+                if cfg.delay_s > 0:
+                    time.sleep(float(cfg.delay_s))
+
+        if pw is not None:
+            pw.close()
+
+        # Include all discovered URLs, not only those we managed to visit before hitting `max_pages`.
+        # This keeps inventories closer to "all reachable from the seeds" while still bounding
+        # request volume during inventory generation.
+        urls_final = sorted(iter_unique(urls_final + sorted(queued)))
+
     inv_hash = sha256_hex_text("\\n".join(urls_final))
 
     sources = {
         "seeds": seeds,
         "scope_prefixes": scopes,
+        "doc_sources": [asdict(ds) for ds in ds_list],
+        "inventory_policy": asdict(pol),
         "robot_sitemaps": robot_sitemaps,
         "sitemap_candidates": candidates,
         "visited_sitemaps": visited_sitemaps,
+        "link_follow": {
+            "visited": link_follow_visited,
+            "discovered": link_follow_discovered,
+            "skipped_robots": link_follow_skipped_robots,
+            "queue_max": link_follow_queue_max,
+            "queue_dropped": link_follow_queue_dropped,
+            "max_queue": link_follow_max_queue,
+        },
         "config": asdict(cfg),
     }
 
@@ -388,6 +647,11 @@ VALUES (?, ?, 'pending');
             "visited_sitemaps": len(visited_sitemaps),
             "urls_in_sitemaps": len(urls),
             "urls_in_scope": len(urls_final),
+            "link_follow_visited": link_follow_visited,
+            "link_follow_discovered": link_follow_discovered,
+            "link_follow_skipped_robots": link_follow_skipped_robots,
+            "link_follow_queue_max": link_follow_queue_max,
+            "link_follow_queue_dropped": link_follow_queue_dropped,
             "errors": len(errors),
         },
         errors=errors[:50],

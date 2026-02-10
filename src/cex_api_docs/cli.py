@@ -12,11 +12,14 @@ from .answer import answer_question
 from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
 from .coverage import endpoint_coverage
+from .coverage_gaps import compute_and_persist_coverage_gaps, list_coverage_gaps
 from .discover_sources import discover_sources
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .ingest_page import ingest_page
 from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
+from .stale_citations import detect_stale_citations
+from .asyncapi_import import import_asyncapi
 from .openapi_import import import_openapi
 from .postman_import import import_postman
 from .fsck import fsck_store
@@ -103,6 +106,12 @@ def main(argv: list[str] | None = None) -> None:
     inv_p.add_argument("--max-redirects", type=int, default=5)
     inv_p.add_argument("--retries", type=int, default=1)
     inv_p.add_argument("--ignore-robots", action="store_true")
+    inv_p.add_argument(
+        "--max-pages",
+        type=int,
+        default=None,
+        help="Clamp link-follow inventory generation to at most N pages (debugging)",
+    )
     inv_p.add_argument("--include-urls", action="store_true", help="Include full URL list in output (can be large)")
     inv_p.add_argument("--sample-limit", type=int, default=20)
 
@@ -118,6 +127,11 @@ def main(argv: list[str] | None = None) -> None:
     fi_p.add_argument("--retries", type=int, default=2)
     fi_p.add_argument("--ignore-robots", action="store_true")
     fi_p.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+    fi_p.add_argument(
+        "--resume",
+        action="store_true",
+        help="Fetch only non-fetched entries (pending/error; includes skipped when --ignore-robots is set).",
+    )
 
     ip = sub.add_parser("ingest-page", help="Ingest a browser-captured page into the store (HTML or markdown)", parents=[common])
     ip.add_argument("--url", required=True)
@@ -131,6 +145,12 @@ def main(argv: list[str] | None = None) -> None:
     sync_p.add_argument("--exchange", default=None)
     sync_p.add_argument("--section", default=None)
     sync_p.add_argument("--limit", type=int, default=None, help="Limit fetched URLs per section (debugging)")
+    sync_p.add_argument(
+        "--inventory-max-pages",
+        type=int,
+        default=None,
+        help="Clamp link-follow inventory generation to at most N pages per section (debugging)",
+    )
     sync_p.add_argument("--delay-s", type=float, default=0.25)
     sync_p.add_argument("--timeout-s", type=float, default=20.0)
     sync_p.add_argument("--max-bytes", type=int, default=10_000_000)
@@ -194,10 +214,33 @@ def main(argv: list[str] | None = None) -> None:
     pm.add_argument("--retries", type=int, default=1)
     pm.add_argument("--continue-on-error", action="store_true", help="Continue importing other endpoints after an error")
 
+    ia = sub.add_parser("import-asyncapi", help="Import AsyncAPI spec into endpoint DB (stub)", parents=[common])
+    ia.add_argument("--exchange", required=True)
+    ia.add_argument("--section", required=True)
+    ia.add_argument("--url", required=True, help="AsyncAPI spec URL (json/yaml)")
+    ia.add_argument("--base-url", default=None)
+    ia.add_argument("--api-version", default=None)
+
     cov = sub.add_parser("coverage", help="Aggregate endpoint field_status coverage", parents=[common])
     cov.add_argument("--exchange", default=None)
     cov.add_argument("--section", default=None)
     cov.add_argument("--limit-samples", type=int, default=5)
+
+    cg = sub.add_parser("coverage-gaps", help="Compute + persist aggregated endpoint completeness gaps", parents=[common])
+    cg.add_argument("--exchange", default=None)
+    cg.add_argument("--section", default=None)
+    cg.add_argument("--limit-samples", type=int, default=5)
+
+    cgl = sub.add_parser("coverage-gaps-list", help="List persisted coverage gap rows", parents=[common])
+    cgl.add_argument("--exchange", default=None)
+    cgl.add_argument("--section", default=None)
+    cgl.add_argument("--limit", type=int, default=200)
+
+    dsc = sub.add_parser("detect-stale-citations", help="Detect endpoint citations that are stale vs current sources", parents=[common])
+    dsc.add_argument("--exchange", default=None)
+    dsc.add_argument("--section", default=None)
+    dsc.add_argument("--dry-run", action="store_true")
+    dsc.add_argument("--limit", type=int, default=None)
 
     se = sub.add_parser("save-endpoint", help="Validate + ingest endpoint JSON", parents=[common])
     se.add_argument("endpoint_json_path")
@@ -336,6 +379,9 @@ def main(argv: list[str] | None = None) -> None:
                 section_id=sec.section_id,
                 allowed_domains=ex.allowed_domains,
                 seed_urls=sec.seed_urls,
+                doc_sources=getattr(sec, "doc_sources", None),
+                inventory_policy=getattr(sec, "inventory_policy", None),
+                link_follow_max_pages_override=args.max_pages,
                 timeout_s=float(args.timeout_s),
                 max_bytes=int(args.max_bytes),
                 max_redirects=int(args.max_redirects),
@@ -375,6 +421,7 @@ def main(argv: list[str] | None = None) -> None:
                 retries=int(args.retries),
                 ignore_robots=bool(args.ignore_robots),
                 render_mode=str(args.render),
+                resume=bool(args.resume),
                 limit=args.limit,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
@@ -411,6 +458,7 @@ def main(argv: list[str] | None = None) -> None:
                 retries=int(args.retries),
                 delay_s=float(args.delay_s),
                 limit=args.limit,
+                inventory_max_pages=args.inventory_max_pages,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
@@ -513,12 +561,45 @@ def main(argv: list[str] | None = None) -> None:
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
 
+        if args.cmd == "import-asyncapi":
+            r = import_asyncapi(exchange=args.exchange, section=args.section, url=args.url, base_url=args.base_url, api_version=args.api_version)
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
         if args.cmd == "coverage":
             r = endpoint_coverage(
                 docs_dir=args.docs_dir,
                 exchange=args.exchange,
                 section=args.section,
                 limit_samples=int(args.limit_samples),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "coverage-gaps":
+            r = compute_and_persist_coverage_gaps(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange=args.exchange,
+                section=args.section,
+                limit_samples=int(args.limit_samples),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "coverage-gaps-list":
+            r = list_coverage_gaps(docs_dir=args.docs_dir, exchange=args.exchange, section=args.section, limit=int(args.limit))
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "detect-stale-citations":
+            r = detect_stale_citations(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange=args.exchange,
+                section=args.section,
+                dry_run=bool(args.dry_run),
+                limit=args.limit,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)

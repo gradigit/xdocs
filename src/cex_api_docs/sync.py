@@ -6,11 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .coverage_gaps import compute_and_persist_coverage_gaps
 from .db import open_db
 from .errors import CexApiDocsError
 from .inventory import create_inventory
 from .inventory_fetch import fetch_inventory
 from .registry import load_registry
+from .stale_citations import detect_stale_citations
 from .timeutil import now_iso_utc
 
 
@@ -26,6 +28,7 @@ class SyncConfig:
     retries: int
     delay_s: float
     limit: int | None
+    inventory_max_pages: int | None
 
 
 def _require_store_db(docs_dir: str) -> Path:
@@ -93,6 +96,7 @@ def run_sync(
     retries: int = 2,
     delay_s: float = 0.25,
     limit: int | None = None,
+    inventory_max_pages: int | None = None,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
@@ -111,6 +115,7 @@ def run_sync(
         retries=int(retries),
         delay_s=float(delay_s),
         limit=None if limit is None else int(limit),
+        inventory_max_pages=None if inventory_max_pages is None else max(1, int(inventory_max_pages)),
     )
 
     sections_run: list[dict[str, Any]] = []
@@ -140,11 +145,17 @@ def run_sync(
                 section_id=sec.section_id,
                 allowed_domains=ex.allowed_domains,
                 seed_urls=sec.seed_urls,
+                doc_sources=getattr(sec, "doc_sources", None),
+                inventory_policy=getattr(sec, "inventory_policy", None),
+                link_follow_max_pages_override=cfg.inventory_max_pages,
                 timeout_s=float(timeout_s),
                 max_bytes=max(50_000_000, int(max_bytes)),
+                link_follow_max_bytes=int(max_bytes),
                 max_redirects=int(max_redirects),
                 retries=int(retries),
                 ignore_robots=bool(ignore_robots),
+                delay_s=float(delay_s),
+                default_render_mode=str(render_mode),
                 include_urls=False,
             )
 
@@ -196,6 +207,32 @@ def run_sync(
             )
 
     ended_at = now_iso_utc()
+    post: dict[str, Any] = {}
+    # Post-processing: keep cron runs actionable (completeness + stale citation sweeps).
+    # These are scale-safe and cheap when endpoint DB is empty.
+    try:
+        post["coverage_gaps"] = compute_and_persist_coverage_gaps(
+            docs_dir=docs_dir,
+            lock_timeout_s=float(lock_timeout_s),
+            exchange=cfg.exchange,
+            section=cfg.section,
+            limit_samples=5,
+        )
+    except CexApiDocsError as e:
+        post["coverage_gaps_error"] = e.to_json()
+
+    try:
+        post["stale_citations"] = detect_stale_citations(
+            docs_dir=docs_dir,
+            lock_timeout_s=float(lock_timeout_s),
+            exchange=cfg.exchange,
+            section=cfg.section,
+            dry_run=False,
+            limit=None,
+        )
+    except CexApiDocsError as e:
+        post["stale_citations_error"] = e.to_json()
+
     return {
         "cmd": "sync",
         "schema_version": "v1",
@@ -205,4 +242,5 @@ def run_sync(
         "config": asdict(cfg),
         "totals": totals,
         "sections": sections_run,
+        "post": post,
     }

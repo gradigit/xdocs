@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import re
 from typing import Any
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import requests
 from bs4 import BeautifulSoup
@@ -75,6 +75,62 @@ def _classify(url: str) -> str | None:
     if SPEC_EXT_RE.search(u):
         return "spec_candidate"
     return None
+
+
+def _common_sitemap_candidates(seed_urls: list[str]) -> list[str]:
+    """
+    Heuristic sitemap URLs for a seed host (mirrors inventory behavior).
+    """
+    out: list[str] = []
+    for u in seed_urls:
+        p = urlsplit(u)
+        scheme = (p.scheme or "https").lower()
+        host = p.hostname or ""
+        if not host:
+            continue
+        netloc = host.lower()
+        if p.port:
+            netloc = f"{netloc}:{int(p.port)}"
+
+        for path in (
+            "/sitemap.xml",
+            "/sitemap_index.xml",
+            "/sitemap-index.xml",
+            "/sitemap.xml.gz",
+            "/sitemap_index.xml.gz",
+            "/sitemap-index.xml.gz",
+        ):
+            out.append(urlunsplit((scheme, netloc, path, "", "")))
+
+        seed_dir = p.path or "/"
+        if not seed_dir.endswith("/"):
+            seed_dir = seed_dir.rsplit("/", 1)[0] + "/"
+        seed_dir = seed_dir if seed_dir.startswith("/") else "/" + seed_dir
+
+        ancestors: list[str] = []
+        cur = seed_dir
+        for _i in range(0, 3):
+            ancestors.append(cur)
+            if cur == "/":
+                break
+            cur = cur.rstrip("/")
+            cur = cur.rsplit("/", 1)[0] + "/"
+            if not cur.startswith("/"):
+                cur = "/" + cur
+
+        for a in dict.fromkeys(ancestors):
+            for name in ("sitemap.xml", "sitemap.xml.gz", "sitemap_index.xml", "sitemap-index.xml"):
+                out.append(urlunsplit((scheme, netloc, a + name, "", "")))
+
+    # Dedupe, preserve order.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for it in out:
+        if not it or it in seen:
+            continue
+        seen.add(it)
+        uniq.append(it)
+    return uniq
 
 
 def discover_sources(
@@ -164,11 +220,29 @@ def discover_sources(
         except Exception:
             continue
 
+    # Common sitemap candidates (best-effort).
+    for sm in _common_sitemap_candidates(seeds):
+        candidates.setdefault(sm, {"url": sm, "kinds": set(), "evidence": []})
+        candidates[sm]["kinds"].add("sitemap")
+        candidates[sm]["evidence"].append({"from": "heuristic", "hint": "common_sitemap_candidates"})
+
     out_sources: list[dict[str, Any]] = []
     for u, rec in sorted(candidates.items(), key=lambda x: x[0]):
         kinds = sorted({str(k) for k in rec.get("kinds", set()) if k})
         if not kinds:
             continue
-        out_sources.append({"url": u, "kinds": kinds, "evidence": rec.get("evidence", [])[:5]})
+        h = _host(u)
+        in_allowed = True
+        if allowed and h:
+            in_allowed = _host_allowed(h, allowed)
+        out_sources.append(
+            {
+                "url": u,
+                "host": h,
+                "in_allowed_domains": bool(in_allowed),
+                "kinds": kinds,
+                "evidence": rec.get("evidence", [])[:5],
+            }
+        )
 
     return {"cmd": "discover-sources", "schema_version": "v1", "config": asdict(cfg), "sources": out_sources}

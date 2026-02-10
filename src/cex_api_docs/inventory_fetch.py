@@ -46,6 +46,7 @@ class FetchInventoryConfig:
     retries: int
     ignore_robots: bool
     render_mode: str  # http|playwright|auto
+    resume: bool
     limit: int | None
 
 
@@ -71,6 +72,7 @@ def fetch_inventory(
     retries: int = DEFAULT_RETRIES,
     ignore_robots: bool = False,
     render_mode: str = "http",
+    resume: bool = False,
     limit: int | None = None,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
@@ -94,6 +96,7 @@ def fetch_inventory(
         retries=int(retries),
         ignore_robots=bool(ignore_robots),
         render_mode=str(render_mode),
+        resume=bool(resume),
         limit=None if limit is None else int(limit),
     )
 
@@ -111,14 +114,26 @@ def fetch_inventory(
             crawl_run_id = int(cur.lastrowid)
             conn.commit()
 
+            where = "WHERE inventory_id = ?"
+            params: list[Any] = [int(inventory_id)]
+            if cfg.resume:
+                # Resume mode: fetch only what hasn't been successfully fetched yet.
+                # If robots were ignored, allow retrying previously skipped entries.
+                statuses = ["pending", "error"]
+                if cfg.ignore_robots:
+                    statuses.append("skipped")
+                placeholders = ", ".join("?" for _ in statuses)
+                where += f" AND status IN ({placeholders})"
+                params.extend(statuses)
+
             rows = conn.execute(
-                """
+                f"""
 SELECT id, canonical_url, status
 FROM inventory_entries
-WHERE inventory_id = ?
+{where}
 ORDER BY canonical_url ASC;
 """,
-                (int(inventory_id),),
+                tuple(params),
             ).fetchall()
             entries = [{"id": int(r["id"]), "canonical_url": str(r["canonical_url"]), "status": str(r["status"])} for r in rows]
             if cfg.limit is not None:

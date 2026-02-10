@@ -13,6 +13,7 @@ It solves that by crawling *public* exchange documentation into a local store an
 
 - Crawl and store official exchange API docs locally (default `./cex-docs/`)
 - Deterministically enumerate doc URLs via inventories (sitemaps + heuristics)
+- Fall back to deterministic, bounded link-follow inventories for docs without usable sitemaps
 - Sync docs in a cron-friendly way (`sync` + stable JSON output, optional Markdown report)
 - Validate registry seeds/domains and API base URLs (reachability-only, unauthenticated)
 - Full-text search crawled pages using SQLite FTS5
@@ -66,6 +67,18 @@ Sync docs for a section (deterministic inventory -> fetch):
 cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs
 ```
 
+Resume a partially completed inventory fetch (after interruption):
+
+```bash
+cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume
+```
+
+Sync all configured exchanges/sections (debug-friendly caps):
+
+```bash
+cex-api-docs sync --docs-dir ./cex-docs --limit 1 --inventory-max-pages 10 --render auto
+```
+
 Render a sync JSON artifact into Markdown:
 
 ```bash
@@ -103,6 +116,12 @@ The registry is `data/exchanges.yaml`. It defines:
 - `allowed_domains`: host allowlist for crawling
 - `sections[].seed_urls`: canonical doc roots to crawl
 - `sections[].base_urls`: API base URLs for reachability checks (and for endpoint records)
+- `sections[].doc_sources[]` (optional): additional enumeration sources (sitemap/spec URLs)
+- `sections[].inventory_policy` (optional): per-section inventory mode + caps
+  - `mode`: `inventory` (sitemap-based) or `link_follow` (deterministic link extraction)
+  - `max_pages`: cap for link-follow inventories
+  - `render_mode`: `http|playwright|auto`
+  - `scope_prefixes`: optional explicit URL prefixes (override derived scope)
 
 Current registry contains exactly these 16 exchanges:
 `binance`, `okx`, `bybit`, `bitget`, `gateio`, `kucoin`, `htx`, `cryptocom`, `bitstamp`, `bitfinex`, `dydx`, `hyperliquid`, `upbit`, `bithumb`, `coinone`, `korbit`.
@@ -144,13 +163,16 @@ Key commands:
 - `crawl`: crawl docs and store pages + metadata
 - `discover-sources`: mine registry seed pages for sitemap/spec URLs (best-effort bootstrap)
 - `inventory`: enumerate doc URLs for a section (best-effort, deterministic)
-- `fetch-inventory`: fetch every URL from an inventory
+- `fetch-inventory`: fetch every URL from an inventory (use `--resume` to continue pending/error after interruption)
 - `sync`: inventory + fetch orchestration (cron-friendly JSON output)
 - `report`: convert sync JSON into a human-readable Markdown report
 - `ingest-page`: ingest browser-captured HTML/markdown into the canonical store
 - `search-pages`, `get-page`: query stored sources
 - `validate-registry`, `validate-base-urls`: reconfirm registry truth
 - `import-openapi`, `import-postman`: deterministically import endpoint skeletons from machine-readable specs (recommended when available)
+- `import-asyncapi`: AsyncAPI import (currently a stub; will return `ENOTIMPL`)
+- `coverage-gaps`, `coverage-gaps-list`: compute and persist aggregated endpoint completeness gaps
+- `detect-stale-citations`: enqueue review items when cited sources drift
 - `save-endpoint`, `search-endpoints`: ingest/search structured endpoint records
 - `coverage`: aggregate endpoint `field_status` coverage (unknown/undocumented/documented counts)
 - `review-list`, `review-show`, `review-resolve`: manage review queue
