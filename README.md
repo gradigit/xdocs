@@ -12,9 +12,12 @@ It solves that by crawling *public* exchange documentation into a local store an
 ## What It Does
 
 - Crawl and store official exchange API docs locally (default `./cex-docs/`)
+- Deterministically enumerate doc URLs via inventories (sitemaps + heuristics)
+- Sync docs in a cron-friendly way (`sync` + stable JSON output, optional Markdown report)
 - Validate registry seeds/domains and API base URLs (reachability-only, unauthenticated)
 - Full-text search crawled pages using SQLite FTS5
 - Ingest structured endpoint JSON (agent-generated) with per-field provenance
+- Ingest browser-captured pages back into the canonical store (`ingest-page`)
 - Answer questions from the local store with claim-level citations only
 
 ## Non-Goals / Safety Rules
@@ -57,7 +60,20 @@ cex-api-docs validate-registry
 cex-api-docs validate-base-urls
 ```
 
-Crawl docs using registry seeds:
+Sync docs for a section (deterministic inventory -> fetch):
+
+```bash
+cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs
+```
+
+Render a sync JSON artifact into Markdown:
+
+```bash
+cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs > /tmp/sync.json
+cex-api-docs report --input /tmp/sync.json --output /tmp/sync.md
+```
+
+Legacy crawl (link-follow) using registry seeds:
 
 ```bash
 cex-api-docs crawl --exchange binance --section spot --docs-dir ./cex-docs
@@ -126,6 +142,11 @@ All commands print machine-readable JSON with a stable `schema_version` (current
 Key commands:
 - `init`: initialize directories + SQLite schema
 - `crawl`: crawl docs and store pages + metadata
+- `inventory`: enumerate doc URLs for a section (best-effort, deterministic)
+- `fetch-inventory`: fetch every URL from an inventory
+- `sync`: inventory + fetch orchestration (cron-friendly JSON output)
+- `report`: convert sync JSON into a human-readable Markdown report
+- `ingest-page`: ingest browser-captured HTML/markdown into the canonical store
 - `search-pages`, `get-page`: query stored sources
 - `validate-registry`, `validate-base-urls`: reconfirm registry truth
 - `save-endpoint`, `search-endpoints`: ingest/search structured endpoint records
@@ -201,7 +222,7 @@ Important paths:
 Run tests:
 
 ```bash
-pytest -q
+.venv/bin/python -m pytest -q
 ```
 
 ## Docs / References
@@ -209,6 +230,7 @@ pytest -q
 - Authoritative plan: `docs/plans/2026-02-09-feat-cex-api-docs-cite-only-knowledge-base-plan.md`
 - Smoke report example: `docs/reports/2026-02-10-cex-api-docs-smoke-report.md`
 - Runbook (Binance wow query): `docs/runbooks/binance-wow-query.md`
+- Runbook (browser capture ingestion): `docs/runbooks/ingest-page.md`
 - Troubleshooting (UA 403 + seed drift): `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
 - “Critical patterns” required reading: `docs/solutions/patterns/critical-patterns.md`
 - Agent skill: `skills/cex-api-docs/SKILL.md`
