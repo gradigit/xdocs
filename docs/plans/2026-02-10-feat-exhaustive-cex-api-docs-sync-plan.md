@@ -228,11 +228,11 @@ Acceptance:
 ### Phase 1: Inventory-Based Exhaustive Fetch
 
 - [ ] Implement `discover-sources` (bootstrap)
-- [ ] Implement `inventory` with at least:
+- [x] Implement `inventory` with at least:
   - sitemap parsing (`sitemap.xml`, `sitemap-index.xml`)
   - doc-site heuristics for common stacks (GitBook/Docusaurus/ReadMe/SwaggerUI) to find sitemap/spec URLs
-- [ ] Implement `fetch-inventory`
-- [ ] Add inventory persistence (DB tables) and diffing between inventories
+- [x] Implement `fetch-inventory`
+- [x] Add inventory persistence (DB tables) and diffing between inventories
 - [ ] Update `crawl` behavior: keep link-follow as fallback only; inventory fetch is the default path to “exhaustive”
 
 Acceptance:
@@ -240,8 +240,8 @@ Acceptance:
 
 ### Phase 2: Browser-Assisted Ingestion Bridge
 
-- [ ] Implement `ingest-page` that writes into the normal store + DB
-- [ ] Add `render_mode=ingest` metadata and include tool provenance
+- [x] Implement `ingest-page` that writes into the normal store + DB
+- [x] Add `render_mode=ingest` metadata and include tool provenance
 - [ ] Document a runbook: “When a URL can’t be fetched deterministically, capture HTML and ingest it”
 
 Acceptance:
@@ -277,8 +277,8 @@ Acceptance:
 
 ### Phase 5: Sync Orchestration + Reports + Cron
 
-- [ ] Implement `sync` command (one JSON artifact per run)
-- [ ] Implement `report` (JSON -> Markdown) for human summaries
+- [x] Implement `sync` command (one JSON artifact per run)
+- [x] Implement `report` (JSON -> Markdown) for human summaries
 - [ ] Add a `scripts/` runner for macOS cron/launchd that:
   - runs `sync`
   - writes a timestamped report file
@@ -316,4 +316,3 @@ Acceptance:
 1. **Robots policy**: default respect robots; allow `--ignore-robots` explicitly for local runs.
 2. **Retention**: keep all page versions by default; add optional retention policy later (keep last N per URL).
 3. **What qualifies as “production section”**: start with all public doc categories discovered from nav + sitemaps; humans can mark `section.status=deprecated|internal|ignore`.
-
