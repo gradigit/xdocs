@@ -2,6 +2,10 @@
 
 Goal: reproduce the MVP wow query end-to-end using only locally stored sources and cite-only output.
 
+Troubleshooting:
+- If any crawl/validation step fails with 403 or seed drift, see:
+  - `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+
 Query:
 
 > What’s the rate limit difference between Binance unified trading endpoint and the Binance spot endpoint? And in order to look up the balance of our Binance subaccount in Portfolio Margin mode, what permissions does the API key need?

@@ -19,6 +19,11 @@ This report is a reproducible sample run demonstrating that the local cite-only 
 - Store integrity (fsck): `0` issues across `58` pages
 - Wow query: `needs_clarification` without clarification; `ok` with `--clarification binance:portfolio_margin`
 
+## Related Docs
+
+- Troubleshooting: `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+- Required reading: `docs/solutions/patterns/critical-patterns.md`
+
 ## From Scratch (Minimal Repro)
 
 Notes:

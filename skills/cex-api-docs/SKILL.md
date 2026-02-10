@@ -57,6 +57,12 @@ For `wss://` base URLs, this is DNS-only (no websocket handshake).
 cex-api-docs validate-base-urls
 ```
 
+## Troubleshooting (403 / WAF / Seed Drift)
+
+If `validate-registry` or `crawl` fails due to UA-dependent 403s or doc host drift, see:
+
+- `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+
 ## Find Sources
 
 ```bash
