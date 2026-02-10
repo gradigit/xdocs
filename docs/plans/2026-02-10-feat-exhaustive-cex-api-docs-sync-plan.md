@@ -249,21 +249,21 @@ Acceptance:
 
 ### Phase 3: Endpoint Enumeration (Skeleton DB for “Everything Exists”)
 
-- [ ] Implement `import-openapi` (JSON/YAML)
-- [ ] Implement `import-postman`
+- [x] Implement `import-openapi` (JSON/YAML)
+- [x] Implement `import-postman`
 - [ ] Implement `import-asyncapi` (or defer if too heavy; keep as stub + plan)
-- [ ] Store endpoint skeletons as endpoint JSON with `field_status` defaults:
+- [x] Store endpoint skeletons as endpoint JSON with `field_status` defaults:
   - if spec provides field, mark `documented` with spec citation if available
   - else mark `undocumented` or `unknown` with a flag for review
-- [ ] Add `coverage` reporting for endpoint counts per exchange/section
+- [x] Add `coverage` reporting for endpoint counts per exchange/section
 
 Acceptance:
 - For at least 1 exchange with OpenAPI/Postman available, import yields 100% endpoint inventory into `endpoints` and `endpoints_fts`.
 
 ### Phase 4: Field Completion Framework + Review Scaling
 
-- [ ] Extend `schemas/endpoint.schema.json` with `field_status` + `variants`
-- [ ] Update `save-endpoint` validation rules accordingly
+- [x] Extend `schemas/endpoint.schema.json` with `field_status` + `variants`
+- [x] Update `save-endpoint` validation rules accordingly
 - [ ] Implement aggregated coverage gaps:
   - create one review item per `(exchange, section, field)` summarizing missing/undocumented counts
   - provide a drill-down command to list sample endpoint_ids
