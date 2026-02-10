@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
 from pathlib import Path
 import sys
@@ -10,10 +11,15 @@ from .answer import answer_question
 from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
 from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
+from .ingest_page import ingest_page
+from .inventory import create_inventory, latest_inventory_id
+from .inventory_fetch import fetch_inventory
 from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
+from .report import render_sync_markdown
 from .registry import load_registry
 from .registry_validate import validate_registry
+from .sync import run_sync
 from .store import init_store
 
 
@@ -75,6 +81,55 @@ def main(argv: list[str] | None = None) -> None:
     dp = sub.add_parser("diff", help="Report new/updated/stale pages for a crawl run", parents=[common])
     dp.add_argument("--crawl-run-id", type=int, default=None)
     dp.add_argument("--limit", type=int, default=50)
+
+    inv_p = sub.add_parser("inventory", help="Deterministically enumerate doc URLs for an exchange section", parents=[common])
+    inv_p.add_argument("--exchange", required=True, help="Exchange id from data/exchanges.yaml")
+    inv_p.add_argument("--section", required=True, help="Section id under the exchange")
+    inv_p.add_argument("--timeout-s", type=float, default=20.0)
+    inv_p.add_argument("--max-bytes", type=int, default=50_000_000)
+    inv_p.add_argument("--max-redirects", type=int, default=5)
+    inv_p.add_argument("--retries", type=int, default=1)
+    inv_p.add_argument("--ignore-robots", action="store_true")
+    inv_p.add_argument("--include-urls", action="store_true", help="Include full URL list in output (can be large)")
+    inv_p.add_argument("--sample-limit", type=int, default=20)
+
+    fi_p = sub.add_parser("fetch-inventory", help="Fetch every URL from an inventory into the store", parents=[common])
+    fi_p.add_argument("--exchange", required=True, help="Exchange id from data/exchanges.yaml")
+    fi_p.add_argument("--section", required=True, help="Section id under the exchange")
+    fi_p.add_argument("--inventory-id", type=int, default=None, help="Inventory id (default: latest for exchange/section)")
+    fi_p.add_argument("--limit", type=int, default=None, help="Fetch only the first N entries (debugging)")
+    fi_p.add_argument("--delay-s", type=float, default=0.25)
+    fi_p.add_argument("--timeout-s", type=float, default=20.0)
+    fi_p.add_argument("--max-bytes", type=int, default=10_000_000)
+    fi_p.add_argument("--max-redirects", type=int, default=5)
+    fi_p.add_argument("--retries", type=int, default=2)
+    fi_p.add_argument("--ignore-robots", action="store_true")
+    fi_p.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+
+    ip = sub.add_parser("ingest-page", help="Ingest a browser-captured page into the store (HTML or markdown)", parents=[common])
+    ip.add_argument("--url", required=True)
+    group = ip.add_mutually_exclusive_group(required=True)
+    group.add_argument("--html-path", default=None)
+    group.add_argument("--markdown-path", default=None)
+    ip.add_argument("--tool", default=None, help="Capture tool (agent-browser|playwright|manual|other)")
+    ip.add_argument("--notes", default=None)
+
+    sync_p = sub.add_parser("sync", help="Inventory + fetch orchestration (cron-friendly JSON output)", parents=[common])
+    sync_p.add_argument("--exchange", default=None)
+    sync_p.add_argument("--section", default=None)
+    sync_p.add_argument("--limit", type=int, default=None, help="Limit fetched URLs per section (debugging)")
+    sync_p.add_argument("--delay-s", type=float, default=0.25)
+    sync_p.add_argument("--timeout-s", type=float, default=20.0)
+    sync_p.add_argument("--max-bytes", type=int, default=10_000_000)
+    sync_p.add_argument("--max-redirects", type=int, default=5)
+    sync_p.add_argument("--retries", type=int, default=2)
+    sync_p.add_argument("--ignore-robots", action="store_true")
+    sync_p.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+
+    rep_p = sub.add_parser("report", help="Render a sync JSON artifact into Markdown", parents=[common])
+    rep_p.add_argument("--input", default="-", help="Path to sync JSON file, or '-' for stdin (default: -)")
+    rep_p.add_argument("--output", default="-", help="Path to write Markdown, or '-' for stdout (default: -)")
+    rep_p.add_argument("--max-errors", type=int, default=50)
 
     sub.add_parser("fts-optimize", help="Optimize SQLite FTS indexes", parents=[common])
     sub.add_parser("fts-rebuild", help="Rebuild SQLite FTS indexes from stored markdown", parents=[common])
@@ -200,6 +255,117 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "diff":
             d = diff_pages(docs_dir=args.docs_dir, crawl_run_id=args.crawl_run_id, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": d})
+            raise SystemExit(0)
+
+        if args.cmd == "inventory":
+            repo_root = Path(__file__).resolve().parents[2]
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            ex = reg.get_exchange(str(args.exchange))
+            sec = reg.get_section(str(args.exchange), str(args.section))
+            inv = create_inventory(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange_id=ex.exchange_id,
+                section_id=sec.section_id,
+                allowed_domains=ex.allowed_domains,
+                seed_urls=sec.seed_urls,
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                ignore_robots=bool(args.ignore_robots),
+                include_urls=bool(args.include_urls),
+                sample_limit=int(args.sample_limit),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": asdict(inv)})
+            raise SystemExit(0)
+
+        if args.cmd == "fetch-inventory":
+            repo_root = Path(__file__).resolve().parents[2]
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            ex = reg.get_exchange(str(args.exchange))
+            sec = reg.get_section(str(args.exchange), str(args.section))
+            inv_id = args.inventory_id
+            if inv_id is None:
+                inv_id = latest_inventory_id(docs_dir=args.docs_dir, exchange_id=ex.exchange_id, section_id=sec.section_id)
+            if inv_id is None:
+                raise CexApiDocsError(
+                    code="ENOINV",
+                    message="No inventory exists yet for exchange/section. Run `cex-api-docs inventory` first.",
+                    details={"exchange_id": ex.exchange_id, "section_id": sec.section_id},
+                )
+            r = fetch_inventory(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                exchange_id=ex.exchange_id,
+                section_id=sec.section_id,
+                inventory_id=int(inv_id),
+                allowed_domains=ex.allowed_domains,
+                delay_s=float(args.delay_s),
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                ignore_robots=bool(args.ignore_robots),
+                render_mode=str(args.render),
+                limit=args.limit,
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "ingest-page":
+            html_path = Path(args.html_path) if args.html_path else None
+            md_path = Path(args.markdown_path) if args.markdown_path else None
+            r = ingest_page(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                url=str(args.url),
+                html_path=html_path,
+                markdown_path=md_path,
+                tool=args.tool,
+                notes=args.notes,
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "sync":
+            repo_root = Path(__file__).resolve().parents[2]
+            r = run_sync(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                registry_path=repo_root / "data" / "exchanges.yaml",
+                exchange=args.exchange,
+                section=args.section,
+                render_mode=str(args.render),
+                ignore_robots=bool(args.ignore_robots),
+                timeout_s=float(args.timeout_s),
+                max_bytes=int(args.max_bytes),
+                max_redirects=int(args.max_redirects),
+                retries=int(args.retries),
+                delay_s=float(args.delay_s),
+                limit=args.limit,
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            raise SystemExit(0)
+
+        if args.cmd == "report":
+            in_path = str(args.input)
+            if in_path == "-" or in_path == "":
+                raw = sys.stdin.read()
+            else:
+                raw = Path(in_path).read_text(encoding="utf-8")
+            data = json.loads(raw)
+            if isinstance(data, dict) and "result" in data and isinstance(data["result"], dict):
+                # Accept a full CLI JSON envelope.
+                data = data["result"]
+            if not isinstance(data, dict):
+                raise CexApiDocsError(code="EBADJSON", message="Report input must be a JSON object.")
+            md = render_sync_markdown(sync_result=data, max_errors=int(args.max_errors))
+            out_path = str(args.output)
+            if out_path == "-" or out_path == "":
+                sys.stdout.write(md)
+            else:
+                Path(out_path).write_text(md, encoding="utf-8")
             raise SystemExit(0)
 
         if args.cmd == "fts-optimize":

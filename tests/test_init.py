@@ -37,7 +37,7 @@ class TestInit(unittest.TestCase):
             finally:
                 conn.close()
 
-            for required in ("pages", "pages_fts", "endpoints", "endpoints_fts", "review_queue"):
+            for required in ("pages", "pages_fts", "endpoints", "endpoints_fts", "review_queue", "inventories", "inventory_entries"):
                 self.assertIn(required, names)
 
     def test_lockfile_blocks_other_process(self) -> None:

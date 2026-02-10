@@ -124,3 +124,34 @@ CREATE TABLE IF NOT EXISTS review_queue (
 
 CREATE INDEX IF NOT EXISTS review_queue_status_idx ON review_queue(status);
 
+-- Inventories (deterministic URL enumeration per exchange section).
+-- These enable "exhaustive" fetch runs that are diffable and cron-friendly.
+CREATE TABLE IF NOT EXISTS inventories (
+  id INTEGER PRIMARY KEY,
+  exchange_id TEXT NOT NULL,
+  section_id TEXT NOT NULL,
+  generated_at TEXT NOT NULL,
+  sources_json TEXT NOT NULL,      -- JSON: seeds, discovered sitemaps, scopes, config
+  url_count INTEGER NOT NULL,
+  inventory_hash TEXT NOT NULL     -- sha256 of canonical URL list (stable ordering)
+);
+
+CREATE INDEX IF NOT EXISTS inventories_exchange_section_idx ON inventories(exchange_id, section_id);
+CREATE INDEX IF NOT EXISTS inventories_generated_at_idx ON inventories(generated_at);
+
+CREATE TABLE IF NOT EXISTS inventory_entries (
+  id INTEGER PRIMARY KEY,
+  inventory_id INTEGER NOT NULL REFERENCES inventories(id),
+  canonical_url TEXT NOT NULL,
+  status TEXT NOT NULL,            -- pending|fetched|error|skipped
+  last_fetched_at TEXT,
+  last_http_status INTEGER,
+  last_content_hash TEXT,
+  last_final_url TEXT,
+  last_page_canonical_url TEXT,
+  error_json TEXT,
+  UNIQUE (inventory_id, canonical_url)
+);
+
+CREATE INDEX IF NOT EXISTS inventory_entries_inventory_id_idx ON inventory_entries(inventory_id);
+CREATE INDEX IF NOT EXISTS inventory_entries_status_idx ON inventory_entries(status);
