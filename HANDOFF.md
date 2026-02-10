@@ -1,78 +1,67 @@
-# Context Handoff — 2026-02-10
-
-Session summary for context continuity after clearing.
+# Context Handoff — 2026-02-11
 
 ## First Steps (Read in Order)
-
-1. Read CLAUDE.md — project context, conventions, current phase, data flow, key files
-2. Read todos/ directory — all 20 TODOs are complete; next work needs new TODO creation
-3. Read docs/plans/2026-02-10-feat-exhaustive-cex-api-docs-sync-plan.md — the fix plan that drove this session's 10 changes
-
-After reading these files, you'll have full context to continue.
+1. Read CLAUDE.md — project context, architecture, conventions
+2. Read TODO.md — current task list (points to `todos/` directory)
+3. Read deep-review-cex-api-docs-readable.md — full deep-review findings and status
 
 ## Session Summary
 
 ### What Was Done
+- Ran deep adversarial review (`/deep-review`) of the entire cex-api-docs codebase
+- Produced two review artifacts: clinical findings + human-readable report
+- Fixed all 9 actionable findings (of 12 total) — 1 CRITICAL, 4 SIGNIFICANT, 4 MINOR
+- All 20 tests pass after fixes
+- Updated CLAUDE.md and .doc-manifest.yaml via `/wrap` chain
 
-Implemented all 10 fixes from the "Fix Plan: All 10 Gaps in cex-api-docs":
+### Deep-Review Fixes Applied (commit e38a0c9)
 
-1. **Deduplicated `_require_store_db`** — centralized into `require_store_db` in store.py; 9 modules updated to import from there instead of duplicating the helper
-2. **Fixed upbit/rest_en scope_prefix bug** — was using Korean path `/api_docs` for English section; corrected to `/api_docs/rest_en`
-3. **Updated asyncapi stub label** — CLI and plan now say "asyncapi-stub" instead of misleading "asyncapi"
-4. **Populated doc_sources** — added sitemap URLs for Binance, OKX, Bybit, Bitget, Hyperliquid in data/exchanges.yaml
-5. **Narrowed write lock in fetch_inventory** — refactored to 3-phase approach: Phase A creates crawl_run (one lock), Phase B per-entry lock around DB writes only, Phase C finalizes (one lock)
-6. **Added --resume to sync** — reuses existing inventory, fetches only pending/error entries
-7. **Deprecated crawl command** — emits stderr warning directing users to `sync` or `inventory`+`fetch-inventory`
-8. **Generalized answer.py** — all 16 exchanges get generic FTS cite-only search; Binance retains richer heuristics as bonus
-9. **Added store-report command** — queries store DB (pages, inventories, endpoints, review queue), renders markdown summary
-10. **Added --concurrency N** — to both fetch-inventory and sync; uses ThreadPoolExecutor + _DomainRateLimiter for per-domain throttling
+| ID | Severity | Fix |
+|----|----------|-----|
+| F1 | CRITICAL | Fixed double-escaped regex in raw strings across 6 files (`r"\\w"` -> `r"\w"`) |
+| F2 | SIGNIFICANT | Rewrote stale_citations.py with 2-phase locking (reads outside lock) |
+| F4 | SIGNIFICANT | Thread-safe robots_cache with `threading.Lock()` in inventory_fetch.py |
+| F5 | SIGNIFICANT | Schema migration framework in db.py (MIGRATIONS dict, sequential apply) |
+| F6 | MINOR | Removed dead `links` table from schema.sql |
+| F7 | MINOR | Removed `_ensure_table()` from coverage_gaps.py (table in schema.sql only) |
+| F8 | MINOR | Extracted shared `url_host()` into new urlutil.py (7 files deduped) |
+| F9 | MINOR | Replaced pages.py `_require_db` with `store.require_store_db` |
+| F12 | MINOR | Replaced 30 `raise SystemExit(0)` with `return` in cli.py |
 
-Also updated CLAUDE.md (data flow, key files, gotchas, current phase) and README.md to reflect all changes.
+### Not Fixed (intentional)
+- F3: Deprecated crawl code — not a bug, deprecation is the plan
+- F10: Already correct behavior upon re-examination
+- F11: Architectural observation, not a code fix
 
 ### Current State
-
-- All 20 tests pass (pytest, 5.5s)
-- All 20 TODOs in todos/ are marked complete
-- Last commit: 08912d9 — feat: implement all 10 fix-plan gaps for cex-api-docs
 - Branch: main
-- Not pushed to remote
+- Last commit: e38a0c9 — fix: deep-review bugfixes — regex, locking, dead code, dedup
+- Working tree: clean (except this HANDOFF.md)
 
 ### What's Next
-
-1. **Run a real sync** against a live exchange to smoke-test all changes end-to-end (`cex-api-docs sync --docs-dir ./cex-docs --concurrency 2`)
-2. **Store-report smoke test** — run `cex-api-docs store-report --docs-dir ./cex-docs` after a sync to verify markdown output
-3. **Answer generalization smoke test** — test answer.py against a non-Binance exchange (e.g. OKX or Bybit) to confirm cite-only FTS search works
-4. **Create new TODOs** for remaining roadmap items (P3+ from plan, WebSocket doc coverage, multi-exchange answer comparison, CI integration)
-5. **Consider adding integration tests** that exercise the full sync pipeline with a mock HTTP server
+1. Continue with items in `todos/` (file-based work tracking)
+2. The "wow query" demo runbook is at docs/runbooks/binance-wow-query.md
+3. Consider running a real sync against an exchange to validate the regex fixes in production
 
 ### Failed Approaches
-
-- None this session; all 10 fixes landed cleanly.
-
-### Open Questions / Blockers
-
-- The `--concurrency` implementation uses ThreadPoolExecutor (not async); this is intentional since the fetch code is synchronous, but a future migration to asyncio + aiohttp could improve throughput
-- answer.py's generic path for non-Binance exchanges uses FTS5 search only; richer heuristics (endpoint matching, rate-limit extraction) are Binance-specific and could be generalized per-exchange over time
-- doc_sources in exchanges.yaml only covers 5 of 16 exchanges so far; remaining exchanges need sitemap discovery
+- Initial regex fix pass missed discover_sources.py:178 (second sitemap regex instance). Found via final `Grep` sweep for `r".*\\\\[wWsSdDbB]` pattern.
+- Import placement: when replacing `def _host()` with `from .urlutil import url_host as _host`, imports were initially placed mid-file at the old function location. Had to move them to the top import section.
 
 ### Key Context
-
-- `require_store_db` is now the single source of truth for "ensure store DB exists" — imported from `cex_api_docs.store` by all modules
-- fetch_inventory uses 3-phase locking: Phase A (create crawl_run, single lock), Phase B (per-entry: fetch outside lock, write inside lock), Phase C (finalize crawl_run, single lock)
-- The `crawl` CLI command still works but prints a deprecation warning to stderr; it delegates to `sync` internally
-- `_DomainRateLimiter` in inventory_fetch.py enforces per-domain delays (default 1s) across concurrent threads
+- All regex in raw strings should use single backslash (`r"\w"` not `r"\\w"`) — the `r` prefix already handles escaping
+- `urlutil.py` is now the canonical location for `url_host()` — all 7 modules import from there
+- Schema migration framework is in place but MIGRATIONS dict is empty (current version is v1). Ready for future schema changes.
+- stale_citations.py uses a read-only connection for phase 1 (analysis) and only acquires write lock for phase 2 (review_queue inserts)
 
 ## Reference Files
-
 | File | Purpose |
 |------|---------|
-| CLAUDE.md | Project context, conventions, key files, current phase |
-| data/exchanges.yaml | All 16 exchanges with seeds, allowlists, base URLs, doc_sources |
-| src/cex_api_docs/store.py | `require_store_db` helper (shared across 9+ modules) |
-| src/cex_api_docs/answer.py | Generalized cite-only answer assembly (all exchanges) |
-| src/cex_api_docs/inventory_fetch.py | 3-phase locking, --resume, --concurrency |
-| src/cex_api_docs/sync.py | Orchestration with --resume and --concurrency |
-| src/cex_api_docs/report.py | Markdown report rendering + store-report logic |
-| src/cex_api_docs/cli.py | CLI entrypoint (store-report, crawl deprecation, etc.) |
-| docs/plans/2026-02-10-feat-exhaustive-cex-api-docs-sync-plan.md | The fix plan driving this session |
-| docs/runbooks/binance-wow-query.md | Demo runbook for cite-only answer queries |
+| CLAUDE.md | Project context, architecture, conventions |
+| TODO.md | Points to `todos/` for work tracking |
+| deep-review-cex-api-docs-readable.md | Human-readable deep review report |
+| deep-review-cex-api-docs.md | Clinical deep review findings |
+| src/cex_api_docs/urlutil.py | New shared `url_host()` utility |
+| src/cex_api_docs/stale_citations.py | Rewritten with 2-phase locking |
+| src/cex_api_docs/db.py | Schema migration framework |
+| schema/schema.sql | Authoritative DDL (links table removed) |
+| docs/runbooks/binance-wow-query.md | Demo runbook for "wow query" |
