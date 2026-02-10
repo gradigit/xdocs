@@ -7,14 +7,7 @@ from typing import Any
 
 from .db import open_db
 from .endpoints import REQUIRED_HTTP_FIELD_STATUS_KEYS
-from .errors import CexApiDocsError
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
+from .store import require_store_db
 
 
 def endpoint_coverage(
@@ -24,7 +17,7 @@ def endpoint_coverage(
     section: str | None = None,
     limit_samples: int = 5,
 ) -> dict[str, Any]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         where: list[str] = []

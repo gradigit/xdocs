@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlsplit
 
+# TODO: migrate to inventory+fetch_inventory pipeline (crawl is deprecated)
 from cex_api_docs.crawler import crawl_store
 from cex_api_docs.pages import diff_pages, search_pages
 from cex_api_docs.store import init_store

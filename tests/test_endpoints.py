@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+# TODO: migrate to inventory+fetch_inventory pipeline (crawl is deprecated)
 from cex_api_docs.crawler import crawl_store
 from cex_api_docs.endpoints import compute_endpoint_id, review_list, review_resolve, save_endpoint, search_endpoints
 from cex_api_docs.pages import get_page

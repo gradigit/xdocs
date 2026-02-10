@@ -9,10 +9,11 @@ from typing import Any
 from .coverage_gaps import compute_and_persist_coverage_gaps
 from .db import open_db
 from .errors import CexApiDocsError
-from .inventory import create_inventory
+from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
 from .registry import load_registry
 from .stale_citations import detect_stale_citations
+from .store import require_store_db
 from .timeutil import now_iso_utc
 
 
@@ -29,17 +30,12 @@ class SyncConfig:
     delay_s: float
     limit: int | None
     inventory_max_pages: int | None
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
+    resume: bool
+    concurrency: int
 
 
 def _inventory_diff_counts(*, docs_dir: str, exchange_id: str, section_id: str, new_inventory_id: int) -> dict[str, int]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         prev = conn.execute(
@@ -81,6 +77,39 @@ SELECT COUNT(*) AS n FROM (
         conn.close()
 
 
+def _load_inventory_from_db(
+    docs_dir: str, inventory_id: int, exchange_id: str, section_id: str,
+) -> dict[str, Any]:
+    """Load an existing inventory row + entry status counts from DB."""
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        row = conn.execute(
+            "SELECT generated_at, url_count, inventory_hash, sources_json FROM inventories WHERE id = ?;",
+            (int(inventory_id),),
+        ).fetchone()
+        if row is None:
+            raise CexApiDocsError(
+                code="ENOINV",
+                message="Inventory not found.",
+                details={"inventory_id": inventory_id},
+            )
+        status_rows = conn.execute(
+            "SELECT status, COUNT(*) AS n FROM inventory_entries WHERE inventory_id = ? GROUP BY status;",
+            (int(inventory_id),),
+        ).fetchall()
+        status_counts = {str(r["status"]): int(r["n"]) for r in status_rows}
+        return {
+            "inventory_id": int(inventory_id),
+            "generated_at": str(row["generated_at"]),
+            "url_count": int(row["url_count"]),
+            "inventory_hash": str(row["inventory_hash"]),
+            "status_counts": status_counts,
+        }
+    finally:
+        conn.close()
+
+
 def run_sync(
     *,
     docs_dir: str,
@@ -97,6 +126,8 @@ def run_sync(
     delay_s: float = 0.25,
     limit: int | None = None,
     inventory_max_pages: int | None = None,
+    resume: bool = False,
+    concurrency: int = 1,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
@@ -116,6 +147,8 @@ def run_sync(
         delay_s=float(delay_s),
         limit=None if limit is None else int(limit),
         inventory_max_pages=None if inventory_max_pages is None else max(1, int(inventory_max_pages)),
+        resume=bool(resume),
+        concurrency=max(1, int(concurrency)),
     )
 
     sections_run: list[dict[str, Any]] = []
@@ -138,35 +171,66 @@ def run_sync(
             if section and sec.section_id != section:
                 continue
 
-            inv = create_inventory(
-                docs_dir=docs_dir,
-                lock_timeout_s=float(lock_timeout_s),
-                exchange_id=ex.exchange_id,
-                section_id=sec.section_id,
-                allowed_domains=ex.allowed_domains,
-                seed_urls=sec.seed_urls,
-                doc_sources=getattr(sec, "doc_sources", None),
-                inventory_policy=getattr(sec, "inventory_policy", None),
-                link_follow_max_pages_override=cfg.inventory_max_pages,
-                timeout_s=float(timeout_s),
-                max_bytes=max(50_000_000, int(max_bytes)),
-                link_follow_max_bytes=int(max_bytes),
-                max_redirects=int(max_redirects),
-                retries=int(retries),
-                ignore_robots=bool(ignore_robots),
-                delay_s=float(delay_s),
-                default_render_mode=str(render_mode),
-                include_urls=False,
-            )
+            # Resume mode: reuse the latest existing inventory instead of creating a new one.
+            inv = None
+            inv_resumed = False
+            if cfg.resume:
+                existing_id = latest_inventory_id(docs_dir=docs_dir, exchange_id=ex.exchange_id, section_id=sec.section_id)
+                if existing_id is not None:
+                    inv_resumed = True
+                    inv_info = _load_inventory_from_db(docs_dir, existing_id, ex.exchange_id, sec.section_id)
 
-            inv_diff = _inventory_diff_counts(docs_dir=docs_dir, exchange_id=ex.exchange_id, section_id=sec.section_id, new_inventory_id=int(inv.inventory_id))
+            if not inv_resumed:
+                inv = create_inventory(
+                    docs_dir=docs_dir,
+                    lock_timeout_s=float(lock_timeout_s),
+                    exchange_id=ex.exchange_id,
+                    section_id=sec.section_id,
+                    allowed_domains=ex.allowed_domains,
+                    seed_urls=sec.seed_urls,
+                    doc_sources=getattr(sec, "doc_sources", None),
+                    inventory_policy=getattr(sec, "inventory_policy", None),
+                    link_follow_max_pages_override=cfg.inventory_max_pages,
+                    timeout_s=float(timeout_s),
+                    max_bytes=max(50_000_000, int(max_bytes)),
+                    link_follow_max_bytes=int(max_bytes),
+                    max_redirects=int(max_redirects),
+                    retries=int(retries),
+                    ignore_robots=bool(ignore_robots),
+                    delay_s=float(delay_s),
+                    default_render_mode=str(render_mode),
+                    include_urls=False,
+                )
+
+            if inv_resumed:
+                use_inv_id = int(inv_info["inventory_id"])
+                inv_url_count = int(inv_info["url_count"])
+                inv_generated_at = inv_info["generated_at"]
+                inv_hash = inv_info["inventory_hash"]
+                inv_diff = {"added": 0, "removed": 0}
+                inv_counts = inv_info.get("status_counts", {})
+                inv_errors: list[dict[str, Any]] = []
+                inv_samples: dict[str, Any] = {}
+            else:
+                assert inv is not None
+                use_inv_id = int(inv.inventory_id)
+                inv_url_count = int(inv.url_count)
+                inv_generated_at = inv.generated_at
+                inv_hash = inv.inventory_hash
+                inv_diff = _inventory_diff_counts(
+                    docs_dir=docs_dir, exchange_id=ex.exchange_id,
+                    section_id=sec.section_id, new_inventory_id=use_inv_id,
+                )
+                inv_counts = inv.counts
+                inv_errors = inv.errors
+                inv_samples = inv.samples
 
             fetch_res = fetch_inventory(
                 docs_dir=docs_dir,
                 lock_timeout_s=float(lock_timeout_s),
                 exchange_id=ex.exchange_id,
                 section_id=sec.section_id,
-                inventory_id=int(inv.inventory_id),
+                inventory_id=use_inv_id,
                 allowed_domains=ex.allowed_domains,
                 delay_s=float(delay_s),
                 timeout_s=float(timeout_s),
@@ -175,32 +239,36 @@ def run_sync(
                 retries=int(retries),
                 ignore_robots=bool(ignore_robots),
                 render_mode=str(render_mode),
+                resume=cfg.resume,
                 limit=cfg.limit,
+                concurrency=cfg.concurrency,
             )
 
             totals["inventories"] += 1
-            totals["inventory_urls"] += int(inv.url_count)
+            totals["inventory_urls"] += inv_url_count
             totals["fetched"] += int(fetch_res["counts"]["fetched"])
             totals["stored"] += int(fetch_res["counts"]["stored"])
             totals["skipped"] += int(fetch_res["counts"]["skipped"])
             totals["new_pages"] += int(fetch_res["counts"].get("new_pages") or 0)
             totals["updated_pages"] += int(fetch_res["counts"].get("updated_pages") or 0)
             totals["unchanged_pages"] += int(fetch_res["counts"].get("unchanged_pages") or 0)
-            totals["errors"] += int(fetch_res["counts"]["errors"]) + int(inv.counts["errors"])
+            inv_error_count = int(inv_counts.get("errors", 0)) if isinstance(inv_counts, dict) else 0
+            totals["errors"] += int(fetch_res["counts"]["errors"]) + inv_error_count
 
             sections_run.append(
                 {
                     "exchange_id": ex.exchange_id,
                     "section_id": sec.section_id,
+                    "resumed": inv_resumed,
                     "inventory": {
-                        "inventory_id": int(inv.inventory_id),
-                        "generated_at": inv.generated_at,
-                        "url_count": int(inv.url_count),
-                        "inventory_hash": inv.inventory_hash,
+                        "inventory_id": use_inv_id,
+                        "generated_at": inv_generated_at,
+                        "url_count": inv_url_count,
+                        "inventory_hash": inv_hash,
                         "diff": inv_diff,
-                        "counts": inv.counts,
-                        "errors": inv.errors,
-                        "samples": inv.samples,
+                        "counts": inv_counts,
+                        "errors": inv_errors,
+                        "samples": inv_samples,
                     },
                     "fetch": fetch_res,
                 }

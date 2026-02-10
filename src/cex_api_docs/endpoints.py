@@ -13,6 +13,7 @@ from .errors import CexApiDocsError
 from .fs import atomic_write_text
 from .hashing import sha256_hex_text
 from .lock import acquire_write_lock
+from .store import require_store_db
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
 
@@ -75,13 +76,6 @@ def compute_endpoint_id(record: dict[str, Any]) -> str:
 
     raw = f"{exchange}|{section}|{protocol}|{base_url}|{api_version_str}|{method}|{path}"
     return sha256_hex_text(raw)
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
 
 
 def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
@@ -155,7 +149,7 @@ def save_endpoint(
     endpoint_json_path: Path,
     schema_path: Path,
 ) -> dict[str, Any]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
 
     record = _load_json(endpoint_json_path)
@@ -246,7 +240,7 @@ def save_endpoints_bulk(
 
     This is primarily used by deterministic importers (OpenAPI/Postman).
     """
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
 
     validator = load_endpoint_schema(schema_path)
@@ -557,7 +551,7 @@ def search_endpoints(
     section: str | None = None,
     limit: int = 10,
 ) -> list[dict[str, Any]]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         where = ["endpoints_fts MATCH ?"]
@@ -616,7 +610,7 @@ LIMIT ?;
 
 
 def review_list(*, docs_dir: str, status: str = "open", limit: int = 50) -> list[dict[str, Any]]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         cur = conn.execute(
@@ -635,7 +629,7 @@ LIMIT ?;
 
 
 def review_show(*, docs_dir: str, review_id: int) -> dict[str, Any]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         row = conn.execute("SELECT * FROM review_queue WHERE id = ?;", (int(review_id),)).fetchone()
@@ -647,7 +641,7 @@ def review_show(*, docs_dir: str, review_id: int) -> dict[str, Any]:
 
 
 def review_resolve(*, docs_dir: str, lock_timeout_s: float, review_id: int, resolution: str | None = None) -> dict[str, Any]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
     with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
         conn = open_db(db_path)

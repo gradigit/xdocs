@@ -251,7 +251,7 @@ Acceptance:
 
 - [x] Implement `import-openapi` (JSON/YAML)
 - [x] Implement `import-postman`
-- [x] Implement `import-asyncapi` (or defer if too heavy; keep as stub + plan)
+- [ ] Implement `import-asyncapi` (deferred — no CEX publishes AsyncAPI specs)
 - [x] Store endpoint skeletons as endpoint JSON with `field_status` defaults:
   - if spec provides field, mark `documented` with spec citation if available
   - else mark `undocumented` or `unknown` with a flag for review

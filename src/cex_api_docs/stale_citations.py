@@ -8,14 +8,8 @@ from typing import Any
 from .db import open_db
 from .errors import CexApiDocsError
 from .lock import acquire_write_lock
+from .store import require_store_db
 from .timeutil import now_iso_utc
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +40,7 @@ def detect_stale_citations(
     - if a page changes during a crawl/fetch, page_store enqueues `source_changed`
     - this command is a deterministic "sweep" to ensure no stale citations are missed
     """
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
 
     created_at = now_iso_utc()

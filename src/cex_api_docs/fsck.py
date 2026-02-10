@@ -4,14 +4,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .db import open_db
-from .errors import CexApiDocsError
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
+from .store import require_store_db
 
 
 def _iter_files(root: Path, *, suffix: str) -> Iterable[Path]:
@@ -27,7 +20,7 @@ def fsck_store(*, docs_dir: str, limit: int = 200, scan_orphans: bool = False) -
     v1 behavior is detection-only: it does not delete or rewrite data by default.
     """
 
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     root = Path(docs_dir)
 
     issues: list[dict[str, Any]] = []

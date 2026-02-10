@@ -12,6 +12,7 @@ from .httpfetch import FetchResult
 from .lock import acquire_write_lock
 from .markdown import extractor_info_v1, normalize_markdown
 from .page_store import store_page
+from .store import require_store_db
 from .timeutil import now_iso_utc
 
 
@@ -22,13 +23,6 @@ class IngestConfig:
     markdown_path: str | None
     tool: str | None
     notes: str | None
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
 
 
 def ingest_page(
@@ -50,7 +44,7 @@ def ingest_page(
             details={"html_path": str(html_path) if html_path else None, "markdown_path": str(markdown_path) if markdown_path else None},
         )
 
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     docs_root = Path(docs_dir)
     lock_path = docs_root / "db" / ".write.lock"
 

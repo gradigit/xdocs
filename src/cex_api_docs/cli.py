@@ -24,7 +24,7 @@ from .openapi_import import import_openapi
 from .postman_import import import_postman
 from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
-from .report import render_sync_markdown
+from .report import render_sync_markdown, store_report, render_store_report_markdown
 from .registry import load_registry
 from .registry_validate import validate_registry
 from .sync import run_sync
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="Initialize store dirs + SQLite schema (idempotent)", parents=[common])
 
-    crawl_p = sub.add_parser("crawl", help="Crawl docs and store pages + metadata", parents=[common])
+    crawl_p = sub.add_parser("crawl", help="(DEPRECATED) Crawl docs and store pages + metadata", parents=[common])
     crawl_p.add_argument("--exchange", help="Exchange id from data/exchanges.yaml (recommended)")
     crawl_p.add_argument("--section", help="Section id under the exchange (optional; default: all sections)")
     crawl_p.add_argument("--url", action="append", default=[], help="Seed URL (repeatable)")
@@ -132,6 +132,12 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Fetch only non-fetched entries (pending/error; includes skipped when --ignore-robots is set).",
     )
+    fi_p.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Number of concurrent HTTP fetch workers (default: 1, sequential)",
+    )
 
     ip = sub.add_parser("ingest-page", help="Ingest a browser-captured page into the store (HTML or markdown)", parents=[common])
     ip.add_argument("--url", required=True)
@@ -158,11 +164,27 @@ def main(argv: list[str] | None = None) -> None:
     sync_p.add_argument("--retries", type=int, default=2)
     sync_p.add_argument("--ignore-robots", action="store_true")
     sync_p.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+    sync_p.add_argument(
+        "--resume",
+        action="store_true",
+        help="Reuse existing inventories and fetch only non-fetched entries (pending/error).",
+    )
+    sync_p.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Number of concurrent HTTP fetch workers per section (default: 1, sequential)",
+    )
 
     rep_p = sub.add_parser("report", help="Render a sync JSON artifact into Markdown", parents=[common])
     rep_p.add_argument("--input", default="-", help="Path to sync JSON file, or '-' for stdin (default: -)")
     rep_p.add_argument("--output", default="-", help="Path to write Markdown, or '-' for stdout (default: -)")
     rep_p.add_argument("--max-errors", type=int, default=50)
+
+    sr_p = sub.add_parser("store-report", help="Report on current store contents", parents=[common])
+    sr_p.add_argument("--exchange", default=None, help="Filter by exchange id")
+    sr_p.add_argument("--section", default=None, help="Filter by section id")
+    sr_p.add_argument("--output", default="-", help="Path to write Markdown, or '-' for stdout (default: -)")
 
     sub.add_parser("fts-optimize", help="Optimize SQLite FTS indexes", parents=[common])
     sub.add_parser("fts-rebuild", help="Rebuild SQLite FTS indexes from stored markdown", parents=[common])
@@ -214,7 +236,7 @@ def main(argv: list[str] | None = None) -> None:
     pm.add_argument("--retries", type=int, default=1)
     pm.add_argument("--continue-on-error", action="store_true", help="Continue importing other endpoints after an error")
 
-    ia = sub.add_parser("import-asyncapi", help="Import AsyncAPI spec into endpoint DB (stub)", parents=[common])
+    ia = sub.add_parser("import-asyncapi", help="Import AsyncAPI spec (not yet implemented — no CEX AsyncAPI specs found)", parents=[common])
     ia.add_argument("--exchange", required=True)
     ia.add_argument("--section", required=True)
     ia.add_argument("--url", required=True, help="AsyncAPI spec URL (json/yaml)")
@@ -279,6 +301,7 @@ def main(argv: list[str] | None = None) -> None:
             raise SystemExit(0)
 
         if args.cmd == "crawl":
+            print("WARNING: 'crawl' is deprecated. Use 'sync' or 'inventory'+'fetch-inventory'.", file=sys.stderr)
             repo_root = Path(__file__).resolve().parents[2]
             seeds: list[str] = list(args.url or [])
             allowed_domains: list[str] = [d for d in (args.domain_scope or []) if d]
@@ -423,6 +446,7 @@ def main(argv: list[str] | None = None) -> None:
                 render_mode=str(args.render),
                 resume=bool(args.resume),
                 limit=args.limit,
+                concurrency=int(args.concurrency),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
@@ -459,6 +483,8 @@ def main(argv: list[str] | None = None) -> None:
                 delay_s=float(args.delay_s),
                 limit=args.limit,
                 inventory_max_pages=args.inventory_max_pages,
+                resume=bool(args.resume),
+                concurrency=int(args.concurrency),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             raise SystemExit(0)
@@ -481,6 +507,22 @@ def main(argv: list[str] | None = None) -> None:
                 sys.stdout.write(md)
             else:
                 Path(out_path).write_text(md, encoding="utf-8")
+            raise SystemExit(0)
+
+        if args.cmd == "store-report":
+            data = store_report(
+                docs_dir=args.docs_dir,
+                exchange=args.exchange,
+                section=args.section,
+            )
+            out_path = str(args.output)
+            if out_path == "-" or out_path == "":
+                md = render_store_report_markdown(data)
+                sys.stdout.write(md)
+            else:
+                md = render_store_report_markdown(data)
+                Path(out_path).write_text(md, encoding="utf-8")
+                _print_json({"ok": True, "schema_version": "v1", "result": data})
             raise SystemExit(0)
 
         if args.cmd == "fts-optimize":

@@ -20,6 +20,7 @@ from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
 from .registry import DocSource, InventoryPolicy
 from .sitemaps import SitemapParseResult, iter_unique, parse_sitemap_bytes
+from .store import require_store_db
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
 
@@ -42,13 +43,6 @@ class InventoryConfig:
     ignore_robots: bool
     delay_s: float
     default_render_mode: str
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
 
 
 def _host(url: str) -> str:
@@ -336,7 +330,7 @@ def create_inventory(
     - common sitemap locations
     - seed-derived scope prefixes to keep section inventories bounded
     """
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
     session = requests.Session()
 
@@ -660,7 +654,7 @@ VALUES (?, ?, 'pending');
 
 
 def latest_inventory_id(*, docs_dir: str, exchange_id: str, section_id: str) -> int | None:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         row = conn.execute(

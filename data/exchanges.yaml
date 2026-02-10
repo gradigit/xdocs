@@ -7,15 +7,27 @@ exchanges:
       - section_id: spot
         base_urls: ["https://api.binance.com"]
         seed_urls: ["https://developers.binance.com/docs/binance-spot-api-docs/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
       - section_id: futures_usdm
         base_urls: ["https://fapi.binance.com"]
         seed_urls: ["https://developers.binance.com/docs/derivatives/usds-margined-futures/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
       - section_id: futures_coinm
         base_urls: ["https://dapi.binance.com"]
         seed_urls: ["https://developers.binance.com/docs/derivatives/coin-margined-futures/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
       - section_id: portfolio_margin
         base_urls: ["https://papi.binance.com"]
         seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
 
   - exchange_id: okx
     display_name: OKX
@@ -25,9 +37,15 @@ exchanges:
       - section_id: rest
         base_urls: ["https://www.okx.com"]
         seed_urls: ["https://www.okx.com/docs-v5/en/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.okx.com/sitemap.xml
       - section_id: websocket
         base_urls: ["wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/private", "wss://ws.okx.com:8443/ws/v5/business"]
         seed_urls: ["https://www.okx.com/docs-v5/en/#websocket-api"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.okx.com/sitemap.xml
 
   - exchange_id: bybit
     display_name: Bybit
@@ -37,9 +55,15 @@ exchanges:
       - section_id: v5
         base_urls: ["https://api.bybit.com"]
         seed_urls: ["https://bybit-exchange.github.io/docs/v5/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://bybit-exchange.github.io/docs/sitemap.xml
       - section_id: websocket
         base_urls: ["wss://stream.bybit.com/v5/public", "wss://stream.bybit.com/v5/private"]
         seed_urls: ["https://bybit-exchange.github.io/docs/v5/ws/connect"]
+        doc_sources:
+          - kind: sitemap
+            url: https://bybit-exchange.github.io/docs/sitemap.xml
 
   - exchange_id: bitget
     display_name: Bitget
@@ -49,6 +73,9 @@ exchanges:
       - section_id: v2
         base_urls: ["https://api.bitget.com"]
         seed_urls: ["https://www.bitget.com/api-doc/common/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.bitget.com/sitemap.xml
 
   - exchange_id: gateio
     display_name: Gate.io
@@ -161,6 +188,9 @@ exchanges:
       - section_id: api
         base_urls: ["https://api.hyperliquid.xyz"]
         seed_urls: ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"]
+        doc_sources:
+          - kind: sitemap
+            url: https://hyperliquid.gitbook.io/hyperliquid-docs/sitemap.xml
 
   - exchange_id: upbit
     display_name: Upbit
@@ -174,8 +204,6 @@ exchanges:
           mode: link_follow
           render_mode: auto
           max_pages: 300
-          scope_prefixes:
-            - "https://docs.upbit.com/kr/reference/"
       - section_id: rest_ko
         base_urls: ["https://api.upbit.com/v1"]
         seed_urls: ["https://docs.upbit.com/ko/reference"]

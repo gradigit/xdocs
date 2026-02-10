@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .db import DbInitResult, init_db
+from .errors import CexApiDocsError
 from .lock import acquire_write_lock
 
 
@@ -25,6 +26,18 @@ class StorePaths:
     lock_path: Path
     crawl_log_path: Path
     review_queue_path: Path
+
+
+def require_store_db(docs_dir: str) -> Path:
+    """Return the DB path, raising ENOINIT if the store hasn't been initialized."""
+    db_path = Path(docs_dir) / "db" / "docs.db"
+    if not db_path.exists():
+        raise CexApiDocsError(
+            code="ENOINIT",
+            message="Store not initialized. Run `cex-api-docs init` first.",
+            details={"docs_dir": docs_dir},
+        )
+    return db_path
 
 
 def resolve_store_paths(docs_dir: str) -> StorePaths:

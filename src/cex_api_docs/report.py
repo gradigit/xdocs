@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
+
+from .db import open_db
+from .store import require_store_db
+from .timeutil import now_iso_utc
 
 
 def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -> str:
@@ -128,5 +133,207 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
         "- Inventory enumeration uses sitemaps when available and can fall back to deterministic link-follow inventories when configured in the registry."
     )
     lines.append("- For JS-heavy docs or WAF edge cases, use `--render auto` (Playwright optional) or browser capture + `ingest-page`.")
+
+    return "\n".join(lines) + "\n"
+
+
+def store_report(
+    *,
+    docs_dir: str,
+    exchange: str | None = None,
+    section: str | None = None,
+) -> dict[str, Any]:
+    """Query the store DB and return a summary of what's currently stored."""
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        generated_at = now_iso_utc()
+
+        # Inventories: count + latest per exchange/section.
+        inv_rows = conn.execute(
+            "SELECT exchange_id, section_id, COUNT(*) AS cnt, MAX(generated_at) AS latest "
+            "FROM inventories GROUP BY exchange_id, section_id ORDER BY exchange_id, section_id;"
+        ).fetchall()
+        inventories = [
+            {"exchange": str(r["exchange_id"]), "section": str(r["section_id"]),
+             "count": int(r["cnt"]), "latest": str(r["latest"])}
+            for r in inv_rows
+            if (not exchange or str(r["exchange_id"]) == exchange)
+            and (not section or str(r["section_id"]) == section)
+        ]
+
+        # Inventory entries: status breakdown for the latest inventory per section.
+        inv_entry_rows = conn.execute(
+            """
+SELECT i.exchange_id, i.section_id, ie.status, COUNT(*) AS cnt
+FROM inventory_entries ie
+JOIN inventories i ON i.id = ie.inventory_id
+WHERE i.id IN (
+    SELECT MAX(id) FROM inventories GROUP BY exchange_id, section_id
+)
+GROUP BY i.exchange_id, i.section_id, ie.status
+ORDER BY i.exchange_id, i.section_id, ie.status;
+"""
+        ).fetchall()
+        entry_status: dict[str, dict[str, int]] = {}
+        for r in inv_entry_rows:
+            key = f"{r['exchange_id']}/{r['section_id']}"
+            if exchange and str(r["exchange_id"]) != exchange:
+                continue
+            if section and str(r["section_id"]) != section:
+                continue
+            entry_status.setdefault(key, {})[str(r["status"])] = int(r["cnt"])
+
+        # Pages: count, domain breakdown, total word count.
+        where_parts: list[str] = []
+        params: list[Any] = []
+        if exchange:
+            where_parts.append("p.canonical_url LIKE ?")
+            params.append(f"%{exchange}%")
+
+        page_sql = "SELECT COUNT(*) AS cnt, COALESCE(SUM(p.word_count), 0) AS total_wc FROM pages p"
+        if where_parts:
+            page_sql += " WHERE " + " AND ".join(where_parts)
+        page_row = conn.execute(page_sql, tuple(params)).fetchone()
+        page_count = int(page_row["cnt"] or 0)
+        total_word_count = int(page_row["total_wc"] or 0)
+
+        # Domain breakdown (top 20).
+        domain_rows = conn.execute(
+            "SELECT SUBSTR(canonical_url, 1, INSTR(SUBSTR(canonical_url, 9), '/') + 8) AS domain, "
+            "COUNT(*) AS cnt FROM pages GROUP BY domain ORDER BY cnt DESC LIMIT 20;"
+        ).fetchall()
+        domains = [{"domain": str(r["domain"]), "count": int(r["cnt"])} for r in domain_rows]
+
+        # Endpoints.
+        ep_sql = "SELECT exchange, section, protocol, COUNT(*) AS cnt FROM endpoints"
+        ep_where: list[str] = []
+        ep_params: list[Any] = []
+        if exchange:
+            ep_where.append("exchange = ?")
+            ep_params.append(exchange)
+        if section:
+            ep_where.append("section = ?")
+            ep_params.append(section)
+        if ep_where:
+            ep_sql += " WHERE " + " AND ".join(ep_where)
+        ep_sql += " GROUP BY exchange, section, protocol ORDER BY exchange, section, protocol;"
+        ep_rows = conn.execute(ep_sql, tuple(ep_params)).fetchall()
+        endpoints = [
+            {"exchange": str(r["exchange"]), "section": str(r["section"]),
+             "protocol": str(r["protocol"]), "count": int(r["cnt"])}
+            for r in ep_rows
+        ]
+        total_endpoints = sum(e["count"] for e in endpoints)
+
+        # Review queue.
+        rq_rows = conn.execute(
+            "SELECT status, COUNT(*) AS cnt FROM review_queue GROUP BY status;"
+        ).fetchall()
+        review_queue = {str(r["status"]): int(r["cnt"]) for r in rq_rows}
+
+        return {
+            "cmd": "store-report",
+            "schema_version": "v1",
+            "docs_dir": str(Path(docs_dir)),
+            "generated_at": generated_at,
+            "filters": {"exchange": exchange, "section": section},
+            "inventories": inventories,
+            "inventory_entries": entry_status,
+            "pages": {
+                "count": page_count,
+                "total_word_count": total_word_count,
+                "domains": domains,
+            },
+            "endpoints": {
+                "total": total_endpoints,
+                "by_section": endpoints,
+            },
+            "review_queue": review_queue,
+        }
+    finally:
+        conn.close()
+
+
+def render_store_report_markdown(data: dict[str, Any]) -> str:
+    """Format store_report() output into readable markdown."""
+    lines: list[str] = []
+    lines.append("# CEX API Docs Store Report")
+    lines.append("")
+    lines.append(f"- **Generated:** `{data.get('generated_at', '')}`")
+    lines.append(f"- **Store:** `{data.get('docs_dir', '')}`")
+    filters = data.get("filters") or {}
+    if filters.get("exchange") or filters.get("section"):
+        lines.append(f"- **Filters:** exchange={filters.get('exchange')}, section={filters.get('section')}")
+    lines.append("")
+
+    # Inventories.
+    inventories = data.get("inventories") or []
+    lines.append("## Inventories")
+    lines.append("")
+    if inventories:
+        lines.append("| Exchange | Section | Count | Latest |")
+        lines.append("|---|---|---:|---|")
+        for inv in inventories:
+            lines.append(f"| {inv['exchange']} | {inv['section']} | {inv['count']} | {inv['latest']} |")
+    else:
+        lines.append("No inventories found.")
+    lines.append("")
+
+    # Inventory entry status.
+    entry_status = data.get("inventory_entries") or {}
+    if entry_status:
+        lines.append("## Latest Inventory Entry Status")
+        lines.append("")
+        lines.append("| Exchange/Section | Fetched | Pending | Error | Skipped |")
+        lines.append("|---|---:|---:|---:|---:|")
+        for key, statuses in sorted(entry_status.items()):
+            lines.append(
+                f"| {key} | {statuses.get('fetched', 0)} | {statuses.get('pending', 0)} "
+                f"| {statuses.get('error', 0)} | {statuses.get('skipped', 0)} |"
+            )
+        lines.append("")
+
+    # Pages.
+    pages = data.get("pages") or {}
+    lines.append("## Pages")
+    lines.append("")
+    lines.append(f"- **Total pages:** {pages.get('count', 0)}")
+    lines.append(f"- **Total word count:** {pages.get('total_word_count', 0):,}")
+    domains = pages.get("domains") or []
+    if domains:
+        lines.append("")
+        lines.append("### Top Domains")
+        lines.append("")
+        lines.append("| Domain | Pages |")
+        lines.append("|---|---:|")
+        for d in domains:
+            lines.append(f"| {d['domain']} | {d['count']} |")
+    lines.append("")
+
+    # Endpoints.
+    ep = data.get("endpoints") or {}
+    lines.append("## Endpoints")
+    lines.append("")
+    lines.append(f"- **Total:** {ep.get('total', 0)}")
+    by_section = ep.get("by_section") or []
+    if by_section:
+        lines.append("")
+        lines.append("| Exchange | Section | Protocol | Count |")
+        lines.append("|---|---|---|---:|")
+        for e in by_section:
+            lines.append(f"| {e['exchange']} | {e['section']} | {e['protocol']} | {e['count']} |")
+    lines.append("")
+
+    # Review queue.
+    rq = data.get("review_queue") or {}
+    lines.append("## Review Queue")
+    lines.append("")
+    if rq:
+        for status, count in sorted(rq.items()):
+            lines.append(f"- **{status}:** {count}")
+    else:
+        lines.append("Review queue is empty.")
+    lines.append("")
 
     return "\n".join(lines) + "\n"

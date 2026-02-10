@@ -9,14 +9,8 @@ from .db import open_db
 from .endpoints import REQUIRED_HTTP_FIELD_STATUS_KEYS
 from .errors import CexApiDocsError
 from .lock import acquire_write_lock
+from .store import require_store_db
 from .timeutil import now_iso_utc
-
-
-def _require_store_db(docs_dir: str) -> Path:
-    db_path = Path(docs_dir) / "db" / "docs.db"
-    if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return db_path
 
 
 def _ensure_table(conn) -> None:
@@ -59,7 +53,7 @@ def compute_and_persist_coverage_gaps(
 
     This is a scale-safe "review backlog" for completeness without exploding review_queue.
     """
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
     updated_at = now_iso_utc()
 
@@ -186,7 +180,7 @@ def list_coverage_gaps(
     section: str | None = None,
     limit: int = 200,
 ) -> dict[str, Any]:
-    db_path = _require_store_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         _ensure_table(conn)

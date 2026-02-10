@@ -86,7 +86,20 @@ cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs > /tmp
 cex-api-docs report --input /tmp/sync.json --output /tmp/sync.md
 ```
 
-Legacy crawl (link-follow) using registry seeds:
+Resume a partially completed sync (reuse existing inventories, fetch only pending/error):
+
+```bash
+cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
+```
+
+Report on current store contents:
+
+```bash
+cex-api-docs store-report --docs-dir ./cex-docs
+cex-api-docs store-report --exchange binance --output store.md
+```
+
+Legacy crawl (deprecated; link-follow) using registry seeds:
 
 ```bash
 cex-api-docs crawl --exchange binance --section spot --docs-dir ./cex-docs
@@ -160,12 +173,13 @@ All commands print machine-readable JSON with a stable `schema_version` (current
 
 Key commands:
 - `init`: initialize directories + SQLite schema
-- `crawl`: crawl docs and store pages + metadata
+- `crawl`: **(deprecated)** crawl docs and store pages + metadata; use `sync` instead
 - `discover-sources`: mine registry seed pages for sitemap/spec URLs (best-effort bootstrap)
 - `inventory`: enumerate doc URLs for a section (best-effort, deterministic)
-- `fetch-inventory`: fetch every URL from an inventory (use `--resume` to continue pending/error after interruption)
-- `sync`: inventory + fetch orchestration (cron-friendly JSON output)
+- `fetch-inventory`: fetch every URL from an inventory (use `--resume` to continue pending/error after interruption; `--concurrency N` for parallel fetch with per-domain rate limiting)
+- `sync`: inventory + fetch orchestration (cron-friendly JSON output; supports `--resume` and `--concurrency N`)
 - `report`: convert sync JSON into a human-readable Markdown report
+- `store-report`: report on current store contents (inventories, pages, endpoints, review queue; filterable by `--exchange`/`--section`)
 - `ingest-page`: ingest browser-captured HTML/markdown into the canonical store
 - `search-pages`, `get-page`: query stored sources
 - `validate-registry`, `validate-base-urls`: reconfirm registry truth
@@ -189,8 +203,8 @@ See `cex-api-docs --help` and `src/cex_api_docs/cli.py` for exact flags.
 - `status: "unknown"`: not supported or not backed by stored sources
 
 Notes:
-- v1 MVP supports `answer` only for Binance. Other exchanges are crawlable/searchable, but not yet assembled into structured answers.
-- Some questions are intentionally treated as ambiguous (for example “unified trading”) and require clarification.
+- `answer` works for all 16 registered exchanges via generic FTS-based cite-only search. Binance has richer heuristics (rate-limit comparison, permissions extraction).
+- Some questions are intentionally treated as ambiguous (for example "unified trading") and require clarification.
 
 Example clarification loop:
 
