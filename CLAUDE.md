@@ -52,7 +52,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 16 exchanges: seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 16 exchanges (28 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (e.g. `sync_and_report.sh` cron runner).
 - `docs/plans/` Authoritative plans and design decisions.
 - `docs/runbooks/` Demo/run instructions.
@@ -103,7 +103,7 @@ The pipeline has a linear progression:
 
 ## Gotchas
 
-- `cex-docs/` and `cex-docs-*/` are local stores and must never be committed (gitignored).
+- `cex-docs/`, `cex-docs-*/`, and `poc-binance-full/` are local data and must never be committed (gitignored).
 - CLI JSON is printed at the end of a command; if you redirect stdout to a file, it may stay empty until completion.
 - Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
@@ -113,12 +113,19 @@ The pipeline has a linear progression:
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
 - **`extract_page_markdown` return order**: Returns `(html, title, md_norm, word_count)` — first element is decoded HTML string, not markdown. The normalized markdown is the third element.
 - **Raw string regex**: In `r"..."` strings, use single backslash for regex escapes (`\w`, `\s`, `\S`). Double backslash (`\\w`) matches literal backslash + letter. Previously caused silent failures in charset detection and robots.txt sitemap parsing.
+- **Single-page doc exchanges**: OKX (224K words), Gate.io (256K), HTX (325K across 4 pages), Crypto.com (35K), Bitstamp (22K), Korbit (25K) serve their entire API reference from 1-2 HTML files. This is correct — the pipeline handles them fine. Don't treat low page counts as errors.
+- **Gate.io rate-limits aggressively**: After syncing, HTTP requests return 403 ("Access Denied"). Content is already in the store; re-sync may need longer delays or `--render auto`.
+- **Binance sitemap is 404**: Despite being configured in `exchanges.yaml`, `developers.binance.com/sitemap.xml` returns 404. The pipeline falls back to link-follow automatically.
 
 ## Current Phase
 
-Phase: MVP hardened (inventory+fetch with --resume/--concurrency, local store+search, endpoint ingest, cite-only answer assembly for all 16 exchanges, store-report, tests). Key hardening: deduplicated `require_store_db` into store.py, narrowed write locks in fetch_inventory (3-phase locking), deprecated `crawl` in favor of `sync`, generalized answer.py beyond Binance.
+Phase: Full sync complete. All 16 exchanges (28 sections) synced via HTTP: 2,286 pages, 3.13M words, zero errors. Store is at `cex-docs/` (731 MB on disk).
 
-Latest: deep-review bugfix pass — fixed regex, locking, dead code. POC validated Binance HTTP fetch is sufficient (see `docs/reports/poc-playwright-vs-http-binance.md`).
+Latest: Full-scale POC compared HTTP vs Playwright vs Jina Reader on 1,072 Binance pages — HTTP wins on speed (5x faster) and code formatting quality. Jina collapses code blocks (deal-breaker). Added HTX derivative sections (dm, coin_margined_swap, usdt_swap) and OKX broker/changelog to registry. Several exchanges (OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit) use single-page docs containing full API references.
+
+POC reports:
+- `docs/reports/poc-playwright-vs-http-binance.md` (5-page sample)
+- `docs/reports/poc-full-binance-http-playwright-jina.md` (1,072-page full comparison)
 
 Next steps live in `todos/` (prioritized), and the "wow query" demo runbook is at:
 - `docs/runbooks/binance-wow-query.md`

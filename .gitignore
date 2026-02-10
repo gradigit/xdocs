@@ -17,3 +17,6 @@ build/
 # Local doc store (must never be committed)
 cex-docs/
 cex-docs-*/
+
+# POC output data (large, regenerable)
+poc-binance-full/

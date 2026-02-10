@@ -46,6 +46,18 @@ exchanges:
         doc_sources:
           - kind: sitemap
             url: https://www.okx.com/sitemap.xml
+      - section_id: broker
+        base_urls: ["https://www.okx.com"]
+        seed_urls: ["https://www.okx.com/docs-v5/broker_en/"]
+        inventory_policy:
+          mode: link_follow
+          max_pages: 100
+      - section_id: changelog
+        base_urls: ["https://www.okx.com"]
+        seed_urls: ["https://www.okx.com/docs-v5/log_en/"]
+        inventory_policy:
+          mode: link_follow
+          max_pages: 100
 
   - exchange_id: bybit
     display_name: Bybit
@@ -126,6 +138,24 @@ exchanges:
           mode: link_follow
           render_mode: auto
           max_pages: 5000
+      - section_id: derivatives
+        base_urls: ["https://api.hbdm.com"]
+        seed_urls: ["https://huobiapi.github.io/docs/dm/v1/en/"]
+        inventory_policy:
+          mode: link_follow
+          max_pages: 100
+      - section_id: coin_margined_swap
+        base_urls: ["https://api.hbdm.com"]
+        seed_urls: ["https://huobiapi.github.io/docs/coin_margined_swap/v1/en/"]
+        inventory_policy:
+          mode: link_follow
+          max_pages: 100
+      - section_id: usdt_swap
+        base_urls: ["https://api.hbdm.com"]
+        seed_urls: ["https://huobiapi.github.io/docs/usdt_swap/v1/en/"]
+        inventory_policy:
+          mode: link_follow
+          max_pages: 100
 
   - exchange_id: cryptocom
     display_name: Crypto.com
