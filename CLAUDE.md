@@ -81,10 +81,11 @@ The pipeline has a linear progression:
 ## Key Files
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs
-- `schema/schema.sql` SQLite schema (pages + endpoint DB + review queue + inventories + coverage_gaps)
+- `schema/schema.sql` SQLite schema (pages, endpoints, FTS5, review queue, inventories, coverage_gaps)
 - `src/cex_api_docs/cli.py` CLI entrypoint (30+ subcommands)
 - `src/cex_api_docs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
-- `src/cex_api_docs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version)
+- `src/cex_api_docs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
+- `src/cex_api_docs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
 - `src/cex_api_docs/store.py` Store init + `require_store_db` helper (shared across all modules)
 - `src/cex_api_docs/lock.py` File-based exclusive write lock (all DB writes go through this)
 - `src/cex_api_docs/inventory.py` Inventory generation (sitemaps + deterministic link-follow fallback)
@@ -108,10 +109,13 @@ The pipeline has a linear progression:
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
+- **Raw string regex**: In `r"..."` strings, use single backslash for regex escapes (`\w`, `\s`, `\S`). Double backslash (`\\w`) matches literal backslash + letter. Previously caused silent failures in charset detection and robots.txt sitemap parsing.
 
 ## Current Phase
 
 Phase: MVP hardened (inventory+fetch with --resume/--concurrency, local store+search, endpoint ingest, cite-only answer assembly for all 16 exchanges, store-report, tests). Key hardening: deduplicated `require_store_db` into store.py, narrowed write locks in fetch_inventory (3-phase locking), deprecated `crawl` in favor of `sync`, generalized answer.py beyond Binance.
+
+Latest: deep-review bugfix pass -- fixed broken regex patterns (charset, robots.txt sitemap), 2-phase locking in stale_citations, thread-safe robots_cache, schema migration framework, extracted shared urlutil.py, removed dead `links` table.
 
 Next steps live in `todos/` (prioritized), and the "wow query" demo runbook is at:
 - `docs/runbooks/binance-wow-query.md`

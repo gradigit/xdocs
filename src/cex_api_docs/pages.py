@@ -7,22 +7,12 @@ from typing import Any
 from .db import open_db
 from .errors import CexApiDocsError
 from .lock import acquire_write_lock
+from .store import require_store_db
 from .urlcanon import canonicalize_url
 
 
-def _db_path(docs_dir: str) -> Path:
-    return Path(docs_dir) / "db" / "docs.db"
-
-
-def _require_db(docs_dir: str) -> Path:
-    p = _db_path(docs_dir)
-    if not p.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
-    return p
-
-
 def search_pages(*, docs_dir: str, query: str, limit: int = 10) -> list[dict[str, Any]]:
-    db_path = _require_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         cur = conn.execute(
@@ -64,7 +54,7 @@ LIMIT ?;
 
 
 def get_page(*, docs_dir: str, url: str) -> dict[str, Any]:
-    db_path = _require_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     canonical = canonicalize_url(url)
     conn = open_db(db_path)
     try:
@@ -108,7 +98,7 @@ WHERE canonical_url = ?;
 
 
 def diff_pages(*, docs_dir: str, crawl_run_id: int | None = None, limit: int = 50) -> dict[str, Any]:
-    db_path = _require_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
         if crawl_run_id is None:
@@ -180,7 +170,7 @@ FROM pages;
 
 
 def fts_optimize(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
-    db_path = _require_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
     with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
         conn = open_db(db_path)
@@ -194,7 +184,7 @@ def fts_optimize(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
 
 
 def fts_rebuild(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
-    db_path = _require_db(docs_dir)
+    db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
     rebuilt_pages = 0
     with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):

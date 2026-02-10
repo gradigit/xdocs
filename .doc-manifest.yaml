@@ -3,22 +3,24 @@
 # Manual edits are preserved on re-scan
 
 version: "1.0"
-last_synced: "2026-02-10T13:50:28.863406Z"
+last_synced: "2026-02-10T15:28:20Z"
 
 files:
   - path: CLAUDE.md
     type: claude-instructions
-    last_updated: "2026-02-10T13:29:30.474172Z"
+    last_updated: "2026-02-10T15:28:20Z"
     references:
       - data/exchanges.yaml
       - docs/runbooks/binance-wow-query.md
       - schema/schema.sql
       - src/cex_api_docs/cli.py
+      - src/cex_api_docs/db.py
       - src/cex_api_docs/inventory.py
       - src/cex_api_docs/inventory_fetch.py
       - src/cex_api_docs/playwrightfetch.py
       - src/cex_api_docs/report.py
       - src/cex_api_docs/sync.py
+      - src/cex_api_docs/urlutil.py
   - path: HANDOFF.md
     type: other
     last_updated: "2026-02-10T13:50:00.156140Z"

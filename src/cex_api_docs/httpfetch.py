@@ -10,6 +10,7 @@ import requests
 
 from .errors import CexApiDocsError
 from .robots import USER_AGENT
+from .urlutil import url_host as _host
 
 
 # Some doc sites block unknown/bot UA strings, while others block browser-like UAs.
@@ -44,10 +45,6 @@ def _selected_headers(resp: requests.Response) -> dict[str, str]:
 def _is_http_url(url: str) -> bool:
     s = urlsplit(url)
     return s.scheme in ("http", "https")
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
 
 
 def _host_allowed(host: str, allowed_domains: set[str]) -> bool:

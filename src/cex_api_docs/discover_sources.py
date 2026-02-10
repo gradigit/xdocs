@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 from .errors import CexApiDocsError
 from .httpfetch import fetch
+from .urlutil import url_host as _host
 
 
 SPEC_HINT_RE = re.compile(r"(openapi|swagger|postman|collection|asyncapi)", flags=re.IGNORECASE)
@@ -26,10 +27,6 @@ class DiscoverConfig:
     max_bytes: int
     max_redirects: int
     retries: int
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
 
 
 def _is_http_url(url: str) -> bool:
@@ -178,7 +175,7 @@ def discover_sources(
             resp = session.get(robots_url, timeout=float(cfg.timeout_s), allow_redirects=True, stream=False)
             text = resp.text or ""
             for line in text.splitlines():
-                m = re.match(r"(?i)\\s*sitemap\\s*:\\s*(\\S+)\\s*$", line.strip())
+                m = re.match(r"(?i)\s*sitemap\s*:\s*(\S+)\s*$", line.strip())
                 if not m:
                     continue
                 sm = m.group(1).strip()

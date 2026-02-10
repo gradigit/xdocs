@@ -46,32 +46,29 @@ def detect_stale_citations(
     created_at = now_iso_utc()
     created = 0
 
-    with acquire_write_lock(lock_path, timeout_s=float(lock_timeout_s)):
-        conn = open_db(db_path)
-        try:
-            # Scope to exchange/section when requested (join through endpoints).
-            base_predicates: list[str] = []
-            params: list[Any] = []
-            if exchange:
-                base_predicates.append("e.exchange = ?")
-                params.append(str(exchange))
-            if section:
-                base_predicates.append("e.section = ?")
-                params.append(str(section))
+    # Phase 1: Read findings without holding the write lock.
+    base_predicates: list[str] = []
+    params: list[Any] = []
+    if exchange:
+        base_predicates.append("e.exchange = ?")
+        params.append(str(exchange))
+    if section:
+        base_predicates.append("e.section = ?")
+        params.append(str(section))
 
-            # Missing sources.
-            # IMPORTANT: keep predicates in WHERE, not in the LEFT JOIN ON clause, or semantics change.
-            missing_predicates = list(base_predicates) + ["p.id IS NULL"]
-            where_missing = "WHERE " + " AND ".join(missing_predicates) if missing_predicates else ""
+    missing_predicates = list(base_predicates) + ["p.id IS NULL"]
+    where_missing = "WHERE " + " AND ".join(missing_predicates) if missing_predicates else ""
 
-            missing_limit = None if limit is None else int(limit)
-            missing_sql_limit = " LIMIT ?" if missing_limit is not None else ""
-            missing_params = list(params)
-            if missing_limit is not None:
-                missing_params.append(int(missing_limit))
+    missing_limit = None if limit is None else int(limit)
+    missing_sql_limit = " LIMIT ?" if missing_limit is not None else ""
+    missing_params = list(params)
+    if missing_limit is not None:
+        missing_params.append(int(missing_limit))
 
-            missing_rows = conn.execute(
-                f"""
+    conn_read = open_db(db_path)
+    try:
+        missing_rows = conn_read.execute(
+            f"""
 SELECT es.endpoint_id, es.field_name, es.page_canonical_url, es.page_content_hash
 FROM endpoint_sources es
 JOIN endpoints e ON e.endpoint_id = es.endpoint_id
@@ -80,25 +77,24 @@ LEFT JOIN pages p ON p.canonical_url = es.page_canonical_url
 ORDER BY es.endpoint_id, es.field_name, es.page_canonical_url
 {missing_sql_limit};
 """,
-                tuple(missing_params),
-            ).fetchall()
+            tuple(missing_params),
+        ).fetchall()
 
-            # Stale sources (hash mismatch).
-            remaining = None
-            if limit is not None:
-                remaining = max(0, int(limit) - len(missing_rows))
-            stale_limit = remaining
-            stale_sql_limit = " LIMIT ?" if stale_limit is not None else ""
+        remaining = None
+        if limit is not None:
+            remaining = max(0, int(limit) - len(missing_rows))
+        stale_limit = remaining
+        stale_sql_limit = " LIMIT ?" if stale_limit is not None else ""
 
-            stale_predicates = list(base_predicates) + ["p.content_hash IS NOT NULL", "es.page_content_hash != p.content_hash"]
-            where_stale = "WHERE " + " AND ".join(stale_predicates) if stale_predicates else ""
+        stale_predicates = list(base_predicates) + ["p.content_hash IS NOT NULL", "es.page_content_hash != p.content_hash"]
+        where_stale = "WHERE " + " AND ".join(stale_predicates) if stale_predicates else ""
 
-            stale_params = list(params)
-            if stale_limit is not None:
-                stale_params.append(int(stale_limit))
+        stale_params = list(params)
+        if stale_limit is not None:
+            stale_params.append(int(stale_limit))
 
-            stale_rows = conn.execute(
-                f"""
+        stale_rows = conn_read.execute(
+            f"""
 SELECT es.endpoint_id, es.field_name, es.page_canonical_url, es.page_content_hash AS cited_hash, p.content_hash AS current_hash
 FROM endpoint_sources es
 JOIN endpoints e ON e.endpoint_id = es.endpoint_id
@@ -107,89 +103,85 @@ JOIN pages p ON p.canonical_url = es.page_canonical_url
 ORDER BY es.endpoint_id, es.field_name, es.page_canonical_url
 {stale_sql_limit};
 """,
-                tuple(stale_params),
-            ).fetchall()
+            tuple(stale_params),
+        ).fetchall()
+    finally:
+        conn_read.close()
 
-            findings: list[StaleCitationFinding] = []
-            for r in missing_rows:
-                findings.append(
-                    StaleCitationFinding(
-                        kind="missing_source",
-                        endpoint_id=str(r["endpoint_id"]),
-                        field_name=str(r["field_name"]),
-                        page_canonical_url=str(r["page_canonical_url"]),
-                        cited_hash=str(r["page_content_hash"]) if r["page_content_hash"] else None,
-                        current_hash=None,
-                    )
-                )
-            for r in stale_rows:
-                findings.append(
-                    StaleCitationFinding(
-                        kind="stale_citation",
-                        endpoint_id=str(r["endpoint_id"]),
-                        field_name=str(r["field_name"]),
-                        page_canonical_url=str(r["page_canonical_url"]),
-                        cited_hash=str(r["cited_hash"]) if r["cited_hash"] else None,
-                        current_hash=str(r["current_hash"]) if r["current_hash"] else None,
-                    )
-                )
+    findings: list[StaleCitationFinding] = []
+    for r in missing_rows:
+        findings.append(
+            StaleCitationFinding(
+                kind="missing_source",
+                endpoint_id=str(r["endpoint_id"]),
+                field_name=str(r["field_name"]),
+                page_canonical_url=str(r["page_canonical_url"]),
+                cited_hash=str(r["page_content_hash"]) if r["page_content_hash"] else None,
+                current_hash=None,
+            )
+        )
+    for r in stale_rows:
+        findings.append(
+            StaleCitationFinding(
+                kind="stale_citation",
+                endpoint_id=str(r["endpoint_id"]),
+                field_name=str(r["field_name"]),
+                page_canonical_url=str(r["page_canonical_url"]),
+                cited_hash=str(r["cited_hash"]) if r["cited_hash"] else None,
+                current_hash=str(r["current_hash"]) if r["current_hash"] else None,
+            )
+        )
 
-            # Findings are already limited at SQL level (missing first, then stale) to preserve
-            # previous semantics without loading unbounded result sets into memory.
+    # Phase 2: Write review queue items under the write lock.
+    if not dry_run and findings:
+        with acquire_write_lock(lock_path, timeout_s=float(lock_timeout_s)):
+            conn = open_db(db_path)
+            try:
+                for f in findings:
+                    kind = "stale_citation" if f.kind == "stale_citation" else "missing_source"
+                    reason = "Citation no longer matches current stored source." if kind == "stale_citation" else "Cited source page is missing from the store."
+                    details = {
+                        "page_canonical_url": f.page_canonical_url,
+                        "cited_hash": f.cited_hash,
+                        "current_hash": f.current_hash,
+                    }
+                    details_json = json.dumps(details, sort_keys=True)
 
-            # Idempotent insertion: avoid duplicating identical open items.
-            def enqueue(f: StaleCitationFinding) -> bool:
-                if dry_run:
-                    return False
-
-                kind = "stale_citation" if f.kind == "stale_citation" else "missing_source"
-                reason = "Citation no longer matches current stored source." if kind == "stale_citation" else "Cited source page is missing from the store."
-                details = {
-                    "page_canonical_url": f.page_canonical_url,
-                    "cited_hash": f.cited_hash,
-                    "current_hash": f.current_hash,
-                }
-                details_json = json.dumps(details, sort_keys=True)
-
-                exists = conn.execute(
-                    """
+                    exists = conn.execute(
+                        """
 SELECT 1
 FROM review_queue
 WHERE status = 'open' AND kind = ? AND endpoint_id = ? AND field_name = ? AND details_json = ?
 LIMIT 1;
 """,
-                    (kind, f.endpoint_id, f.field_name, details_json),
-                ).fetchone()
-                if exists is not None:
-                    return False
+                        (kind, f.endpoint_id, f.field_name, details_json),
+                    ).fetchone()
+                    if exists is not None:
+                        continue
 
-                conn.execute(
-                    """
+                    conn.execute(
+                        """
 INSERT INTO review_queue (kind, endpoint_id, field_name, reason, status, created_at, details_json)
 VALUES (?, ?, ?, ?, 'open', ?, ?);
 """,
-                    (kind, f.endpoint_id, f.field_name, reason, created_at, details_json),
-                )
-                return True
-
-            for f in findings:
-                if enqueue(f):
+                        (kind, f.endpoint_id, f.field_name, reason, created_at, details_json),
+                    )
                     created += 1
 
-            conn.commit()
+                conn.commit()
+            finally:
+                conn.close()
 
-            return {
-                "cmd": "detect-stale-citations",
-                "schema_version": "v1",
-                "filters": {"exchange": exchange, "section": section},
-                "dry_run": bool(dry_run),
-                "counts": {
-                    "missing_source": sum(1 for f in findings if f.kind == "missing_source"),
-                    "stale_citation": sum(1 for f in findings if f.kind == "stale_citation"),
-                    "total_findings": len(findings),
-                    "review_items_created": int(created),
-                },
-                "sample": [asdict(f) for f in findings[:10]],
-            }
-        finally:
-            conn.close()
+    return {
+        "cmd": "detect-stale-citations",
+        "schema_version": "v1",
+        "filters": {"exchange": exchange, "section": section},
+        "dry_run": bool(dry_run),
+        "counts": {
+            "missing_source": sum(1 for f in findings if f.kind == "missing_source"),
+            "stale_citation": sum(1 for f in findings if f.kind == "stale_citation"),
+            "total_findings": len(findings),
+            "review_items_created": int(created),
+        },
+        "sample": [asdict(f) for f in findings[:10]],
+    }

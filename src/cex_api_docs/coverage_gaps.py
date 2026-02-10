@@ -13,23 +13,6 @@ from .store import require_store_db
 from .timeutil import now_iso_utc
 
 
-def _ensure_table(conn) -> None:
-    conn.execute(
-        """
-CREATE TABLE IF NOT EXISTS coverage_gaps (
-  exchange TEXT NOT NULL,
-  section TEXT NOT NULL,
-  protocol TEXT NOT NULL,
-  field_name TEXT NOT NULL,
-  status_counts_json TEXT NOT NULL,
-  sample_endpoint_ids_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  PRIMARY KEY (exchange, section, protocol, field_name)
-);
-"""
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class CoverageGapRow:
     exchange: str
@@ -129,7 +112,6 @@ def compute_and_persist_coverage_gaps(
     with acquire_write_lock(lock_path, timeout_s=float(lock_timeout_s)):
         conn = open_db(db_path)
         try:
-            _ensure_table(conn)
             with conn:
                 for gr in gap_rows:
                     conn.execute(
@@ -183,7 +165,6 @@ def list_coverage_gaps(
     db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
-        _ensure_table(conn)
         where: list[str] = []
         params: list[Any] = []
         if exchange:

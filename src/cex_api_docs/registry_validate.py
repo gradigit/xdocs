@@ -14,7 +14,7 @@ from .registry import load_registry
 
 
 def _parse_charset(content_type: str) -> str | None:
-    m = re.search(r"charset=([\\w\\-]+)", content_type or "", flags=re.IGNORECASE)
+    m = re.search(r"charset=([\w\-]+)", content_type or "", flags=re.IGNORECASE)
     if not m:
         return None
     return m.group(1).strip().strip('"').strip("'")
@@ -31,13 +31,13 @@ def _decode_body(body: bytes, content_type: str) -> str:
 def _detect_meta_refresh(html: str) -> dict[str, Any] | None:
     # Example: <meta http-equiv="refresh" content="0; url=https://example.com">
     m = re.search(
-        r"(?is)<meta\\s+[^>]*http-equiv\\s*=\\s*['\\\"]?refresh['\\\"]?[^>]*content\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]",
+        r"""(?is)<meta\s+[^>]*http-equiv\s*=\s*['"]?refresh['"]?[^>]*content\s*=\s*['"]([^'"]+)['"]""",
         html,
     )
     if not m:
         return None
     content = m.group(1)
-    m2 = re.search(r"(?i)\\burl\\s*=\\s*([^;\\s]+)", content)
+    m2 = re.search(r"(?i)\burl\s*=\s*([^;\s]+)", content)
     target = m2.group(1).strip() if m2 else None
     return {"content": content, "target": target}
 

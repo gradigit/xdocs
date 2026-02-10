@@ -298,7 +298,7 @@ def main(argv: list[str] | None = None) -> None:
                 lock_timeout_s=float(args.lock_timeout_s),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": result})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "crawl":
             print("WARNING: 'crawl' is deprecated. Use 'sync' or 'inventory'+'fetch-inventory'.", file=sys.stderr)
@@ -348,22 +348,22 @@ def main(argv: list[str] | None = None) -> None:
                 render_mode=str(args.render),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": result})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "search-pages":
             matches = search_pages(docs_dir=args.docs_dir, query=args.query, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches}})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "get-page":
             page = get_page(docs_dir=args.docs_dir, url=args.url)
             _print_json({"ok": True, "schema_version": "v1", "result": page})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "diff":
             d = diff_pages(docs_dir=args.docs_dir, crawl_run_id=args.crawl_run_id, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": d})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "discover-sources":
             repo_root = Path(__file__).resolve().parents[2]
@@ -388,7 +388,7 @@ def main(argv: list[str] | None = None) -> None:
                 )
 
             _print_json({"ok": True, "schema_version": "v1", "result": {"results": results}})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "inventory":
             repo_root = Path(__file__).resolve().parents[2]
@@ -414,7 +414,7 @@ def main(argv: list[str] | None = None) -> None:
                 sample_limit=int(args.sample_limit),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": asdict(inv)})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "fetch-inventory":
             repo_root = Path(__file__).resolve().parents[2]
@@ -449,7 +449,7 @@ def main(argv: list[str] | None = None) -> None:
                 concurrency=int(args.concurrency),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "ingest-page":
             html_path = Path(args.html_path) if args.html_path else None
@@ -464,7 +464,7 @@ def main(argv: list[str] | None = None) -> None:
                 notes=args.notes,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "sync":
             repo_root = Path(__file__).resolve().parents[2]
@@ -487,7 +487,7 @@ def main(argv: list[str] | None = None) -> None:
                 concurrency=int(args.concurrency),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "report":
             in_path = str(args.input)
@@ -507,7 +507,7 @@ def main(argv: list[str] | None = None) -> None:
                 sys.stdout.write(md)
             else:
                 Path(out_path).write_text(md, encoding="utf-8")
-            raise SystemExit(0)
+            return
 
         if args.cmd == "store-report":
             data = store_report(
@@ -523,17 +523,17 @@ def main(argv: list[str] | None = None) -> None:
                 md = render_store_report_markdown(data)
                 Path(out_path).write_text(md, encoding="utf-8")
                 _print_json({"ok": True, "schema_version": "v1", "result": data})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "fts-optimize":
             r = fts_optimize(docs_dir=args.docs_dir, lock_timeout_s=float(args.lock_timeout_s))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "fts-rebuild":
             r = fts_rebuild(docs_dir=args.docs_dir, lock_timeout_s=float(args.lock_timeout_s))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "validate-registry":
             repo_root = Path(__file__).resolve().parents[2]
@@ -548,7 +548,7 @@ def main(argv: list[str] | None = None) -> None:
                 render_mode=str(args.render),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "validate-base-urls":
             repo_root = Path(__file__).resolve().parents[2]
@@ -560,12 +560,12 @@ def main(argv: list[str] | None = None) -> None:
                 retries=int(args.retries),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "fsck":
             r = fsck_store(docs_dir=args.docs_dir, limit=int(args.limit), scan_orphans=bool(args.scan_orphans))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "import-openapi":
             r = import_openapi(
@@ -583,7 +583,7 @@ def main(argv: list[str] | None = None) -> None:
                 continue_on_error=bool(args.continue_on_error),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "import-postman":
             r = import_postman(
@@ -601,12 +601,12 @@ def main(argv: list[str] | None = None) -> None:
                 continue_on_error=bool(args.continue_on_error),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "import-asyncapi":
             r = import_asyncapi(exchange=args.exchange, section=args.section, url=args.url, base_url=args.base_url, api_version=args.api_version)
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "coverage":
             r = endpoint_coverage(
@@ -616,7 +616,7 @@ def main(argv: list[str] | None = None) -> None:
                 limit_samples=int(args.limit_samples),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "coverage-gaps":
             r = compute_and_persist_coverage_gaps(
@@ -627,12 +627,12 @@ def main(argv: list[str] | None = None) -> None:
                 limit_samples=int(args.limit_samples),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "coverage-gaps-list":
             r = list_coverage_gaps(docs_dir=args.docs_dir, exchange=args.exchange, section=args.section, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "detect-stale-citations":
             r = detect_stale_citations(
@@ -644,7 +644,7 @@ def main(argv: list[str] | None = None) -> None:
                 limit=args.limit,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "save-endpoint":
             repo_root = Path(__file__).resolve().parents[2]
@@ -655,7 +655,7 @@ def main(argv: list[str] | None = None) -> None:
                 schema_path=repo_root / "schemas" / "endpoint.schema.json",
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "search-endpoints":
             matches = search_endpoints(
@@ -666,17 +666,17 @@ def main(argv: list[str] | None = None) -> None:
                 limit=int(args.limit),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches}})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "review-list":
             items = review_list(docs_dir=args.docs_dir, status=args.status, limit=int(args.limit))
             _print_json({"ok": True, "schema_version": "v1", "result": {"items": items}})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "review-show":
             item = review_show(docs_dir=args.docs_dir, review_id=int(args.id))
             _print_json({"ok": True, "schema_version": "v1", "result": item})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "review-resolve":
             item = review_resolve(
@@ -686,12 +686,12 @@ def main(argv: list[str] | None = None) -> None:
                 resolution=args.resolution,
             )
             _print_json({"ok": True, "schema_version": "v1", "result": item})
-            raise SystemExit(0)
+            return
 
         if args.cmd == "answer":
             result = answer_question(docs_dir=args.docs_dir, question=args.question, clarification=args.clarification)
             _print_json(result)
-            raise SystemExit(0)
+            return
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})
         raise SystemExit(2)

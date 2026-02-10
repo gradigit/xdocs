@@ -24,6 +24,7 @@ from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
+from .urlutil import url_host as _host
 
 
 DEFAULT_TIMEOUT_S = 20.0
@@ -35,7 +36,7 @@ DEFAULT_RETRIES = 2
 
 def _parse_charset(content_type: str) -> str | None:
     # e.g. "text/html; charset=utf-8"
-    m = re.search(r"charset=([\\w\\-]+)", content_type, flags=re.IGNORECASE)
+    m = re.search(r"charset=([\w\-]+)", content_type, flags=re.IGNORECASE)
     if not m:
         return None
     return m.group(1).strip().strip('"').strip("'")
@@ -75,10 +76,6 @@ def _extract_links(html: str, *, base_url: str) -> list[str]:
 def _is_http_url(url: str) -> bool:
     s = urlsplit(url)
     return s.scheme in ("http", "https")
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
 
 
 def _write_crawl_log(path: Path, rec: dict[str, Any]) -> None:

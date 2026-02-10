@@ -22,6 +22,7 @@ from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
 from .store import require_store_db
 from .timeutil import now_iso_utc
+from .urlutil import url_host as _host
 
 
 DEFAULT_TIMEOUT_S = 20.0
@@ -29,10 +30,6 @@ DEFAULT_MAX_BYTES = 10_000_000
 DEFAULT_MAX_REDIRECTS = 5
 DEFAULT_DELAY_S = 0.25
 DEFAULT_RETRIES = 2
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
 
 
 class _DomainRateLimiter:
@@ -162,14 +159,16 @@ ORDER BY canonical_url ASC;
 
         session = requests.Session()
         robots_cache: dict[str, Any] = {}
+        robots_lock = threading.Lock()
 
         def robots_can_fetch(u: str) -> bool:
             if cfg.ignore_robots:
                 return True
             h = _host(u)
-            if h not in robots_cache:
-                robots_cache[h] = fetch_robots_policy(session, url=u, timeout_s=cfg.timeout_s)
-            can_fetch_fn, _decision = robots_cache[h]
+            with robots_lock:
+                if h not in robots_cache:
+                    robots_cache[h] = fetch_robots_policy(session, url=u, timeout_s=cfg.timeout_s)
+                can_fetch_fn, _decision = robots_cache[h]
             return bool(can_fetch_fn(u))
 
         fetched = 0

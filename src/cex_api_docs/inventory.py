@@ -23,6 +23,7 @@ from .sitemaps import SitemapParseResult, iter_unique, parse_sitemap_bytes
 from .store import require_store_db
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
+from .urlutil import url_host as _host
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,10 +44,6 @@ class InventoryConfig:
     ignore_robots: bool
     delay_s: float
     default_render_mode: str
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
 
 
 def _robot_sitemaps(session: requests.Session, *, base_url: str, timeout_s: float) -> list[str]:
@@ -83,7 +80,7 @@ def _robot_sitemaps(session: requests.Session, *, base_url: str, timeout_s: floa
     out: list[str] = []
     for line in text.splitlines():
         # Allow arbitrary spacing/case.
-        m = re.match(r"(?i)\\s*sitemap\\s*:\\s*(\\S+)\\s*$", line.strip())
+        m = re.match(r"(?i)\s*sitemap\s*:\s*(\S+)\s*$", line.strip())
         if not m:
             continue
         out.append(m.group(1).strip())

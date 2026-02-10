@@ -10,10 +10,7 @@ from urllib.parse import urlsplit
 
 from .errors import CexApiDocsError
 from .httpfetch import FetchResult, _host_allowed, _is_http_url
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
+from .urlutil import url_host as _host
 
 
 def _is_localhostish(host: str) -> bool:

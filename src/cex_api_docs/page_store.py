@@ -16,14 +16,11 @@ from .httpfetch import FetchResult
 from .markdown import ExtractorInfo, html_to_markdown, normalize_markdown
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
-
-
-def _host(url: str) -> str:
-    return (urlsplit(url).hostname or "").lower()
+from .urlutil import url_host as _host
 
 
 def _parse_charset(content_type: str) -> str | None:
-    m = re.search(r"charset=([\\w\\-]+)", content_type or "", flags=re.IGNORECASE)
+    m = re.search(r"charset=([\w\-]+)", content_type or "", flags=re.IGNORECASE)
     if not m:
         return None
     return m.group(1).strip().strip('"').strip("'")

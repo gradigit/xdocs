@@ -56,17 +56,6 @@ CREATE TABLE IF NOT EXISTS page_versions (
 CREATE INDEX IF NOT EXISTS page_versions_page_id_idx ON page_versions(page_id);
 CREATE INDEX IF NOT EXISTS page_versions_crawl_run_id_idx ON page_versions(crawl_run_id);
 
-CREATE TABLE IF NOT EXISTS links (
-  id INTEGER PRIMARY KEY,
-  from_page_id INTEGER NOT NULL REFERENCES pages(id),
-  to_url TEXT NOT NULL,
-  to_canonical_url TEXT,
-  depth INTEGER,
-  found_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS links_from_page_id_idx ON links(from_page_id);
-
 -- FTS5 tables (fail at runtime if FTS5 not enabled).
 CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(
   canonical_url UNINDEXED,
