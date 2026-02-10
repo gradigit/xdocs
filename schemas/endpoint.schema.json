@@ -2,12 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Endpoint Record",
   "type": "object",
-  "required": ["exchange", "section", "protocol", "endpoint_id", "sources", "extraction"],
+  "required": ["exchange", "section", "protocol", "endpoint_id", "field_status"],
   "properties": {
     "exchange": { "type": "string" },
     "section": { "type": "string" },
     "protocol": { "type": "string", "enum": ["http", "ws", "rpc", "other"] },
     "endpoint_id": { "type": "string" },
+    "field_status": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["documented", "undocumented", "unknown", "conflict"]
+      }
+    },
     "http": {
       "type": ["object", "null"],
       "properties": {
@@ -19,12 +26,13 @@
       "additionalProperties": true
     },
     "description": { "type": ["string", "null"] },
+    "request_schema": { "type": ["object", "null"], "additionalProperties": true },
+    "response_schema": { "type": ["object", "null"], "additionalProperties": true },
     "required_permissions": { "type": ["object", "null"], "additionalProperties": true },
     "rate_limit": { "type": ["object", "null"], "additionalProperties": true },
     "error_codes": { "type": ["array", "null"], "items": { "type": "object" } },
     "sources": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "object",
         "required": ["url", "crawled_at", "content_hash", "path_hash", "excerpt", "excerpt_start", "excerpt_end"],
@@ -37,6 +45,19 @@
           "excerpt_start": { "type": "integer", "minimum": 0 },
           "excerpt_end": { "type": "integer", "minimum": 0 },
           "field_name": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "variants": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["when"],
+        "properties": {
+          "when": { "type": "string" },
+          "notes": { "type": ["string", "null"] },
+          "sources": { "$ref": "#/properties/sources" }
         },
         "additionalProperties": true
       }
@@ -54,4 +75,3 @@
   },
   "additionalProperties": true
 }
-

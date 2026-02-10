@@ -73,6 +73,18 @@ class TestEndpoints(unittest.TestCase):
                 "http": {"method": "GET", "path": "/api/v3/time", "base_url": "https://api.binance.com", "api_version": None},
                 "description": "Test endpoint",
                 "rate_limit": {"note": needle},
+                # Only mark fields as "documented" when we also provide mechanically-verifiable citations.
+                "field_status": {
+                    "http.method": "unknown",
+                    "http.path": "unknown",
+                    "http.base_url": "unknown",
+                    "description": "unknown",
+                    "request_schema": "unknown",
+                    "response_schema": "unknown",
+                    "required_permissions": "unknown",
+                    "rate_limit": "documented",
+                    "error_codes": "unknown",
+                },
                 "sources": [
                     {
                         "url": page2_url,
@@ -155,6 +167,11 @@ class TestEndpoints(unittest.TestCase):
             record2 = dict(record)
             record2["http"] = {"method": "GET", "path": "/api/v3/ping", "base_url": "https://api.binance.com", "api_version": None}
             record2["endpoint_id"] = compute_endpoint_id(record2)
+            # This endpoint has a rate_limit value but no per-field citation mapping.
+            # We intentionally mark it unknown to trigger a review item rather than
+            # claiming it's documented.
+            record2["field_status"] = dict(record["field_status"])
+            record2["field_status"]["rate_limit"] = "unknown"
             record2["sources"] = [
                 {
                     "url": page2_url,

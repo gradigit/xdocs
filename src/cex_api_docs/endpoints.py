@@ -17,6 +17,32 @@ from .urlcanon import canonicalize_url
 
 HARD_MAX_EXCERPT_CHARS = 600
 
+# Field completeness contract.
+# These keys are used in endpoint JSON as field_status{} keys.
+# Dotted keys address nested objects (e.g. "http.method").
+REQUIRED_HTTP_FIELD_STATUS_KEYS: tuple[str, ...] = (
+    "http.method",
+    "http.path",
+    "http.base_url",
+    "description",
+    "request_schema",
+    "response_schema",
+    "required_permissions",
+    "rate_limit",
+    "error_codes",
+)
+
+# Review queue must be scale-aware; only flag per-endpoint inconsistencies for high-risk fields.
+INCONSISTENT_STATUS_REVIEW_FIELDS: frozenset[str] = frozenset(
+    {
+        "required_permissions",
+        "rate_limit",
+        "error_codes",
+        "request_schema",
+        "response_schema",
+    }
+)
+
 
 def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -165,8 +191,23 @@ def save_endpoint(
     description_str = None if description is None else str(description)
 
     sources = record.get("sources") or []
-    if not isinstance(sources, list) or not sources:
-        raise CexApiDocsError(code="EBADSRC", message="Endpoint record must include sources[] with at least one item.")
+    if not isinstance(sources, list):
+        raise CexApiDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
+
+    field_status = record.get("field_status")
+    if not isinstance(field_status, dict):
+        raise CexApiDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
+
+    if protocol == "http":
+        if not isinstance(record.get("http"), dict):
+            raise CexApiDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
+        missing = [k for k in REQUIRED_HTTP_FIELD_STATUS_KEYS if k not in field_status]
+        if missing:
+            raise CexApiDocsError(
+                code="EBADFIELDSTATUS",
+                message="field_status{} is missing required keys for protocol=http.",
+                details={"endpoint_id": computed_id, "missing_keys": missing},
+            )
 
     updated_at = now_iso_utc()
 
@@ -178,6 +219,41 @@ def save_endpoint(
                 if not isinstance(c, dict):
                     raise CexApiDocsError(code="EBADSRC", message="sources[] must contain objects.")
                 _verify_citation_against_store(conn=conn, citation=c)
+
+            def _get_field_value(key: str) -> Any:
+                # Dotted keys allow nested field status, e.g. "http.method".
+                if "." in key:
+                    prefix, rest = key.split(".", 1)
+                    obj = record.get(prefix)
+                    if isinstance(obj, dict):
+                        return obj.get(rest)
+                    return None
+                return record.get(key)
+
+            documented_fields = [str(k) for k, v in field_status.items() if str(v) == "documented"]
+            source_fields = {str(c.get("field_name")) for c in sources if c.get("field_name")}
+
+            missing_citations = sorted([f for f in documented_fields if f not in source_fields])
+            if missing_citations:
+                raise CexApiDocsError(
+                    code="EBADCITE",
+                    message="Documented fields are missing required citations.",
+                    details={"endpoint_id": computed_id, "missing_field_names": missing_citations},
+                )
+
+            missing_values: list[str] = []
+            for f in documented_fields:
+                v = _get_field_value(f)
+                if v is None:
+                    missing_values.append(f)
+                elif isinstance(v, str) and not v.strip():
+                    missing_values.append(f)
+            if missing_values:
+                raise CexApiDocsError(
+                    code="EBADFIELDSTATUS",
+                    message="Documented fields must have non-empty values.",
+                    details={"endpoint_id": computed_id, "missing_values": sorted(missing_values)},
+                )
 
             # Persist endpoint JSON to disk.
             endpoint_dir = Path(docs_dir) / "endpoints" / exchange / section
@@ -254,10 +330,16 @@ INSERT OR IGNORE INTO endpoint_sources (
                         (computed_id, str(field), canonical, content_hash, updated_at),
                     )
 
-                # Review queue rules: if high-risk fields present but missing per-field sources.
-                source_fields = {str(c.get("field_name")) for c in sources if c.get("field_name")}
-                for field_name in ("required_permissions", "rate_limit", "error_codes"):
-                    if record.get(field_name) is not None and field_name not in source_fields:
+                # Review queue rules: inconsistent field_status vs values (high-risk fields only).
+                for field_name, status in field_status.items():
+                    k = str(field_name)
+                    st = str(status)
+                    if k not in INCONSISTENT_STATUS_REVIEW_FIELDS:
+                        continue
+                    v = _get_field_value(k)
+                    if v is None:
+                        continue
+                    if st in ("undocumented", "unknown"):
                         conn.execute(
                             """
 INSERT INTO review_queue (
@@ -265,12 +347,12 @@ INSERT INTO review_queue (
 ) VALUES (?, ?, ?, ?, 'open', ?, ?);
 """,
                             (
-                                "missing_field_citation",
+                                "inconsistent_field_status",
                                 computed_id,
-                                field_name,
-                                f"{field_name} present but no source citation provided",
+                                k,
+                                "Field has a value but field_status is not documented",
                                 updated_at,
-                                json.dumps({"endpoint_path": str(endpoint_path)}, sort_keys=True),
+                                json.dumps({"field_status": st, "endpoint_path": str(endpoint_path)}, sort_keys=True),
                             ),
                         )
 
@@ -281,6 +363,7 @@ INSERT INTO review_queue (
                         "required_permissions": record.get("required_permissions"),
                         "rate_limit": record.get("rate_limit"),
                         "error_codes": record.get("error_codes"),
+                        "field_status": field_status,
                     },
                     sort_keys=True,
                     ensure_ascii=False,
