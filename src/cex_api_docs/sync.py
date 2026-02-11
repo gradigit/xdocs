@@ -11,6 +11,7 @@ from .db import open_db
 from .errors import CexApiDocsError
 from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
+from .quality import quality_check
 from .registry import load_registry
 from .stale_citations import detect_stale_citations
 from .store import require_store_db
@@ -32,6 +33,7 @@ class SyncConfig:
     inventory_max_pages: int | None
     resume: bool
     concurrency: int
+    force_refetch: bool
 
 
 def _inventory_diff_counts(*, docs_dir: str, exchange_id: str, section_id: str, new_inventory_id: int) -> dict[str, int]:
@@ -128,12 +130,16 @@ def run_sync(
     inventory_max_pages: int | None = None,
     resume: bool = False,
     concurrency: int = 1,
+    force_refetch: bool = False,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
 
     started_at = now_iso_utc()
     reg = load_registry(registry_path)
+
+    if resume and force_refetch:
+        raise CexApiDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
 
     cfg = SyncConfig(
         exchange=exchange,
@@ -149,6 +155,7 @@ def run_sync(
         inventory_max_pages=None if inventory_max_pages is None else max(1, int(inventory_max_pages)),
         resume=bool(resume),
         concurrency=max(1, int(concurrency)),
+        force_refetch=bool(force_refetch),
     )
 
     sections_run: list[dict[str, Any]] = []
@@ -171,10 +178,10 @@ def run_sync(
             if section and sec.section_id != section:
                 continue
 
-            # Resume mode: reuse the latest existing inventory instead of creating a new one.
+            # Resume/force-refetch mode: reuse the latest existing inventory instead of creating a new one.
             inv = None
             inv_resumed = False
-            if cfg.resume:
+            if cfg.resume or cfg.force_refetch:
                 existing_id = latest_inventory_id(docs_dir=docs_dir, exchange_id=ex.exchange_id, section_id=sec.section_id)
                 if existing_id is not None:
                     inv_resumed = True
@@ -242,6 +249,7 @@ def run_sync(
                 resume=cfg.resume,
                 limit=cfg.limit,
                 concurrency=cfg.concurrency,
+                force_refetch=cfg.force_refetch,
             )
 
             totals["inventories"] += 1
@@ -300,6 +308,11 @@ def run_sync(
         )
     except CexApiDocsError as e:
         post["stale_citations_error"] = e.to_json()
+
+    try:
+        post["quality_check"] = quality_check(docs_dir=docs_dir)
+    except CexApiDocsError as e:
+        post["quality_check_error"] = e.to_json()
 
     return {
         "cmd": "sync",

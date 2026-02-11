@@ -71,6 +71,7 @@ class FetchInventoryConfig:
     resume: bool
     limit: int | None
     concurrency: int
+    force_refetch: bool
 
 
 def fetch_inventory(
@@ -91,9 +92,12 @@ def fetch_inventory(
     resume: bool = False,
     limit: int | None = None,
     concurrency: int = 1,
+    force_refetch: bool = False,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
+    if resume and force_refetch:
+        raise CexApiDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
 
     db_path = require_store_db(docs_dir)
     docs_root = Path(docs_dir)
@@ -116,6 +120,7 @@ def fetch_inventory(
         resume=bool(resume),
         limit=None if limit is None else int(limit),
         concurrency=max(1, int(concurrency)),
+        force_refetch=bool(force_refetch),
     )
 
     started_at = now_iso_utc()
@@ -136,7 +141,9 @@ def fetch_inventory(
         # Read entries (WAL mode allows reads without flock).
         where = "WHERE inventory_id = ?"
         params: list[Any] = [int(inventory_id)]
-        if cfg.resume:
+        if cfg.force_refetch:
+            pass  # No status filter — fetch all entries including already-fetched ones.
+        elif cfg.resume:
             statuses = ["pending", "error"]
             if cfg.ignore_robots:
                 statuses.append("skipped")

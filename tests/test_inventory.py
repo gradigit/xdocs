@@ -119,5 +119,132 @@ class TestInventory(unittest.TestCase):
                     conn2.close()
 
 
+    def test_force_refetch_redownloads_fetched_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            site = tmp_path / "site"
+            (site / "docs").mkdir(parents=True, exist_ok=True)
+            (site / "docs" / "a.html").write_text(
+                "<html><head><title>A</title></head><body><h1>A</h1>Hello A content here</body></html>\n",
+                encoding="utf-8",
+            )
+            (site / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
+
+            with serve_directory(site) as base:
+                docs_dir = tmp_path / "cex-docs"
+                init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+
+                seed = f"{base}/docs/a.html"
+                inv = create_inventory(
+                    docs_dir=str(docs_dir),
+                    lock_timeout_s=1.0,
+                    exchange_id="testex",
+                    section_id="docs",
+                    allowed_domains=["127.0.0.1"],
+                    seed_urls=[seed],
+                    timeout_s=5.0,
+                    max_bytes=2_000_000,
+                    max_redirects=3,
+                    retries=0,
+                    ignore_robots=False,
+                )
+                self.assertEqual(inv.url_count, 1)
+
+                # First fetch.
+                fr1 = fetch_inventory(
+                    docs_dir=str(docs_dir),
+                    lock_timeout_s=1.0,
+                    exchange_id="testex",
+                    section_id="docs",
+                    inventory_id=int(inv.inventory_id),
+                    allowed_domains=["127.0.0.1"],
+                    delay_s=0.0,
+                    timeout_s=5.0,
+                    max_bytes=2_000_000,
+                    max_redirects=3,
+                    retries=0,
+                    ignore_robots=False,
+                    render_mode="http",
+                )
+                self.assertEqual(fr1["counts"]["stored"], 1)
+                self.assertEqual(fr1["counts"]["new_pages"], 1)
+
+                # Modify the content on disk.
+                (site / "docs" / "a.html").write_text(
+                    "<html><head><title>A</title></head><body><h1>A</h1>Updated content here now</body></html>\n",
+                    encoding="utf-8",
+                )
+
+                # Force-refetch: should re-download and detect the update.
+                fr2 = fetch_inventory(
+                    docs_dir=str(docs_dir),
+                    lock_timeout_s=1.0,
+                    exchange_id="testex",
+                    section_id="docs",
+                    inventory_id=int(inv.inventory_id),
+                    allowed_domains=["127.0.0.1"],
+                    delay_s=0.0,
+                    timeout_s=5.0,
+                    max_bytes=2_000_000,
+                    max_redirects=3,
+                    retries=0,
+                    ignore_robots=False,
+                    render_mode="http",
+                    force_refetch=True,
+                )
+                self.assertEqual(fr2["counts"]["stored"], 1)
+                self.assertEqual(fr2["counts"]["updated_pages"], 1)
+                self.assertEqual(fr2["counts"]["new_pages"], 0)
+
+    def test_force_refetch_and_resume_mutual_exclusion(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            site = tmp_path / "site"
+            site.mkdir(parents=True, exist_ok=True)
+            (site / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf-8")
+            (site / "a.html").write_text("<html><body>A</body></html>\n", encoding="utf-8")
+
+            with serve_directory(site) as base:
+                docs_dir = tmp_path / "cex-docs"
+                init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+
+                inv = create_inventory(
+                    docs_dir=str(docs_dir),
+                    lock_timeout_s=1.0,
+                    exchange_id="testex",
+                    section_id="docs",
+                    allowed_domains=["127.0.0.1"],
+                    seed_urls=[f"{base}/a.html"],
+                    timeout_s=5.0,
+                    max_bytes=2_000_000,
+                    max_redirects=3,
+                    retries=0,
+                    ignore_robots=False,
+                )
+
+                from cex_api_docs.errors import CexApiDocsError
+
+                with self.assertRaises(CexApiDocsError) as ctx:
+                    fetch_inventory(
+                        docs_dir=str(docs_dir),
+                        lock_timeout_s=1.0,
+                        exchange_id="testex",
+                        section_id="docs",
+                        inventory_id=int(inv.inventory_id),
+                        allowed_domains=["127.0.0.1"],
+                        delay_s=0.0,
+                        timeout_s=5.0,
+                        max_bytes=2_000_000,
+                        max_redirects=3,
+                        retries=0,
+                        render_mode="http",
+                        resume=True,
+                        force_refetch=True,
+                    )
+                self.assertEqual(ctx.exception.code, "EBADARG")
+
+
 if __name__ == "__main__":
     unittest.main()

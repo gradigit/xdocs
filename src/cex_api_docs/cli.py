@@ -24,6 +24,7 @@ from .openapi_import import import_openapi
 from .postman_import import import_postman
 from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
+from .quality import quality_check
 from .report import render_sync_markdown, store_report, render_store_report_markdown
 from .registry import load_registry
 from .registry_validate import validate_registry
@@ -133,6 +134,11 @@ def main(argv: list[str] | None = None) -> None:
         help="Fetch only non-fetched entries (pending/error; includes skipped when --ignore-robots is set).",
     )
     fi_p.add_argument(
+        "--force-refetch",
+        action="store_true",
+        help="Re-download all pages to detect content changes. Reports new/updated/unchanged counts.",
+    )
+    fi_p.add_argument(
         "--concurrency",
         type=int,
         default=1,
@@ -168,6 +174,11 @@ def main(argv: list[str] | None = None) -> None:
         "--resume",
         action="store_true",
         help="Reuse existing inventories and fetch only non-fetched entries (pending/error).",
+    )
+    sync_p.add_argument(
+        "--force-refetch",
+        action="store_true",
+        help="Re-download all pages to detect content changes. Reuses existing inventories. Reports new/updated/unchanged counts.",
     )
     sync_p.add_argument(
         "--concurrency",
@@ -207,6 +218,8 @@ def main(argv: list[str] | None = None) -> None:
     vbu.add_argument("--section", default=None, help="Section id to validate (default: all)")
     vbu.add_argument("--timeout-s", type=float, default=10.0)
     vbu.add_argument("--retries", type=int, default=1)
+
+    sub.add_parser("quality-check", help="Check stored pages for empty/thin content or tiny HTML (JS rendering failures)", parents=[common])
 
     fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
     fsck_p.add_argument("--limit", type=int, default=200)
@@ -447,6 +460,7 @@ def main(argv: list[str] | None = None) -> None:
                 resume=bool(args.resume),
                 limit=args.limit,
                 concurrency=int(args.concurrency),
+                force_refetch=bool(args.force_refetch),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
@@ -485,6 +499,7 @@ def main(argv: list[str] | None = None) -> None:
                 inventory_max_pages=args.inventory_max_pages,
                 resume=bool(args.resume),
                 concurrency=int(args.concurrency),
+                force_refetch=bool(args.force_refetch),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
@@ -559,6 +574,11 @@ def main(argv: list[str] | None = None) -> None:
                 timeout_s=float(args.timeout_s),
                 retries=int(args.retries),
             )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "quality-check":
+            r = quality_check(docs_dir=args.docs_dir)
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
 
