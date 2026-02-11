@@ -25,6 +25,10 @@ dev = [
 playwright = [
   "playwright>=1.48",
 ]
+semantic = [
+  "lancedb>=0.20",
+  "sentence-transformers>=3.0",
+]
 
 [project.scripts]
 cex-api-docs = "cex_api_docs.cli:main"

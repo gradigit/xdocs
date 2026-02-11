@@ -221,6 +221,16 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("quality-check", help="Check stored pages for empty/thin content or tiny HTML (JS rendering failures)", parents=[common])
 
+    bi = sub.add_parser("build-index", help="Build LanceDB semantic search index from stored pages (requires [semantic])", parents=[common])
+    bi.add_argument("--limit", type=int, default=0, help="Max pages to embed (0=all)")
+    bi.add_argument("--exchange", default=None, help="Filter by exchange domain pattern")
+
+    ss = sub.add_parser("semantic-search", help="Semantic search via LanceDB vector index (requires [semantic])", parents=[common])
+    ss.add_argument("query", help="Natural language search query")
+    ss.add_argument("--exchange", default=None, help="Filter by exchange")
+    ss.add_argument("--limit", type=int, default=10)
+    ss.add_argument("--mode", default="hybrid", choices=["vector", "fts", "hybrid"], help="Search mode (default: hybrid)")
+
     fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
     fsck_p.add_argument("--limit", type=int, default=200)
     fsck_p.add_argument("--scan-orphans", action="store_true", help="Scan raw/pages/meta directories for orphan files (can be slow)")
@@ -580,6 +590,18 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "quality-check":
             r = quality_check(docs_dir=args.docs_dir)
             _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "build-index":
+            from .semantic import build_index
+            r = build_index(docs_dir=args.docs_dir, limit=int(args.limit), exchange=args.exchange)
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "semantic-search":
+            from .semantic import semantic_search
+            results = semantic_search(docs_dir=args.docs_dir, query=args.query, exchange=args.exchange, limit=int(args.limit), query_type=args.mode)
+            _print_json({"ok": True, "schema_version": "v1", "result": {"cmd": "semantic-search", "query": args.query, "mode": args.mode, "results": results}})
             return
 
         if args.cmd == "fsck":

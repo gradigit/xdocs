@@ -1,0 +1,1704 @@
+{
+  "summary": {
+    "build_time_s": 7.8,
+    "pages_embedded": 200,
+    "queries": 20,
+    "top_k": 5,
+    "top1_match_rate": 0.15,
+    "avg_overlap_fts_vec": 0.05,
+    "avg_overlap_fts_hybrid": 0.1,
+    "avg_latency_ms": {
+      "fts5": 6.3,
+      "vector": 6.5,
+      "hybrid": 7.2
+    },
+    "type_breakdown": {
+      "concept": {
+        "count": 5,
+        "top1_match_rate": 0.0,
+        "avg_overlap_fts_vec": 0.0,
+        "avg_overlap_fts_hybrid": 0.0
+      },
+      "cross": {
+        "count": 5,
+        "top1_match_rate": 0.0,
+        "avg_overlap_fts_vec": 0.0,
+        "avg_overlap_fts_hybrid": 0.0
+      },
+      "exact": {
+        "count": 5,
+        "top1_match_rate": 0.6,
+        "avg_overlap_fts_vec": 0.0,
+        "avg_overlap_fts_hybrid": 0.0
+      },
+      "natural": {
+        "count": 5,
+        "top1_match_rate": 0.0,
+        "avg_overlap_fts_vec": 0.2,
+        "avg_overlap_fts_hybrid": 0.4
+      }
+    }
+  },
+  "results": [
+    {
+      "query": "How do I check my account balance on Binance?",
+      "type": "natural",
+      "exchange": "binance",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 1.1
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+        "count": 5,
+        "ms": 18.4
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+        "count": 5,
+        "ms": 18.9
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"?\""
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 125,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+          "title": "Futures Account Balance V3 | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 387,
+          "score": 0.9024649262428284
+        },
+        {
+          "page_id": 124,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V2",
+          "title": "Futures Account Balance | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 386,
+          "score": 0.9032272100448608
+        },
+        {
+          "page_id": 138,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 62,
+          "score": 0.9834671020507812
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 125,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+          "title": "Futures Account Balance V3 | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 387,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 39,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/demo-mode/general-info",
+          "title": "General Info | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 590,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 124,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V2",
+          "title": "Futures Account Balance | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 386,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "What permissions does the API key need?",
+      "type": "natural",
+      "exchange": null,
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": "https://www.gate.com/docs/apiv4/index.html",
+        "count": 5,
+        "ms": 6.3
+      },
+      "hybrid": {
+        "top1": "https://www.gate.com/docs/apiv4/index.html",
+        "count": 5,
+        "ms": 6.3
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"?\""
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 3,
+          "url": "https://www.gate.com/docs/apiv4/index.html",
+          "title": "Gate API v4 | Gate API v4",
+          "exchange": "gateio",
+          "word_count": 74441,
+          "score": 1.2579370737075806
+        },
+        {
+          "page_id": 90,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+          "title": "Request Security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2300,
+          "score": 1.4435783624649048
+        },
+        {
+          "page_id": 105,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2418,
+          "score": 1.4609098434448242
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 3,
+          "url": "https://www.gate.com/docs/apiv4/index.html",
+          "title": "Gate API v4 | Gate API v4",
+          "exchange": "gateio",
+          "word_count": 74441,
+          "score": 0.03226645663380623
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 90,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+          "title": "Request Security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2300,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "How to place a limit order",
+      "type": "natural",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_count_decrement",
+        "count": 5,
+        "ms": 27.9
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_amend_keep_priority",
+        "count": 5,
+        "ms": 5.7
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Auto-Cancel-All-Open-Orders",
+        "count": 5,
+        "ms": 6.3
+      },
+      "overlap_fts_vec": 1,
+      "overlap_fts_hybrid": 1,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 56,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_count_decrement",
+          "title": "Order Count Decrement | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1391,
+          "score": -5.792127341329607
+        },
+        {
+          "page_id": 57,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/sor_faq",
+          "title": "SOR FAQ | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1911,
+          "score": -5.426478648932352
+        },
+        {
+          "page_id": 657,
+          "url": "https://bybit-exchange.github.io/docs/v5/copytrade",
+          "title": "How To Start Copy Trading | Bybit API Documentation",
+          "exchange": "bybit",
+          "word_count": 312,
+          "score": -5.273182505823547
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 53,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_amend_keep_priority",
+          "title": "Order Amend Keep Priority | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1065,
+          "score": 1.5150569677352905
+        },
+        {
+          "page_id": 56,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_count_decrement",
+          "title": "Order Count Decrement | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1391,
+          "score": 1.5916281938552856
+        },
+        {
+          "page_id": 88,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/limits",
+          "title": "LIMITS | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 555,
+          "score": 1.6332297325134277
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 203,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Auto-Cancel-All-Open-Orders",
+          "title": "Auto Cancel All Open Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 466,
+          "score": 0.03100961446762085
+        },
+        {
+          "page_id": 53,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_amend_keep_priority",
+          "title": "Order Amend Keep Priority | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1065,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        }
+      ]
+    },
+    {
+      "query": "How to withdraw funds from my account",
+      "type": "natural",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://www.gate.com/docs/apiv4/index.html",
+        "count": 5,
+        "ms": 6.7
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+        "count": 5,
+        "ms": 7.4
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+        "count": 5,
+        "ms": 6.7
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 1,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 3,
+          "url": "https://www.gate.com/docs/apiv4/index.html",
+          "title": "Gate API v4 | Gate API v4",
+          "exchange": "gateio",
+          "word_count": 74441,
+          "score": -11.64867638916205
+        },
+        {
+          "page_id": 898,
+          "url": "https://www.gate.com/docs/developers/apiv4/",
+          "title": "Gate API | Gate API v4",
+          "exchange": "gateio",
+          "word_count": 181453,
+          "score": -10.852043515211346
+        },
+        {
+          "page_id": 2286,
+          "url": "https://www.okx.com/docs-v5/log_en/",
+          "title": "OKX API guide | OKX technical support | OKX",
+          "exchange": "okx",
+          "word_count": 63376,
+          "score": -7.427374353410086
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 138,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 62,
+          "score": 1.5541856288909912
+        },
+        {
+          "page_id": 133,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Future-Account-Transaction-History-List",
+          "title": "Get Future Account Transaction History List | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 252,
+          "score": 1.5925716161727905
+        },
+        {
+          "page_id": 124,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V2",
+          "title": "Futures Account Balance | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 386,
+          "score": 1.5942730903625488
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 138,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 62,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 133,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Future-Account-Transaction-History-List",
+          "title": "Get Future Account Transaction History List | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 252,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "What are the rate limits for trading endpoints?",
+      "type": "natural",
+      "exchange": null,
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/rate-limits",
+        "count": 5,
+        "ms": 5.3
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/rate-limits",
+        "count": 5,
+        "ms": 6.2
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"?\""
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 115,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/rate-limits",
+          "title": "Rate limits | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1252,
+          "score": 1.189540982246399
+        },
+        {
+          "page_id": 140,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+          "title": "Query Order Rate Limit | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 346,
+          "score": 1.1939588785171509
+        },
+        {
+          "page_id": 70,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/limits",
+          "title": "LIMITS | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 517,
+          "score": 1.2742245197296143
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 115,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/rate-limits",
+          "title": "Rate limits | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1252,
+          "score": 0.03226645663380623
+        },
+        {
+          "page_id": 156,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/faq",
+          "title": "Self Trade Prevention | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1850,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 140,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+          "title": "Query Order Rate Limit | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 346,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "GET /api/v3/account",
+      "type": "exact",
+      "exchange": "binance",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+        "count": 5,
+        "ms": 5.8
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Future-Account-Transaction-History-List",
+        "count": 5,
+        "ms": 7.4
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"/\""
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 125,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+          "title": "Futures Account Balance V3 | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 387,
+          "score": 1.4573168754577637
+        },
+        {
+          "page_id": 81,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/account-endpoints",
+          "title": "Account Endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2217,
+          "score": 1.4635510444641113
+        },
+        {
+          "page_id": 133,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Future-Account-Transaction-History-List",
+          "title": "Get Future Account Transaction History List | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 252,
+          "score": 1.4691225290298462
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 133,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Future-Account-Transaction-History-List",
+          "title": "Get Future Account Transaction History List | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 252,
+          "score": 0.03226645663380623
+        },
+        {
+          "page_id": 125,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3",
+          "title": "Futures Account Balance V3 | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 387,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 81,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/account-endpoints",
+          "title": "Account Endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2217,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "POST /api/v3/order",
+      "type": "exact",
+      "exchange": "binance",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/pegged_orders",
+        "count": 5,
+        "ms": 5.8
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/pegged_orders",
+        "count": 5,
+        "ms": 6.6
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"/\""
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 52,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/pegged_orders",
+          "title": "Pegged Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1011,
+          "score": 1.3474907875061035
+        },
+        {
+          "page_id": 203,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Auto-Cancel-All-Open-Orders",
+          "title": "Auto Cancel All Open Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 466,
+          "score": 1.3686387538909912
+        },
+        {
+          "page_id": 202,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/All-Orders",
+          "title": "Query All Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 544,
+          "score": 1.3689090013504028
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 52,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/pegged_orders",
+          "title": "Pegged Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1011,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 156,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/faq",
+          "title": "Self Trade Prevention | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1850,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 203,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Auto-Cancel-All-Open-Orders",
+          "title": "Auto Cancel All Open Orders | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 466,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "/v5/market/tickers",
+      "type": "exact",
+      "exchange": "bybit",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": null,
+        "count": 0,
+        "ms": 5.2
+      },
+      "hybrid": {
+        "top1": null,
+        "count": 0,
+        "ms": 5.6
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": true,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"/\""
+        }
+      ],
+      "vec_results": [],
+      "hybrid_results": []
+    },
+    {
+      "query": "GET /api/v1/market/orderbook/level2_20",
+      "type": "exact",
+      "exchange": "kucoin",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": null,
+        "count": 0,
+        "ms": 6.2
+      },
+      "hybrid": {
+        "top1": null,
+        "count": 0,
+        "ms": 8.1
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": true,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"/\""
+        }
+      ],
+      "vec_results": [],
+      "hybrid_results": []
+    },
+    {
+      "query": "/api/v5/account/balance",
+      "type": "exact",
+      "exchange": "okx",
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": null,
+        "count": 0,
+        "ms": 5.5
+      },
+      "hybrid": {
+        "top1": null,
+        "count": 0,
+        "ms": 6.7
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": true,
+      "fts5_results": [
+        {
+          "error": "fts5: syntax error near \"/\""
+        }
+      ],
+      "vec_results": [],
+      "hybrid_results": []
+    },
+    {
+      "query": "authentication HMAC signature",
+      "type": "concept",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/request-security",
+        "count": 5,
+        "ms": 4.2
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/",
+        "count": 5,
+        "ms": 6.2
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/authentication-requests",
+        "count": 5,
+        "ms": 7.3
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 42,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2377,
+          "score": -13.407884780343418
+        },
+        {
+          "page_id": 105,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2418,
+          "score": -13.31528788779067
+        },
+        {
+          "page_id": 1142,
+          "url": "https://docs.korbit.co.kr/index_en.html",
+          "title": "Korbit API Docs",
+          "exchange": "korbit",
+          "word_count": 13143,
+          "score": -12.637369735671031
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 20,
+          "url": "https://developers.binance.com/docs/",
+          "title": "Integrate Binance Login with your web application | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2070,
+          "score": 1.6026506423950195
+        },
+        {
+          "page_id": 107,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/session-authentication",
+          "title": "Session Authentication | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 462,
+          "score": 1.6623222827911377
+        },
+        {
+          "page_id": 97,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/authentication-requests",
+          "title": "Authentication requests | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 537,
+          "score": 1.6685256958007812
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 111,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/authentication-requests",
+          "title": "Authentication requests | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 499,
+          "score": 0.03125763311982155
+        },
+        {
+          "page_id": 118,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/session-authentication",
+          "title": "Session Authentication | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 424,
+          "score": 0.03125
+        },
+        {
+          "page_id": 20,
+          "url": "https://developers.binance.com/docs/",
+          "title": "Integrate Binance Login with your web application | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2070,
+          "score": 0.016393441706895828
+        }
+      ]
+    },
+    {
+      "query": "websocket real-time order updates",
+      "type": "concept",
+      "exchange": null,
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.7
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/websocket-api/Order-Book",
+        "count": 5,
+        "ms": 6.1
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/websocket-api/Order-Book",
+        "count": 5,
+        "ms": 6.2
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "no such column: time"
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 195,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/websocket-api/Order-Book",
+          "title": "Order Book | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 289,
+          "score": 1.4060356616973877
+        },
+        {
+          "page_id": 95,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api",
+          "title": "General API Information | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 510,
+          "score": 1.4376276731491089
+        },
+        {
+          "page_id": 44,
+          "url": "https://developers.binance.com/docs/margin_trading/trade-data-stream/Listen-Token-Websocket-API",
+          "title": "listenToken Subscription Methods | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 597,
+          "score": 1.4526500701904297
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 195,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/websocket-api/Order-Book",
+          "title": "Order Book | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 289,
+          "score": 0.03201844170689583
+        },
+        {
+          "page_id": 32,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/user-data-stream",
+          "title": "User Data Stream | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1336,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 95,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api",
+          "title": "General API Information | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 510,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "transfer assets between accounts",
+      "type": "concept",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://developers.binance.com/docs/institutional_loan/transfer",
+        "count": 5,
+        "ms": 7.3
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+        "count": 5,
+        "ms": 6.1
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+        "count": 5,
+        "ms": 7.3
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 3031,
+          "url": "https://developers.binance.com/docs/institutional_loan/transfer",
+          "title": "Risk Unit Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 491,
+          "score": -9.957744541614698
+        },
+        {
+          "page_id": 3032,
+          "url": "https://developers.binance.com/docs/institutional_loan/transfer/Institution-Loan-Group-Transfer",
+          "title": "Risk Unit Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 475,
+          "score": -9.951912284149044
+        },
+        {
+          "page_id": 3622,
+          "url": "https://developers.binance.com/docs/sub_account/asset-management/Move-Position-for-Sub-account",
+          "title": "Move Position for Sub account (For Master Account) | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 628,
+          "score": -8.917140180181951
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 138,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 62,
+          "score": 1.5580193996429443
+        },
+        {
+          "page_id": 128,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Current-Multi-Assets-Mode",
+          "title": "Get Current Multi Assets Mode | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 345,
+          "score": 1.606076955795288
+        },
+        {
+          "page_id": 47,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints",
+          "title": "Account Endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2393,
+          "score": 1.64835524559021
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 138,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/New-Future-Account-Transfer",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 62,
+          "score": 0.032522473484277725
+        },
+        {
+          "page_id": 128,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Get-Current-Multi-Assets-Mode",
+          "title": "Get Current Multi Assets Mode | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 345,
+          "score": 0.0320020467042923
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        }
+      ]
+    },
+    {
+      "query": "candlestick chart data klines",
+      "type": "concept",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams",
+        "count": 5,
+        "ms": 5.1
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Continuous-Contract-Kline-Candlestick-Data",
+        "count": 5,
+        "ms": 5.8
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Continuous-Contract-Kline-Candlestick-Data",
+        "count": 5,
+        "ms": 5.9
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 30,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams",
+          "title": "WebSocket Streams | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2985,
+          "score": -13.098009245962968
+        },
+        {
+          "page_id": 2541,
+          "url": "https://developers.binance.com/docs/derivatives/options-trading/websocket-market-streams/Kline-Candlestick-Streams",
+          "title": "Kline Candlestick Streams | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 356,
+          "score": -12.951840913648587
+        },
+        {
+          "page_id": 318,
+          "url": "https://developers.binance.com/docs/derivatives/coin-margined-futures/market-data/rest-api/Kline-Candlestick-Data",
+          "title": "Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 550,
+          "score": -12.89311859709549
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 165,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Continuous-Contract-Kline-Candlestick-Data",
+          "title": "Continuous Contract Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 483,
+          "score": 1.244854211807251
+        },
+        {
+          "page_id": 174,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Kline-Candlestick-Data",
+          "title": "Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 457,
+          "score": 1.2670938968658447
+        },
+        {
+          "page_id": 177,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Mark-Price-Kline-Candlestick-Data",
+          "title": "Mark Price Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 457,
+          "score": 1.274672508239746
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 165,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Continuous-Contract-Kline-Candlestick-Data",
+          "title": "Continuous Contract Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 483,
+          "score": 0.032786883413791656
+        },
+        {
+          "page_id": 174,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Kline-Candlestick-Data",
+          "title": "Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 457,
+          "score": 0.032258063554763794
+        },
+        {
+          "page_id": 177,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Mark-Price-Kline-Candlestick-Data",
+          "title": "Mark Price Kline Candlestick Data | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 457,
+          "score": 0.0314980149269104
+        }
+      ]
+    },
+    {
+      "query": "IP whitelist security restrictions",
+      "type": "concept",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://bybit-exchange.github.io/docs/v5/error",
+        "count": 5,
+        "ms": 2.8
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+        "count": 5,
+        "ms": 6.0
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+        "count": 5,
+        "ms": 6.2
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 676,
+          "url": "https://bybit-exchange.github.io/docs/v5/error",
+          "title": "Error Codes | Bybit API Documentation",
+          "exchange": "bybit",
+          "word_count": 6206,
+          "score": -14.59603202800369
+        },
+        {
+          "page_id": 2287,
+          "url": "https://raw.githubusercontent.com/binance/binance-api-swagger/master/spot_api.yaml",
+          "title": null,
+          "exchange": "aggregator",
+          "word_count": 63795,
+          "score": -9.670514066725449
+        },
+        {
+          "page_id": 898,
+          "url": "https://www.gate.com/docs/developers/apiv4/",
+          "title": "Gate API | Gate API v4",
+          "exchange": "gateio",
+          "word_count": 181453,
+          "score": -6.072043818831963
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 90,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+          "title": "Request Security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2300,
+          "score": 1.6328051090240479
+        },
+        {
+          "page_id": 105,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2418,
+          "score": 1.6760832071304321
+        },
+        {
+          "page_id": 42,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2377,
+          "score": 1.6814851760864258
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 90,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/request-security",
+          "title": "Request Security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2300,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 14,
+          "url": "https://developers.binance.com/docs/derivatives/quick-start",
+          "title": "Quick Start | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 379,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 105,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/request-security",
+          "title": "Request security | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2418,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "margin trading leverage API",
+      "type": "cross",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://developers.binance.com/docs/margin_trading/account/Adjust-Cross-Margin-Max-Leverage",
+        "count": 5,
+        "ms": 52.4
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Notional-and-Leverage-Brackets",
+        "count": 5,
+        "ms": 5.9
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Notional-and-Leverage-Brackets",
+        "count": 5,
+        "ms": 6.8
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 2328,
+          "url": "https://developers.binance.com/docs/margin_trading/account/Adjust-Cross-Margin-Max-Leverage",
+          "title": "Adjust cross margin max leverage | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 248,
+          "score": -3.102437735852004
+        },
+        {
+          "page_id": 411,
+          "url": "https://developers.binance.com/docs/derivatives/portfolio-margin/account/Change-UM-Initial-Leverage",
+          "title": "Change Um Initial Leverage | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 441,
+          "score": -3.0981791089807706
+        },
+        {
+          "page_id": 409,
+          "url": "https://developers.binance.com/docs/derivatives/portfolio-margin/account/Change-CM-Initial-Leverage",
+          "title": "Change Cm Initial Leverage | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 442,
+          "score": -3.0981478247508805
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 139,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Notional-and-Leverage-Brackets",
+          "title": "Notional And Leverage Brackets | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 436,
+          "score": 1.018681287765503
+        },
+        {
+          "page_id": 120,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 251,
+          "score": 1.046024203300476
+        },
+        {
+          "page_id": 144,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/websocket-api",
+          "title": "Futures Account Balance V2 | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 312,
+          "score": 1.0707389116287231
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 139,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Notional-and-Leverage-Brackets",
+          "title": "Notional And Leverage Brackets | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 436,
+          "score": 0.032786883413791656
+        },
+        {
+          "page_id": 200,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api",
+          "title": "New Order | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 702,
+          "score": 0.03125
+        },
+        {
+          "page_id": 120,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 251,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "copy trading follower endpoints",
+      "type": "cross",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://www.bitget.com/api-doc/copytrading/error-code/restapi",
+        "count": 5,
+        "ms": 3.2
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints",
+        "count": 5,
+        "ms": 5.8
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints",
+        "count": 5,
+        "ms": 6.1
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 2622,
+          "url": "https://www.bitget.com/api-doc/copytrading/error-code/restapi",
+          "title": "Rest API Error Code | Bitget API",
+          "exchange": "bitget",
+          "word_count": 7296,
+          "score": -8.545016961178584
+        },
+        {
+          "page_id": 2654,
+          "url": "https://www.bitget.com/api-doc/broker/error-code/restapi",
+          "title": "Rest API Error Code | Bitget API",
+          "exchange": "bitget",
+          "word_count": 7290,
+          "score": -8.129741723846363
+        },
+        {
+          "page_id": 3787,
+          "url": "https://www.bitget.com/api-doc/margin/error-code/restapi",
+          "title": "Rest API Error Code | Bitget API",
+          "exchange": "bitget",
+          "word_count": 7295,
+          "score": -8.117503217242437
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 72,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints",
+          "title": "Trading endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 8369,
+          "score": 1.399337649345398
+        },
+        {
+          "page_id": 47,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints",
+          "title": "Account Endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2393,
+          "score": 1.4109957218170166
+        },
+        {
+          "page_id": 54,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/general-endpoints",
+          "title": "General endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 646,
+          "score": 1.422480821609497
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 72,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints",
+          "title": "Trading endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 8369,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 23,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs",
+          "title": "Changelog | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 16856,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 47,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints",
+          "title": "Account Endpoints | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2393,
+          "score": 0.016129031777381897
+        }
+      ]
+    },
+    {
+      "query": "earn staking savings products",
+      "type": "cross",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://www.kucoin.com/docs-new/rest/earn/get-savings-products",
+        "count": 5,
+        "ms": 3.7
+      },
+      "vector": {
+        "top1": "https://huobiapi.github.io/docs/spot/v1/en/",
+        "count": 5,
+        "ms": 6.4
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/binance-spot-api-docs/demo-mode/DEMO-TERMS-OF-USE",
+        "count": 5,
+        "ms": 7.0
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 1968,
+          "url": "https://www.kucoin.com/docs-new/rest/earn/get-savings-products",
+          "title": "Get Savings Products - KUCOIN API",
+          "exchange": "kucoin",
+          "word_count": 2295,
+          "score": -7.777130378036937
+        },
+        {
+          "page_id": 1964,
+          "url": "https://www.kucoin.com/docs-new/rest/earn/get-promotion-products",
+          "title": "Get Promotion Products - KUCOIN API",
+          "exchange": "kucoin",
+          "word_count": 2296,
+          "score": -7.751483046841438
+        },
+        {
+          "page_id": 1973,
+          "url": "https://www.kucoin.com/docs-new/rest/earn/redeem",
+          "title": "Redeem - KUCOIN API",
+          "exchange": "kucoin",
+          "word_count": 2270,
+          "score": -7.603394344174779
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 1.563437819480896
+        },
+        {
+          "page_id": 43,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/faqs/stp_faq",
+          "title": "STP FAQ | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 3004,
+          "score": 1.6805145740509033
+        },
+        {
+          "page_id": 70,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/limits",
+          "title": "LIMITS | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 517,
+          "score": 1.688029170036316
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 60,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/demo-mode/DEMO-TERMS-OF-USE",
+          "title": "Demo Mode Terms of Use | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 109,
+          "score": 0.03151364624500275
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 34,
+          "url": "https://developers.binance.com/docs/binance-spot-api-docs/PROD-TERMS-OF-USE",
+          "title": "Terms of Use | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 94,
+          "score": 0.016393441706895828
+        }
+      ]
+    },
+    {
+      "query": "broker sub-account management",
+      "type": "cross",
+      "exchange": null,
+      "fts5": {
+        "top1": null,
+        "count": 1,
+        "ms": 0.9
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/portfolio-margin",
+        "count": 5,
+        "ms": 5.7
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api",
+        "count": 5,
+        "ms": 6.6
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "error": "no such column: account"
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 10,
+          "url": "https://developers.binance.com/docs/derivatives/portfolio-margin",
+          "title": "General Info | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2227,
+          "score": 1.623719334602356
+        },
+        {
+          "page_id": 8,
+          "url": "https://developers.binance.com/docs/derivatives/portfolio-margin/",
+          "title": "General Info | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2227,
+          "score": 1.6635286808013916
+        },
+        {
+          "page_id": 120,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 251,
+          "score": 1.6714084148406982
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 120,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api",
+          "title": "New Future Account Transfer | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 251,
+          "score": 0.0317460335791111
+        },
+        {
+          "page_id": 10,
+          "url": "https://developers.binance.com/docs/derivatives/portfolio-margin",
+          "title": "General Info | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2227,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        }
+      ]
+    },
+    {
+      "query": "futures perpetual swap funding rate",
+      "type": "cross",
+      "exchange": null,
+      "fts5": {
+        "top1": "https://www.okx.com/docs-v5/en/",
+        "count": 5,
+        "ms": 4.3
+      },
+      "vector": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+        "count": 5,
+        "ms": 5.1
+      },
+      "hybrid": {
+        "top1": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+        "count": 5,
+        "ms": 6.6
+      },
+      "overlap_fts_vec": 0,
+      "overlap_fts_hybrid": 0,
+      "top1_match": false,
+      "fts5_results": [
+        {
+          "page_id": 865,
+          "url": "https://www.okx.com/docs-v5/en/",
+          "title": "OKX API guide | OKX technical support | OKX",
+          "exchange": "okx",
+          "word_count": 224360,
+          "score": -15.41101898771269
+        },
+        {
+          "page_id": 2286,
+          "url": "https://www.okx.com/docs-v5/log_en/",
+          "title": "OKX API guide | OKX technical support | OKX",
+          "exchange": "okx",
+          "word_count": 63376,
+          "score": -15.394908594849287
+        },
+        {
+          "page_id": 2283,
+          "url": "https://huobiapi.github.io/docs/coin_margined_swap/v1/en/",
+          "title": "Huobi Coin Margined Swap API Reference",
+          "exchange": "htx",
+          "word_count": 72641,
+          "score": -14.704583653979887
+        }
+      ],
+      "vec_results": [
+        {
+          "page_id": 140,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+          "title": "Query Order Rate Limit | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 346,
+          "score": 1.340262770652771
+        },
+        {
+          "page_id": 157,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/faq/stp-faq",
+          "title": "Self Trade Prevention | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1900,
+          "score": 1.3439489603042603
+        },
+        {
+          "page_id": 7,
+          "url": "https://developers.binance.com/docs/derivatives/coin-margined-futures/",
+          "title": "General Info | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 2368,
+          "score": 1.3554178476333618
+        }
+      ],
+      "hybrid_results": [
+        {
+          "page_id": 140,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit",
+          "title": "Query Order Rate Limit | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 346,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 4,
+          "url": "https://huobiapi.github.io/docs/spot/v1/en/",
+          "title": "Huobi API Reference v1.0",
+          "exchange": "htx",
+          "word_count": 48457,
+          "score": 0.016393441706895828
+        },
+        {
+          "page_id": 157,
+          "url": "https://developers.binance.com/docs/derivatives/usds-margined-futures/faq/stp-faq",
+          "title": "Self Trade Prevention | Binance Open Platform",
+          "exchange": "binance",
+          "word_count": 1900,
+          "score": 0.016129031777381897
+        }
+      ]
+    }
+  ]
+}
