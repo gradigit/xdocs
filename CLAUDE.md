@@ -42,6 +42,18 @@ cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-
 # Report on current store contents (pages, inventories, endpoints, review queue)
 cex-api-docs store-report --docs-dir ./cex-docs
 cex-api-docs store-report --exchange binance --section spot --output report.md
+
+# Import endpoints from OpenAPI spec (use --base-url if spec lacks servers[].url)
+cex-api-docs import-openapi --exchange binance --section spot --url <spec-url> --docs-dir ./cex-docs --continue-on-error
+
+# Import endpoints from Postman collection
+cex-api-docs import-postman --exchange bybit --section v5 --url <collection-url> --docs-dir ./cex-docs --continue-on-error
+
+# Search endpoints by keyword
+cex-api-docs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-docs
+
+# Cite-only answer from local store
+cex-api-docs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
 ```
 
 Note: The legacy `crawl` command still works but emits a deprecation warning. Use `sync` or `inventory`+`fetch-inventory` instead.
@@ -52,7 +64,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 16 exchanges (28 sections): seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 16 exchanges (37 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (e.g. `sync_and_report.sh` cron runner).
 - `docs/plans/` Authoritative plans and design decisions.
 - `docs/runbooks/` Demo/run instructions.
@@ -116,16 +128,23 @@ The pipeline has a linear progression:
 - **Single-page doc exchanges**: OKX (224K words), Gate.io (256K), HTX (325K across 4 pages), Crypto.com (35K), Bitstamp (22K), Korbit (25K) serve their entire API reference from 1-2 HTML files. This is correct — the pipeline handles them fine. Don't treat low page counts as errors.
 - **Gate.io rate-limits aggressively**: After syncing, HTTP requests return 403 ("Access Denied"). Content is already in the store; re-sync may need longer delays or `--render auto`.
 - **Binance sitemap is 404**: Despite being configured in `exchanges.yaml`, `developers.binance.com/sitemap.xml` returns 404. The pipeline falls back to link-follow automatically.
+- **OpenAPI import needs `--base-url` for some specs**: KuCoin official OpenAPI specs have no `servers[].url` field. Pass `--base-url` explicitly or the import fails with `EBADOPENAPI`.
+- **Endpoint extraction citations must be exact**: `save-endpoint` verifies that `excerpt` matches the stored markdown at `[excerpt_start:excerpt_end]` byte-for-byte. Off-by-one errors or whitespace mismatches cause `EBADCITE`.
+- **`extracted_endpoints/` is gitignored**: Agent-extracted endpoint JSON files live here. They are regenerable from stored markdown and should not be committed.
 
 ## Current Phase
 
-Phase: Full sync complete. All 16 exchanges (28 sections) synced via HTTP: 2,286 pages, 3.13M words, zero errors. Store is at `cex-docs/` (731 MB on disk).
+Phase: Endpoint ingest complete. All 16 exchanges (37 sections) synced and indexed: 3,813 pages, 4.48M words, 3,125 structured endpoints. Store is at `cex-docs/`.
 
-Latest: Full-scale POC compared HTTP vs Playwright vs Jina Reader on 1,072 Binance pages — HTTP wins on speed (5x faster) and code formatting quality. Jina collapses code blocks (deal-breaker). Added HTX derivative sections (dm, coin_margined_swap, usdt_swap) and OKX broker/changelog to registry. Several exchanges (OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit) use single-page docs containing full API references.
+Latest: Imported endpoints from three sources:
+1. **OpenAPI/Postman specs** (Binance official + openxapi, Bybit official Postman, KuCoin official, Bitget community, OKX openxapi) — 1,918 endpoints, zero errors.
+2. **Agent-based markdown extraction** (HTX, Gate.io, Crypto.com, Bitfinex, Bitstamp, dYdX, Hyperliquid, Upbit, Bithumb, Coinone, Korbit) — 1,207 endpoints with verified citations.
+3. **Registry expansion** (9 new sections): Binance options/margin_trading/wallet/copy_trading/portfolio_margin_pro + Bitget copy_trading/margin/earn/broker — 1,527 new pages synced. Endpoints for new sections not yet extracted.
+
+Wow query demo (`docs/runbooks/binance-wow-query.md`) works end-to-end: returns cited claims for rate limits and API key permissions.
 
 POC reports:
 - `docs/reports/poc-playwright-vs-http-binance.md` (5-page sample)
 - `docs/reports/poc-full-binance-http-playwright-jina.md` (1,072-page full comparison)
 
-Next steps live in `todos/` (prioritized), and the "wow query" demo runbook is at:
-- `docs/runbooks/binance-wow-query.md`
+Next: Extract endpoints for the 9 newly added sections. Endpoint search and answer commands are fully operational.

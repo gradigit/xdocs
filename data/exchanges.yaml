@@ -28,6 +28,36 @@ exchanges:
         doc_sources:
           - kind: sitemap
             url: https://developers.binance.com/sitemap.xml
+      - section_id: options
+        base_urls: ["https://eapi.binance.com"]
+        seed_urls: ["https://developers.binance.com/docs/derivatives/options-trading/general-info"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
+      - section_id: margin_trading
+        base_urls: ["https://api.binance.com"]
+        seed_urls: ["https://developers.binance.com/docs/margin_trading/Introduction"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
+      - section_id: wallet
+        base_urls: ["https://api.binance.com"]
+        seed_urls: ["https://developers.binance.com/docs/wallet"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
+      - section_id: copy_trading
+        base_urls: ["https://api.binance.com"]
+        seed_urls: ["https://developers.binance.com/docs/copy_trading"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
+      - section_id: portfolio_margin_pro
+        base_urls: ["https://papi.binance.com"]
+        seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin-pro/general-info"]
+        doc_sources:
+          - kind: sitemap
+            url: https://developers.binance.com/sitemap.xml
 
   - exchange_id: okx
     display_name: OKX
@@ -85,6 +115,30 @@ exchanges:
       - section_id: v2
         base_urls: ["https://api.bitget.com"]
         seed_urls: ["https://www.bitget.com/api-doc/common/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.bitget.com/sitemap.xml
+      - section_id: copy_trading
+        base_urls: ["https://api.bitget.com"]
+        seed_urls: ["https://www.bitget.com/api-doc/copytrading/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.bitget.com/sitemap.xml
+      - section_id: margin
+        base_urls: ["https://api.bitget.com"]
+        seed_urls: ["https://www.bitget.com/api-doc/margin/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.bitget.com/sitemap.xml
+      - section_id: earn
+        base_urls: ["https://api.bitget.com"]
+        seed_urls: ["https://www.bitget.com/api-doc/earn/intro"]
+        doc_sources:
+          - kind: sitemap
+            url: https://www.bitget.com/sitemap.xml
+      - section_id: broker
+        base_urls: ["https://api.bitget.com"]
+        seed_urls: ["https://www.bitget.com/api-doc/broker/intro"]
         doc_sources:
           - kind: sitemap
             url: https://www.bitget.com/sitemap.xml
