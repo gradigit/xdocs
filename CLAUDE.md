@@ -33,6 +33,9 @@ cex-api-docs sync --docs-dir ./cex-docs --resume
 # Parallel fetch (N concurrent workers with per-domain rate limiting)
 cex-api-docs sync --docs-dir ./cex-docs --concurrency 4
 
+# Force re-download all pages to detect content changes
+cex-api-docs sync --docs-dir ./cex-docs --force-refetch
+
 # Resume an interrupted inventory fetch
 cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume
 
@@ -52,6 +55,9 @@ cex-api-docs import-postman --exchange bybit --section v5 --url <collection-url>
 # Search endpoints by keyword
 cex-api-docs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-docs
 
+# Content quality check (empty/thin/tiny_html pages)
+cex-api-docs quality-check --docs-dir ./cex-docs
+
 # Cite-only answer from local store
 cex-api-docs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
 ```
@@ -70,6 +76,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `docs/runbooks/` Demo/run instructions.
 - `docs/solutions/` Problem/solution write-ups (integration issues, logic errors, patterns).
 - `docs/reports/` Generated sync and smoke reports.
+- `docs/research/` Technology research notes (LanceDB, LlamaIndex, CEX OpenAPI landscape).
 - `skills/` Claude Code skill definitions (for agent usage).
 - `todos/` File-based work tracking (source of truth for follow-ups).
 
@@ -79,11 +86,11 @@ The pipeline has a linear progression:
 
 1. **Registry** (`data/exchanges.yaml`) -- defines exchanges, sections, seed URLs, and allowlists.
 2. **Inventory** (`inventory.py`) -- enumerates all doc URLs for a section (sitemaps first, link-follow fallback). Persists to `inventories`/`inventory_entries` tables.
-3. **Fetch** (`inventory_fetch.py`) -- downloads each inventory URL, stores raw HTML + converted markdown + metadata under `cex-docs/`. Supports `--resume`, `--concurrency`, `--render auto`.
+3. **Fetch** (`inventory_fetch.py`) -- downloads each inventory URL, stores raw HTML + converted markdown + metadata under `cex-docs/`. Supports `--resume`, `--concurrency`, `--render auto`, `--force-refetch`.
 4. **Store** (`store.py`, `db.py`, `page_store.py`) -- SQLite DB with WAL mode, write-lock serialization, FTS5 indexes on pages and endpoints.
 5. **Endpoint ingest** (`endpoints.py`, `openapi_import.py`, `postman_import.py`, `ingest_page.py`) -- structured endpoint records with provenance (citations back to source pages).
 6. **Query / Answer** (`answer.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
-7. **Quality** (`coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- coverage gap detection, stale citation sweeps, store consistency checks.
+7. **Quality** (`quality.py`, `coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- content quality gate (empty/thin/tiny_html detection), coverage gap detection, stale citation sweeps, store consistency checks.
 
 ## Conventions
 
@@ -111,6 +118,7 @@ The pipeline has a linear progression:
 - `src/cex_api_docs/postman_import.py` Postman collection import into endpoint DB
 - `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
 - `src/cex_api_docs/answer.py` Cite-only answer assembly (generalized to all 16 exchanges; Binance has richer heuristics)
+- `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
 - `src/cex_api_docs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
 
 ## Gotchas
@@ -134,17 +142,16 @@ The pipeline has a linear progression:
 
 ## Current Phase
 
-Phase: Endpoint ingest complete. All 16 exchanges (37 sections) synced and indexed: 3,813 pages, 4.48M words, 3,125 structured endpoints. Store is at `cex-docs/`.
+Phase: Endpoint extraction complete across all sections. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **3,431 structured endpoints**. Store is at `cex-docs/`.
 
-Latest: Imported endpoints from three sources:
-1. **OpenAPI/Postman specs** (Binance official + openxapi, Bybit official Postman, KuCoin official, Bitget community, OKX openxapi) — 1,918 endpoints, zero errors.
-2. **Agent-based markdown extraction** (HTX, Gate.io, Crypto.com, Bitfinex, Bitstamp, dYdX, Hyperliquid, Upbit, Bithumb, Coinone, Korbit) — 1,207 endpoints with verified citations.
-3. **Registry expansion** (9 new sections): Binance options/margin_trading/wallet/copy_trading/portfolio_margin_pro + Bitget copy_trading/margin/earn/broker — 1,527 new pages synced. Endpoints for new sections not yet extracted.
+Latest: All 9 newly added sections now have endpoints:
+- **Binance** options (46 via openxapi OpenAPI), margin_trading (59), wallet (47), copy_trading (2), portfolio_margin_pro (21) — all via official Postman collections.
+- **Bitget** broker (14), copy_trading (45), earn (27), margin (45) — via automated markdown extraction with cite-only provenance.
+- Added `--force-refetch` flag and `quality-check` command for content change detection and quality validation.
 
-Wow query demo (`docs/runbooks/binance-wow-query.md`) works end-to-end: returns cited claims for rate limits and API key permissions.
+Research completed (docs/research/):
+- LanceDB: Strong fit as supplementary semantic index alongside SQLite FTS5.
+- LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
+- CEX OpenAPI specs: Mapped all 16 exchanges; identified Bitstamp official spec and Gate.io SDK spec as remaining import opportunities.
 
-POC reports:
-- `docs/reports/poc-playwright-vs-http-binance.md` (5-page sample)
-- `docs/reports/poc-full-binance-http-playwright-jina.md` (1,072-page full comparison)
-
-Next: Extract endpoints for the 9 newly added sections. Endpoint search and answer commands are fully operational.
+Next: LanceDB POC (embed 100 pages, test 20 queries) to quantify semantic search improvement over FTS5 alone.
