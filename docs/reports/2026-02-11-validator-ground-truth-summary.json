@@ -1,0 +1,50 @@
+{
+  "run_ts": "20260211T143402Z",
+  "docs_dir": "validator-store",
+  "registry_validation": {
+    "ok": 37,
+    "total": 37
+  },
+  "base_url_validation": {
+    "ok": 40,
+    "total": 40
+  },
+  "inventory": {
+    "inventory_rows": 37,
+    "sections_done": 37,
+    "total_inventory_urls": 7136,
+    "entry_status": {
+      "fetched": 7135,
+      "pending": 0,
+      "error": 1
+    }
+  },
+  "content": {
+    "pages": 3771,
+    "total_word_count": 3918368
+  },
+  "integrity": {
+    "fsck_core_issue_count": 0,
+    "fsck_orphan_scan_issue_count": 200
+  },
+  "unresolved": [
+    {
+      "exchange": "korbit",
+      "section": "rest",
+      "url": "https://docs.korbit.co.kr/",
+      "error_json": {
+        "code": "EDOMAIN",
+        "details": {
+          "allowed_domains": [
+            "docs.korbit.co.kr"
+          ],
+          "location": "https://maintenance.korbit.co.kr",
+          "next_host": "maintenance.korbit.co.kr",
+          "next_url": "https://maintenance.korbit.co.kr",
+          "url": "https://docs.korbit.co.kr/"
+        },
+        "message": "Redirect target host is outside allowed domain scope."
+      }
+    }
+  ]
+}
