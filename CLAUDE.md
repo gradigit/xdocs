@@ -58,6 +58,14 @@ cex-api-docs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-d
 # Content quality check (empty/thin/tiny_html pages)
 cex-api-docs quality-check --docs-dir ./cex-docs
 
+# Build LanceDB semantic search index (requires pip install -e ".[semantic]")
+cex-api-docs build-index --docs-dir ./cex-docs
+cex-api-docs build-index --exchange binance --limit 500 --docs-dir ./cex-docs
+
+# Semantic search via LanceDB (vector, fts, or hybrid mode)
+cex-api-docs semantic-search "check wallet balance" --docs-dir ./cex-docs
+cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
+
 # Cite-only answer from local store
 cex-api-docs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
 ```
@@ -89,8 +97,9 @@ The pipeline has a linear progression:
 3. **Fetch** (`inventory_fetch.py`) -- downloads each inventory URL, stores raw HTML + converted markdown + metadata under `cex-docs/`. Supports `--resume`, `--concurrency`, `--render auto`, `--force-refetch`.
 4. **Store** (`store.py`, `db.py`, `page_store.py`) -- SQLite DB with WAL mode, write-lock serialization, FTS5 indexes on pages and endpoints.
 5. **Endpoint ingest** (`endpoints.py`, `openapi_import.py`, `postman_import.py`, `ingest_page.py`) -- structured endpoint records with provenance (citations back to source pages).
-6. **Query / Answer** (`answer.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
-7. **Quality** (`quality.py`, `coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- content quality gate (empty/thin/tiny_html detection), coverage gap detection, stale citation sweeps, store consistency checks.
+6. **Semantic Index** (`semantic.py`) -- optional LanceDB vector index built from page markdown. Enables vector/hybrid search alongside FTS5 for natural language queries where keyword matching fails.
+7. **Query / Answer** (`answer.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
+8. **Quality** (`quality.py`, `coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- content quality gate (empty/thin/tiny_html detection), coverage gap detection, stale citation sweeps, store consistency checks.
 
 ## Conventions
 
@@ -119,6 +128,7 @@ The pipeline has a linear progression:
 - `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
 - `src/cex_api_docs/answer.py` Cite-only answer assembly (generalized to all 16 exchanges; Binance has richer heuristics)
 - `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
+- `src/cex_api_docs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
 - `src/cex_api_docs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
 
 ## Gotchas
@@ -128,6 +138,7 @@ The pipeline has a linear progression:
 - Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
 - **Playwright is optional**: install with `pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
+- **Semantic search is optional**: install with `pip install -e ".[semantic]"` (adds lancedb + sentence-transformers + torch ~2GB). Without it, `build-index` and `semantic-search` commands raise ImportError. Uses `all-MiniLM-L6-v2` model (384 dims). LanceDB index stored at `cex-docs/lancedb-index/`.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
@@ -142,16 +153,16 @@ The pipeline has a linear progression:
 
 ## Current Phase
 
-Phase: Endpoint extraction complete across all sections. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **3,431 structured endpoints**. Store is at `cex-docs/`.
+Phase: Semantic search integrated. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **~3,430 structured endpoints**. Store is at `cex-docs/`.
 
-Latest: All 9 newly added sections now have endpoints:
-- **Binance** options (46 via openxapi OpenAPI), margin_trading (59), wallet (47), copy_trading (2), portfolio_margin_pro (21) — all via official Postman collections.
-- **Bitget** broker (14), copy_trading (45), earn (27), margin (45) — via automated markdown extraction with cite-only provenance.
-- Added `--force-refetch` flag and `quality-check` command for content change detection and quality validation.
+Latest:
+- **LanceDB semantic search** implemented as optional `[semantic]` dependency. POC evaluation across 3,815 pages: vector search finds results for 90% of queries vs FTS5's 50%, with sub-10ms latency. CLI commands: `build-index`, `semantic-search` (vector/fts/hybrid modes). Report at docs/reports/poc-lancedb-semantic-search.md.
+- **Bitstamp** endpoints reimported from official OpenAPI 3.0.3 spec (82 endpoints, extracted from Redoc page via Playwright).
+- **Gate.io** endpoints extracted from stored markdown (363 endpoints, 97% citation success rate).
 
 Research completed (docs/research/):
-- LanceDB: Strong fit as supplementary semantic index alongside SQLite FTS5.
+- LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
-- CEX OpenAPI specs: Mapped all 16 exchanges; identified Bitstamp official spec and Gate.io SDK spec as remaining import opportunities.
+- CEX OpenAPI specs: Mapped all 16 exchanges; all viable imports completed.
 
-Next: LanceDB POC (embed 100 pages, test 20 queries) to quantify semantic search improvement over FTS5 alone.
+Next: Integrate semantic search as FTS5 fallback in `answer` command (when FTS5 returns no results, try hybrid search). Extract endpoints for 9 newly added Binance/Bitget sections.

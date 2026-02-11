@@ -1,69 +1,48 @@
 # Context Handoff — 2026-02-12
 
 ## First Steps (Read in Order)
-1. Read CLAUDE.md — project context and conventions
+1. Read CLAUDE.md — project context, conventions, current phase
 2. Read TODO.md — current task list
 
 ## Session Summary
 
-Completed endpoint extraction for all 9 newly added exchange sections and ran 3 parallel research agents.
+Completed all 4 items from previous handoff's "What's Next":
 
-### Endpoint Extraction (260 new endpoints)
+### 1. LanceDB Semantic Search (POC -> Module)
+- Implemented `src/cex_api_docs/semantic.py` with `build_index()`, `semantic_search()`, `fts5_search()`
+- Added `[semantic]` optional dependency in pyproject.toml (lancedb + sentence-transformers)
+- Added `build-index` and `semantic-search` CLI commands (vector/fts/hybrid modes)
+- POC evaluation across 3,815 pages: vector search finds results for 90% of queries vs FTS5's 50%, sub-10ms latency for all engines
+- Test: `tests/test_semantic.py` (skips if lancedb not installed)
+- Report: docs/reports/poc-lancedb-semantic-search.md
 
-**Binance (4 sections via official Postman collections from github.com/binance/binance-api-postman):**
-- `binance/copy_trading`: 2 endpoints
-- `binance/margin_trading`: 59 endpoints
-- `binance/wallet`: 47 endpoints
-- `binance/portfolio_margin_pro`: 21 endpoints
+### 2. Bitstamp OpenAPI Import
+- Extracted official OpenAPI 3.0.3 spec from Bitstamp Redoc page (Playwright)
+- Reimported: 82 endpoints, 0 errors
 
-**Binance options (via openxapi OpenAPI spec, done in previous session):**
-- `binance/options`: 46 endpoints
+### 3. Gate.io Endpoint Extraction
+- No public OpenAPI spec available (checked all SDK repos)
+- Extracted 363 endpoints from stored markdown (2 pages: 181K + 74K words)
+- 97% citation success rate (11 EBADCITE skipped)
+- Cleaned up 367 stale `gate_io` entries from earlier session (wrong exchange_id)
 
-**Bitget (4 sections via automated markdown extraction with cite-only provenance):**
-- `bitget/broker`: 14 endpoints
-- `bitget/copy_trading`: 45 endpoints
-- `bitget/earn`: 27 endpoints
-- `bitget/margin`: 45 endpoints
+### 4. Stale File Cleanup
+- Deleted 4 orphaned research files from crashed session at repo root
+- Cleaned up stale `gate_io` DB entries (FK cascade: endpoint_sources -> endpoints)
 
-**Import method for Bitget:** Regex-extracted HTTP method + path from stored markdown pages, then used `save_endpoints_bulk()` with proper `field_status` keys and per-field source citations. Required `field_name` on each source entry and all 9 `REQUIRED_HTTP_FIELD_STATUS_KEYS` including `error_codes`.
-
-**Total endpoints: 3,431** (up from 3,171). All 32 active sections now have structured endpoints.
-
-### Research Reports (3 background agents)
-
-All saved to `docs/research/`:
-
-1. **research-lancedb-2026-02-12.md** (501 lines) — LanceDB is a strong fit as supplementary semantic index alongside SQLite. Embedded/serverless, Apache 2.0, 8.9K stars. Recommendation: keep SQLite as primary, add LanceDB for semantic queries. Start with `all-MiniLM-L6-v2` embeddings. POC first (embed 100 pages, test 20 queries).
-
-2. **research-llamaindex-2026-02-12.md** (361 lines) — Not recommended as orchestration layer. LLM-based retrieval (non-deterministic SQL, prompt-based citations) conflicts with project's deterministic cite-only design. Cherry-pick patterns only if needed.
-
-3. **research-cex-openapi-specs-2026-02-12.md** (433 lines) — Mapped all 16 exchanges for spec availability. Key findings:
-   - 7 exchanges have official/community specs (already imported)
-   - Top new import opportunities: Bitstamp official OpenAPI (Redoc download), Gate.io spec from SDK repos
-   - Aggregators: openxapi (Binance+OKX, highest quality), exchange-collection (11 exchanges, variable quality)
-
-### Code Changes (committed in previous session)
-
-- `--force-refetch` flag on `sync` and `fetch-inventory` commands
-- `quality-check` subcommand (empty/thin/tiny_html detection)
-- `quality.py` module integrated into post-sync phase
-- Tests: `test_force_refetch_redownloads_fetched_entries`, `test_force_refetch_and_resume_mutual_exclusion`, `test_quality_check_detects_empty_pages`, `test_quality_check_passes_normal_pages`
-
-### Stale Files to Clean Up
-
-Root-level research files from a crashed session (superseded by docs/research/ versions):
-- `research-cex-openapi-swagger-2026-02-11.md`
-- `research-lancedb-2026-02-11.md`
-- `research-llamaindex-2026-02-11.md`
-- `research-lancedb-llamaindex-cex-openapi-synthesis-2026-02-11.md`
-
-## Git State
-- **Branch:** main
-- **Last commit:** f5555f9 — feat: --force-refetch flag + content quality gate
+## Store Stats
+- 16 exchanges, 37 sections
+- 3,813 pages, 4.48M words
+- ~3,430 structured endpoints
+- LanceDB index: 3,815 pages embedded at `cex-docs/lancedb-index/`
 
 ## What's Next
+1. **Integrate semantic fallback in `answer` command**: When FTS5 returns no results, try hybrid search via LanceDB (architecture diagram in POC report)
+2. **Extract endpoints for 9 new sections**: Binance options/margin_trading/wallet/copy_trading/portfolio_margin_pro + Bitget copy_trading/margin/earn/broker -- pages synced, endpoints not yet extracted
+3. **Endpoint count reconciliation**: Store has ~3,430 endpoints; verify per-exchange counts are accurate after Gate.io cleanup
 
-1. **LanceDB POC** — Embed 100 pages, test 20 queries, measure improvement over FTS5 alone
-2. **Bitstamp OpenAPI import** — Official spec downloadable from Redoc page
-3. **Gate.io OpenAPI extraction** — Find spec in SDK repos (gateapi-go, gateapi-python)
-4. **Stale root research files** — Delete the 4 superseded files listed above
+## Key Commits This Session
+```
+d2b5027 feat: LanceDB semantic search module + POC evaluation
+7e27a93 docs: endpoint extraction complete + research reports + CLAUDE.md sync
+```
