@@ -13,6 +13,7 @@ build/
 
 # Local agent artifacts (never commit)
 .claude/
+!.claude/skills/
 
 # Local doc store (must never be committed)
 cex-docs/
@@ -23,3 +24,17 @@ poc-binance-full/
 
 # Extracted endpoint JSON files (regenerable from stored markdown)
 extracted_endpoints/
+
+# Dev/session artifacts (not needed by end users)
+HANDOFF.md
+TODO.md
+todos/
+docs/archive/
+docs/plans/
+docs/reports/
+docs/research/
+docs/runbooks/
+docs/discussions/
+docs/solutions/
+scripts/poc_*.py
+.doc-manifest.yaml

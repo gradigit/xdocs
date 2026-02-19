@@ -80,13 +80,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
 - `data/exchanges.yaml` Registry of all 16 exchanges (37 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (e.g. `sync_and_report.sh` cron runner).
-- `docs/plans/` Authoritative plans and design decisions.
-- `docs/runbooks/` Demo/run instructions.
-- `docs/solutions/` Problem/solution write-ups (integration issues, logic errors, patterns).
-- `docs/reports/` Generated sync and smoke reports.
-- `docs/research/` Technology research notes (LanceDB, LlamaIndex, CEX OpenAPI landscape).
-- `skills/` Claude Code skill definitions (for agent usage).
-- `todos/` File-based work tracking (source of truth for follow-ups).
+- `.claude/skills/` Claude Code skill definitions (auto-discovered by Claude Code).
 
 ## Data Flow
 
