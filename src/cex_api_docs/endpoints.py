@@ -543,6 +543,81 @@ INSERT INTO endpoints_fts (
     return {"endpoint_id": computed_id, "path": str(endpoint_path), "updated_at": updated_at}
 
 
+def get_endpoint(
+    *,
+    docs_dir: str,
+    endpoint_id: str,
+) -> dict[str, Any]:
+    """Return the full parsed JSON blob for a single endpoint by ID."""
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        row = conn.execute(
+            "SELECT json FROM endpoints WHERE endpoint_id = ?;",
+            (endpoint_id,),
+        ).fetchone()
+        if row is None:
+            raise CexApiDocsError(
+                code="ENOTFOUND",
+                message="Endpoint not found.",
+                details={"endpoint_id": endpoint_id},
+            )
+        return json.loads(row["json"])
+    finally:
+        conn.close()
+
+
+def list_endpoints(
+    *,
+    docs_dir: str,
+    exchange: str | None = None,
+    section: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    """Return endpoint summaries filtered by exchange/section."""
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        where: list[str] = []
+        params: list[Any] = []
+        if exchange:
+            where.append("exchange = ?")
+            params.append(exchange)
+        if section:
+            where.append("section = ?")
+            params.append(section)
+        params.append(int(limit))
+
+        where_clause = f"WHERE {' AND '.join(where)}" if where else ""
+        sql = f"""
+SELECT endpoint_id, exchange, section, protocol, method, path, base_url, description, json, updated_at
+FROM endpoints
+{where_clause}
+ORDER BY exchange, section, method, path
+LIMIT ?;
+"""
+        cur = conn.execute(sql, tuple(params))
+        out: list[dict[str, Any]] = []
+        for r in cur.fetchall():
+            record = json.loads(r["json"])
+            field_status = record.get("field_status", {})
+            out.append({
+                "endpoint_id": r["endpoint_id"],
+                "exchange": r["exchange"],
+                "section": r["section"],
+                "protocol": r["protocol"],
+                "method": r["method"],
+                "path": r["path"],
+                "base_url": r["base_url"],
+                "description": r["description"],
+                "field_status": field_status,
+                "updated_at": r["updated_at"],
+            })
+        return out
+    finally:
+        conn.close()
+
+
 def search_endpoints(
     *,
     docs_dir: str,

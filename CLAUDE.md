@@ -55,6 +55,21 @@ cex-api-docs import-postman --exchange bybit --section v5 --url <collection-url>
 # Search endpoints by keyword
 cex-api-docs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-docs
 
+# Get full endpoint record by ID
+cex-api-docs get-endpoint <endpoint_id> --docs-dir ./cex-docs
+
+# List endpoint summaries by exchange/section
+cex-api-docs list-endpoints --exchange binance --section spot --limit 20 --docs-dir ./cex-docs
+
+# Lookup endpoint by HTTP path (SQL LIKE, handles {{url}} prefix)
+cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance --docs-dir ./cex-docs
+
+# Search error code across endpoints + pages
+cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+
+# Classify input text (error, endpoint, payload, code, question)
+cex-api-docs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs
+
 # Content quality check (empty/thin/tiny_html pages)
 cex-api-docs quality-check --docs-dir ./cex-docs
 
@@ -92,7 +107,7 @@ The pipeline has a linear progression:
 4. **Store** (`store.py`, `db.py`, `page_store.py`) -- SQLite DB with WAL mode, write-lock serialization, FTS5 indexes on pages and endpoints.
 5. **Endpoint ingest** (`endpoints.py`, `openapi_import.py`, `postman_import.py`, `ingest_page.py`) -- structured endpoint records with provenance (citations back to source pages).
 6. **Semantic Index** (`semantic.py`) -- optional LanceDB vector index built from page markdown. Enables vector/hybrid search alongside FTS5 for natural language queries where keyword matching fails.
-7. **Query / Answer** (`answer.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
+7. **Query / Answer** (`answer.py`, `lookup.py`, `classify.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB + semantic fallback. Input classification routes errors, paths, payloads, code, and questions to appropriate search commands. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
 8. **Quality** (`quality.py`, `coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- content quality gate (empty/thin/tiny_html detection), coverage gap detection, stale citation sweeps, store consistency checks.
 
 ## Conventions
@@ -106,7 +121,7 @@ The pipeline has a linear progression:
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs
 - `schema/schema.sql` SQLite schema (pages, endpoints, FTS5, review queue, inventories, coverage_gaps)
-- `src/cex_api_docs/cli.py` CLI entrypoint (30+ subcommands)
+- `src/cex_api_docs/cli.py` CLI entrypoint (35+ subcommands)
 - `src/cex_api_docs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
 - `src/cex_api_docs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
 - `src/cex_api_docs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
@@ -116,11 +131,14 @@ The pipeline has a linear progression:
 - `src/cex_api_docs/inventory_fetch.py` Fetch + persist inventory entries (--resume, --concurrency with per-domain rate limiting, 3-phase locking)
 - `src/cex_api_docs/playwrightfetch.py` Playwright fetch wrapper (JS-rendered docs fallback)
 - `src/cex_api_docs/sync.py` Cron-friendly orchestration (inventory + fetch, --resume, --concurrency)
-- `src/cex_api_docs/endpoints.py` Endpoint CRUD, FTS search, review queue management
+- `src/cex_api_docs/endpoints.py` Endpoint CRUD (`get_endpoint`, `list_endpoints`, `search_endpoints`), FTS search, review queue management
 - `src/cex_api_docs/openapi_import.py` OpenAPI/Swagger spec import into endpoint DB
 - `src/cex_api_docs/postman_import.py` Postman collection import into endpoint DB
 - `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
-- `src/cex_api_docs/answer.py` Cite-only answer assembly (generalized to all 16 exchanges; Binance has richer heuristics)
+- `src/cex_api_docs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
+- `src/cex_api_docs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
+- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 16 exchanges; Binance has richer heuristics)
+- `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + cex-api-query skill)
 - `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
 - `src/cex_api_docs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
 - `src/cex_api_docs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
@@ -147,10 +165,11 @@ The pipeline has a linear progression:
 
 ## Current Phase
 
-Phase: Semantic search integrated. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **~3,430 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **~3,430 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
-- **LanceDB semantic search** implemented as optional `[semantic]` dependency. POC evaluation across 3,815 pages: vector search finds results for 90% of queries vs FTS5's 50%, with sub-10ms latency. CLI commands: `build-index`, `semantic-search` (vector/fts/hybrid modes). Report at docs/reports/poc-lancedb-semantic-search.md.
+- **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback. 5 new CLI commands: `get-endpoint`, `list-endpoints`, `lookup-endpoint`, `search-error`, `classify`. Skill rewritten to v2.0.0 with classification-based routing.
+- **LanceDB semantic search** integrated as FTS5 fallback in `answer` command. Also available standalone via `semantic-search` CLI.
 - **Bitstamp** endpoints reimported from official OpenAPI 3.0.3 spec (82 endpoints, extracted from Redoc page via Playwright).
 - **Gate.io** endpoints extracted from stored markdown (363 endpoints, 97% citation success rate).
 
@@ -159,4 +178,4 @@ Research completed (docs/research/):
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
 - CEX OpenAPI specs: Mapped all 16 exchanges; all viable imports completed.
 
-Next: Integrate semantic search as FTS5 fallback in `answer` command (when FTS5 returns no results, try hybrid search). Extract endpoints for 9 newly added Binance/Bitget sections.
+Next: Extract endpoints for 9 newly added Binance/Bitget sections. Improve error code search accuracy (currently matches bare numbers in page content; could use exchange-specific patterns from `data/error_code_patterns.yaml` to rank results).

@@ -14,7 +14,9 @@ from .crawler import crawl_store
 from .coverage import endpoint_coverage
 from .coverage_gaps import compute_and_persist_coverage_gaps, list_coverage_gaps
 from .discover_sources import discover_sources
-from .endpoints import review_list, review_resolve, review_show, save_endpoint, search_endpoints
+from .classify import classify_input
+from .endpoints import get_endpoint, list_endpoints, review_list, review_resolve, review_show, save_endpoint, search_endpoints
+from .lookup import lookup_endpoint_by_path, search_error_code
 from .ingest_page import ingest_page
 from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
@@ -310,6 +312,28 @@ def main(argv: list[str] | None = None) -> None:
     ap = sub.add_parser("answer", help="Assemble cite-only answers from local store", parents=[common])
     ap.add_argument("question")
     ap.add_argument("--clarification", default=None, help="Clarification selection id (e.g. binance:portfolio_margin)")
+
+    ge = sub.add_parser("get-endpoint", help="Get full endpoint record by ID", parents=[common])
+    ge.add_argument("endpoint_id")
+
+    le = sub.add_parser("list-endpoints", help="List endpoint summaries by exchange/section", parents=[common])
+    le.add_argument("--exchange", default=None)
+    le.add_argument("--section", default=None)
+    le.add_argument("--limit", type=int, default=100)
+
+    lup = sub.add_parser("lookup-endpoint", help="Lookup endpoint by HTTP path", parents=[common])
+    lup.add_argument("path", help="HTTP path (e.g. /sapi/v1/convert/getQuote)")
+    lup.add_argument("--method", default=None, help="HTTP method filter")
+    lup.add_argument("--exchange", default=None)
+    lup.add_argument("--section", default=None)
+
+    ser = sub.add_parser("search-error", help="Search error code across endpoints + pages", parents=[common])
+    ser.add_argument("error_code")
+    ser.add_argument("--exchange", default=None)
+    ser.add_argument("--limit", type=int, default=10)
+
+    cls = sub.add_parser("classify", help="Classify input text (error, endpoint, payload, code, question)", parents=[common])
+    cls.add_argument("text")
 
     args = parser.parse_args(argv)
 
@@ -733,6 +757,50 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "answer":
             result = answer_question(docs_dir=args.docs_dir, question=args.question, clarification=args.clarification)
             _print_json(result)
+            return
+
+        if args.cmd == "get-endpoint":
+            result = get_endpoint(docs_dir=args.docs_dir, endpoint_id=args.endpoint_id)
+            _print_json({"ok": True, "schema_version": "v1", "result": result})
+            return
+
+        if args.cmd == "list-endpoints":
+            items = list_endpoints(docs_dir=args.docs_dir, exchange=args.exchange, section=args.section, limit=int(args.limit))
+            _print_json({"ok": True, "schema_version": "v1", "result": {"endpoints": items, "count": len(items)}})
+            return
+
+        if args.cmd == "lookup-endpoint":
+            matches = lookup_endpoint_by_path(
+                docs_dir=args.docs_dir,
+                path=args.path,
+                method=args.method,
+                exchange=args.exchange,
+                section=args.section,
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches, "count": len(matches)}})
+            return
+
+        if args.cmd == "search-error":
+            matches = search_error_code(
+                docs_dir=args.docs_dir,
+                error_code=args.error_code,
+                exchange=args.exchange,
+                limit=int(args.limit),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches, "count": len(matches)}})
+            return
+
+        if args.cmd == "classify":
+            classification = classify_input(args.text)
+            _print_json({
+                "ok": True,
+                "schema_version": "v1",
+                "result": {
+                    "input_type": classification.input_type,
+                    "confidence": classification.confidence,
+                    "signals": classification.signals,
+                },
+            })
             return
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})

@@ -1,0 +1,147 @@
+# Exchange-specific error code formats and common codes.
+# Used by classify.py and the cex-api-query skill for quick error routing.
+
+binance:
+  format: "negative integer (e.g. -1002)"
+  pattern: "-\\d{4}"
+  permission_errors: ["-1002", "-2015", "-3001"]
+  rate_limit_errors: ["-1003", "-1015"]
+  common:
+    "-1002": "Unauthorized — API key missing or invalid"
+    "-1003": "Too many requests — rate limit exceeded"
+    "-1015": "Too many orders — order rate limit"
+    "-2015": "Invalid API key, IP, or permissions"
+    "-3001": "Margin account not enabled"
+
+okx:
+  format: "5-digit (e.g. 50004)"
+  pattern: "5\\d{4}"
+  permission_errors: ["50111", "50102"]
+  rate_limit_errors: ["50011"]
+  common:
+    "50004": "Endpoint request timeout"
+    "50011": "Request rate limit exceeded"
+    "50102": "Timestamp expired"
+    "50111": "Invalid API key"
+    "58237": "Withdrawal rcvrInfo required (travel rule)"
+
+bybit:
+  format: "5-6 digit (e.g. 10001)"
+  pattern: "\\d{5,6}"
+  permission_errors: ["10003", "10004"]
+  rate_limit_errors: ["10006", "10018"]
+  common:
+    "10001": "Parameter error"
+    "10003": "Invalid API key"
+    "10004": "Sign error"
+    "10006": "Rate limit exceeded"
+
+bitget:
+  format: "5-digit (e.g. 40001)"
+  pattern: "4\\d{4}"
+  permission_errors: ["40009", "40014"]
+  rate_limit_errors: ["40011"]
+  common:
+    "40001": "Parameter error"
+    "40009": "API key permissions insufficient"
+    "40014": "Invalid API key"
+
+kucoin:
+  format: "6-digit (e.g. 400001)"
+  pattern: "\\d{6}"
+  permission_errors: ["400003", "400004"]
+  rate_limit_errors: ["429000"]
+  common:
+    "400001": "Parameter error"
+    "400003": "Signature error"
+    "400004": "Timestamp expired"
+
+gate_io:
+  format: "string label (e.g. INVALID_KEY)"
+  pattern: "[A-Z_]+"
+  permission_errors: ["INVALID_KEY", "FORBIDDEN"]
+  rate_limit_errors: ["TOO_MANY_REQUESTS"]
+  common:
+    "INVALID_KEY": "API key invalid"
+    "FORBIDDEN": "Permission denied"
+
+htx:
+  format: "string code (e.g. api-signature-not-valid)"
+  pattern: "api-[a-z-]+"
+  permission_errors: ["api-signature-not-valid", "api-key-not-found"]
+  rate_limit_errors: ["order-limitorder-amount-min-error"]
+  common:
+    "api-signature-not-valid": "Invalid signature"
+    "api-key-not-found": "API key not found"
+
+crypto_com:
+  format: "5-digit (e.g. 10001)"
+  pattern: "\\d{5}"
+  permission_errors: ["10002"]
+  rate_limit_errors: ["10007"]
+  common:
+    "10001": "Invalid request"
+    "10002": "Unauthorized"
+    "10007": "Rate limit exceeded"
+
+bitstamp:
+  format: "HTTP status + JSON reason"
+  pattern: "HTTP [45]\\d{2}"
+  permission_errors: []
+  rate_limit_errors: []
+  common: {}
+
+bitfinex:
+  format: "5-digit (e.g. 10100)"
+  pattern: "\\d{5}"
+  permission_errors: ["10100"]
+  rate_limit_errors: ["11010"]
+  common:
+    "10100": "API key not found"
+    "11010": "Rate limit exceeded"
+
+dydx:
+  format: "HTTP status + error message"
+  pattern: "HTTP [45]\\d{2}"
+  permission_errors: []
+  rate_limit_errors: []
+  common: {}
+
+hyperliquid:
+  format: "string error message"
+  pattern: ".*"
+  permission_errors: []
+  rate_limit_errors: []
+  common: {}
+
+upbit:
+  format: "string code (e.g. invalid_access_key)"
+  pattern: "[a-z_]+"
+  permission_errors: ["invalid_access_key", "jwt_verification"]
+  rate_limit_errors: ["too_many_requests"]
+  common:
+    "invalid_access_key": "Invalid access key"
+    "too_many_requests": "Rate limit exceeded"
+
+bithumb:
+  format: "4-digit (e.g. 5100)"
+  pattern: "\\d{4}"
+  permission_errors: ["5100"]
+  rate_limit_errors: ["5200"]
+  common:
+    "5100": "Bad request"
+    "5200": "Rate limit exceeded"
+
+coinone:
+  format: "numeric"
+  pattern: "\\d+"
+  permission_errors: []
+  rate_limit_errors: []
+  common: {}
+
+korbit:
+  format: "numeric"
+  pattern: "\\d+"
+  permission_errors: []
+  rate_limit_errors: []
+  common: {}

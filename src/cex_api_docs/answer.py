@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import re
+import sqlite3
 from pathlib import Path
 from typing import Any
 
@@ -121,6 +123,100 @@ LIMIT ?;
     return [dict(r) for r in cur.fetchall()]
 
 
+def _search_pages_with_fallback(
+    conn: sqlite3.Connection,
+    *,
+    query: str,
+    url_prefix: str,
+    limit: int = 5,
+    docs_dir: str | None = None,
+) -> list[dict[str, Any]]:
+    """Search pages via FTS5, falling back to semantic search if no results."""
+    results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit)
+    if results or docs_dir is None:
+        return results
+    try:
+        from .semantic import semantic_search
+        sem_results = semantic_search(
+            docs_dir=docs_dir,
+            query=query,
+            exchange=None,
+            limit=limit,
+            query_type="hybrid",
+        )
+        for sr in sem_results:
+            url = sr.get("url", "")
+            if url_prefix and not url.startswith(url_prefix):
+                continue
+            # Convert semantic result to the format _search_pages returns.
+            row = conn.execute(
+                "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path FROM pages WHERE canonical_url = ?;",
+                (url,),
+            ).fetchone()
+            if row:
+                results.append(dict(row))
+            if len(results) >= limit:
+                break
+    except (ImportError, Exception):
+        # Semantic search is optional; index may not exist.
+        pass
+    return results
+
+
+def _search_endpoints_for_answer(
+    conn: sqlite3.Connection,
+    *,
+    query: str,
+    exchange: str,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    """Search endpoint records and return relevant fields for answer composition."""
+    # Sanitize for FTS5, filtering out FTS5 keywords that would break syntax.
+    fts_keywords = {"OR", "AND", "NOT", "NEAR"}
+    terms = [t for t in re.findall(r"[A-Za-z0-9_]+", query) if t.upper() not in fts_keywords]
+    fts_query = " OR ".join(terms[:8]) if terms else query
+    if not fts_query.strip():
+        return []
+
+    where = ["endpoints_fts MATCH ?", "endpoints_fts.exchange = ?"]
+    params: list[Any] = [fts_query, exchange, int(limit)]
+
+    sql = f"""
+SELECT
+  endpoints_fts.endpoint_id,
+  endpoints_fts.exchange,
+  endpoints_fts.section,
+  endpoints_fts.method,
+  endpoints_fts.path,
+  snippet(endpoints_fts, 5, '[', ']', '...', 12) AS snippet,
+  bm25(endpoints_fts) AS rank
+FROM endpoints_fts
+WHERE {' AND '.join(where)}
+ORDER BY rank
+LIMIT ?;
+"""
+    try:
+        cur = conn.execute(sql, tuple(params))
+    except sqlite3.OperationalError:
+        return []
+
+    out: list[dict[str, Any]] = []
+    for r in cur.fetchall():
+        # Get the full endpoint record.
+        full = conn.execute("SELECT json FROM endpoints WHERE endpoint_id = ?;", (r["endpoint_id"],)).fetchone()
+        record = json.loads(full["json"]) if full else {}
+        out.append({
+            "endpoint_id": r["endpoint_id"],
+            "exchange": r["exchange"],
+            "section": r["section"],
+            "method": r["method"],
+            "path": r["path"],
+            "snippet": r["snippet"],
+            "record": record,
+        })
+    return out
+
+
 def _detect_exchange(norm: str, reg) -> list:
     """Match exchange names/IDs in the normalized question text."""
     matches = []
@@ -133,7 +229,7 @@ def _detect_exchange(norm: str, reg) -> list:
 
 
 def _generic_search_answer(
-    conn, *, exchange, question: str, norm: str,
+    conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
 ) -> dict[str, Any]:
     """Generic cite-only answer for any exchange: FTS search across all sections."""
     seed_prefixes = {sec.section_id: sec.seed_urls[0] for sec in exchange.sections if sec.seed_urls}
@@ -151,9 +247,34 @@ def _generic_search_answer(
     }]
     fts_query = " OR ".join(terms[:8]) if terms else norm
 
+    # Search endpoints for relevant results.
+    endpoint_results = _search_endpoints_for_answer(conn, query=fts_query, exchange=exchange.exchange_id, limit=3)
+    for ep in endpoint_results:
+        record = ep.get("record", {})
+        ep_desc = record.get("description", ep.get("snippet", ""))
+        rate_limit = record.get("rate_limit")
+        field_status = record.get("field_status", {})
+
+        # If rate_limit is unknown, try to infer from page markdown.
+        rate_limit_note = ""
+        if field_status.get("rate_limit") in ("unknown", "undocumented") and rate_limit is None:
+            inferred = _infer_rate_limit_from_pages(conn, exchange=exchange, path=ep.get("path", ""), terms=terms, docs_dir=docs_dir)
+            if inferred:
+                rate_limit_note = f" [inferred rate limit: {inferred['text']}]"
+
+        text = f"[{ep['exchange']}:{ep['section']}] {ep.get('method', '')} {ep.get('path', '')} — {ep_desc}{rate_limit_note}"
+        claims.append({
+            "id": f"c{c}",
+            "kind": "ENDPOINT",
+            "text": text,
+            "citations": [],
+            "endpoint_id": ep["endpoint_id"],
+        })
+        c += 1
+
     # Search each section, collect top results.
     for section_id, prefix in seed_prefixes.items():
-        candidates = _search_pages(conn, query=fts_query, url_prefix=prefix, limit=3)
+        candidates = _search_pages_with_fallback(conn, query=fts_query, url_prefix=prefix, limit=3, docs_dir=docs_dir)
         for cand in candidates:
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
             if not md_path or not md_path.exists():
@@ -177,10 +298,11 @@ def _generic_search_answer(
         if c > 10:
             break
 
-    # Fallback: search by domain prefix if no section-based results.
-    if not claims:
+    # Fallback: search by domain prefix if no page claims found.
+    page_claims = [cl for cl in claims if cl.get("kind") != "ENDPOINT"]
+    if not page_claims:
         for dp in domain_prefixes:
-            candidates = _search_pages(conn, query=fts_query, url_prefix=dp, limit=5)
+            candidates = _search_pages_with_fallback(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir)
             for cand in candidates:
                 md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
                 if not md_path or not md_path.exists():
@@ -201,7 +323,7 @@ def _generic_search_answer(
                 c += 1
                 if c > 10:
                     break
-            if claims:
+            if page_claims or len(claims) > len(endpoint_results):
                 break
 
     if not claims:
@@ -219,8 +341,40 @@ def _generic_search_answer(
     }
 
 
+def _infer_rate_limit_from_pages(
+    conn: sqlite3.Connection,
+    *,
+    exchange,
+    path: str,
+    terms: list[str],
+    docs_dir: str | None = None,
+) -> dict[str, str] | None:
+    """Try to infer rate limit from page markdown near the endpoint path."""
+    if not path:
+        return None
+    seed_prefixes = {sec.section_id: sec.seed_urls[0] for sec in exchange.sections if sec.seed_urls}
+    path_tail = path.rstrip("/").rsplit("/", 1)[-1] if "/" in path else path
+
+    for _section_id, prefix in seed_prefixes.items():
+        candidates = _search_pages(conn, query=f"rate limit {path_tail}", url_prefix=prefix, limit=3)
+        for cand in candidates:
+            md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
+            if not md_path or not md_path.exists():
+                continue
+            md = md_path.read_text(encoding="utf-8")
+            # Find the endpoint path in the markdown, then look for weight/limit nearby.
+            idx = md.lower().find(path_tail.lower())
+            if idx == -1:
+                continue
+            window = md[max(0, idx - 200):min(len(md), idx + 500)]
+            weight = _extract_weight_from_excerpt(window)
+            if weight is not None:
+                return {"text": f"weight {weight} (inferred)", "source_url": cand["canonical_url"]}
+    return None
+
+
 def _binance_answer(
-    conn, *, reg, question: str, norm: str, clarification: str | None,
+    conn, *, reg, question: str, norm: str, clarification: str | None, docs_dir: str | None = None,
 ) -> dict[str, Any]:
     """Binance-specific answer logic with rate-limit comparison and permissions heuristics."""
     binance = reg.get_exchange("binance")
@@ -407,7 +561,7 @@ def _binance_answer(
 
     # If no specialized logic triggered, fall through to generic search.
     if not claims and not unified_section:
-        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm)
+        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm, docs_dir=docs_dir)
 
     # Status policy: only "ok" when every requested part is cite-backed.
     if wants_rate and unified_section and "rate_limit_comparison" in missing:
@@ -519,9 +673,9 @@ def answer_question(
     try:
         # Binance: use richer Binance-specific logic.
         if exchange.exchange_id == "binance":
-            return _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification)
+            return _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir)
 
         # All other exchanges: generic cite-only search.
-        return _generic_search_answer(conn, exchange=exchange, question=question, norm=norm)
+        return _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir)
     finally:
         conn.close()
