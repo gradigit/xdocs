@@ -432,7 +432,9 @@ exchanges:
           mode: link_follow
           render_mode: auto
           max_pages: 300
+          scope_priority: 50
           scope_prefixes:
+            - "https://docs.upbit.com/ko/reference/"
             - "https://docs.upbit.com/kr/reference/"
 
   - exchange_id: bithumb
