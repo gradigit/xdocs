@@ -165,8 +165,11 @@ def _copy_runtime_data(cfg: SyncConfig) -> list[str]:
                     conn.execute(f"DELETE FROM {table};")
                 except sqlite3.OperationalError:
                     pass  # Table may not exist in older schemas
-            conn.execute("VACUUM;")
             conn.commit()
+            conn.close()
+            # VACUUM must run outside a transaction
+            conn = sqlite3.connect(str(dst_db), isolation_level=None)
+            conn.execute("VACUUM;")
             conn.close()
 
     return copied
