@@ -77,6 +77,9 @@ cex-api-docs quality-check --docs-dir ./cex-docs
 cex-api-docs build-index --docs-dir ./cex-docs
 cex-api-docs build-index --exchange binance --limit 500 --docs-dir ./cex-docs
 
+# Compact LanceDB index (merge fragments + cleanup old versions)
+cex-api-docs compact-index --docs-dir ./cex-docs
+
 # Semantic search via LanceDB (vector, fts, or hybrid mode)
 cex-api-docs semantic-search "check wallet balance" --docs-dir ./cex-docs
 cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
@@ -104,7 +107,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
 - `data/exchanges.yaml` Registry of all 35 exchanges (62 sections): seeds, allowed domains, base URLs, doc sources.
-- `scripts/` Automation helpers (e.g. `sync_and_report.sh` cron runner).
+- `scripts/` Automation helpers (`sync_runtime_repo.py`, `run_sync_preset.sh`, benchmarks).
 - `.claude/skills/` Claude Code skill definitions (auto-discovered by Claude Code).
 
 ## Data Flow
@@ -161,6 +164,10 @@ The pipeline has a linear progression:
 - `src/cex_api_docs/crawl_coverage.py` Coverage audit + gap backfill
 - `src/cex_api_docs/link_check.py` Stored page URL reachability checks (HEAD requests)
 - `src/cex_api_docs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
+- `src/cex_api_docs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
+- `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
+- `src/cex_api_docs/reranker.py` Cross-encoder reranking (jina-reranker-v3-mlx)
+- `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
 
 ## Gotchas
 
@@ -207,4 +214,4 @@ Research completed (docs/research/):
 - CCXT as cross-reference: Built `ccxt_xref.py` — 20/21 CEXes mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Next: Rebuild semantic index (incremental). Add link validation to maintainer workflow. Periodic CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Structured changelog extraction for drift detection (404 changelog pages already in store, no structured schema yet).
+Next: Rebuild semantic index with new Jina v5 model (full rebuild required — 1024→768 dim change). Add link validation to maintainer workflow. Periodic CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Structured changelog extraction for drift detection (404 changelog pages already in store, no structured schema yet).

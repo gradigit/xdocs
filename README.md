@@ -78,6 +78,12 @@ source .venv/bin/activate
 pip install -e ".[dev,semantic]"
 ```
 
+Lightweight query-only install (Mac, no PyTorch):
+
+```bash
+pip install -e ".[semantic-query]"
+```
+
 Optional reranker support:
 
 ```bash
@@ -95,6 +101,7 @@ cex-api-docs init --docs-dir ./cex-docs
 cex-api-docs validate-registry
 cex-api-docs sync --docs-dir ./cex-docs
 cex-api-docs build-index --docs-dir ./cex-docs
+cex-api-docs compact-index --docs-dir ./cex-docs
 ```
 
 ### 4) First queries
@@ -234,9 +241,9 @@ Generate/update runtime repo from maintainer repo:
 
 ```bash
 python3 scripts/sync_runtime_repo.py \
-  --runtime-root /Users/aaaaa/Projects/cex-api-docs-runtime \
+  --runtime-root /path/to/cex-api-docs-runtime \
   --docs-dir ./cex-docs \
-  --clean
+  --clean --hash-tree --strip-maintenance
 ```
 
 Split-architecture guide:
@@ -291,6 +298,9 @@ Production rollout guide:
 - `src/cex_api_docs/crawl_coverage.py` — coverage audit + gap backfill
 - `src/cex_api_docs/link_check.py` — stored page reachability checks
 - `src/cex_api_docs/ccxt_xref.py` — CCXT cross-reference validation
+- `src/cex_api_docs/embeddings.py` — embedding backend selection (Jina MLX / SentenceTransformers)
+- `src/cex_api_docs/chunker.py` — markdown chunking for semantic index
+- `scripts/sync_runtime_repo.py` — sync maintainer repo → runtime repo
 - `schema/schema.sql` — SQLite schema
 - `data/exchanges.yaml` — exchange registry
 - `.claude/skills/cex-api-query/SKILL.md` — agent skill workflow
@@ -309,7 +319,8 @@ Production rollout guide:
 ## Troubleshooting
 
 - If semantic commands fail, make sure semantic extras are installed:
-  - `pip install -e ".[semantic]"`
+  - Full (Mac or PC/CUDA): `pip install -e ".[semantic]"`
+  - Query-only (Mac, no PyTorch): `pip install -e ".[semantic-query]"`
 - If reranker is unavailable:
   - `pip install -e ".[reranker]"`
 - If long-running sync was interrupted:

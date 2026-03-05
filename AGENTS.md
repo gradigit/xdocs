@@ -64,6 +64,7 @@ cex-api-docs search-endpoints "..." --docs-dir ./cex-docs
 
 # Semantic retrieval (optional extras)
 cex-api-docs build-index --docs-dir ./cex-docs
+cex-api-docs compact-index --docs-dir ./cex-docs
 cex-api-docs semantic-search "..." --docs-dir ./cex-docs --mode hybrid --rerank-policy auto
 cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
 
@@ -96,8 +97,8 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Context (from latest handoff)
 
-- Crawl validation pipeline implemented (10 phases, 25+ modules, 319 tests).
-- Semantic index: Qwen3-Embedding-0.6B (1024 dims, MLX 4-bit) with heading-context-injected mistune chunking.
+- Crawl validation pipeline implemented (10 phases, 25+ modules, 337 tests).
+- Semantic index: jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
 - 5,716+ pages in store across 35 exchanges (21 CEX, 13 DEX, 1 ref).
 - Golden QA validation: three-level matching (exact/prefix/domain). Baseline: 68% exact, 82% prefix, 98% domain.
 - Optional reranking with `jina-reranker-v3-mlx`.
@@ -106,7 +107,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 - `cex-docs/` and derived local data are gitignored and should not be committed.
 - Semantic features require optional extras (`[semantic]` / `[reranker]`).
-- **Semantic search model**: Qwen3-Embedding-0.6B (1024 dims) via MLX 4-bit on Apple Silicon. Fallback: SentenceTransformers. Env override: `CEX_EMBEDDING_BACKEND`, `CEX_EMBEDDING_MODEL`.
+- **Semantic search model**: jina-embeddings-v5-text-nano (768 dims, EuroBERT). MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-nano-mlx`). Fallback: SentenceTransformers. Query-only: `pip install -e ".[semantic-query]"`. Full: `pip install -e ".[semantic]"`. Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL`, `CEX_JINA_MLX_REVISION`.
 - `crawl` is legacy/deprecated; prefer `sync` (or `inventory` + `fetch-inventory`).
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits.
 - **Single-page doc exchanges**: OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit serve entire API reference from 1-4 HTML pages. Don't treat low page counts as errors.
