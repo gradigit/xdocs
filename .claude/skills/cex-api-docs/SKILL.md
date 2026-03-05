@@ -21,7 +21,93 @@ description: >
 
 Default store root: `./cex-docs/` (override via `--docs-dir` everywhere).
 
-## Quickstart
+## Maintainer Workflow
+
+### Setup (once)
+
+```bash
+bash scripts/bootstrap.sh [./cex-docs]
+# Creates .venv, installs deps (+ semantic extras), inits store, runs tests
+```
+
+### Regular Sync (daily / cron)
+
+`sync_and_report.sh` is the single entry point. It runs all four post-sync steps:
+
+```bash
+# Recommended: use the cron wrapper (sync + quality + changelogs + index)
+bash scripts/sync_and_report.sh [./cex-docs]
+
+# Or run the sync preset directly (sync only, no post-processing)
+bash scripts/run_sync_preset.sh fast-daytime ./cex-docs     # incremental, concurrency 2
+bash scripts/run_sync_preset.sh overnight-safe ./cex-docs   # force-refetch, slower
+```
+
+`sync_and_report.sh` writes timestamped artifacts to `cex-docs/reports/`:
+- `TIMESTAMP-sync.json` — machine-readable sync result
+- `TIMESTAMP-sync.md` — human-readable report
+- `TIMESTAMP-quality.json` — empty/thin/tiny_html page flags
+- `TIMESTAMP-changelogs.json` — new changelog entries (`entries_new > 0` = API changes)
+
+### Post-Sync Steps (run by sync_and_report.sh automatically)
+
+```bash
+# 1. Quality gate — flags empty/thin/tiny_html pages
+cex-api-docs quality-check --docs-dir ./cex-docs
+
+# 2. Changelog extraction — new entries after sync = API drift detected
+cex-api-docs extract-changelogs --docs-dir ./cex-docs
+cex-api-docs list-changelogs --since YYYY-MM-DD --docs-dir ./cex-docs
+
+# 3. Incremental semantic index — embeds only new/changed pages
+cex-api-docs build-index --incremental --docs-dir ./cex-docs
+cex-api-docs compact-index --docs-dir ./cex-docs   # merge fragments after large additions
+```
+
+### Periodic Maintenance
+
+```bash
+# CCXT wiki refresh (weekly) — re-fetches, reports changes, spot-checks links
+bash scripts/refresh_ccxt_docs.sh [./cex-docs]
+
+# Link reachability check (weekly or ad-hoc) — HEAD requests against stored URLs
+bash scripts/check_links.sh [./cex-docs] [--exchange X] [--sample N]
+```
+
+### Pre-Publish Gate
+
+Before pushing the runtime repo or sharing the store snapshot:
+
+```bash
+# Full pre-share gate: schema check, smoke syncs, tests, link spot-check
+bash scripts/pre_share_check.sh [./cex-docs]
+
+# Export query-only runtime (strips maintenance tables, writes manifest)
+python3 scripts/sync_runtime_repo.py \
+  --runtime-root ../cex-api-docs-runtime \
+  --docs-dir ./cex-docs \
+  --strip-maintenance \
+  --clean
+```
+
+### Adding a New Exchange
+
+1. Add entry to `data/exchanges.yaml` (exchange_id, sections, seed_urls, allowed_domains, scope_prefixes)
+2. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs`
+3. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
+4. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
+5. Update section count in CLAUDE.md
+
+### Registry Gotchas
+
+- **Scope ownership**: sections sharing a sitemap need `scope_prefixes` + lower `scope_priority` (e.g. 50) to outrank broad sections (default 100). See binance/copy_trading.
+- **URL migration**: when an exchange reorganises docs, update `seed_urls` and `scope_prefixes`; old orphaned pages stay in store but won't be re-fetched. See Coinbase 2026-03.
+- **JS rendering**: set `render_mode: auto` for sites that require it (Coinbase, KuCoin, Aster, Paradex).
+- **Binance sitemap 404**: expected — pipeline falls back to link-follow automatically.
+
+---
+
+## Quickstart (Query Only)
 
 ```bash
 python3 -m venv .venv
@@ -31,35 +117,26 @@ pip install -e .
 cex-api-docs init --docs-dir ./cex-docs
 ```
 
-## Sync Docs (Primary Workflow)
-
-Deterministic pipeline: inventory (enumerate URLs) then fetch (download + store).
-Use `sync` for the combined orchestration, or run each step separately.
+## Sync Docs
 
 ```bash
-# Full sync (inventory + fetch); cron-friendly JSON output
+# Full sync (inventory + fetch)
 cex-api-docs sync --docs-dir ./cex-docs
 
 # With JS rendering for sites that require it
 cex-api-docs sync --docs-dir ./cex-docs --render auto
 
-# Resume interrupted sync (reuse inventories, fetch only pending/error entries)
+# Resume interrupted sync
 cex-api-docs sync --docs-dir ./cex-docs --resume
 
-# Parallel fetch (N concurrent workers with per-domain rate limiting)
+# Parallel fetch
 cex-api-docs sync --docs-dir ./cex-docs --concurrency 4
 ```
 
 ### Step-by-Step Alternative
 
 ```bash
-# Step 1: Build inventory for a specific exchange section
 cex-api-docs inventory --exchange binance --section spot --docs-dir ./cex-docs
-
-# Step 2: Fetch all inventory URLs into the store
-cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs
-
-# Both steps support --resume and --concurrency
 cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
 ```
 
@@ -68,27 +145,14 @@ cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-
 ## Store Report
 
 ```bash
-# Full store overview (pages, inventories, endpoints, review queue)
 cex-api-docs store-report --docs-dir ./cex-docs
-
-# Scoped to one exchange section, output to file
 cex-api-docs store-report --exchange binance --section spot --output report.md
 ```
 
 ## Validate Registry (Domains/Seeds)
 
-Quick health-check for all 35 exchanges in `data/exchanges.yaml` (networked):
-
 ```bash
 cex-api-docs validate-registry
-```
-
-## Validate Base URLs (API Endpoints)
-
-Reachability check for `base_urls` in `data/exchanges.yaml` (networked; unauthenticated only).
-For `wss://` base URLs, this is DNS-only (no websocket handshake).
-
-```bash
 cex-api-docs validate-base-urls
 ```
 
@@ -108,59 +172,41 @@ cex-api-docs get-page "https://..." --docs-dir ./cex-docs
 ## Store Integrity & Quality
 
 ```bash
-# Detect DB/file inconsistencies (detection-only)
 cex-api-docs fsck --docs-dir ./cex-docs
-
-# Coverage gap analysis
+cex-api-docs quality-check --docs-dir ./cex-docs
 cex-api-docs coverage --docs-dir ./cex-docs
 cex-api-docs coverage-gaps --docs-dir ./cex-docs
-cex-api-docs coverage-gaps-list --docs-dir ./cex-docs
-
-# Detect stale endpoint citations vs current sources
 cex-api-docs detect-stale-citations --docs-dir ./cex-docs
-
-# FTS index maintenance
 cex-api-docs fts-optimize --docs-dir ./cex-docs
-cex-api-docs fts-rebuild --docs-dir ./cex-docs
-
-# Stored page URL reachability (HEAD requests, no content download)
 cex-api-docs check-links --docs-dir ./cex-docs
 cex-api-docs check-links --exchange binance --sample 50 --docs-dir ./cex-docs
 ```
 
+## Changelog Extraction
+
+```bash
+# Extract dated entries from stored changelog pages (idempotent)
+cex-api-docs extract-changelogs --docs-dir ./cex-docs
+
+# List entries; new entries after a sync = API drift
+cex-api-docs list-changelogs --docs-dir ./cex-docs --exchange binance --since 2026-01-01
+```
+
 ## Crawl Target Validation
 
-Validate that the store has ALL pages from exchange doc sites. The validation
-pipeline uses four independent discovery methods and cross-validates them.
-Sitemaps are NOT trusted as truth.
-
-### Quick Check (No Network)
-
 ```bash
+# Quick (no network)
 cex-api-docs sanitize-check --docs-dir ./cex-docs
-```
 
-### Sitemap Health (Network, Fast)
-
-```bash
+# Sitemap health
 cex-api-docs validate-sitemaps --docs-dir ./cex-docs
-cex-api-docs validate-sitemaps --exchange binance --docs-dir ./cex-docs
-```
 
-### Multi-Method Discovery (Network)
-
-```bash
+# Multi-method discovery
 cex-api-docs validate-crawl-targets --exchange binance --docs-dir ./cex-docs
 cex-api-docs validate-crawl-targets --exchange binance --enable-nav --enable-wayback --docs-dir ./cex-docs
-```
 
-### Coverage Audit (Full Pipeline)
-
-```bash
+# Coverage audit + backfill
 cex-api-docs crawl-coverage --docs-dir ./cex-docs
-cex-api-docs crawl-coverage --exchange binance --enable-live --enable-nav --docs-dir ./cex-docs
-cex-api-docs crawl-coverage --exchange binance --backfill --docs-dir ./cex-docs
-cex-api-docs crawl-coverage --exchange binance --backfill --fetch --docs-dir ./cex-docs
 cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage
 ```
 
@@ -176,9 +222,6 @@ cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage
 
 - `missing_from_store`: pages on live site not in store → sync needed
 - `missing_from_live`: pages in store not on live site → potentially stale
-- `single_source_count` high: weak cross-validation
-- `all_methods_failed`: pipeline itself may have failed
-- `extraction_quality_warnings`: content captured but structural elements lost
 - `completion_pct < 90%`: partial crawl (rate limiting / 403)
 
 ## Import Specs
@@ -215,15 +258,19 @@ cex-api-docs review-resolve <id> --docs-dir ./cex-docs
 
 ## Answer Questions
 
-Use `answer` for a cite-only assembled response (no new facts).
-
 ```bash
 cex-api-docs answer "..." --docs-dir ./cex-docs
-# If prompted for clarification, re-run with:
 cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
 ```
 
-If a question is ambiguous (e.g., "Binance unified trading endpoint"), the tool must return `needs_clarification` with concrete section choices derived from what is present in the local store.
+If a question is ambiguous, the tool returns `needs_clarification` with concrete section choices.
+
+## Semantic Search
+
+```bash
+cex-api-docs semantic-search "check wallet balance" --docs-dir ./cex-docs
+cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
+```
 
 ## CCXT Cross-Reference
 
