@@ -121,7 +121,7 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     copied.append(str(smoke_dst))
 
     gitignore = runtime_root / ".gitignore"
-    gitignore.write_text(".venv/\nlogs/\nreports/\n__pycache__/\n.pytest_cache/\n", encoding="utf-8")
+    gitignore.write_text(".DS_Store\n.venv/\nlogs/\nreports/\n__pycache__/\n*.pyc\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n", encoding="utf-8")
     copied.append(str(gitignore))
     return copied
 
