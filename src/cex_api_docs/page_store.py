@@ -13,7 +13,13 @@ from .errors import CexApiDocsError
 from .fs import atomic_write_bytes, atomic_write_text
 from .hashing import sha256_hex_bytes, sha256_hex_text
 from .httpfetch import FetchResult
-from .markdown import ExtractorInfo, html_to_markdown, normalize_markdown
+from .markdown import (
+    ExtractorInfo,
+    apply_quality_fallback,
+    extract_block_metadata,
+    html_to_markdown,
+    normalize_markdown,
+)
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
 from .urlutil import url_host as _host
@@ -52,7 +58,8 @@ def extract_page_markdown(*, fr: FetchResult) -> tuple[str, str | None, str, int
     md_norm = ""
     if "text/html" in (fr.content_type or "").lower() or (fr.content_type or "").lower().startswith("text/"):
         md_raw = html_to_markdown(html, base_url=fr.final_url)
-        md_norm = normalize_markdown(md_raw)
+        md_norm = normalize_markdown(md_raw, html=html)
+        md_norm = normalize_markdown(apply_quality_fallback(md_norm, html=html))
     wc = len(md_norm.split())
     return html, title, md_norm, wc
 
@@ -109,6 +116,7 @@ def store_page(
     raw_path = docs_root / "raw" / domain / f"{path_hash}.bin"
     md_path = docs_root / "pages" / domain / f"{path_hash}.md"
     meta_path = docs_root / "meta" / domain / f"{path_hash}.json"
+    blocks_path = docs_root / "meta" / domain / f"{path_hash}.blocks.json"
 
     # Write files first (atomic).
     atomic_write_bytes(raw_path, fr.body)
@@ -143,6 +151,13 @@ def store_page(
         extra = {k: v for k, v in meta_extra.items() if k not in meta}
         if extra:
             meta.update(extra)
+
+    block_meta: dict[str, Any] = {}
+    if md_norm:
+        block_meta = extract_block_metadata(md_norm)
+        atomic_write_text(blocks_path, json.dumps(block_meta, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
+        meta["blocks_path"] = str(blocks_path)
+        meta["blocks_summary"] = block_meta.get("counts") or {}
 
     prev_content_hash: str | None = None
     page_id: int
@@ -318,6 +333,11 @@ INSERT INTO page_versions (
         "prev_content_hash": prev_content_hash,
         "crawled_at": crawled_at,
         "render_mode": render_mode,
-        "paths": {"raw_path": str(raw_path), "markdown_path": str(md_path) if md_norm else None, "meta_path": str(meta_path)},
+        "blocks_summary": block_meta.get("counts") if block_meta else None,
+        "paths": {
+            "raw_path": str(raw_path),
+            "markdown_path": str(md_path) if md_norm else None,
+            "meta_path": str(meta_path),
+            "blocks_path": str(blocks_path) if md_norm else None,
+        },
     }
-

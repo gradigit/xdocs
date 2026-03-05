@@ -35,7 +35,7 @@ class FetchResult:
 
 def _selected_headers(resp: requests.Response) -> dict[str, str]:
     out: dict[str, str] = {}
-    for k in ("etag", "last-modified", "cache-control", "content-length"):
+    for k in ("etag", "last-modified", "cache-control", "content-length", "retry-after"):
         v = resp.headers.get(k)
         if v is not None:
             out[k] = v
@@ -57,10 +57,19 @@ def _host_allowed(host: str, allowed_domains: set[str]) -> bool:
     return False
 
 
-def _get(session: requests.Session, *, url: str, timeout_s: float, user_agent: str | None) -> requests.Response:
+def _get(
+    session: requests.Session,
+    *,
+    url: str,
+    timeout_s: float,
+    user_agent: str | None,
+    extra_headers: dict[str, str] | None = None,
+) -> requests.Response:
     headers: dict[str, str] = {}
     if user_agent:
         headers["User-Agent"] = user_agent
+    if extra_headers:
+        headers.update(extra_headers)
     return session.get(
         url,
         timeout=timeout_s,
@@ -79,6 +88,7 @@ def fetch(
     max_redirects: int,
     retries: int,
     allowed_domains: set[str] | None = None,
+    conditional_headers: dict[str, str] | None = None,
 ) -> FetchResult:
     if not _is_http_url(url):
         raise CexApiDocsError(code="EBADURL", message="Only http/https URLs are supported.", details={"url": url})
@@ -114,21 +124,39 @@ def fetch(
                 # Some doc sites block custom/bot UA strings, while others block python-requests.
                 # Try our identifying UA first, then fall back to other common UAs on 403.
                 # Order matters (example: gate.com allows python-requests UA but blocks browser UAs).
-                resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=USER_AGENT)
+                resp = _get(
+                    session,
+                    url=current_url,
+                    timeout_s=timeout_s,
+                    user_agent=USER_AGENT,
+                    extra_headers=conditional_headers,
+                )
                 if int(resp.status_code) == 403:
                     try:
                         resp.close()
                     except Exception:
                         pass
                     # requests' default UA (python-requests/...) when no UA header is provided.
-                    resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=None)
+                    resp = _get(
+                        session,
+                        url=current_url,
+                        timeout_s=timeout_s,
+                        user_agent=None,
+                        extra_headers=conditional_headers,
+                    )
                 if int(resp.status_code) == 403:
                     try:
                         resp.close()
                     except Exception:
                         pass
                     # Browser-like UA to satisfy WAFs that block non-browser UAs.
-                    resp = _get(session, url=current_url, timeout_s=timeout_s, user_agent=_BROWSER_UA)
+                    resp = _get(
+                        session,
+                        url=current_url,
+                        timeout_s=timeout_s,
+                        user_agent=_BROWSER_UA,
+                        extra_headers=conditional_headers,
+                    )
 
                 status = int(resp.status_code)
                 if status in (301, 302, 303, 307, 308) and resp.headers.get("location"):

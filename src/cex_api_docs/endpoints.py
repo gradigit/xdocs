@@ -553,7 +553,7 @@ def get_endpoint(
     conn = open_db(db_path)
     try:
         row = conn.execute(
-            "SELECT json FROM endpoints WHERE endpoint_id = ?;",
+            "SELECT json, docs_url FROM endpoints WHERE endpoint_id = ?;",
             (endpoint_id,),
         ).fetchone()
         if row is None:
@@ -562,7 +562,10 @@ def get_endpoint(
                 message="Endpoint not found.",
                 details={"endpoint_id": endpoint_id},
             )
-        return json.loads(row["json"])
+        record = json.loads(row["json"])
+        if row["docs_url"]:
+            record["docs_url"] = row["docs_url"]
+        return record
     finally:
         conn.close()
 

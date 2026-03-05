@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -8,12 +9,47 @@ from typing import Any
 from .errors import CexApiDocsError
 
 
-SCHEMA_USER_VERSION_V1 = 1
+SCHEMA_USER_VERSION = 3
 
-# Migrations: dict mapping (from_version -> to_version) to SQL statements.
-# Each migration bumps user_version after execution.
-MIGRATIONS: dict[tuple[int, int], list[str]] = {
-    # Example: (1, 2): ["ALTER TABLE pages ADD COLUMN new_col TEXT;"],
+
+def _migrate_2_to_3(conn: sqlite3.Connection) -> None:
+    """Add docs_url column to endpoints table (idempotent)."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(endpoints);").fetchall()}
+    if "docs_url" not in cols:
+        conn.execute("ALTER TABLE endpoints ADD COLUMN docs_url TEXT;")
+
+
+# Migrations: dict mapping (from_version -> to_version) to steps.
+# Each step is either a SQL string (run via executescript) or a callable(conn).
+MIGRATIONS: dict[tuple[int, int], list[str | Callable[[sqlite3.Connection], None]]] = {
+    (1, 2): [
+        """
+ALTER TABLE inventory_entries ADD COLUMN last_etag TEXT;
+""",
+        """
+ALTER TABLE inventory_entries ADD COLUMN last_last_modified TEXT;
+""",
+        """
+ALTER TABLE inventory_entries ADD COLUMN last_cache_control TEXT;
+""",
+        """
+CREATE TABLE IF NOT EXISTS inventory_scope_ownership (
+  scope_group TEXT NOT NULL,
+  canonical_url TEXT NOT NULL,
+  owner_exchange_id TEXT NOT NULL,
+  owner_section_id TEXT NOT NULL,
+  owner_inventory_id INTEGER NOT NULL REFERENCES inventories(id),
+  owner_priority INTEGER NOT NULL DEFAULT 100,
+  owned_at TEXT NOT NULL,
+  PRIMARY KEY (scope_group, canonical_url)
+);
+""",
+        """
+CREATE INDEX IF NOT EXISTS inventory_scope_ownership_owner_idx
+ON inventory_scope_ownership(owner_exchange_id, owner_section_id, owner_priority);
+""",
+    ],
+    (2, 3): [_migrate_2_to_3],
 }
 
 
@@ -96,9 +132,12 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
                     message=f"No migration path from schema v{v} to v{v + 1}.",
                     details={"current_user_version": v, "expected_user_version": expected_user_version},
                 )
-            for sql in MIGRATIONS[key]:
+            for step in MIGRATIONS[key]:
                 try:
-                    conn.executescript(sql)
+                    if callable(step):
+                        step(conn)
+                    else:
+                        conn.executescript(step)
                 except sqlite3.OperationalError as e:
                     raise CexApiDocsError(
                         code="ESCHEMA",
@@ -115,9 +154,8 @@ def init_db(db_path: Path, schema_sql_path: Path) -> DbInitResult:
     conn = open_db(db_path)
     try:
         _check_fts5(conn)
-        user_version = apply_schema(conn, schema_sql_path=schema_sql_path, expected_user_version=SCHEMA_USER_VERSION_V1)
+        user_version = apply_schema(conn, schema_sql_path=schema_sql_path, expected_user_version=SCHEMA_USER_VERSION)
         conn.commit()
         return DbInitResult(db_path=db_path, schema_user_version=user_version, fts5_available=True)
     finally:
         conn.close()
-

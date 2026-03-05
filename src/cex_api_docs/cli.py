@@ -14,6 +14,7 @@ from .crawler import crawl_store
 from .coverage import endpoint_coverage
 from .coverage_gaps import compute_and_persist_coverage_gaps, list_coverage_gaps
 from .discover_sources import discover_sources
+from .ccxt_xref import ccxt_cross_reference
 from .classify import classify_input
 from .endpoints import get_endpoint, list_endpoints, review_list, review_resolve, review_show, save_endpoint, search_endpoints
 from .lookup import lookup_endpoint_by_path, search_error_code
@@ -31,7 +32,7 @@ from .report import render_sync_markdown, store_report, render_store_report_mark
 from .registry import load_registry
 from .registry_validate import validate_registry
 from .sync import run_sync
-from .store import init_store
+from .store import init_store, migrate_store_schema
 
 
 def _print_json(obj: object) -> None:
@@ -66,6 +67,12 @@ def main(argv: list[str] | None = None) -> None:
 
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="Initialize store dirs + SQLite schema (idempotent)", parents=[common])
+    ms = sub.add_parser("migrate-schema", help="Check/apply store DB schema migrations", parents=[common])
+    ms.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply pending migrations (default: dry-run status only).",
+    )
 
     crawl_p = sub.add_parser("crawl", help="(DEPRECATED) Crawl docs and store pages + metadata", parents=[common])
     crawl_p.add_argument("--exchange", help="Exchange id from data/exchanges.yaml (recommended)")
@@ -146,6 +153,30 @@ def main(argv: list[str] | None = None) -> None:
         default=1,
         help="Number of concurrent HTTP fetch workers (default: 1, sequential)",
     )
+    fi_p.add_argument(
+        "--conditional",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use conditional revalidation headers (If-None-Match / If-Modified-Since) when available (default: true).",
+    )
+    fi_p.add_argument(
+        "--adaptive-delay",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Adapt per-domain delay using Retry-After/HTTP status feedback (default: true).",
+    )
+    fi_p.add_argument(
+        "--max-domain-delay",
+        type=float,
+        default=30.0,
+        help="Upper bound (seconds) for adaptive per-domain delay (default: 30).",
+    )
+    fi_p.add_argument(
+        "--scope-dedupe",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable cross-section scope ownership dedupe (default: true).",
+    )
 
     ip = sub.add_parser("ingest-page", help="Ingest a browser-captured page into the store (HTML or markdown)", parents=[common])
     ip.add_argument("--url", required=True)
@@ -188,6 +219,30 @@ def main(argv: list[str] | None = None) -> None:
         default=1,
         help="Number of concurrent HTTP fetch workers per section (default: 1, sequential)",
     )
+    sync_p.add_argument(
+        "--conditional",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use conditional revalidation headers when available (default: true).",
+    )
+    sync_p.add_argument(
+        "--adaptive-delay",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Adapt per-domain delay using Retry-After/HTTP status feedback (default: true).",
+    )
+    sync_p.add_argument(
+        "--max-domain-delay",
+        type=float,
+        default=30.0,
+        help="Upper bound (seconds) for adaptive per-domain delay (default: 30).",
+    )
+    sync_p.add_argument(
+        "--scope-dedupe",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable cross-section scope ownership dedupe (default: true).",
+    )
 
     rep_p = sub.add_parser("report", help="Render a sync JSON artifact into Markdown", parents=[common])
     rep_p.add_argument("--input", default="-", help="Path to sync JSON file, or '-' for stdin (default: -)")
@@ -226,16 +281,90 @@ def main(argv: list[str] | None = None) -> None:
     bi = sub.add_parser("build-index", help="Build LanceDB semantic search index from stored pages (requires [semantic])", parents=[common])
     bi.add_argument("--limit", type=int, default=0, help="Max pages to embed (0=all)")
     bi.add_argument("--exchange", default=None, help="Filter by exchange domain pattern")
+    bi.add_argument("--batch-size", type=int, default=64, help="Embedding batch size (default: 64)")
+    bi.add_argument("--incremental", action="store_true", help="Only embed new/changed pages (skip unchanged)")
+
+    sub.add_parser("compact-index", help="Compact LanceDB index: merge fragments + cleanup old versions (requires [semantic])", parents=[common])
 
     ss = sub.add_parser("semantic-search", help="Semantic search via LanceDB vector index (requires [semantic])", parents=[common])
     ss.add_argument("query", help="Natural language search query")
     ss.add_argument("--exchange", default=None, help="Filter by exchange")
     ss.add_argument("--limit", type=int, default=10)
     ss.add_argument("--mode", default="hybrid", choices=["vector", "fts", "hybrid"], help="Search mode (default: hybrid)")
+    ss.add_argument(
+        "--rerank-policy",
+        default="auto",
+        choices=["auto", "always", "never"],
+        help="Rerank policy: auto (confidence-triggered), always, or never (default: auto)",
+    )
+    ss.add_argument(
+        "--rerank",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Explicitly force rerank on/off (overrides --rerank-policy)",
+    )
+
+    vr_p = sub.add_parser("validate-retrieval", help="Run golden QA validation against semantic search index (requires [semantic])", parents=[common])
+    vr_p.add_argument("--qa-file", required=True, help="Path to JSONL file with golden QA pairs")
+    vr_p.add_argument("--limit", type=int, default=5, help="Top-K results to check (default: 5)")
+    vr_p.add_argument(
+        "--rerank",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable/disable reranking during validation (default: enabled)",
+    )
 
     fsck_p = sub.add_parser("fsck", help="Detect store DB/file inconsistencies (detection-only by default)", parents=[common])
     fsck_p.add_argument("--limit", type=int, default=200)
     fsck_p.add_argument("--scan-orphans", action="store_true", help="Scan raw/pages/meta directories for orphan files (can be slow)")
+    fsck_p.add_argument("--verify-hashes", action="store_true", help="Re-compute SHA256 of markdown files and compare to DB content_hash")
+    fsck_p.add_argument("--verify-fts", action="store_true", help="Check FTS5 row counts and orphan/missing entries")
+    fsck_p.add_argument("--verify-endpoint-json", action="store_true", help="Compare on-disk endpoint JSON to DB json column")
+
+    audit_p = sub.add_parser("audit", help="Run all validation checks and produce consolidated report", parents=[common])
+    audit_p.add_argument("--include-network", action="store_true", help="Include network checks (validate-registry, validate-base-urls, sitemap-health)")
+    audit_p.add_argument("--include-ccxt", action="store_true", help="Include CCXT cross-reference check")
+    audit_p.add_argument("--include-semantic", action="store_true", help="Include semantic retrieval validation")
+    audit_p.add_argument("--include-crawl-coverage", action="store_true", help="Include multi-method crawl coverage check")
+    audit_p.add_argument("--include-live-validation", action="store_true", help="Include live site nav validation (expensive)")
+    audit_p.add_argument("--exchange", default=None, help="Limit network/coverage checks to this exchange")
+    audit_p.add_argument("--qa-file", default=None, help="Path to golden QA JSONL file (for --include-semantic)")
+    audit_p.add_argument("--limit", type=int, default=200, help="Max issues per check (default: 200)")
+
+    # --- Crawl target validation subcommands ---
+
+    san_p = sub.add_parser("sanitize-check", help="Scan inventory URLs for sanitization issues", parents=[common])
+    san_p.add_argument("--exchange", default=None, help="Filter to exchange")
+
+    vs_p = sub.add_parser("validate-sitemaps", help="Sitemap health + cross-validation (network)", parents=[common])
+    vs_p.add_argument("--exchange", default=None, help="Filter to exchange")
+    vs_p.add_argument("--section", default=None, help="Filter to section")
+    vs_p.add_argument("--timeout-s", type=float, default=15.0)
+
+    vct_p = sub.add_parser("validate-crawl-targets", help="Multi-method URL discovery", parents=[common])
+    vct_p.add_argument("--exchange", required=True, help="Exchange to validate")
+    vct_p.add_argument("--section", default=None, help="Section to validate (default: all)")
+    vct_p.add_argument("--enable-nav", action="store_true", help="Enable nav extraction via agent-browser")
+    vct_p.add_argument("--enable-wayback", action="store_true", help="Enable Wayback Machine CDX discovery")
+    vct_p.add_argument("--timeout-s", type=float, default=30.0)
+
+    cl_p = sub.add_parser("check-links", help="Check stored page URL reachability (HEAD requests)", parents=[common])
+    cl_p.add_argument("--exchange", default=None, help="Filter to exchange")
+    cl_p.add_argument("--sample", type=int, default=0, help="Random sample N URLs (0 = all)")
+    cl_p.add_argument("--timeout-s", type=float, default=10.0, help="HTTP timeout per request")
+    cl_p.add_argument("--concurrency", type=int, default=4, help="Max concurrent workers")
+    cl_p.add_argument("--delay-s", type=float, default=0.5, help="Per-domain rate limiting delay")
+
+    cc_p = sub.add_parser("crawl-coverage", help="Full coverage audit (discovery + store comparison)", parents=[common])
+    cc_p.add_argument("--exchange", default=None, help="Filter to exchange")
+    cc_p.add_argument("--section", default=None, help="Filter to section")
+    cc_p.add_argument("--enable-live", action="store_true", help="Enable live site validation")
+    cc_p.add_argument("--enable-nav", action="store_true", help="Enable nav extraction")
+    cc_p.add_argument("--enable-wayback", action="store_true", help="Enable Wayback CDX")
+    cc_p.add_argument("--backfill", action="store_true", help="Insert missing URLs as pending inventory entries (dry-run)")
+    cc_p.add_argument("--fetch", action="store_true", help="With --backfill, also fetch the new entries")
+    cc_p.add_argument("--timeout-s", type=float, default=30.0)
+    cc_p.add_argument("--output", default=None, help="Write markdown report to file")
 
     io = sub.add_parser("import-openapi", help="Import OpenAPI (Swagger) spec into endpoint DB", parents=[common])
     io.add_argument("--exchange", required=True)
@@ -335,6 +464,14 @@ def main(argv: list[str] | None = None) -> None:
     cls = sub.add_parser("classify", help="Classify input text (error, endpoint, payload, code, question)", parents=[common])
     cls.add_argument("text")
 
+    cx = sub.add_parser("ccxt-xref", help="Cross-reference endpoint DB against CCXT describe() metadata (requires [ccxt])", parents=[common])
+    cx.add_argument("--exchange", default=None, help="Limit to a single exchange")
+
+    le = sub.add_parser("link-endpoints", help="Resolve docs_url for spec-imported endpoints", parents=[common])
+    le.add_argument("--exchange", required=True, help="Exchange ID")
+    le.add_argument("--section", default=None, help="Section ID (optional)")
+    le.add_argument("--limit", type=int, default=0, help="Max endpoints to resolve (0 = all)")
+
     args = parser.parse_args(argv)
 
     try:
@@ -343,6 +480,15 @@ def main(argv: list[str] | None = None) -> None:
                 docs_dir=args.docs_dir,
                 schema_sql_path=Path(__file__).resolve().parents[2] / "schema" / "schema.sql",
                 lock_timeout_s=float(args.lock_timeout_s),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": result})
+            return
+
+        if args.cmd == "migrate-schema":
+            result = migrate_store_schema(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                dry_run=not bool(args.apply),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": result})
             return
@@ -495,6 +641,12 @@ def main(argv: list[str] | None = None) -> None:
                 limit=args.limit,
                 concurrency=int(args.concurrency),
                 force_refetch=bool(args.force_refetch),
+                conditional=bool(args.conditional),
+                adaptive_delay=bool(args.adaptive_delay),
+                max_domain_delay_s=float(args.max_domain_delay),
+                scope_dedupe=bool(args.scope_dedupe),
+                scope_group=(sec.inventory_policy.scope_group or ex.exchange_id),
+                scope_priority=int(sec.inventory_policy.scope_priority),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
@@ -534,6 +686,10 @@ def main(argv: list[str] | None = None) -> None:
                 resume=bool(args.resume),
                 concurrency=int(args.concurrency),
                 force_refetch=bool(args.force_refetch),
+                conditional=bool(args.conditional),
+                adaptive_delay=bool(args.adaptive_delay),
+                max_domain_delay_s=float(args.max_domain_delay),
+                scope_dedupe=bool(args.scope_dedupe),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
@@ -618,19 +774,282 @@ def main(argv: list[str] | None = None) -> None:
 
         if args.cmd == "build-index":
             from .semantic import build_index
-            r = build_index(docs_dir=args.docs_dir, limit=int(args.limit), exchange=args.exchange)
+            r = build_index(
+                docs_dir=args.docs_dir,
+                limit=int(args.limit),
+                exchange=args.exchange,
+                batch_size=int(args.batch_size),
+                incremental=bool(args.incremental),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "compact-index":
+            from .semantic import compact_index
+            r = compact_index(docs_dir=args.docs_dir)
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
 
         if args.cmd == "semantic-search":
             from .semantic import semantic_search
-            results = semantic_search(docs_dir=args.docs_dir, query=args.query, exchange=args.exchange, limit=int(args.limit), query_type=args.mode)
-            _print_json({"ok": True, "schema_version": "v1", "result": {"cmd": "semantic-search", "query": args.query, "mode": args.mode, "results": results}})
+            if args.rerank is None:
+                rerank_policy: str | bool = str(args.rerank_policy)
+            else:
+                rerank_policy = bool(args.rerank)
+            results, meta = semantic_search(
+                docs_dir=args.docs_dir,
+                query=args.query,
+                exchange=args.exchange,
+                limit=int(args.limit),
+                query_type=args.mode,
+                rerank=rerank_policy,
+                include_meta=True,
+            )
+            _print_json(
+                {
+                    "ok": True,
+                    "schema_version": "v1",
+                    "result": {
+                        "cmd": "semantic-search",
+                        "query": args.query,
+                        "mode": args.mode,
+                        "rerank_policy": meta["rerank_policy"],
+                        "rerank_applied": meta["rerank_applied"],
+                        "rerank_reason": meta["rerank_reason"],
+                        "results": results,
+                    },
+                },
+            )
+            return
+
+        if args.cmd == "validate-retrieval":
+            from .validate import validate_retrieval
+            vresult = validate_retrieval(
+                docs_dir=args.docs_dir,
+                qa_path=args.qa_file,
+                limit=int(args.limit),
+                rerank=bool(args.rerank),
+            )
+            _print_json({
+                "ok": True,
+                "schema_version": "v2",
+                "result": {
+                    "cmd": "validate-retrieval",
+                    "rerank": bool(args.rerank),
+                    "total_queries": vresult.total_queries,
+                    "hit_rate": vresult.hit_rate,
+                    "mean_recall": vresult.mean_recall,
+                    "prefix_hit_rate": vresult.prefix_hit_rate,
+                    "prefix_mean_recall": vresult.prefix_mean_recall,
+                    "domain_hit_rate": vresult.domain_hit_rate,
+                    "domain_mean_recall": vresult.domain_mean_recall,
+                    "k": vresult.k,
+                    "per_query": [
+                        {
+                            "query": qr.query,
+                            "expected_urls": qr.expected_urls,
+                            "retrieved_urls": qr.retrieved_urls,
+                            "hit": qr.hit,
+                            "recall": qr.recall,
+                            "prefix_hit": qr.prefix_hit,
+                            "prefix_recall": qr.prefix_recall,
+                            "domain_hit": qr.domain_hit,
+                            "domain_recall": qr.domain_recall,
+                        }
+                        for qr in vresult.per_query
+                    ],
+                },
+            })
             return
 
         if args.cmd == "fsck":
-            r = fsck_store(docs_dir=args.docs_dir, limit=int(args.limit), scan_orphans=bool(args.scan_orphans))
+            r = fsck_store(
+                docs_dir=args.docs_dir,
+                limit=int(args.limit),
+                scan_orphans=bool(args.scan_orphans),
+                verify_hashes=bool(args.verify_hashes),
+                verify_fts=bool(args.verify_fts),
+                verify_endpoint_json=bool(args.verify_endpoint_json),
+            )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "audit":
+            from .audit import run_audit
+            r = run_audit(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=float(args.lock_timeout_s),
+                include_network=bool(args.include_network),
+                include_ccxt=bool(args.include_ccxt),
+                include_semantic=bool(args.include_semantic),
+                include_crawl_coverage=bool(getattr(args, "include_crawl_coverage", False)),
+                include_live_validation=bool(getattr(args, "include_live_validation", False)),
+                exchange=getattr(args, "exchange", None),
+                qa_file=args.qa_file,
+                limit=int(args.limit),
+            )
+            _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "sanitize-check":
+            from .url_sanitize import sanitize_url
+            from .db import open_db
+            from .store import require_store_db as _rsdb
+            db_path = _rsdb(args.docs_dir)
+            conn = open_db(db_path)
+            try:
+                where = ""
+                params: tuple[str, ...] = ()
+                if getattr(args, "exchange", None):
+                    where = " WHERE ie.canonical_url LIKE ?"
+                    params = (f"%{args.exchange}%",)
+                rows = conn.execute(
+                    f"SELECT ie.canonical_url FROM inventory_entries ie{where} ORDER BY ie.canonical_url;",
+                    params,
+                ).fetchall()
+                bad: list[dict[str, str]] = []
+                for row in rows:
+                    url = str(row["canonical_url"])
+                    sr = sanitize_url(url)
+                    if not sr.accepted:
+                        bad.append({"url": url, "reason": sr.reason or "rejected"})
+                _print_json({
+                    "ok": True, "schema_version": "v1",
+                    "result": {"total_urls": len(rows), "bad_urls": len(bad), "issues": bad},
+                })
+            finally:
+                conn.close()
+            return
+
+        if args.cmd == "validate-sitemaps":
+            from .sitemap_validate import validate_sitemaps
+            from .registry import load_registry as _lr
+            repo_root = Path(__file__).resolve().parents[2]
+            registry_path = repo_root / "data" / "exchanges.yaml"
+            registry = _lr(registry_path)
+            results = []
+            for ex in registry.exchanges:
+                if getattr(args, "exchange", None) and ex.exchange_id != args.exchange:
+                    continue
+                for sec in ex.sections:
+                    if getattr(args, "section", None) and sec.section_id != args.section:
+                        continue
+                    try:
+                        vr = validate_sitemaps(
+                            exchange_id=ex.exchange_id,
+                            section_id=sec.section_id,
+                            registry_path=registry_path,
+                            timeout_s=float(args.timeout_s),
+                        )
+                        from dataclasses import asdict as _ad
+                        results.append(_ad(vr))
+                    except Exception as e:
+                        results.append({
+                            "exchange_id": ex.exchange_id,
+                            "section_id": sec.section_id,
+                            "error": f"{type(e).__name__}: {e}",
+                        })
+            _print_json({"ok": True, "schema_version": "v1", "result": {"sections": results}})
+            return
+
+        if args.cmd == "validate-crawl-targets":
+            from .crawl_targets import discover_crawl_targets
+            repo_root = Path(__file__).resolve().parents[2]
+            registry_path = repo_root / "data" / "exchanges.yaml"
+            from .registry import load_registry as _lr2
+            registry = _lr2(registry_path)
+            ex = registry.get_exchange(args.exchange)
+            results = []
+            for sec in ex.sections:
+                if getattr(args, "section", None) and sec.section_id != args.section:
+                    continue
+                try:
+                    dr = discover_crawl_targets(
+                        exchange_id=ex.exchange_id,
+                        section_id=sec.section_id,
+                        registry_path=registry_path,
+                        docs_dir=args.docs_dir,
+                        enable_nav=bool(args.enable_nav),
+                        enable_wayback=bool(args.enable_wayback),
+                        timeout_s=float(args.timeout_s),
+                    )
+                    results.append({
+                        "exchange_id": dr.exchange_id,
+                        "section_id": dr.section_id,
+                        "total_urls": len(dr.urls),
+                        "method_counts": dr.method_counts,
+                        "intersection_count": dr.intersection_count,
+                        "single_source_count": dr.single_source_count,
+                        "rejected_urls": len(dr.rejected_urls),
+                        "warnings": dr.warnings,
+                    })
+                except Exception as e:
+                    results.append({
+                        "exchange_id": ex.exchange_id,
+                        "section_id": sec.section_id,
+                        "error": f"{type(e).__name__}: {e}",
+                    })
+            _print_json({"ok": True, "schema_version": "v1", "result": {"sections": results}})
+            return
+
+        if args.cmd == "crawl-coverage":
+            from .crawl_coverage import audit_crawl_coverage, backfill_gaps
+            repo_root = Path(__file__).resolve().parents[2]
+            registry_path = repo_root / "data" / "exchanges.yaml"
+            r = audit_crawl_coverage(
+                docs_dir=args.docs_dir,
+                registry_path=registry_path,
+                exchange_id=getattr(args, "exchange", None),
+                section_id=getattr(args, "section", None),
+                enable_live=bool(getattr(args, "enable_live", False)),
+                enable_nav=bool(getattr(args, "enable_nav", False)),
+                enable_wayback=bool(getattr(args, "enable_wayback", False)),
+                timeout_s=float(args.timeout_s),
+            )
+            output: dict[str, Any] = {
+                "overall_coverage_pct": round(r.overall_coverage_pct, 1),
+                "total_missing": r.total_missing,
+                "total_stale": r.total_stale,
+                "sections": [
+                    {
+                        "exchange_id": sc.exchange_id,
+                        "section_id": sc.section_id,
+                        "discovered_urls": sc.discovered_urls,
+                        "stored_urls": sc.stored_urls,
+                        "missing_count": len(sc.missing_urls),
+                        "stale_count": len(sc.stale_urls),
+                        "coverage_pct": round(sc.coverage_pct, 1),
+                        "discovery_methods_used": sc.discovery_methods_used,
+                        "warnings": sc.warnings,
+                    }
+                    for sc in r.sections
+                ],
+            }
+            # Backfill if requested.
+            if getattr(args, "backfill", False):
+                backfill_results = []
+                for sc in r.sections:
+                    if sc.missing_urls:
+                        bf = backfill_gaps(
+                            docs_dir=args.docs_dir,
+                            exchange_id=sc.exchange_id,
+                            section_id=sc.section_id,
+                            missing_urls=sc.missing_urls,
+                            dry_run=not bool(getattr(args, "fetch", False)),
+                        )
+                        backfill_results.append({
+                            "exchange_id": sc.exchange_id,
+                            "section_id": sc.section_id,
+                            **bf,
+                        })
+                output["backfill"] = backfill_results
+            # Markdown report output.
+            if getattr(args, "output", None):
+                from .report import render_coverage_report_markdown
+                md = render_coverage_report_markdown(r)
+                Path(args.output).write_text(md, encoding="utf-8")
+                output["report_written_to"] = args.output
+            _print_json({"ok": True, "schema_version": "v1", "result": output})
             return
 
         if args.cmd == "import-openapi":
@@ -801,6 +1220,65 @@ def main(argv: list[str] | None = None) -> None:
                     "signals": classification.signals,
                 },
             })
+            return
+
+        if args.cmd == "check-links":
+            from .link_check import check_stored_links
+            report = check_stored_links(
+                docs_dir=args.docs_dir,
+                exchange=getattr(args, "exchange", None),
+                sample=int(getattr(args, "sample", 0)),
+                timeout_s=float(args.timeout_s),
+                concurrency=int(args.concurrency),
+                delay_s=float(getattr(args, "delay_s", 0.5)),
+            )
+            result_dict: dict[str, Any] = {
+                "checked": report.checked,
+                "ok": report.ok,
+                "redirect": report.redirect,
+                "client_error": report.client_error,
+                "server_error": report.server_error,
+                "network_error": report.network_error,
+                "checked_at": report.checked_at,
+                "issues": [
+                    {
+                        "url": r.url,
+                        "http_status": r.http_status,
+                        "error": r.error,
+                        "redirect_url": r.redirect_url,
+                        "response_time_ms": r.response_time_ms,
+                    }
+                    for r in report.results
+                ],
+            }
+            _print_json({"ok": True, "schema_version": "v1", "result": result_dict})
+            return
+
+        if args.cmd == "ccxt-xref":
+            result = ccxt_cross_reference(docs_dir=args.docs_dir, exchange=args.exchange)
+            _print_json(result)
+            return
+
+        if args.cmd == "link-endpoints":
+            from .resolve_docs_urls import link_endpoints_bulk
+            from .db import open_db
+            from .store import require_store_db
+            repo_root = Path(__file__).resolve().parents[2]
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            ex = reg.get_exchange(args.exchange)
+            db_path = require_store_db(args.docs_dir)
+            conn = open_db(db_path)
+            try:
+                result = link_endpoints_bulk(
+                    conn,
+                    exchange=args.exchange,
+                    section=args.section,
+                    allowed_domains=ex.allowed_domains,
+                    limit=args.limit,
+                )
+                _print_json({"ok": True, "schema_version": "v1", **result})
+            finally:
+                conn.close()
             return
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})

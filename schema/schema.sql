@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS endpoints (
   base_url TEXT,
   api_version TEXT,
   description TEXT,
+  docs_url TEXT,
   json TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -138,12 +139,30 @@ CREATE TABLE IF NOT EXISTS inventory_entries (
   last_content_hash TEXT,
   last_final_url TEXT,
   last_page_canonical_url TEXT,
+  last_etag TEXT,
+  last_last_modified TEXT,
+  last_cache_control TEXT,
   error_json TEXT,
   UNIQUE (inventory_id, canonical_url)
 );
 
 CREATE INDEX IF NOT EXISTS inventory_entries_inventory_id_idx ON inventory_entries(inventory_id);
 CREATE INDEX IF NOT EXISTS inventory_entries_status_idx ON inventory_entries(status);
+
+-- Cross-section ownership cache used by scope-dedupe.
+CREATE TABLE IF NOT EXISTS inventory_scope_ownership (
+  scope_group TEXT NOT NULL,
+  canonical_url TEXT NOT NULL,
+  owner_exchange_id TEXT NOT NULL,
+  owner_section_id TEXT NOT NULL,
+  owner_inventory_id INTEGER NOT NULL REFERENCES inventories(id),
+  owner_priority INTEGER NOT NULL DEFAULT 100,
+  owned_at TEXT NOT NULL,
+  PRIMARY KEY (scope_group, canonical_url)
+);
+
+CREATE INDEX IF NOT EXISTS inventory_scope_ownership_owner_idx
+  ON inventory_scope_ownership(owner_exchange_id, owner_section_id, owner_priority);
 
 -- Aggregated endpoint completeness gaps. This is a scale-safe alternative to
 -- creating per-endpoint review items for missing fields.

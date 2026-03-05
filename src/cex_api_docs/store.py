@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .db import DbInitResult, init_db
+from .db import SCHEMA_USER_VERSION, DbInitResult, apply_schema, init_db, open_db
 from .errors import CexApiDocsError
 from .lock import acquire_write_lock
 
@@ -38,6 +38,87 @@ def require_store_db(docs_dir: str) -> Path:
             details={"docs_dir": docs_dir},
         )
     return db_path
+
+
+def ensure_store_schema(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
+    """
+    Ensure an initialized store DB is migrated to the current schema version.
+
+    This is safe to call before normal operations; it performs a cheap user_version
+    check and only acquires the write lock when an upgrade is needed.
+    """
+    db_path = require_store_db(docs_dir)
+
+    conn = open_db(db_path)
+    try:
+        row = conn.execute("PRAGMA user_version;").fetchone()
+        assert row is not None
+        current = int(row[0])
+    finally:
+        conn.close()
+
+    if current >= SCHEMA_USER_VERSION:
+        return {
+            "db_path": str(db_path),
+            "schema_user_version_before": current,
+            "schema_user_version_after": current,
+            "upgraded": False,
+        }
+
+    lock_path = Path(docs_dir) / "db" / ".write.lock"
+    schema_sql_path = Path(__file__).resolve().parents[2] / "schema" / "schema.sql"
+
+    with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
+        conn2 = open_db(db_path)
+        try:
+            row2 = conn2.execute("PRAGMA user_version;").fetchone()
+            assert row2 is not None
+            before = int(row2[0])
+            after = apply_schema(conn2, schema_sql_path=schema_sql_path, expected_user_version=SCHEMA_USER_VERSION)
+            conn2.commit()
+        finally:
+            conn2.close()
+
+    return {
+        "db_path": str(db_path),
+        "schema_user_version_before": before,
+        "schema_user_version_after": after,
+        "upgraded": bool(after > before),
+    }
+
+
+def get_store_schema_status(*, docs_dir: str) -> dict[str, Any]:
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+    try:
+        row = conn.execute("PRAGMA user_version;").fetchone()
+        assert row is not None
+        current = int(row[0])
+    finally:
+        conn.close()
+
+    return {
+        "db_path": str(db_path),
+        "schema_user_version": current,
+        "target_schema_user_version": int(SCHEMA_USER_VERSION),
+        "upgrade_required": bool(current < SCHEMA_USER_VERSION),
+    }
+
+
+def migrate_store_schema(*, docs_dir: str, lock_timeout_s: float, dry_run: bool = True) -> dict[str, Any]:
+    status = get_store_schema_status(docs_dir=docs_dir)
+    if dry_run:
+        return {"dry_run": True, **status}
+
+    mig = ensure_store_schema(docs_dir=docs_dir, lock_timeout_s=lock_timeout_s)
+    after = get_store_schema_status(docs_dir=docs_dir)
+    return {
+        "dry_run": False,
+        **after,
+        "schema_user_version_before": mig["schema_user_version_before"],
+        "schema_user_version_after": mig["schema_user_version_after"],
+        "upgraded": mig["upgraded"],
+    }
 
 
 def resolve_store_paths(docs_dir: str) -> StorePaths:

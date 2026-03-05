@@ -206,10 +206,26 @@ def fts_rebuild(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
                     )
                     rebuilt_pages += 1
 
-                # Endpoints FTS will be populated during endpoint ingestion; keep empty for now.
+                # Rebuild endpoints FTS from endpoints table.
                 conn.execute("DELETE FROM endpoints_fts;")
+                ep_rows = conn.execute(
+                    "SELECT rowid, endpoint_id, exchange, section, json FROM endpoints;"
+                ).fetchall()
+                rebuilt_endpoints = 0
+                for er in ep_rows:
+                    try:
+                        record = json.loads(er["json"]) if er["json"] else {}
+                    except (ValueError, TypeError):
+                        record = {}
+                    method = record.get("method", "")
+                    path = record.get("path", "")
+                    conn.execute(
+                        "INSERT INTO endpoints_fts(rowid, endpoint_id, exchange, section, method, path, search_text) VALUES (?, ?, ?, ?, ?, ?, ?);",
+                        (er["rowid"], er["endpoint_id"], er["exchange"], er["section"], method, path, er["json"] or ""),
+                    )
+                    rebuilt_endpoints += 1
 
             conn.commit()
-            return {"rebuilt_pages_fts": rebuilt_pages, "rebuilt_endpoints_fts": 0}
+            return {"rebuilt_pages_fts": rebuilt_pages, "rebuilt_endpoints_fts": rebuilt_endpoints}
         finally:
             conn.close()

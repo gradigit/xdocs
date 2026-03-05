@@ -123,44 +123,89 @@ LIMIT ?;
     return [dict(r) for r in cur.fetchall()]
 
 
-def _search_pages_with_fallback(
+def _search_pages_with_semantic(
     conn: sqlite3.Connection,
     *,
     query: str,
     url_prefix: str,
     limit: int = 5,
     docs_dir: str | None = None,
+    exchange: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Search pages via FTS5, falling back to semantic search if no results."""
-    results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit)
-    if results or docs_dir is None:
-        return results
-    try:
-        from .semantic import semantic_search
-        sem_results = semantic_search(
-            docs_dir=docs_dir,
-            query=query,
-            exchange=None,
-            limit=limit,
-            query_type="hybrid",
-        )
-        for sr in sem_results:
-            url = sr.get("url", "")
-            if url_prefix and not url.startswith(url_prefix):
-                continue
-            # Convert semantic result to the format _search_pages returns.
-            row = conn.execute(
-                "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path FROM pages WHERE canonical_url = ?;",
-                (url,),
-            ).fetchone()
-            if row:
-                results.append(dict(row))
-            if len(results) >= limit:
-                break
-    except (ImportError, Exception):
-        # Semantic search is optional; index may not exist.
-        pass
-    return results
+    """Search pages via FTS5 and semantic search (co-primary), interleaving results."""
+    # FTS5 search.
+    fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit)
+
+    # Semantic search (if available).
+    sem_results_raw: list[dict[str, Any]] = []
+    if docs_dir is not None:
+        try:
+            from .semantic import semantic_search
+            sem_hits = semantic_search(
+                docs_dir=docs_dir,
+                query=query,
+                exchange=exchange,
+                limit=limit,
+                query_type="hybrid",
+                rerank="auto",
+            )
+            for sr in sem_hits:
+                url = sr.get("url", "")
+                if url_prefix and not url.startswith(url_prefix):
+                    continue
+                # Convert semantic result to the format _search_pages returns.
+                row = conn.execute(
+                    "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path FROM pages WHERE canonical_url = ?;",
+                    (url,),
+                ).fetchone()
+                if row:
+                    sem_results_raw.append(dict(row))
+        except (ImportError, Exception):
+            # Semantic search is optional; index may not exist.
+            pass
+
+    if not sem_results_raw:
+        return fts_results[:limit]
+    if not fts_results:
+        return sem_results_raw[:limit]
+
+    # Interleaved merge: alternate FTS and semantic results, dedup by URL.
+    merged: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    fts_iter = iter(fts_results)
+    sem_iter = iter(sem_results_raw)
+    fts_done = False
+    sem_done = False
+
+    while len(merged) < limit:
+        # Take from FTS.
+        if not fts_done:
+            try:
+                item = next(fts_iter)
+                url = item.get("canonical_url", "")
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    merged.append(item)
+                    if len(merged) >= limit:
+                        break
+            except StopIteration:
+                fts_done = True
+
+        # Take from semantic.
+        if not sem_done:
+            try:
+                item = next(sem_iter)
+                url = item.get("canonical_url", "")
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    merged.append(item)
+            except StopIteration:
+                sem_done = True
+
+        if fts_done and sem_done:
+            break
+
+    return merged[:limit]
 
 
 def _search_endpoints_for_answer(
@@ -228,6 +273,50 @@ def _detect_exchange(norm: str, reg) -> list:
     return matches
 
 
+def _resolve_endpoint_citation_url(
+    conn: sqlite3.Connection, *, ep: dict[str, Any], exchange,
+) -> str | None:
+    """Resolve the best citation URL for an endpoint (docs page > spec URL).
+
+    Priority: docs_url column → query-time FTS resolution → sources[0].url.
+    """
+    # Fast path: check pre-resolved docs_url column.
+    try:
+        row = conn.execute(
+            "SELECT docs_url FROM endpoints WHERE endpoint_id = ?;",
+            (ep["endpoint_id"],),
+        ).fetchone()
+        if row and row["docs_url"]:
+            return row["docs_url"]
+    except sqlite3.OperationalError:
+        pass  # Column may not exist yet (pre-migration).
+
+    # Query-time fallback: FTS resolution.
+    path = ep.get("path", "")
+    if path:
+        try:
+            from .resolve_docs_urls import resolve_docs_url
+
+            docs_url = resolve_docs_url(
+                conn,
+                path=path,
+                exchange=ep["exchange"],
+                allowed_domains=exchange.allowed_domains or [],
+            )
+            if docs_url:
+                return docs_url
+        except Exception:
+            pass
+
+    # Last resort: spec URL from sources[].
+    record = ep.get("record", {})
+    sources = record.get("sources") or []
+    if sources and isinstance(sources[0], dict):
+        return sources[0].get("url")
+
+    return None
+
+
 def _generic_search_answer(
     conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
 ) -> dict[str, Any]:
@@ -263,18 +352,20 @@ def _generic_search_answer(
                 rate_limit_note = f" [inferred rate limit: {inferred['text']}]"
 
         text = f"[{ep['exchange']}:{ep['section']}] {ep.get('method', '')} {ep.get('path', '')} — {ep_desc}{rate_limit_note}"
+        citation_url = _resolve_endpoint_citation_url(conn, ep=ep, exchange=exchange)
+        citations = [{"url": citation_url}] if citation_url else []
         claims.append({
             "id": f"c{c}",
             "kind": "ENDPOINT",
             "text": text,
-            "citations": [],
+            "citations": citations,
             "endpoint_id": ep["endpoint_id"],
         })
         c += 1
 
     # Search each section, collect top results.
     for section_id, prefix in seed_prefixes.items():
-        candidates = _search_pages_with_fallback(conn, query=fts_query, url_prefix=prefix, limit=3, docs_dir=docs_dir)
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=3, docs_dir=docs_dir, exchange=exchange.exchange_id)
         for cand in candidates:
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
             if not md_path or not md_path.exists():
@@ -293,16 +384,16 @@ def _generic_search_answer(
             }
             claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}:{section_id}] {excerpt}", citation=citation))
             c += 1
-            if c > 10:
+            if c > 20:
                 break
-        if c > 10:
+        if c > 20:
             break
 
     # Fallback: search by domain prefix if no page claims found.
     page_claims = [cl for cl in claims if cl.get("kind") != "ENDPOINT"]
     if not page_claims:
         for dp in domain_prefixes:
-            candidates = _search_pages_with_fallback(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir)
+            candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id)
             for cand in candidates:
                 md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
                 if not md_path or not md_path.exists():
@@ -321,7 +412,7 @@ def _generic_search_answer(
                 }
                 claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}] {excerpt}", citation=citation))
                 c += 1
-                if c > 10:
+                if c > 20:
                     break
             if page_claims or len(claims) > len(endpoint_results):
                 break
@@ -356,7 +447,7 @@ def _infer_rate_limit_from_pages(
     path_tail = path.rstrip("/").rsplit("/", 1)[-1] if "/" in path else path
 
     for _section_id, prefix in seed_prefixes.items():
-        candidates = _search_pages(conn, query=f"rate limit {path_tail}", url_prefix=prefix, limit=3)
+        candidates = _search_pages_with_semantic(conn, query=f"rate limit {path_tail}", url_prefix=prefix, limit=3, docs_dir=docs_dir, exchange=exchange.exchange_id if hasattr(exchange, 'exchange_id') else None)
         for cand in candidates:
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
             if not md_path or not md_path.exists():
@@ -440,7 +531,7 @@ def _binance_answer(
             if not prefix:
                 notes.append(f"No registry seed URL for binance section '{section_id}'.")
                 continue
-            candidates = _search_pages(conn, query=query, url_prefix=prefix, limit=5)
+            candidates = _search_pages_with_semantic(conn, query=query, url_prefix=prefix, limit=5, docs_dir=docs_dir, exchange="binance")
             if not candidates:
                 notes.append(f"No crawled pages found for query '{query}' under {prefix}.")
                 continue
@@ -514,11 +605,13 @@ def _binance_answer(
         picked_prefix: str | None = None
 
         for prefix in prefixes:
-            candidates = _search_pages(
+            candidates = _search_pages_with_semantic(
                 conn,
                 query="permissions OR permission OR \"api key permissions\" OR \"required permissions\" OR \"enable reading\" OR \"enable withdrawals\"",
                 url_prefix=prefix,
                 limit=10,
+                docs_dir=docs_dir,
+                exchange="binance",
             )
             for cand in candidates:
                 md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None

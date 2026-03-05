@@ -25,9 +25,29 @@ dev = [
 playwright = [
   "playwright>=1.48",
 ]
+semantic-query = [
+  "lancedb>=0.20",
+  "mlx>=0.20; sys_platform == 'darwin'",
+  "tokenizers>=0.20; sys_platform == 'darwin'",
+  "huggingface-hub>=0.24",
+  "mistune>=3.0",
+]
 semantic = [
   "lancedb>=0.20",
+  "mlx>=0.20; sys_platform == 'darwin'",
+  "tokenizers>=0.20",
+  "huggingface-hub>=0.24",
   "sentence-transformers>=3.0",
+  "peft>=0.15.2",
+  "mistune>=3.0",
+]
+ccxt = [
+  "ccxt>=4.4",
+]
+reranker = [
+  "huggingface_hub>=0.27",
+  "mlx>=0.20",
+  "mlx-lm>=0.20",
 ]
 
 [project.scripts]
@@ -35,3 +55,7 @@ cex-api-docs = "cex_api_docs.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+addopts = "-m 'not slow'"

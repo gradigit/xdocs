@@ -30,6 +30,7 @@ HANDOFF.md
 TODO.md
 todos/
 docs/archive/
+docs/ops/
 docs/plans/
 docs/reports/
 docs/research/
@@ -38,3 +39,15 @@ docs/discussions/
 docs/solutions/
 scripts/poc_*.py
 .doc-manifest.yaml
+
+# Ephemeral local artifacts
+logs/
+reports/
+ops/
+poc-*.jpeg
+security_best_practices_report.md
+
+# Platform-specific tool config
+.codex/
+.playwright-mcp/
+.DS_Store

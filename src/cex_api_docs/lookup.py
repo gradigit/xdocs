@@ -41,7 +41,7 @@ def lookup_endpoint_by_path(
         sql = f"""
 SELECT e.endpoint_id, e.exchange, e.section, e.protocol,
        e.method, e.path, e.base_url, e.api_version,
-       e.description, e.json, e.updated_at
+       e.description, e.json, e.updated_at, e.docs_url
 FROM endpoints e
 WHERE {' AND '.join(where)}
 ORDER BY e.exchange, e.section, e.method;
@@ -50,6 +50,8 @@ ORDER BY e.exchange, e.section, e.method;
         out: list[dict[str, Any]] = []
         for r in cur.fetchall():
             record = json.loads(r["json"])
+            if r["docs_url"]:
+                record["docs_url"] = r["docs_url"]
             out.append(record)
         return out
     finally:

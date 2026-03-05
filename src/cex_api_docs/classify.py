@@ -3,7 +3,46 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
+
+_exchange_names: list[str] | None = None
+
+def _get_exchange_names() -> list[str]:
+    """Load exchange names from registry, with hardcoded fallback."""
+    global _exchange_names
+    if _exchange_names is not None:
+        return _exchange_names
+
+    try:
+        from .registry import load_registry
+        registry_path = Path(__file__).resolve().parents[2] / "data" / "exchanges.yaml"
+        reg = load_registry(registry_path)
+        names = [ex.exchange_id for ex in reg.exchanges]
+        # Add common aliases.
+        alias_map = {
+            "gateio": "gate.io",
+            "cryptocom": "crypto.com",
+            "mercadobitcoin": "mercado bitcoin",
+        }
+        for ex_id, alias in alias_map.items():
+            if ex_id in names and alias not in names:
+                names.append(alias)
+        # Add legacy names.
+        if "htx" in names and "huobi" not in names:
+            names.append("huobi")
+        _exchange_names = names
+        return _exchange_names
+    except Exception:
+        # Fallback to hardcoded list if registry loading fails.
+        _exchange_names = [
+            "binance", "okx", "bybit", "bitget", "kucoin", "gate.io", "gateio",
+            "htx", "huobi", "crypto.com", "bitstamp", "bitfinex", "dydx",
+            "hyperliquid", "gmx", "drift", "aevo", "perp", "perpetual protocol",
+            "gains", "gains network", "kwenta", "lighter", "ccxt",
+            "upbit", "bithumb", "coinone", "korbit",
+        ]
+        return _exchange_names
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,22 +113,37 @@ def classify_input(text: str) -> InputClassification:
         "question": 0.2,  # baseline
     }
 
-    # --- Error message detection ---
-    error_codes: list[dict[str, str]] = []
-    for exchange_hint, pat in _ERROR_CODE_PATTERNS:
-        for m in pat.finditer(text):
-            error_codes.append({"code": m.group(), "exchange_hint": exchange_hint})
-            scores["error_message"] += 0.4
+    # --- Request payload detection (JSON) ---
+    # Must run BEFORE error code detection so that numeric values inside JSON
+    # payloads (e.g. "price":"30000") don't trigger false error_message matches.
+    is_json_payload = False
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            is_json_payload = True
+            signals["payload_format"] = "json"
+            signals["payload_keys"] = list(parsed.keys())[:10]
+            scores["request_payload"] += 0.7
+    except (json.JSONDecodeError, ValueError):
+        pass
 
-    for phrase in _ERROR_PHRASES:
-        if re.search(phrase, text, re.IGNORECASE):
-            scores["error_message"] += 0.3
-            break
+    # --- Error message detection (skip if input is a JSON payload) ---
+    if not is_json_payload:
+        error_codes: list[dict[str, str]] = []
+        for exchange_hint, pat in _ERROR_CODE_PATTERNS:
+            for m in pat.finditer(text):
+                error_codes.append({"code": m.group(), "exchange_hint": exchange_hint})
+                scores["error_message"] += 0.4
 
-    if error_codes:
-        signals["error_codes"] = error_codes
-        # Error codes are a strong signal — boost significantly when present.
-        scores["error_message"] = max(scores["error_message"], 0.7)
+        for phrase in _ERROR_PHRASES:
+            if re.search(phrase, text, re.IGNORECASE):
+                scores["error_message"] += 0.3
+                break
+
+        if error_codes:
+            signals["error_codes"] = error_codes
+            # Error codes are a strong signal — boost significantly when present.
+            scores["error_message"] = max(scores["error_message"], 0.7)
 
     # --- Endpoint path detection ---
     path_match = re.search(
@@ -108,19 +162,9 @@ def classify_input(text: str) -> InputClassification:
             if method_str:
                 scores["endpoint_path"] += 0.2
 
-    # --- Request payload detection ---
-    # Try JSON parse
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, dict):
-            signals["payload_format"] = "json"
-            signals["payload_keys"] = list(parsed.keys())[:10]
-            scores["request_payload"] += 0.7
-    except (json.JSONDecodeError, ValueError):
-        pass
+    # --- Request payload detection (URL-encoded) ---
 
-    # URL-encoded params: key=value&key2=value2
-    if re.match(r"^[a-zA-Z_]\w*=[^&\s]+(&[a-zA-Z_]\w*=[^&\s]+)+$", text):
+    if not is_json_payload and re.match(r"^[a-zA-Z_]\w*=[^&\s]+(&[a-zA-Z_]\w*=[^&\s]+)+$", text):
         signals["payload_format"] = "url_encoded"
         scores["request_payload"] += 0.6
 
@@ -133,14 +177,18 @@ def classify_input(text: str) -> InputClassification:
         scores["code_snippet"] += min(0.3 + code_hits * 0.15, 0.9)
 
     # --- Exchange hint detection ---
-    exchange_names = [
-        "binance", "okx", "bybit", "bitget", "kucoin", "gate.io", "gateio",
-        "htx", "huobi", "crypto.com", "bitstamp", "bitfinex", "dydx",
-        "hyperliquid", "upbit", "bithumb", "coinone", "korbit",
-    ]
+    exchange_names = _get_exchange_names()
     for name in exchange_names:
         if re.search(re.escape(name), text, re.IGNORECASE):
-            signals["exchange_hint"] = name.replace("gateio", "gate.io").replace("huobi", "htx")
+            hint = name.lower()
+            # Normalize aliases to canonical exchange_id.
+            alias_to_id = {
+                "gate.io": "gateio", "huobi": "htx",
+                "crypto.com": "cryptocom",
+                "mercado bitcoin": "mercadobitcoin",
+                "perpetual protocol": "perp", "gains network": "gains",
+            }
+            signals["exchange_hint"] = alias_to_id.get(hint, hint)
             break
 
     # --- Question detection ---

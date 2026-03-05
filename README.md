@@ -1,294 +1,331 @@
 # cex-api-docs
 
-Local-only, cite-only knowledge base for centralized exchange (CEX) API documentation.
+Local-first, cite-only knowledge base for centralized exchange (CEX) API docs.
 
-This repository is for teams who keep getting tripped up by:
-- which endpoint base URL to use (spot vs futures vs portfolio margin, etc.)
-- differing rate-limit/weight models across endpoints
-- API key permissions required for specific endpoints
+This project lets your team ask natural-language questions like:
 
-It solves that by crawling *public* exchange documentation into a local store and enforcing a strict “cite-only” rule when answering questions.
+- “What permission does this private endpoint need?”
+- “Why is this auth request failing on OKX/Bybit/Bitget?”
+- “What is the safest rollout plan across exchanges?”
 
-## What It Does
+…and get answers backed by local sources, with citations.
 
-- Crawl and store official exchange API docs locally (default `./cex-docs/`)
-- Deterministically enumerate doc URLs via inventories (sitemaps + heuristics)
-- Fall back to deterministic, bounded link-follow inventories for docs without usable sitemaps
-- Sync docs in a cron-friendly way (`sync` + stable JSON output, optional Markdown report)
-- Validate registry seeds/domains and API base URLs (reachability-only, unauthenticated)
-- Full-text search crawled pages using SQLite FTS5
-- Ingest structured endpoint JSON (agent-generated) with per-field provenance
-- Ingest browser-captured pages back into the canonical store (`ingest-page`)
-- Answer questions from the local store with claim-level citations only
+---
 
-## Non-Goals / Safety Rules
+## Who this is for
 
-- No hosted service. Everything is local.
-- No storage of real exchange API keys.
-- No authenticated exchange API calls and no trading logic.
-- No unsupported claims in answers:
-  - If a fact is not backed by stored sources, return `unknown` / `undocumented` / `conflict`.
+Teams integrating multiple CEX APIs who need:
 
-## Install (macOS)
+- consistent endpoint/auth/rate-limit answers,
+- fewer production mistakes from doc drift,
+- auditable outputs (not “LLM guesses”),
+- a workflow that works in **Codex CLI** and **Claude Code**.
+
+No internal contacts are required. If you can run the CLI, you can use this repo.
+
+---
+
+## What this project is
+
+`cex-api-docs` combines three things:
+
+1. **CLI tool** (`cex-api-docs`)  
+   Crawls/syncs docs, indexes data, searches, and assembles cite-only answers.
+
+2. **Local knowledge store** (`./cex-docs` by default)  
+   SQLite + FTS + endpoint records + optional LanceDB semantic index.
+
+3. **Agent skill** (`.claude/skills/cex-api-query/SKILL.md`)  
+   A workflow so agents can query docs via natural language with strict citations.
+
+---
+
+## Why this helps
+
+Without this project, teams often lose time on:
+
+- wrong endpoint variants (spot vs margin vs futures),
+- missing permission scopes,
+- exchange-specific signature/timestamp gotchas,
+- conflicting docs and unclear source of truth.
+
+With this project, the workflow is:
+
+- retrieve from local docs,
+- verify with endpoint/page evidence,
+- fail closed (`unknown` / `undocumented` / `conflict`) when evidence is missing.
+
+---
+
+## Core principles
+
+- **Cite-only**: no unsupported factual claims.
+- **Local-first**: answers come from your local store.
+- **Deterministic ingestion**: inventory + fetch + stable storage.
+- **Fail-closed output**: unknown/conflict instead of hallucination.
+
+---
+
+## Quick start (new user, zero context)
+
+### 1) Install
 
 Requires Python 3.11+.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[dev,semantic]"
 ```
 
-Optional (only needed for JS-heavy doc sites):
+Optional reranker support:
 
 ```bash
-pip install -e ".[playwright]"
-python3 -m playwright install
+pip install -e ".[reranker]"
 ```
 
-## Quickstart
+### 2) Use an existing team snapshot (recommended)
 
-Initialize a fresh store:
+If your team already shared a prepared `cex-docs/` folder, you can start querying immediately.
+
+### 3) If no snapshot exists, build locally
 
 ```bash
 cex-api-docs init --docs-dir ./cex-docs
-```
-
-Sanity-check the built-in registry (networked):
-
-```bash
 cex-api-docs validate-registry
-cex-api-docs validate-base-urls
+cex-api-docs sync --docs-dir ./cex-docs
+cex-api-docs build-index --docs-dir ./cex-docs
 ```
 
-Sync docs for a section (deterministic inventory -> fetch):
-
-```bash
-cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs
-```
-
-Resume a partially completed inventory fetch (after interruption):
-
-```bash
-cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume
-```
-
-Sync all configured exchanges/sections (debug-friendly caps):
-
-```bash
-cex-api-docs sync --docs-dir ./cex-docs --limit 1 --inventory-max-pages 10 --render auto
-```
-
-Render a sync JSON artifact into Markdown:
-
-```bash
-cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs > /tmp/sync.json
-cex-api-docs report --input /tmp/sync.json --output /tmp/sync.md
-```
-
-Resume a partially completed sync (reuse existing inventories, fetch only pending/error):
-
-```bash
-cex-api-docs sync --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
-```
-
-Report on current store contents:
-
-```bash
-cex-api-docs store-report --docs-dir ./cex-docs
-cex-api-docs store-report --exchange binance --output store.md
-```
-
-Legacy crawl (deprecated; link-follow) using registry seeds:
-
-```bash
-cex-api-docs crawl --exchange binance --section spot --docs-dir ./cex-docs
-```
-
-Search the local docs:
+### 4) First queries
 
 ```bash
 cex-api-docs search-pages "rate limit OR weight" --docs-dir ./cex-docs
+cex-api-docs semantic-search "binance api key permissions" --exchange binance --mode hybrid --docs-dir ./cex-docs
+cex-api-docs answer "What permissions are required for Binance private balance endpoints?" --docs-dir ./cex-docs
 ```
 
-Answer a question (cite-only; answers come only from stored sources):
+---
+
+## Natural-language agent workflow (Codex or Claude)
+
+In a new session at the repo root, prompt:
+
+```text
+Use cex-api-query skill.
+Find private balance endpoints for Binance/OKX/Bybit and list auth headers, permissions, and top auth failure codes with citations.
+```
+
+Bootstrap guard snippet (recommended for every fresh session):
+
+```text
+Use cex-api-query skill for this CEX API docs query.
+```
+
+The skill uses this retrieval strategy for question-style prompts:
+
+1. semantic search (`hybrid`) with **auto rerank policy**,
+2. targeted endpoint/page verification,
+3. bounded fallback search,
+4. citation-ledger style output.
+
+---
+
+## Supported exchanges
+
+Registry currently includes 35 exchanges (21 CEX, 13 DEX, 1 reference):
+
+**CEX (21):** binance, okx, bybit, bitget, gateio, kucoin, htx, cryptocom, bitstamp, bitfinex, upbit, bithumb, coinone, korbit, kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin
+
+**DEX (13):** dydx, hyperliquid, gmx, drift, aevo, perpetual, gains, kwenta, lighter, aster, apex, grvt, paradex
+
+**Reference:** ccxt
+
+---
+
+## Important commands
+
+### Ingestion / sync
 
 ```bash
-cex-api-docs answer "What API key permissions are required to query Binance Portfolio Margin subaccount balances?" --docs-dir ./cex-docs
+cex-api-docs sync --docs-dir ./cex-docs
+cex-api-docs sync --docs-dir ./cex-docs --resume --concurrency 4
+cex-api-docs store-report --docs-dir ./cex-docs
 ```
 
-Validate store integrity (detection-only by default):
+### Retrieval
 
 ```bash
-cex-api-docs fsck --docs-dir ./cex-docs
+cex-api-docs search-pages "jwt verification" --docs-dir ./cex-docs
+cex-api-docs search-endpoints "wallet balance" --exchange bybit --docs-dir ./cex-docs
+cex-api-docs semantic-search "how to sign okx request" --exchange okx --mode hybrid --docs-dir ./cex-docs
 ```
 
-## Registry (16 Exchanges)
-
-The registry is `data/exchanges.yaml`. It defines:
-- `allowed_domains`: host allowlist for crawling
-- `sections[].seed_urls`: canonical doc roots to crawl
-- `sections[].base_urls`: API base URLs for reachability checks (and for endpoint records)
-- `sections[].doc_sources[]` (optional): additional enumeration sources (sitemap/spec URLs)
-- `sections[].inventory_policy` (optional): per-section inventory mode + caps
-  - `mode`: `inventory` (sitemap-based) or `link_follow` (deterministic link extraction)
-  - `max_pages`: cap for link-follow inventories
-  - `render_mode`: `http|playwright|auto`
-  - `scope_prefixes`: optional explicit URL prefixes (override derived scope)
-
-Current registry contains exactly these 16 exchanges:
-`binance`, `okx`, `bybit`, `bitget`, `gateio`, `kucoin`, `htx`, `cryptocom`, `bitstamp`, `bitfinex`, `dydx`, `hyperliquid`, `upbit`, `bithumb`, `coinone`, `korbit`.
-
-### Reconfirm Seeds/Domains
-
-`validate-registry` fetches each seed URL and asserts:
-- the seed is reachable (HTTP 2xx), and
-- markdown extraction produced non-empty content (word_count > 0)
+### Answer assembly
 
 ```bash
-cex-api-docs validate-registry
-cex-api-docs validate-registry --exchange binance
-cex-api-docs validate-registry --exchange binance --section portfolio_margin
+cex-api-docs answer "Explain Upbit private account auth requirements with citations" --docs-dir ./cex-docs
 ```
 
-If a doc site is JS-rendered or doing UA-based blocking, try:
-
-```bash
-cex-api-docs validate-registry --render auto
-```
-
-### Reconfirm API Base URLs (Endpoints)
-
-`validate-base-urls` is *reachability only* and **unauthenticated**:
-- `https://...` / `http://...`: does a basic GET; any HTTP response counts as “reachable”
-- `wss://...` / `ws://...`: DNS-only check (no websocket handshake)
+### Validation / quality
 
 ```bash
 cex-api-docs validate-base-urls
+cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
+cex-api-docs fsck --docs-dir ./cex-docs
+cex-api-docs migrate-schema --docs-dir ./cex-docs          # dry-run
+cex-api-docs migrate-schema --docs-dir ./cex-docs --apply  # apply pending DB migrations
+
+# Crawl validation
+cex-api-docs sanitize-check --docs-dir ./cex-docs
+cex-api-docs crawl-coverage --exchange binance --docs-dir ./cex-docs
+cex-api-docs check-links --sample 50 --docs-dir ./cex-docs
 ```
 
-## CLI (JSON-First)
+---
 
-All commands print machine-readable JSON with a stable `schema_version` (currently `v1`).
+## Reranking policy (how it works)
 
-Key commands:
-- `init`: initialize directories + SQLite schema
-- `crawl`: **(deprecated)** crawl docs and store pages + metadata; use `sync` instead
-- `discover-sources`: mine registry seed pages for sitemap/spec URLs (best-effort bootstrap)
-- `inventory`: enumerate doc URLs for a section (best-effort, deterministic)
-- `fetch-inventory`: fetch every URL from an inventory (use `--resume` to continue pending/error after interruption; `--concurrency N` for parallel fetch with per-domain rate limiting)
-- `sync`: inventory + fetch orchestration (cron-friendly JSON output; supports `--resume` and `--concurrency N`)
-- `report`: convert sync JSON into a human-readable Markdown report
-- `store-report`: report on current store contents (inventories, pages, endpoints, review queue; filterable by `--exchange`/`--section`)
-- `ingest-page`: ingest browser-captured HTML/markdown into the canonical store
-- `search-pages`, `get-page`: query stored sources
-- `validate-registry`, `validate-base-urls`: reconfirm registry truth
-- `import-openapi`, `import-postman`: deterministically import endpoint skeletons from machine-readable specs (recommended when available)
-- `import-asyncapi`: AsyncAPI import (currently a stub; will return `ENOTIMPL`)
-- `coverage-gaps`, `coverage-gaps-list`: compute and persist aggregated endpoint completeness gaps
-- `detect-stale-citations`: enqueue review items when cited sources drift
-- `save-endpoint`, `search-endpoints`: ingest/search structured endpoint records
-- `coverage`: aggregate endpoint `field_status` coverage (unknown/undocumented/documented counts)
-- `review-list`, `review-show`, `review-resolve`: manage review queue
-- `answer`: assemble cite-only answers from the local store
-- `fsck`: detect store inconsistencies
+`semantic-search` supports:
 
-See `cex-api-docs --help` and `src/cex_api_docs/cli.py` for exact flags.
+- `--rerank-policy auto` (default): apply reranking only when candidates are ambiguous,
+- `--rerank-policy always`: always rerank,
+- `--rerank-policy never`: never rerank,
+- `--rerank/--no-rerank`: manual override.
 
-## Cite-Only Answers
-
-`cex-api-docs answer ...` returns one of:
-- `status: "ok"`: claims with citations
-- `status: "needs_clarification"`: you must re-run with `--clarification <id>`
-- `status: "unknown"`: not supported or not backed by stored sources
-
-Notes:
-- `answer` works for all 16 registered exchanges via generic FTS-based cite-only search. Binance has richer heuristics (rate-limit comparison, permissions extraction).
-- Some questions are intentionally treated as ambiguous (for example "unified trading") and require clarification.
-
-Example clarification loop:
+Example:
 
 ```bash
-cex-api-docs answer "What's the rate limit difference between Binance unified trading endpoint and Binance spot endpoint?" --docs-dir ./cex-docs
-# => status=needs_clarification with options like "binance:portfolio_margin"
-cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
+cex-api-docs semantic-search "binance api key permissions" --exchange binance --mode hybrid --rerank-policy auto --docs-dir ./cex-docs
 ```
 
-## Endpoint JSON Ingestion (Deterministic)
+CLI output includes rerank audit fields:
 
-This project supports ingesting agent-generated endpoint records into SQLite for fast search and review.
+- `rerank_policy`
+- `rerank_applied`
+- `rerank_reason`
 
-- Schema: `schemas/endpoint.schema.json`
-- Ingest: `cex-api-docs save-endpoint path/to/endpoint.json`
-- Search: `cex-api-docs search-endpoints "subaccount balance" --exchange binance`
-- Coverage: `cex-api-docs coverage --exchange binance`
+---
 
-The expectation is that endpoint JSON includes per-field provenance for high-risk fields (permissions, rate limits, etc.): URL, crawl hashes, and a mechanically-verifiable excerpt.
+## Team operating model (recommended)
 
-### Machine-Readable Spec Imports (Preferred)
+Use two roles:
 
-When an exchange publishes an OpenAPI/Swagger spec or a Postman collection, you can import it deterministically into the endpoint DB:
+### A) Maintainers (1–2 people)
+
+- run scheduled sync/index refresh,
+- run retrieval validation,
+- publish versioned data bundle (`cex-docs` snapshot + changelog).
+
+### B) Consumers (everyone else)
+
+- pull latest repo,
+- use latest shared `cex-docs` snapshot,
+- run natural-language queries via skill.
+
+This keeps day-to-day usage fast and consistent.
+
+### Recommended production split (two repos)
+
+- **Maintainer repo**: crawling/sync/index/validation/publishing.
+- **Runtime repo (team-facing)**: query CLI + query skill + prebuilt `cex-docs` snapshot.
+
+Generate/update runtime repo from maintainer repo:
 
 ```bash
-cex-api-docs import-openapi --exchange binance --section spot --url "https://example.com/openapi.yaml" --base-url "https://api.binance.com"
-cex-api-docs import-postman --exchange binance --section spot --url "https://example.com/collection.json" --base-url "https://api.binance.com"
+python3 scripts/sync_runtime_repo.py \
+  --runtime-root /Users/aaaaa/Projects/cex-api-docs-runtime \
+  --docs-dir ./cex-docs \
+  --clean
 ```
 
-These imports:
-- ingest the spec into the canonical store (so citations are verifiable)
-- create one endpoint record per operation/request
-- set `field_status` for a standard required field set
-- mark only fields with verifiable citations as `documented` (everything else defaults to `unknown`)
+Split-architecture guide:
 
-## Store Layout
+- `docs/ops/maintainer-vs-runtime-repo-split.md`
 
-Default store root: `./cex-docs/` (override via `--docs-dir` everywhere).
+---
 
-Important paths:
-- `cex-docs/db/docs.db`: SQLite database (pages, FTS, endpoints, review queue)
-- `cex-docs/raw/`: raw HTML responses
-- `cex-docs/pages/`: extracted markdown files
-- `cex-docs/meta/`: per-page crawl metadata (JSON)
-- `cex-docs/endpoints/`: ingested endpoint JSON blobs (as files, plus DB rows)
-- `cex-docs/review/queue.jsonl`: review queue log (append-only)
-- `cex-docs/crawl-log.jsonl`: crawl run log (append-only)
+## Background refresh presets (daytime vs overnight)
 
-## How It Works (Tech Overview)
+```bash
+# Fast daytime resume
+scripts/run_sync_preset.sh fast-daytime ./cex-docs
 
-- Crawler
-  - Fetches pages with `requests`
-  - Extracts links + text, converts HTML to markdown (`beautifulsoup4`, `html2text`)
-  - Respects `robots.txt` by default (override with `--ignore-robots`)
-  - Handles UA-dependent 403s via multi-UA retry logic (some doc sites block “bot-like” UAs)
-- Canonicalization + content addressing
-  - Canonical URL normalization keeps storage deterministic
-  - Content hashes and path hashes make it cheap to detect changes and build citations
-- SQLite + FTS5
-  - `pages` and `pages_fts` power full-text search over crawled markdown
-  - `endpoints` and `endpoints_fts` power endpoint search
-  - `endpoint_sources` records per-field provenance links back to specific crawled pages/hashes
-- Rendering modes
-  - `--render http` (default): fast, requests-based fetching
-  - `--render playwright`: browser rendering for JS-heavy docs (optional dependency)
-  - `--render auto`: uses HTTP first, falls back to Playwright when extraction is empty/non-2xx
+# Overnight safe full refresh
+scripts/run_sync_preset.sh overnight-safe ./cex-docs
+```
+
+launchd sample and setup guide:
+
+- `docs/ops/background-sync-launchd.md`
+- `ops/launchd/com.cexapidocs.sync.overnight.plist`
+
+### Keep demo workspace skills in sync
+
+```bash
+python3 scripts/sync_demo_skills.py --demo-root /Users/aaaaa/Projects/cex-api-docs-demo-workspace
+```
+
+If the demo workspace path does not exist yet, clone/create it first, then rerun the sync command.
+
+### Pre-share production check
+
+```bash
+scripts/pre_share_check.sh ./cex-docs
+```
+
+Production rollout guide:
+
+- `docs/ops/production-readiness-and-rollout.md`
+
+---
+
+## Project structure
+
+- `src/cex_api_docs/cli.py` — CLI entrypoint
+- `src/cex_api_docs/semantic.py` — vector/fts/hybrid retrieval + rerank policy
+- `src/cex_api_docs/answer.py` — cite-only answer composition
+- `src/cex_api_docs/chunker.py` — markdown chunking for semantic index
+- `src/cex_api_docs/validate.py` — retrieval evaluation
+- `src/cex_api_docs/crawl_targets.py` — multi-method URL discovery
+- `src/cex_api_docs/crawl_coverage.py` — coverage audit + gap backfill
+- `src/cex_api_docs/link_check.py` — stored page reachability checks
+- `src/cex_api_docs/ccxt_xref.py` — CCXT cross-reference validation
+- `schema/schema.sql` — SQLite schema
+- `data/exchanges.yaml` — exchange registry
+- `.claude/skills/cex-api-query/SKILL.md` — agent skill workflow
+
+---
+
+## Safety / non-goals
+
+- Not a hosted SaaS.
+- Does not store real API keys.
+- Does not place trades.
+- Does not make authenticated exchange calls.
+
+---
+
+## Troubleshooting
+
+- If semantic commands fail, make sure semantic extras are installed:
+  - `pip install -e ".[semantic]"`
+- If reranker is unavailable:
+  - `pip install -e ".[reranker]"`
+- If long-running sync was interrupted:
+  - re-run with `--resume`.
+
+---
 
 ## Development
 
 Run tests:
 
 ```bash
-.venv/bin/python -m pytest -q
+python3 -m pytest -q
 ```
 
-## Docs / References
-
-- Authoritative plan: `docs/plans/2026-02-09-feat-cex-api-docs-cite-only-knowledge-base-plan.md`
-- Smoke report example: `docs/reports/2026-02-10-cex-api-docs-smoke-report.md`
-- Runbook (Binance wow query): `docs/runbooks/binance-wow-query.md`
-- Runbook (browser capture ingestion): `docs/runbooks/ingest-page.md`
-- Troubleshooting (UA 403 + seed drift): `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
-- “Critical patterns” required reading: `docs/solutions/patterns/critical-patterns.md`
-- Agent skill: `skills/cex-api-docs/SKILL.md`
+---
 
 ## License
 

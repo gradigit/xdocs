@@ -26,6 +26,17 @@ class InventoryPolicy:
     max_pages: int | None = None
     render_mode: str | None = None  # http|playwright|auto (None => use CLI default)
     scope_prefixes: list[str] = field(default_factory=list)  # optional explicit URL prefixes
+    # Cross-section dedupe ownership controls.
+    # If unset, sync defaults this to "<exchange_id>" for exchange-local dedupe.
+    scope_group: str | None = None
+    # Lower value = higher priority ownership.
+    scope_priority: int = 100
+
+
+@dataclass(frozen=True, slots=True)
+class RenderOptions:
+    scroll_full_page: bool = False
+    expand_accordions: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +46,7 @@ class ExchangeSection:
     seed_urls: list[str]
     doc_sources: list[DocSource] = field(default_factory=list)
     inventory_policy: InventoryPolicy = field(default_factory=InventoryPolicy)
+    render_options: RenderOptions = field(default_factory=RenderOptions)
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +123,16 @@ def load_registry(registry_path: Path) -> Registry:
                 max_pages=int(pol_raw["max_pages"]) if pol_raw.get("max_pages") is not None else None,
                 render_mode=str(pol_raw["render_mode"]).strip() if pol_raw.get("render_mode") else None,
                 scope_prefixes=[str(x) for x in (pol_raw.get("scope_prefixes") or []) if x],
+                scope_group=str(pol_raw["scope_group"]).strip() if pol_raw.get("scope_group") else None,
+                scope_priority=int(pol_raw.get("scope_priority") or 100),
+            )
+
+            ro_raw = sec.get("render_options") or {}
+            if not isinstance(ro_raw, dict):
+                ro_raw = {}
+            render_opts = RenderOptions(
+                scroll_full_page=bool(ro_raw.get("scroll_full_page", False)),
+                expand_accordions=bool(ro_raw.get("expand_accordions", False)),
             )
 
             sections.append(
@@ -120,6 +142,7 @@ def load_registry(registry_path: Path) -> Registry:
                     seed_urls=list(sec.get("seed_urls", []) or []),
                     doc_sources=doc_sources,
                     inventory_policy=inv_policy,
+                    render_options=render_opts,
                 )
             )
         exchanges.append(

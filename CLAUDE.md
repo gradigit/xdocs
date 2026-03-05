@@ -83,6 +83,16 @@ cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-
 
 # Cite-only answer from local store
 cex-api-docs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
+
+# Crawl target validation
+cex-api-docs sanitize-check --docs-dir ./cex-docs
+cex-api-docs validate-sitemaps [--exchange X] --docs-dir ./cex-docs
+cex-api-docs validate-crawl-targets --exchange X [--enable-nav] [--enable-wayback] --docs-dir ./cex-docs
+cex-api-docs crawl-coverage [--exchange X] [--enable-live] [--enable-nav] [--backfill] --docs-dir ./cex-docs
+cex-api-docs check-links [--exchange X] [--sample N] --docs-dir ./cex-docs
+
+# Enhanced audit
+cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage --include-live-validation --exchange X
 ```
 
 Note: The legacy `crawl` command still works but emits a deprecation warning. Use `sync` or `inventory`+`fetch-inventory` instead.
@@ -93,7 +103,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 16 exchanges (37 sections): seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 35 exchanges (62 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (e.g. `sync_and_report.sh` cron runner).
 - `.claude/skills/` Claude Code skill definitions (auto-discovered by Claude Code).
 
@@ -108,7 +118,7 @@ The pipeline has a linear progression:
 5. **Endpoint ingest** (`endpoints.py`, `openapi_import.py`, `postman_import.py`, `ingest_page.py`) -- structured endpoint records with provenance (citations back to source pages).
 6. **Semantic Index** (`semantic.py`) -- optional LanceDB vector index built from page markdown. Enables vector/hybrid search alongside FTS5 for natural language queries where keyword matching fails.
 7. **Query / Answer** (`answer.py`, `lookup.py`, `classify.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB + semantic fallback. Input classification routes errors, paths, payloads, code, and questions to appropriate search commands. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
-8. **Quality** (`quality.py`, `coverage.py`, `coverage_gaps.py`, `stale_citations.py`, `fsck.py`) -- content quality gate (empty/thin/tiny_html detection), coverage gap detection, stale citation sweeps, store consistency checks.
+8. **Quality & Validation** (`quality.py`, `fsck.py`, `extraction_verify.py`, `crawl_targets.py`, `crawl_coverage.py`, `live_validate.py`, `link_check.py`) -- content quality gate, structural extraction verification, multi-method crawl target discovery, coverage audit with gap backfill, live site validation, stored page reachability checks.
 
 ## Conventions
 
@@ -137,11 +147,20 @@ The pipeline has a linear progression:
 - `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
 - `src/cex_api_docs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
 - `src/cex_api_docs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
-- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 16 exchanges; Binance has richer heuristics)
+- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 35 exchanges; Binance has richer heuristics)
 - `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + cex-api-query skill)
 - `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
 - `src/cex_api_docs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
 - `src/cex_api_docs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
+- `src/cex_api_docs/url_sanitize.py` URL sanitization filter (template artifacts, CDN paths, bad schemes)
+- `src/cex_api_docs/extraction_verify.py` Structural extraction verification (HTML vs markdown quality scoring)
+- `src/cex_api_docs/sitemap_validate.py` Sitemap health checks + cross-validation against store
+- `src/cex_api_docs/nav_extract.py` Nav extraction via agent-browser + HTTP/BS4 fallback
+- `src/cex_api_docs/crawl_targets.py` Multi-method URL discovery (sitemap + link-follow + nav + Wayback CDX)
+- `src/cex_api_docs/live_validate.py` Live site nav comparison against store
+- `src/cex_api_docs/crawl_coverage.py` Coverage audit + gap backfill
+- `src/cex_api_docs/link_check.py` Stored page URL reachability checks (HEAD requests)
+- `src/cex_api_docs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
 
 ## Gotchas
 
@@ -150,7 +169,7 @@ The pipeline has a linear progression:
 - Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
 - **Playwright is optional**: install with `pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
-- **Semantic search is optional**: install with `pip install -e ".[semantic]"` (adds lancedb + sentence-transformers + torch ~2GB). Without it, `build-index` and `semantic-search` commands raise ImportError. Uses `all-MiniLM-L6-v2` model (384 dims). LanceDB index stored at `cex-docs/lancedb-index/`.
+- **Semantic search model**: `jina-embeddings-v5-text-nano` (768 dims, last-token pooling, EuroBERT backbone). MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-nano-mlx`), not mlx-embeddings. Query-only install: `pip install -e ".[semantic-query]"` (Mac). Full install: `pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads ~495MB model from HuggingFace (cached after that). LanceDB index stored at `cex-docs/lancedb-index/`.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
@@ -162,20 +181,30 @@ The pipeline has a linear progression:
 - **OpenAPI import needs `--base-url` for some specs**: KuCoin official OpenAPI specs have no `servers[].url` field. Pass `--base-url` explicitly or the import fails with `EBADOPENAPI`.
 - **Endpoint extraction citations must be exact**: `save-endpoint` verifies that `excerpt` matches the stored markdown at `[excerpt_start:excerpt_end]` byte-for-byte. Off-by-one errors or whitespace mismatches cause `EBADCITE`.
 - **`extracted_endpoints/` is gitignored**: Agent-extracted endpoint JSON files live here. They are regenerable from stored markdown and should not be committed.
+- **Korean exchange doc coverage**:
+  - **Upbit**: English docs (`global-docs.upbit.com`, `rest_en`) lag Korean (`docs.upbit.com/kr/`, `rest_ko`) by ~3 minor versions (v1.3.1 vs v1.6.1 as of 2026-02). English is missing 4 endpoints, has stale response schemas, and omits per-endpoint rate limits and changelogs. Treat Korean as authoritative; English is supplementary for keyword search.
+  - **Bithumb**: Korean docs (`apidocs.bithumb.com`, `rest`) are the default. English (`rest_en`) uses Localize.js client-side translation (1,723 entries) and **requires Playwright** to render. Coverage may be partial since translations lag Korean updates.
+  - **Coinone**: Korean-only (`docs.coinone.co.kr`). No English version exists. Endpoint paths and parameter names are in English and searchable via FTS5.
+  - **Korbit**: Already in English (`docs.korbit.co.kr`). No language issue.
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 16 exchanges, 37 sections synced: 3,813 pages, 4.48M words, **~3,430 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 62 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
-- **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback. 5 new CLI commands: `get-endpoint`, `list-endpoints`, `lookup-endpoint`, `search-error`, `classify`. Skill rewritten to v2.0.0 with classification-based routing.
-- **LanceDB semantic search** integrated as FTS5 fallback in `answer` command. Also available standalone via `semantic-search` CLI.
-- **Bitstamp** endpoints reimported from official OpenAPI 3.0.3 spec (82 endpoints, extracted from Redoc page via Playwright).
-- **Gate.io** endpoints extracted from stored markdown (363 endpoints, 97% citation success rate).
+- **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
+- **7 new CEXes synced** (kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin) with OpenAPI imports for bitmex, mercadobitcoin, coinbase/intx.
+- **4 Tier 1 DEX protocols synced** (aster, apex, grvt, paradex).
+- **CCXT wiki synced** (188 pages) + cross-reference module (`ccxt_xref.py`).
+- **Coinbase scope dedup** — added `scope_priority` + `scope_prefixes` to 4 Coinbase sections sharing one sitemap.
+- **LanceDB semantic index** — jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading context injection. Chunks prepend `[Page Title > Section Heading]` for disambiguation.
+- **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 
 Research completed (docs/research/):
 - LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
-- CEX OpenAPI specs: Mapped all 16 exchanges; all viable imports completed.
+- CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
+- CCXT as cross-reference: Built `ccxt_xref.py` — 20/21 CEXes mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
+- DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Next: Extract endpoints for 9 newly added Binance/Bitget sections. Improve error code search accuracy (currently matches bare numbers in page content; could use exchange-specific patterns from `data/error_code_patterns.yaml` to rank results).
+Next: Rebuild semantic index (incremental). Add link validation to maintainer workflow. Periodic CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Structured changelog extraction for drift detection (404 changelog pages already in store, no structured schema yet).

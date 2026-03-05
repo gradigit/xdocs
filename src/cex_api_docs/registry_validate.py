@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import re
+import shutil
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -11,6 +13,28 @@ from .httpfetch import FetchResult, fetch
 from .markdown import html_to_markdown, normalize_markdown
 from .playwrightfetch import PlaywrightFetcher
 from .registry import load_registry
+
+log = logging.getLogger(__name__)
+
+
+def _get_render_backend(allowed_domains: set[str]):
+    """Fallback chain: agent-browser → Node.js playwright → Python playwright."""
+    if shutil.which("agent-browser"):
+        try:
+            from .agentbrowserfetch import AgentBrowserFetcher
+            log.info("render backend: agent-browser")
+            return AgentBrowserFetcher(allowed_domains=allowed_domains)
+        except Exception:
+            pass
+    try:
+        from .nodepwfetch import NodePlaywrightFetcher
+        backend = NodePlaywrightFetcher(allowed_domains=allowed_domains)
+        log.info("render backend: node-playwright")
+        return backend
+    except (ImportError, CexApiDocsError):
+        pass
+    log.info("render backend: python-playwright")
+    return PlaywrightFetcher(allowed_domains=allowed_domains)
 
 
 def _parse_charset(content_type: str) -> str | None:
@@ -124,7 +148,7 @@ def validate_registry(
 
                         if needs_pw:
                             if pw is None:
-                                pw = PlaywrightFetcher(allowed_domains=allow).open()
+                                pw = _get_render_backend(allow).open()
                             fr_pw = pw.fetch(
                                 url=seed,
                                 timeout_s=float(timeout_s),

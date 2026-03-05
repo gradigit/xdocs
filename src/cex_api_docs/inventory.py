@@ -20,6 +20,7 @@ from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
 from .registry import DocSource, InventoryPolicy
 from .sitemaps import SitemapParseResult, iter_unique, parse_sitemap_bytes
+from .url_sanitize import sanitize_url
 from .store import require_store_db
 from .timeutil import now_iso_utc
 from .urlcanon import canonicalize_url
@@ -176,7 +177,9 @@ def _extract_links(html: str, *, base_url: str) -> list[str]:
             continue
         u = urljoin(base_url, href)
         if u.startswith("http://") or u.startswith("https://"):
-            out.append(u)
+            sr = sanitize_url(u)
+            if sr.accepted:
+                out.append(u)
     return out
 
 
@@ -272,9 +275,25 @@ def _walk_sitemaps(
             status = int(fr.http_status)
             ctype = (fr.content_type or "").lower()
             if status < 200 or status >= 300:
+                errors.append({
+                    "url": sm,
+                    "error": {
+                        "code": "ESITEMAPHTTP",
+                        "message": f"Sitemap returned HTTP {status}.",
+                        "details": {"url": sm, "http_status": status},
+                    },
+                })
                 continue
             looks_xml = ("xml" in ctype) or (len(fr.body) > 0 and fr.body.lstrip().startswith(b"<"))
             if not looks_xml:
+                errors.append({
+                    "url": sm,
+                    "error": {
+                        "code": "ESITEMAPFORMAT",
+                        "message": "Sitemap response is not XML.",
+                        "details": {"url": sm, "content_type": ctype},
+                    },
+                })
                 continue
 
             parsed: SitemapParseResult = parse_sitemap_bytes(data=fr.body, url=fr.final_url)
@@ -404,6 +423,37 @@ def create_inventory(
             retries=cfg.retries,
         )
         errors.extend(sitemap_errors)
+
+        # Auto link-follow fallback: if sitemaps produced < 5 URLs, supplement
+        # with one-hop link extraction from seed pages.
+        if len(urls) < 5:
+            import logging
+
+            _log = logging.getLogger(__name__)
+            _log.warning(
+                "Sitemaps yielded only %d URLs for %s/%s; running link-follow fallback from seeds.",
+                len(urls),
+                exchange_id,
+                section_id,
+            )
+            for seed_url in seeds:
+                try:
+                    fr = fetch(
+                        session,
+                        url=seed_url,
+                        timeout_s=float(cfg.timeout_s),
+                        max_bytes=int(cfg.link_follow_max_bytes),
+                        max_redirects=int(cfg.max_redirects),
+                        retries=int(cfg.retries),
+                        allowed_domains=allow,
+                    )
+                    if 200 <= int(fr.http_status) < 300:
+                        html = _decode_html(fr.body)
+                        seed_links = _extract_links(html, base_url=fr.final_url)
+                        urls.extend(seed_links)
+                except Exception:
+                    # Best-effort fallback; failures don't abort inventory.
+                    continue
 
     # 3) Canonicalize + filter by allowlist and scope prefixes.
     urls_canon: list[str] = []

@@ -1,21 +1,31 @@
-"""Semantic search via LanceDB (optional, requires `pip install cex-api-docs[semantic]`)."""
+"""Semantic search via LanceDB (optional, requires ``cex-api-docs[semantic]``)."""
 
 from __future__ import annotations
 
 import logging
+import os
+import time
 from pathlib import Path
 from typing import Any
 
 from .db import open_db
+from .embeddings import get_embedder
 from .store import require_store_db
 
 logger = logging.getLogger(__name__)
 
-# Lazy imports to avoid hard dependency on lancedb/sentence-transformers.
+# Lazy import to avoid hard dependency on lancedb.
 _lancedb = None
-_embedder = None
 
 TABLE_NAME = "pages"
+
+_RERANK_POLICY_AUTO = "auto"
+_RERANK_POLICY_ALWAYS = "always"
+_RERANK_POLICY_NEVER = "never"
+
+_AUTO_RERANK_MIN_CANDIDATES = int(os.getenv("CEX_RERANK_AUTO_MIN_CANDIDATES", "12"))
+_AUTO_RERANK_TOP_DELTA = float(os.getenv("CEX_RERANK_AUTO_TOP_DELTA", "0.006"))
+_AUTO_RERANK_TOPK_SPREAD = float(os.getenv("CEX_RERANK_AUTO_TOPK_SPREAD", "0.02"))
 
 
 def _require_lancedb():
@@ -31,18 +41,70 @@ def _require_lancedb():
     return _lancedb
 
 
-def _get_embedder():
-    global _embedder
-    if _embedder is None:
-        lancedb = _require_lancedb()
-        from lancedb.embeddings import get_registry
-
-        _embedder = get_registry().get("sentence-transformers").create()
-    return _embedder
-
-
 def _lance_dir(docs_dir: str) -> str:
     return str(Path(docs_dir) / "lancedb-index")
+
+
+def compact_index(*, docs_dir: str) -> dict[str, Any]:
+    """Compact LanceDB index: merge fragments + cleanup old versions."""
+    lancedb = _require_lancedb()
+    lance_db = lancedb.connect(_lance_dir(docs_dir))
+    table = lance_db.open_table(TABLE_NAME)
+    pre = table.count_rows()
+    table.compact_files()
+    table.cleanup_old_versions()
+    post = table.count_rows()
+    return {"rows": post, "pre_compact_rows": pre, "lance_dir": _lance_dir(docs_dir)}
+
+
+def _normalize_rerank_policy(rerank: bool | str) -> str:
+    if isinstance(rerank, bool):
+        return _RERANK_POLICY_ALWAYS if rerank else _RERANK_POLICY_NEVER
+    policy = str(rerank).strip().lower()
+    if policy not in {_RERANK_POLICY_AUTO, _RERANK_POLICY_ALWAYS, _RERANK_POLICY_NEVER}:
+        raise ValueError(
+            f"Unsupported rerank policy {rerank!r}; use one of: "
+            f"{_RERANK_POLICY_AUTO}|{_RERANK_POLICY_ALWAYS}|{_RERANK_POLICY_NEVER}"
+        )
+    return policy
+
+
+def _should_auto_rerank(raw_results: list[dict[str, Any]], *, limit: int) -> tuple[bool, str]:
+    """Decide whether reranking should be applied in auto mode.
+
+    Heuristic intent:
+    - Avoid default reranking cost for obviously strong rankings.
+    - Trigger rerank when many near-tied candidates make ordering uncertain.
+    """
+    if not raw_results:
+        return False, "no_candidates"
+
+    if len(raw_results) < max(2, min(_AUTO_RERANK_MIN_CANDIDATES, limit * 2)):
+        return False, "too_few_candidates"
+
+    top = raw_results[: min(5, len(raw_results))]
+    scores = [float(r.get("score", 0.0)) for r in top]
+    if len(scores) < 2:
+        return False, "single_candidate"
+
+    top_delta = abs(scores[0] - scores[1])
+    spread = max(scores) - min(scores)
+
+    if top_delta <= _AUTO_RERANK_TOP_DELTA or spread <= _AUTO_RERANK_TOPK_SPREAD:
+        return True, "ambiguous_top_scores"
+
+    return False, "confident_ranking"
+
+
+def _get_indexed_pages(table: Any) -> dict[int, str]:
+    """Return {page_id: content_hash} for all pages currently in the index."""
+    try:
+        df = table.search().select(["page_id", "content_hash"]).limit(10_000_000).to_pandas()
+        # De-duplicate: one row per page_id.
+        deduped = df.drop_duplicates(subset=["page_id"])
+        return dict(zip(deduped["page_id"].tolist(), deduped["content_hash"].tolist()))
+    except Exception:
+        return {}
 
 
 def build_index(
@@ -50,27 +112,33 @@ def build_index(
     docs_dir: str,
     limit: int = 0,
     exchange: str | None = None,
-    batch_size: int = 256,
+    batch_size: int = 128,
+    incremental: bool = False,
 ) -> dict[str, Any]:
     """Build or rebuild the LanceDB semantic index from SQLite pages.
+
+    Uses jina-embeddings-v5-text-nano (Jina MLX by default) with markdown
+    chunking for fine-grained retrieval.
 
     Args:
         docs_dir: Path to the cex-docs store directory.
         limit: Max pages to embed (0 = all).
         exchange: Optional filter by exchange domain pattern.
         batch_size: Rows per embedding batch.
+        incremental: If True, only process new/changed pages instead of
+            dropping and rebuilding the entire index.
 
     Returns:
         Summary dict with counts.
     """
     lancedb = _require_lancedb()
-    embedder = _get_embedder()
+    embedder = get_embedder()
 
     db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
 
     try:
-        # Build query.
+        # Build query — include content_hash for change detection.
         sql = """
 SELECT
   p.id AS page_id,
@@ -78,7 +146,8 @@ SELECT
   p.title,
   p.domain,
   p.word_count,
-  p.markdown_path
+  p.markdown_path,
+  p.content_hash
 FROM pages p
 WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
 """
@@ -96,17 +165,139 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
         conn.close()
 
     if not rows:
-        return {"cmd": "build-index", "pages_embedded": 0, "status": "no_pages"}
+        return {"cmd": "build-index", "pages_processed": 0, "chunks_embedded": 0, "status": "no_pages"}
 
-    logger.info("Embedding %d pages...", len(rows))
+    # Import chunker (requires mistune from [semantic] extras).
+    from .chunker import chunk_markdown
 
-    # Read markdown content and build records.
-    records: list[dict[str, Any]] = []
+    # Connect to LanceDB.
+    lance_db = lancedb.connect(_lance_dir(docs_dir))
+
+    from lancedb.pydantic import LanceModel, Vector
+
+    ndims = embedder.ndims()
+
+    class ChunkEmbedding(LanceModel):
+        text: str
+        vector: Vector(ndims)  # type: ignore[valid-type]
+        page_id: int
+        chunk_index: int
+        heading: str
+        exchange: str
+        domain: str
+        url: str
+        title: str
+        word_count: int
+        content_hash: str
+
+    # Incremental mode: diff against existing index.
+    pages_deleted = 0
+    chunks_deleted = 0
+    table = None
+
+    if incremental:
+        try:
+            table = lance_db.open_table(TABLE_NAME)
+            # Check schema compatibility — content_hash must exist.
+            schema_cols = {f.name for f in table.schema}
+            if "content_hash" not in schema_cols:
+                logger.warning(
+                    "Existing index lacks 'content_hash' column; falling back to full rebuild."
+                )
+                table = None
+                indexed = {}
+            else:
+                # Check vector dimensions match current embedder via schema
+                # inspection (not search — search fails on partially-written tables).
+                vec_field = table.schema.field("vector")
+                existing_dims = vec_field.type.list_size if vec_field else None
+                if existing_dims is not None and existing_dims != ndims:
+                    logger.warning(
+                        "Model dimension mismatch: index has %d dims, embedder produces %d. "
+                        "Falling back to full rebuild.",
+                        existing_dims, ndims,
+                    )
+                    table = None
+                    indexed = {}
+                elif existing_dims is None:
+                    logger.warning(
+                        "Cannot determine vector dimensions from schema; falling back to full rebuild."
+                    )
+                    table = None
+                    indexed = {}
+                else:
+                    indexed = _get_indexed_pages(table)
+        except Exception:
+            # No existing table — fall back to full build.
+            indexed = {}
+            table = None
+
+        if indexed:
+            # Build source-of-truth map from SQLite.
+            source_pages: dict[int, str] = {
+                row["page_id"]: (row["content_hash"] or "") for row in rows
+            }
+
+            # Pages to delete: removed from SQLite or content changed.
+            stale_ids: list[int] = []
+            for pid, old_hash in indexed.items():
+                if pid not in source_pages or source_pages[pid] != old_hash:
+                    stale_ids.append(pid)
+
+            # Pages to add: new or changed.
+            new_page_ids: set[int] = set()
+            for pid, cur_hash in source_pages.items():
+                if pid not in indexed or indexed[pid] != cur_hash:
+                    new_page_ids.add(pid)
+
+            # Delete stale chunks.
+            if stale_ids:
+                # LanceDB delete predicate with IN clause (batch in groups of 500).
+                for i in range(0, len(stale_ids), 500):
+                    batch = stale_ids[i : i + 500]
+                    id_list = ", ".join(str(x) for x in batch)
+                    pre_count = table.count_rows()
+                    table.delete(f"page_id IN ({id_list})")
+                    post_count = table.count_rows()
+                    chunks_deleted += pre_count - post_count
+                pages_deleted = len(stale_ids)
+
+            # Filter rows to only new/changed pages.
+            rows = [r for r in rows if r["page_id"] in new_page_ids]
+
+            if not rows:
+                # Nothing new — just rebuild FTS index in case it's stale.
+                if chunks_deleted > 0:
+                    table.create_fts_index("text", replace=True)
+                return {
+                    "cmd": "build-index",
+                    "mode": "incremental",
+                    "pages_processed": 0,
+                    "chunks_embedded": 0,
+                    "pages_deleted": pages_deleted,
+                    "chunks_deleted": chunks_deleted,
+                    "total_rows": table.count_rows(),
+                    "status": "up_to_date",
+                }
+
+    logger.info("Processing %d pages for chunking + embedding...", len(rows))
+
+    # Create table if needed (full rebuild or no existing table).
+    if table is None:
+        try:
+            lance_db.drop_table(TABLE_NAME)
+        except Exception:
+            pass
+        table = lance_db.create_table(TABLE_NAME, schema=ChunkEmbedding)
+
+    # Phase 1: Collect all chunks (fast, no embedding).
     skipped = 0
-    # markdown_path is stored relative to repo root (includes docs_dir prefix),
-    # so resolve from the parent of docs_dir.
+    pages_processed = 0
+    all_chunks: list[dict[str, Any]] = []
+
     docs_path = Path(docs_dir)
     repo_root = docs_path.parent
+
     for row in rows:
         md_rel = row["markdown_path"]
         md_path = repo_root / md_rel if md_rel.startswith(docs_path.name) else docs_path / md_rel
@@ -114,72 +305,105 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
             skipped += 1
             continue
         md_text = md_path.read_text(encoding="utf-8", errors="replace")
-        # Truncate to ~2000 chars for embedding (MiniLM has 512 token limit).
-        text = md_text[:4000]
-        if not text.strip():
+        if not md_text.strip():
             skipped += 1
             continue
 
-        # Derive exchange from domain.
         domain = row["domain"]
         exchange_id = _domain_to_exchange(domain)
+        content_hash = row["content_hash"] or ""
 
-        records.append(
-            {
-                "text": text,
-                "page_id": row["page_id"],
-                "exchange": exchange_id,
-                "domain": domain,
-                "url": row["canonical_url"],
-                "title": row["title"] or "",
-                "word_count": row["word_count"],
-            }
-        )
+        chunks = chunk_markdown(md_text)
+        if not chunks:
+            skipped += 1
+            continue
 
-    if not records:
-        return {"cmd": "build-index", "pages_embedded": 0, "skipped": skipped, "status": "no_content"}
+        pages_processed += 1
+        page_title = row["title"] or ""
+        for chunk in chunks:
+            # Prepend page title + heading to chunk text for embedding context.
+            # This disambiguates chunks from similarly named pages across
+            # different exchange products/sections (e.g. "Binance Spot API >
+            # Account Endpoints" vs "Binance Pay > Balance Query").
+            context_parts: list[str] = []
+            if page_title:
+                context_parts.append(page_title)
+            if chunk.heading and chunk.heading != page_title:
+                context_parts.append(chunk.heading)
+            context_prefix = " > ".join(context_parts)
+            embed_text = f"[{context_prefix}]\n{chunk.text}" if context_prefix else chunk.text
 
-    # Connect to LanceDB and create/overwrite table.
-    lance_db = lancedb.connect(_lance_dir(docs_dir))
+            all_chunks.append(
+                {
+                    "text": embed_text,
+                    "page_id": row["page_id"],
+                    "chunk_index": chunk.chunk_index,
+                    "heading": chunk.heading,
+                    "exchange": exchange_id,
+                    "domain": domain,
+                    "url": row["canonical_url"],
+                    "title": row["title"] or "",
+                    "word_count": row["word_count"],
+                    "content_hash": content_hash,
+                }
+            )
 
-    from lancedb.pydantic import LanceModel, Vector
+    logger.info("Chunked %d pages into %d chunks. Sorting by length for optimal batching...",
+                pages_processed, len(all_chunks))
 
-    ndims = embedder.ndims()
+    # Phase 2: Sort by text length to minimize padding waste within batches.
+    # With decoder models, padding all items to the longest in a batch is expensive.
+    # Grouping similar-length chunks together avoids 10-40x slowdowns from mixed batches.
+    all_chunks.sort(key=lambda c: len(c["text"]))
 
-    class PageEmbedding(LanceModel):
-        text: str = embedder.SourceField()
-        vector: Vector(ndims) = embedder.VectorField()  # type: ignore[valid-type]
-        page_id: int
-        exchange: str
-        domain: str
-        url: str
-        title: str
-        word_count: int
+    # Phase 3: Embed in batches and stream to LanceDB.
+    chunks_embedded = 0
+    t_embed_start = time.monotonic()
 
-    # Drop existing table if present.
-    try:
-        lance_db.drop_table(TABLE_NAME)
-    except Exception:
-        pass
-
-    # Batch insert.
-    table = lance_db.create_table(TABLE_NAME, schema=PageEmbedding)
-    for i in range(0, len(records), batch_size):
-        batch = records[i : i + batch_size]
-        logger.info("  Embedding batch %d-%d / %d", i, i + len(batch), len(records))
+    for i in range(0, len(all_chunks), batch_size):
+        batch = all_chunks[i : i + batch_size]
+        vectors = embedder.embed_texts([r["text"] for r in batch])
+        for row, vec in zip(batch, vectors):
+            row["vector"] = vec
         table.add(batch)
+        chunks_embedded += len(batch)
+
+        # Log progress with throughput every ~500 chunks.
+        if chunks_embedded % 500 < batch_size:
+            elapsed = time.monotonic() - t_embed_start
+            rate = chunks_embedded / elapsed * 60 if elapsed > 0 else 0
+            logger.info("  Embedded %d / %d chunks (%.0f/min)...",
+                        chunks_embedded, len(all_chunks), rate)
+
+    if chunks_embedded == 0 and not incremental:
+        return {
+            "cmd": "build-index",
+            "pages_processed": 0,
+            "chunks_embedded": 0,
+            "skipped": skipped,
+            "status": "no_content",
+        }
 
     # Create FTS index for hybrid search.
     table.create_fts_index("text", replace=True)
 
-    return {
+    result: dict[str, Any] = {
         "cmd": "build-index",
-        "pages_embedded": len(records),
+        "pages_processed": pages_processed,
+        "chunks_embedded": chunks_embedded,
         "skipped": skipped,
         "total_rows": table.count_rows(),
         "lance_dir": _lance_dir(docs_dir),
+        "model": embedder.model_name,
+        "embedding_backend": embedder.backend_name,
+        "ndims": ndims,
         "status": "ok",
     }
+    if incremental:
+        result["mode"] = "incremental"
+        result["pages_deleted"] = pages_deleted
+        result["chunks_deleted"] = chunks_deleted
+    return result
 
 
 def semantic_search(
@@ -189,7 +413,9 @@ def semantic_search(
     exchange: str | None = None,
     limit: int = 10,
     query_type: str = "hybrid",
-) -> list[dict[str, Any]]:
+    rerank: bool | str = True,
+    include_meta: bool = False,
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
     """Run semantic (vector), FTS, or hybrid search against the LanceDB index.
 
     Args:
@@ -198,37 +424,152 @@ def semantic_search(
         exchange: Optional exchange filter.
         limit: Max results.
         query_type: "vector", "fts", or "hybrid".
+        rerank:
+            - bool: True=always rerank, False=never rerank
+            - "auto": rerank only when top results are ambiguous
+            - "always" / "never": explicit policy strings
+        include_meta: Return `(results, meta)` when True.
 
     Returns:
         List of result dicts with url, title, score, etc.
+        Results are de-duplicated by page_id (best chunk per page).
     """
+    rerank_policy = _normalize_rerank_policy(rerank)
+
     lancedb = _require_lancedb()
     lance_db = lancedb.connect(_lance_dir(docs_dir))
     table = lance_db.open_table(TABLE_NAME)
+    embedder = get_embedder()
 
-    search = table.search(query, query_type=query_type).limit(limit)
-    if exchange:
-        search = search.where(f"exchange = '{exchange}'")
+    # Fetch more candidates when reranking is possible.
+    fetch_limit = limit * 3 if rerank_policy in {_RERANK_POLICY_ALWAYS, _RERANK_POLICY_AUTO} else limit * 2
 
-    arrow_table = search.to_arrow()
-    results: list[dict[str, Any]] = []
+    def _build_search(kind: str):
+        if kind == "vector":
+            query_vector = embedder.embed_texts([query], is_query=True)[0]
+            return table.search(query_vector).limit(fetch_limit)
+        if kind == "fts":
+            return table.search(query, query_type="fts").limit(fetch_limit)
+        if kind == "hybrid":
+            query_vector = embedder.embed_texts([query], is_query=True)[0]
+            return (
+                table.search(query_type="hybrid")
+                .vector(query_vector)
+                .text(query)
+                .limit(fetch_limit)
+            )
+        raise ValueError(f"Unsupported query_type={kind!r}; use vector|fts|hybrid")
+
+    def _with_exchange_filter(search_obj):
+        if exchange:
+            return search_obj.where(f"exchange = '{exchange}'")
+        return search_obj
+
+    search = _with_exchange_filter(_build_search(query_type))
+    try:
+        arrow_table = search.to_arrow()
+    except RuntimeError as exc:
+        msg = str(exc)
+        missing_fts = "Cannot perform full text search unless an INVERTED index has been created" in msg
+        if query_type not in {"fts", "hybrid"} or not missing_fts:
+            raise
+
+        logger.warning(
+            "FTS index missing for semantic table; attempting to create index and retry.",
+        )
+        try:
+            table.create_fts_index("text", replace=False)
+            retry = _with_exchange_filter(_build_search(query_type))
+            arrow_table = retry.to_arrow()
+        except Exception:
+            logger.warning(
+                "FTS index create/retry failed; falling back to vector-only search.",
+                exc_info=True,
+            )
+            fallback = _with_exchange_filter(_build_search("vector"))
+            arrow_table = fallback.to_arrow()
+    raw_results: list[dict[str, Any]] = []
     cols = arrow_table.column_names
+    has_text = "text" in cols
     for i in range(arrow_table.num_rows):
         score = 0.0
+        score_kind = "none"
         if "_relevance_score" in cols:
             score = float(arrow_table.column("_relevance_score")[i].as_py())
+            score_kind = "relevance"
         elif "_distance" in cols:
             score = float(arrow_table.column("_distance")[i].as_py())
-        results.append(
-            {
-                "page_id": int(arrow_table.column("page_id")[i].as_py()),
-                "url": str(arrow_table.column("url")[i].as_py()),
-                "title": str(arrow_table.column("title")[i].as_py()),
-                "exchange": str(arrow_table.column("exchange")[i].as_py()),
-                "word_count": int(arrow_table.column("word_count")[i].as_py()),
-                "score": score,
-            }
-        )
+            score_kind = "distance"
+
+        result: dict[str, Any] = {
+            "page_id": int(arrow_table.column("page_id")[i].as_py()),
+            "url": str(arrow_table.column("url")[i].as_py()),
+            "title": str(arrow_table.column("title")[i].as_py()),
+            "exchange": str(arrow_table.column("exchange")[i].as_py()),
+            "word_count": int(arrow_table.column("word_count")[i].as_py()),
+            "score": score,
+            "score_kind": score_kind,
+        }
+
+        # Include chunk fields if present.
+        if "chunk_index" in cols:
+            result["chunk_index"] = int(arrow_table.column("chunk_index")[i].as_py())
+        if "heading" in cols:
+            result["heading"] = str(arrow_table.column("heading")[i].as_py())
+        if has_text:
+            result["text"] = str(arrow_table.column("text")[i].as_py())
+
+        raw_results.append(result)
+
+    rerank_applied = False
+    rerank_reason = "policy_never"
+    should_rerank = False
+    if rerank_policy == _RERANK_POLICY_ALWAYS:
+        should_rerank = True
+        rerank_reason = "policy_always"
+    elif rerank_policy == _RERANK_POLICY_AUTO:
+        should_rerank, rerank_reason = _should_auto_rerank(raw_results, limit=limit)
+
+    # Rerank if requested/policy-triggered.
+    if should_rerank and raw_results and has_text:
+        try:
+            from .reranker import rerank as do_rerank
+            # Slice input to reduce cross-encoder compute (top_n only truncates output).
+            rerank_input = raw_results[:min(limit * 3, len(raw_results))]
+            raw_results = do_rerank(query, rerank_input, top_n=limit * 2, text_key="text")
+            rerank_applied = True
+        except ImportError:
+            logger.warning("Reranker not available (pip install cex-api-docs[reranker]). Skipping rerank.")
+            rerank_reason = "reranker_unavailable"
+    elif should_rerank and raw_results and not has_text:
+        rerank_reason = "text_not_available"
+
+    # De-duplicate by page_id: keep the highest-scoring chunk per page.
+    # Higher _relevance_score = better, lower _distance = better.
+    # Use the score as-is since results are already ordered by relevance.
+    seen_pages: dict[int, dict[str, Any]] = {}
+    for r in raw_results:
+        pid = r["page_id"]
+        if pid not in seen_pages:
+            seen_pages[pid] = r
+
+    results = list(seen_pages.values())[:limit]
+
+    # Strip text field from output (only needed for reranking).
+    for r in results:
+        r.pop("text", None)
+        r.pop("score_kind", None)
+
+    if include_meta:
+        meta = {
+            "rerank_policy": rerank_policy,
+            "rerank_applied": rerank_applied,
+            "rerank_reason": rerank_reason,
+            "candidate_count": len(raw_results),
+            "fetch_limit": fetch_limit,
+            "query_type": query_type,
+        }
+        return results, meta
     return results
 
 
@@ -288,16 +629,45 @@ _DOMAIN_MAP = {
     "www.bitget.com": "bitget",
     "www.gate.com": "gateio",
     "huobiapi.github.io": "htx",
-    "exchange-docs.crypto.com": "crypto_com",
+    "exchange-docs.crypto.com": "cryptocom",
     "docs.bitfinex.com": "bitfinex",
     "www.bitstamp.net": "bitstamp",
     "docs.dydx.xyz": "dydx",
+    "docs.dydx.exchange": "dydx",
     "hyperliquid.gitbook.io": "hyperliquid",
     "docs.upbit.com": "upbit",
+    "global-docs.upbit.com": "upbit",
     "apidocs.bithumb.com": "bithumb",
     "docs.coinone.co.kr": "coinone",
     "docs.korbit.co.kr": "korbit",
     "raw.githubusercontent.com": "aggregator",
+    # Pages-only exchanges (DEXs / docs-only)
+    "docs.drift.trade": "drift",
+    "docs.gmx.io": "gmx",
+    "gmx-docs.io": "gmx",
+    "api-docs.aevo.xyz": "aevo",
+    "docs.aevo.xyz": "aevo",
+    "docs.gains.trade": "gains",
+    "docs.kwenta.io": "kwenta",
+    "docs.lighter.xyz": "lighter",
+    "lighter.gitbook.io": "lighter",
+    "docs.perp.com": "perp",
+    # New CEXes
+    "docs.kraken.com": "kraken",
+    "docs.cdp.coinbase.com": "coinbase",
+    "docs.bitmex.com": "bitmex",
+    "www.bitmex.com": "bitmex",
+    "developer-pro.bitmart.com": "bitmart",
+    "docs.whitebit.com": "whitebit",
+    "api.mercadobitcoin.net": "mercadobitcoin",
+    "ws.mercadobitcoin.net": "mercadobitcoin",
+    # New DEXes
+    "docs.asterdex.com": "aster",
+    "api-docs.pro.apex.exchange": "apex",
+    "docs.paradex.trade": "paradex",
+    # Aggregator
+    "docs.ccxt.com": "ccxt",
+    "github.com": "ccxt",
 }
 
 

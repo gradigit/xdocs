@@ -1,0 +1,50 @@
+{"query": "How to check account balance on Binance", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints"], "expected_exchange": "binance", "tags": ["keyword", "account"]}
+{"query": "Binance spot trading rate limits", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/limits", "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/general-api-information"], "expected_exchange": "binance", "tags": ["rate-limit"]}
+{"query": "place a new order on Binance", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints"], "expected_exchange": "binance", "tags": ["trading"]}
+{"query": "Binance API key permissions", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/request-security", "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/general-api-information", "https://developers.binance.com/docs/wallet/account/api-key-permission"], "expected_exchange": "binance", "tags": ["auth", "permissions"]}
+{"query": "Binance websocket stream endpoints", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams"], "expected_exchange": "binance", "tags": ["websocket"]}
+{"query": "Bybit get wallet balance", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/account/wallet-balance"], "expected_exchange": "bybit", "tags": ["keyword", "balance"]}
+{"query": "Bybit place order API", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/order/create-order"], "expected_exchange": "bybit", "tags": ["trading"]}
+{"query": "OKX funding rate API", "expected_urls": ["https://www.okx.com/docs-v5/en/"], "expected_exchange": "okx", "tags": ["funding-rate"]}
+{"query": "OKX order placement endpoint", "expected_urls": ["https://www.okx.com/docs-v5/en/"], "expected_exchange": "okx", "tags": ["trading"]}
+{"query": "KuCoin API authentication", "expected_urls": ["https://www.kucoin.com/docs-new/authentication"], "expected_exchange": "kucoin", "tags": ["auth"]}
+{"query": "KuCoin get account balance", "expected_urls": ["https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-list-spot"], "expected_exchange": "kucoin", "tags": ["account"]}
+{"query": "Bitget copy trading API", "expected_urls": ["https://www.bitget.com/api-doc/copytrading/intro"], "expected_exchange": "bitget", "tags": ["copy-trading"]}
+{"query": "Gate.io spot order endpoint", "expected_urls": ["https://www.gate.com/docs/developers/apiv4/"], "expected_exchange": "gateio", "tags": ["trading"]}
+{"query": "Binance margin account endpoints", "expected_urls": ["https://developers.binance.com/docs/margin_trading/Introduction"], "expected_exchange": "binance", "tags": ["margin"]}
+{"query": "HTX API rate limit rules", "expected_urls": ["https://huobiapi.github.io/docs/spot/v1/en/"], "expected_exchange": "htx", "tags": ["rate-limit"]}
+{"query": "Crypto.com exchange API overview", "expected_urls": ["https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html"], "expected_exchange": "cryptocom", "tags": ["overview"]}
+{"query": "dYdX perpetual trading API", "expected_urls": ["https://docs.dydx.xyz/types/perpetual", "https://docs.dydx.xyz/types/perpetual_market", "https://docs.dydx.xyz/"], "expected_exchange": "dydx", "tags": ["perpetual"]}
+{"query": "Hyperliquid order types", "expected_urls": ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api", "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint"], "expected_exchange": "hyperliquid", "tags": ["trading"]}
+{"query": "Bitstamp withdrawal endpoint", "expected_urls": ["https://www.bitstamp.net/api/"], "expected_exchange": "bitstamp", "tags": ["withdrawal"]}
+{"query": "Upbit market information API", "expected_urls": ["https://docs.upbit.com/reference"], "expected_exchange": "upbit", "tags": ["market-data"]}
+{"query": "Kraken REST API authentication", "expected_urls": ["https://docs.kraken.com/api/docs/guides/spot-rest-auth/"], "expected_exchange": "kraken", "tags": ["auth"]}
+{"query": "Kraken spot rate limits", "expected_urls": ["https://docs.kraken.com/api/docs/guides/spot-rest-ratelimits/"], "expected_exchange": "kraken", "tags": ["rate-limit"]}
+{"query": "Kraken websocket introduction", "expected_urls": ["https://docs.kraken.com/api/docs/guides/spot-ws-intro/"], "expected_exchange": "kraken", "tags": ["websocket"]}
+{"query": "Coinbase exchange API authentication", "expected_urls": ["https://docs.cdp.coinbase.com/exchange/rest-api/authentication"], "expected_exchange": "coinbase", "tags": ["auth"]}
+{"query": "Coinbase REST API quickstart", "expected_urls": ["https://docs.cdp.coinbase.com/exchange/introduction/rest-quickstart"], "expected_exchange": "coinbase", "tags": ["overview"]}
+{"query": "BitMEX place new order", "expected_urls": ["https://docs.bitmex.com/api-explorer/new-order", "https://docs.bitmex.com/api-explorer/new-order-1"], "expected_exchange": "bitmex", "tags": ["trading"]}
+{"query": "BitMart spot trading API", "expected_urls": ["https://developer-pro.bitmart.com/en/spot/"], "expected_exchange": "bitmart", "tags": ["trading"]}
+{"query": "WhiteBIT API authentication", "expected_urls": ["https://docs.whitebit.com/api-reference/authentication"], "expected_exchange": "whitebit", "tags": ["auth"]}
+{"query": "WhiteBIT withdrawal endpoint", "expected_urls": ["https://docs.whitebit.com/api-reference/account-wallet/create-withdraw-request"], "expected_exchange": "whitebit", "tags": ["withdrawal"]}
+{"query": "Bithumb authentication header", "expected_urls": ["https://apidocs.bithumb.com/docs/인증-헤더-만들기", "https://apidocs.bithumb.com/v2.1.0/docs/인증-헤더-만들기"], "expected_exchange": "bithumb", "tags": ["auth"]}
+{"query": "Coinone error codes", "expected_urls": ["https://docs.coinone.co.kr/docs/error-code"], "expected_exchange": "coinone", "tags": ["error-codes"]}
+{"query": "Coinone cancel order API", "expected_urls": ["https://docs.coinone.co.kr/reference/cancel-order"], "expected_exchange": "coinone", "tags": ["trading"]}
+{"query": "Korbit API documentation", "expected_urls": ["https://docs.korbit.co.kr/index_en.html", "https://docs.korbit.co.kr/"], "expected_exchange": "korbit", "tags": ["overview"]}
+{"query": "ApeX exchange trading API", "expected_urls": ["https://api-docs.pro.apex.exchange/"], "expected_exchange": "apex", "tags": ["trading"]}
+{"query": "Aster DEX API documentation", "expected_urls": ["https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation"], "expected_exchange": "aster", "tags": ["overview"]}
+{"query": "Paradex API quickstart", "expected_urls": ["https://docs.paradex.trade/api/general-information/api-quick-start", "https://docs.paradex.trade/api/general-information"], "expected_exchange": "paradex", "tags": ["overview"]}
+{"query": "Paradex rate limits", "expected_urls": ["https://docs.paradex.trade/api/general-information/rate-limits", "https://docs.paradex.trade/api/general-information/rate-limits/open-orders-per-account", "https://docs.paradex.trade/api/general-information/rate-limits/api"], "expected_exchange": "paradex", "tags": ["rate-limit"]}
+{"query": "dYdX order types", "expected_urls": ["https://docs.dydx.xyz/concepts/trading/orders"], "expected_exchange": "dydx", "tags": ["trading"]}
+{"query": "Hyperliquid info endpoint", "expected_urls": ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint"], "expected_exchange": "hyperliquid", "tags": ["market-data"]}
+{"query": "Binance USDM futures order endpoints", "expected_urls": ["https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api"], "expected_exchange": "binance", "tags": ["futures", "trading"]}
+{"query": "Bybit position information", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/position"], "expected_exchange": "bybit", "tags": ["position"]}
+{"query": "What is the Binance error code -1002", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/errors"], "expected_exchange": "binance", "tags": ["error-codes"]}
+{"query": "Bitget broker API error codes", "expected_urls": ["https://www.bitget.com/api-doc/broker/error-code/restapi"], "expected_exchange": "bitget", "tags": ["error-codes"]}
+{"query": "KuCoin futures place order", "expected_urls": ["https://www.kucoin.com/docs-new/rest/futures-trading/orders/add-order"], "expected_exchange": "kucoin", "tags": ["futures", "trading"]}
+{"query": "Bybit API rate limiting", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/rate-limit"], "expected_exchange": "bybit", "tags": ["rate-limit"]}
+{"query": "BitMart futures trading API", "expected_urls": ["https://developer-pro.bitmart.com/en/futuresv2/"], "expected_exchange": "bitmart", "tags": ["futures"]}
+{"query": "Binance options trading API", "expected_urls": ["https://developers.binance.com/docs/derivatives/options-trading"], "expected_exchange": "binance", "tags": ["options"]}
+{"query": "Binance portfolio margin endpoints", "expected_urls": ["https://developers.binance.com/docs/derivatives/portfolio-margin"], "expected_exchange": "binance", "tags": ["margin"]}
+{"query": "How to create an API key on Aster", "expected_urls": ["https://docs.asterdex.com/product/aster-perpetuals/api/how-to-create-an-api"], "expected_exchange": "aster", "tags": ["auth"]}
+{"query": "Hyperliquid spot API", "expected_urls": ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot"], "expected_exchange": "hyperliquid", "tags": ["spot"]}

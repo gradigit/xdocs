@@ -88,6 +88,64 @@ class TestClassifyQuestions(unittest.TestCase):
         self.assertEqual(result.input_type, "question")
         self.assertEqual(result.signals.get("exchange_hint"), "okx")
 
+    def test_exchange_hint_kraken(self) -> None:
+        result = classify_input("How do I place an order on Kraken?")
+        self.assertEqual(result.input_type, "question")
+        self.assertEqual(result.signals.get("exchange_hint"), "kraken")
+
+    def test_exchange_hint_coinbase(self) -> None:
+        result = classify_input("What are Coinbase API rate limits?")
+        self.assertEqual(result.input_type, "question")
+        self.assertEqual(result.signals.get("exchange_hint"), "coinbase")
+
+    def test_exchange_hint_bitmex(self) -> None:
+        result = classify_input("How to get positions on BitMEX?")
+        self.assertEqual(result.input_type, "question")
+        self.assertEqual(result.signals.get("exchange_hint"), "bitmex")
+
+    def test_exchange_hint_bitmart(self) -> None:
+        result = classify_input("What permissions does BitMart API key need?")
+        self.assertEqual(result.input_type, "question")
+        self.assertEqual(result.signals.get("exchange_hint"), "bitmart")
+
+    def test_exchange_hint_whitebit(self) -> None:
+        result = classify_input("WhiteBIT withdrawal endpoint")
+        self.assertIn(result.signals.get("exchange_hint", "").lower(), ("whitebit",))
+
+    def test_exchange_hint_aster(self) -> None:
+        result = classify_input("How to use Aster DEX API?")
+        self.assertEqual(result.input_type, "question")
+        self.assertEqual(result.signals.get("exchange_hint"), "aster")
+
+    def test_exchange_hint_apex(self) -> None:
+        result = classify_input("ApeX exchange trading API")
+        self.assertIn("apex", result.signals.get("exchange_hint", "").lower())
+
+
+class TestClassifyJsonPayloadNotError(unittest.TestCase):
+    """JSON payloads with numeric values must not trigger error_message."""
+
+    def test_json_with_large_numeric_values(self) -> None:
+        result = classify_input('{"price":"30000","quantity":"50000"}')
+        self.assertEqual(result.input_type, "request_payload")
+        self.assertNotIn("error_codes", result.signals)
+
+    def test_json_order_payload(self) -> None:
+        result = classify_input('{"symbol":"BTCUSDT","side":"BUY","type":"LIMIT","price":"30000","quantity":"0.5"}')
+        self.assertEqual(result.input_type, "request_payload")
+        self.assertEqual(result.signals.get("payload_format"), "json")
+
+    def test_error_code_still_detected_in_plain_text(self) -> None:
+        """Regression guard: error codes in non-JSON text must still be detected."""
+        result = classify_input("Error 50111: permission denied")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertIn("error_codes", result.signals)
+
+    def test_binance_negative_error_still_works(self) -> None:
+        """Regression guard: Binance -1002 style errors."""
+        result = classify_input("-1002 unauthorized")
+        self.assertEqual(result.input_type, "error_message")
+
 
 class TestClassifyEdgeCases(unittest.TestCase):
     def test_empty_input(self) -> None:

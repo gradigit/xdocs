@@ -34,6 +34,10 @@ class SyncConfig:
     resume: bool
     concurrency: int
     force_refetch: bool
+    conditional: bool
+    adaptive_delay: bool
+    max_domain_delay_s: float
+    scope_dedupe: bool
 
 
 def _inventory_diff_counts(*, docs_dir: str, exchange_id: str, section_id: str, new_inventory_id: int) -> dict[str, int]:
@@ -131,6 +135,10 @@ def run_sync(
     resume: bool = False,
     concurrency: int = 1,
     force_refetch: bool = False,
+    conditional: bool = True,
+    adaptive_delay: bool = True,
+    max_domain_delay_s: float = 30.0,
+    scope_dedupe: bool = True,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
         raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
@@ -156,6 +164,10 @@ def run_sync(
         resume=bool(resume),
         concurrency=max(1, int(concurrency)),
         force_refetch=bool(force_refetch),
+        conditional=bool(conditional),
+        adaptive_delay=bool(adaptive_delay),
+        max_domain_delay_s=max(float(max_domain_delay_s), 0.0),
+        scope_dedupe=bool(scope_dedupe),
     )
 
     sections_run: list[dict[str, Any]] = []
@@ -165,16 +177,25 @@ def run_sync(
         "fetched": 0,
         "stored": 0,
         "skipped": 0,
+        "dedupe_skipped": 0,
         "errors": 0,
         "new_pages": 0,
         "updated_pages": 0,
         "unchanged_pages": 0,
+        "revalidated_unchanged": 0,
+        "retry_after_applied": 0,
     }
 
     for ex in reg.exchanges:
         if exchange and ex.exchange_id != exchange:
             continue
-        for sec in ex.sections:
+        sections_sorted = sorted(
+            ex.sections,
+            key=lambda s: (
+                int(getattr(s.inventory_policy, "scope_priority", 100)),
+            ),
+        )
+        for sec in sections_sorted:
             if section and sec.section_id != section:
                 continue
 
@@ -250,6 +271,12 @@ def run_sync(
                 limit=cfg.limit,
                 concurrency=cfg.concurrency,
                 force_refetch=cfg.force_refetch,
+                conditional=cfg.conditional,
+                adaptive_delay=cfg.adaptive_delay,
+                max_domain_delay_s=cfg.max_domain_delay_s,
+                scope_dedupe=cfg.scope_dedupe,
+                scope_group=(sec.inventory_policy.scope_group or ex.exchange_id),
+                scope_priority=int(sec.inventory_policy.scope_priority),
             )
 
             totals["inventories"] += 1
@@ -257,9 +284,12 @@ def run_sync(
             totals["fetched"] += int(fetch_res["counts"]["fetched"])
             totals["stored"] += int(fetch_res["counts"]["stored"])
             totals["skipped"] += int(fetch_res["counts"]["skipped"])
+            totals["dedupe_skipped"] += int(fetch_res["counts"].get("dedupe_skipped") or 0)
             totals["new_pages"] += int(fetch_res["counts"].get("new_pages") or 0)
             totals["updated_pages"] += int(fetch_res["counts"].get("updated_pages") or 0)
             totals["unchanged_pages"] += int(fetch_res["counts"].get("unchanged_pages") or 0)
+            totals["revalidated_unchanged"] += int(fetch_res["counts"].get("revalidated_unchanged") or 0)
+            totals["retry_after_applied"] += int(fetch_res["counts"].get("retry_after_applied") or 0)
             inv_error_count = int(inv_counts.get("errors", 0)) if isinstance(inv_counts, dict) else 0
             totals["errors"] += int(fetch_res["counts"]["errors"]) + inv_error_count
 

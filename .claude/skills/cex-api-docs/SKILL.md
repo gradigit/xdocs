@@ -77,7 +77,7 @@ cex-api-docs store-report --exchange binance --section spot --output report.md
 
 ## Validate Registry (Domains/Seeds)
 
-Quick health-check for all 16 exchanges in `data/exchanges.yaml` (networked):
+Quick health-check for all 35 exchanges in `data/exchanges.yaml` (networked):
 
 ```bash
 cex-api-docs validate-registry
@@ -122,7 +122,64 @@ cex-api-docs detect-stale-citations --docs-dir ./cex-docs
 # FTS index maintenance
 cex-api-docs fts-optimize --docs-dir ./cex-docs
 cex-api-docs fts-rebuild --docs-dir ./cex-docs
+
+# Stored page URL reachability (HEAD requests, no content download)
+cex-api-docs check-links --docs-dir ./cex-docs
+cex-api-docs check-links --exchange binance --sample 50 --docs-dir ./cex-docs
 ```
+
+## Crawl Target Validation
+
+Validate that the store has ALL pages from exchange doc sites. The validation
+pipeline uses four independent discovery methods and cross-validates them.
+Sitemaps are NOT trusted as truth.
+
+### Quick Check (No Network)
+
+```bash
+cex-api-docs sanitize-check --docs-dir ./cex-docs
+```
+
+### Sitemap Health (Network, Fast)
+
+```bash
+cex-api-docs validate-sitemaps --docs-dir ./cex-docs
+cex-api-docs validate-sitemaps --exchange binance --docs-dir ./cex-docs
+```
+
+### Multi-Method Discovery (Network)
+
+```bash
+cex-api-docs validate-crawl-targets --exchange binance --docs-dir ./cex-docs
+cex-api-docs validate-crawl-targets --exchange binance --enable-nav --enable-wayback --docs-dir ./cex-docs
+```
+
+### Coverage Audit (Full Pipeline)
+
+```bash
+cex-api-docs crawl-coverage --docs-dir ./cex-docs
+cex-api-docs crawl-coverage --exchange binance --enable-live --enable-nav --docs-dir ./cex-docs
+cex-api-docs crawl-coverage --exchange binance --backfill --docs-dir ./cex-docs
+cex-api-docs crawl-coverage --exchange binance --backfill --fetch --docs-dir ./cex-docs
+cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage
+```
+
+### When to Validate
+
+- After sync: `sanitize-check`
+- After adding exchange: `validate-crawl-targets --enable-nav`
+- CCXT docs refresh: `bash scripts/refresh_ccxt_docs.sh`
+- Monthly: `crawl-coverage`
+- Gaps suspected: `--enable-live --enable-nav --enable-wayback`
+
+### Interpreting Results
+
+- `missing_from_store`: pages on live site not in store → sync needed
+- `missing_from_live`: pages in store not on live site → potentially stale
+- `single_source_count` high: weak cross-validation
+- `all_methods_failed`: pipeline itself may have failed
+- `extraction_quality_warnings`: content captured but structural elements lost
+- `completion_pct < 90%`: partial crawl (rate limiting / 403)
 
 ## Import Specs
 
@@ -167,3 +224,10 @@ cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./
 ```
 
 If a question is ambiguous (e.g., "Binance unified trading endpoint"), the tool must return `needs_clarification` with concrete section choices derived from what is present in the local store.
+
+## CCXT Cross-Reference
+
+```bash
+cex-api-docs ccxt-xref --docs-dir ./cex-docs
+cex-api-docs ccxt-xref --exchange binance --docs-dir ./cex-docs
+```

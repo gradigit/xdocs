@@ -32,7 +32,10 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
         f"new_pages={totals.get('new_pages')}, "
         f"updated_pages={totals.get('updated_pages')}, "
         f"unchanged_pages={totals.get('unchanged_pages')}, "
+        f"revalidated_unchanged={totals.get('revalidated_unchanged')}, "
+        f"retry_after_applied={totals.get('retry_after_applied')}, "
         f"skipped={totals.get('skipped')}, "
+        f"dedupe_skipped={totals.get('dedupe_skipped')}, "
         f"errors={totals.get('errors')}"
     )
     lines.append("")
@@ -40,9 +43,9 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
     lines.append("## Per Exchange/Section")
     lines.append("")
     lines.append(
-        "| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | New | Updated | Unchanged | Skipped | Errors | Inventory ID | Crawl Run |"
+        "| Exchange | Section | Inventory URLs | +Added | -Removed | Fetched | Stored | New | Updated | Unchanged | Revalidated | Retry-After | Skipped | Dedupe-Skipped | Errors | Inventory ID | Crawl Run |"
     )
-    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
 
     for s in sections:
         ex = s.get("exchange_id")
@@ -65,7 +68,10 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
                     str(counts.get("new_pages") or 0),
                     str(counts.get("updated_pages") or 0),
                     str(counts.get("unchanged_pages") or 0),
+                    str(counts.get("revalidated_unchanged") or 0),
+                    str(counts.get("retry_after_applied") or 0),
                     str(counts.get("skipped") or 0),
+                    str(counts.get("dedupe_skipped") or 0),
                     str(counts.get("errors") or 0),
                     str(inv.get("inventory_id") or ""),
                     str(fetch.get("crawl_run_id") or ""),
@@ -73,6 +79,40 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
             )
             + " |"
         )
+
+    # Adaptive delay / Retry-After diagnostics (bounded).
+    delay_lines: list[str] = []
+    for s in sections:
+        ex = s.get("exchange_id")
+        sec = s.get("section_id")
+        fetch = s.get("fetch") or {}
+        snap = fetch.get("domain_delay_snapshot") or {}
+        if not isinstance(snap, dict):
+            continue
+        for domain, st in sorted(snap.items()):
+            if not isinstance(st, dict):
+                continue
+            ra = int(st.get("retry_after_applied") or 0)
+            th = int(st.get("throttle_events") or 0)
+            if ra <= 0 and th <= 0:
+                continue
+            delay_lines.append(
+                f"- `{ex}:{sec}` `{domain}` delay={st.get('current_delay_s')}s, "
+                f"next_allowed_in={st.get('next_allowed_in_s')}s, "
+                f"retry_after_applied={ra}, throttle_events={th}, last_status={st.get('last_status')}"
+            )
+            if len(delay_lines) >= 50:
+                break
+        if len(delay_lines) >= 50:
+            break
+
+    lines.append("")
+    lines.append("## Domain Delay Snapshot (Adaptive Throttle)")
+    lines.append("")
+    if not delay_lines:
+        lines.append("No Retry-After/throttle events recorded.")
+    else:
+        lines.extend(delay_lines)
 
     # Collect a bounded set of errors.
     err_lines: list[str] = []
@@ -336,4 +376,120 @@ def render_store_report_markdown(data: dict[str, Any]) -> str:
         lines.append("Review queue is empty.")
     lines.append("")
 
+    return "\n".join(lines) + "\n"
+
+
+def render_coverage_report_markdown(audit_result: Any) -> str:
+    """Render a CoverageAuditResult into readable markdown.
+
+    Accepts either a CoverageAuditResult dataclass or a dict with the same shape.
+    """
+    lines: list[str] = []
+    lines.append("# Crawl Coverage Report")
+    lines.append("")
+    lines.append(f"- **Generated:** `{now_iso_utc()}`")
+
+    # Handle both dataclass and dict forms.
+    if hasattr(audit_result, "overall_coverage_pct"):
+        overall_pct = audit_result.overall_coverage_pct
+        total_missing = audit_result.total_missing
+        total_stale = audit_result.total_stale
+        sections = audit_result.sections
+    else:
+        overall_pct = audit_result.get("overall_coverage_pct", 0)
+        total_missing = audit_result.get("total_missing", 0)
+        total_stale = audit_result.get("total_stale", 0)
+        sections = audit_result.get("sections", [])
+
+    lines.append(f"- **Overall Coverage:** {overall_pct:.1f}%")
+    lines.append(f"- **Total Missing:** {total_missing}")
+    lines.append(f"- **Total Stale:** {total_stale}")
+    lines.append(f"- **Sections Checked:** {len(sections)}")
+    lines.append("")
+
+    # Per-section table.
+    lines.append("## Per-Section Coverage")
+    lines.append("")
+    lines.append("| Exchange | Section | Discovered | Stored | Missing | Stale | Coverage % | Methods |")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---|")
+
+    for sc in sections:
+        if hasattr(sc, "exchange_id"):
+            ex_id = sc.exchange_id
+            sec_id = sc.section_id
+            discovered = sc.discovered_urls
+            stored = sc.stored_urls
+            missing = len(sc.missing_urls)
+            stale = len(sc.stale_urls)
+            cov_pct = sc.coverage_pct
+            methods = ", ".join(sc.discovery_methods_used)
+        else:
+            ex_id = sc.get("exchange_id", "")
+            sec_id = sc.get("section_id", "")
+            discovered = sc.get("discovered_urls", 0)
+            stored = sc.get("stored_urls", 0)
+            missing = sc.get("missing_count", 0)
+            stale = sc.get("stale_count", 0)
+            cov_pct = sc.get("coverage_pct", 0)
+            methods = ", ".join(sc.get("discovery_methods_used", []))
+        lines.append(
+            f"| {ex_id} | {sec_id} | {discovered} | {stored} | {missing} | {stale} | {cov_pct:.1f} | {methods} |"
+        )
+
+    # Missing URLs (actionable).
+    has_missing = False
+    for sc in sections:
+        missing_urls = getattr(sc, "missing_urls", None) or (sc.get("missing_urls") if isinstance(sc, dict) else None)
+        if missing_urls:
+            has_missing = True
+            break
+
+    if has_missing:
+        lines.append("")
+        lines.append("## Missing URLs (Not in Store)")
+        lines.append("")
+        count = 0
+        for sc in sections:
+            if hasattr(sc, "exchange_id"):
+                ex_id = sc.exchange_id
+                sec_id = sc.section_id
+                missing_urls_list = sc.missing_urls
+            else:
+                ex_id = sc.get("exchange_id", "")
+                sec_id = sc.get("section_id", "")
+                missing_urls_list = sc.get("missing_urls", [])
+            for url in missing_urls_list[:20]:  # Cap per section.
+                lines.append(f"- `{ex_id}/{sec_id}`: {url}")
+                count += 1
+                if count >= 100:
+                    break
+            if count >= 100:
+                lines.append("- ... (truncated at 100)")
+                break
+
+    # Warnings.
+    has_warnings = False
+    for sc in sections:
+        warn_list = getattr(sc, "warnings", None) or (sc.get("warnings") if isinstance(sc, dict) else None)
+        if warn_list:
+            has_warnings = True
+            break
+
+    if has_warnings:
+        lines.append("")
+        lines.append("## Warnings")
+        lines.append("")
+        for sc in sections:
+            if hasattr(sc, "exchange_id"):
+                ex_id = sc.exchange_id
+                sec_id = sc.section_id
+                warn_list = sc.warnings
+            else:
+                ex_id = sc.get("exchange_id", "")
+                sec_id = sc.get("section_id", "")
+                warn_list = sc.get("warnings", [])
+            for w in warn_list:
+                lines.append(f"- `{ex_id}/{sec_id}`: {w}")
+
+    lines.append("")
     return "\n".join(lines) + "\n"

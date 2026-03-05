@@ -191,6 +191,46 @@ agent-browser find placeholder "Search" type "query"
 agent-browser find testid "submit-btn" click
 ```
 
+## CEX API Docs: Crawl Validation Use Cases
+
+agent-browser is used by the `cex-api-docs` validation pipeline for:
+
+### Nav Extraction (Discovery)
+
+Extract navigation URLs from JS-rendered doc sites that static HTML parsing misses:
+
+```bash
+# agent-browser renders the page, then runs DOM queries to extract all nav links
+# This is automated by: cex-api-docs validate-crawl-targets --exchange binance --enable-nav
+```
+
+The pipeline uses these CSS selectors: `nav a`, `aside a`, `[role="navigation"] a`,
+`.sidebar a`, `.toc a`, `.docs-nav a`, `.menu a`, `.docusaurus-sidebar a`
+
+### Full-Page Scroll + Accordion Expansion (Content Completeness)
+
+For SPA doc sites that lazy-load content (OKX, Binance, Bybit):
+
+```bash
+# Controlled via render_options in data/exchanges.yaml:
+#   render_options:
+#     scroll_full_page: true
+#     expand_accordions: true
+
+# The pipeline scrolls by viewport height, checks scrollHeight stability,
+# and clicks [aria-expanded="false"] elements + opens <details> tags
+```
+
+### Manual Nav Inspection
+
+When investigating coverage gaps, inspect the live nav tree manually:
+
+```bash
+agent-browser open https://developers.binance.com/docs/binance-spot-api-docs/rest-api
+agent-browser snapshot -i -s "nav, aside, [role='navigation']"
+# Check which links exist in the nav vs what's in the store
+```
+
 ## Deep-Dive Documentation
 
 | Reference | When to Use |
