@@ -106,7 +106,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 35 exchanges (62 sections): seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 35 exchanges (61 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (`sync_runtime_repo.py`, `run_sync_preset.sh`, benchmarks).
 - `.claude/skills/` Claude Code skill definitions (auto-discovered by Claude Code).
 
@@ -196,7 +196,7 @@ The pipeline has a linear progression:
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 62 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).

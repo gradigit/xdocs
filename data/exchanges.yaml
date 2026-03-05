@@ -52,12 +52,18 @@ exchanges:
         doc_sources:
           - kind: sitemap
             url: https://developers.binance.com/sitemap.xml
+        inventory_policy:
+          scope_prefixes:
+            - "https://developers.binance.com/docs/copy_trading"
       - section_id: portfolio_margin_pro
         base_urls: ["https://papi.binance.com"]
         seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin-pro/general-info"]
         doc_sources:
           - kind: sitemap
             url: https://developers.binance.com/sitemap.xml
+        inventory_policy:
+          scope_prefixes:
+            - "https://developers.binance.com/docs/derivatives/portfolio-margin-pro/"
 
   - exchange_id: okx
     display_name: OKX
@@ -161,18 +167,13 @@ exchanges:
     allowed_domains:
       - www.kucoin.com
     sections:
+      # NOTE: KuCoin uses opaque URL IDs (/docs-new/338210m0) — spot and futures
+      # docs are interleaved in one URL tree. All content is crawled here.
       - section_id: spot
-        base_urls: ["https://api.kucoin.com"]
-        seed_urls: ["https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 5000
-          scope_prefixes:
-            - "https://www.kucoin.com/docs-new/"
-      - section_id: futures
-        base_urls: ["https://api-futures.kucoin.com"]
-        seed_urls: ["https://www.kucoin.com/docs/rest/futures-trading/orders/place-order"]
+        base_urls: ["https://api.kucoin.com", "https://api-futures.kucoin.com"]
+        seed_urls:
+          - "https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order"
+          - "https://www.kucoin.com/docs/rest/futures-trading/orders/place-order"
         inventory_policy:
           mode: link_follow
           render_mode: auto
@@ -509,6 +510,8 @@ exchanges:
             url: https://docs.cdp.coinbase.com/sitemap.xml
         inventory_policy:
           scope_priority: 10
+          render_mode: auto
+          max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/advanced-trade/"
       - section_id: exchange
@@ -519,6 +522,8 @@ exchanges:
             url: https://docs.cdp.coinbase.com/sitemap.xml
         inventory_policy:
           scope_priority: 20
+          render_mode: auto
+          max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/exchange/"
       - section_id: intx
@@ -529,6 +534,8 @@ exchanges:
             url: https://docs.cdp.coinbase.com/sitemap.xml
         inventory_policy:
           scope_priority: 30
+          render_mode: auto
+          max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/intx/"
       - section_id: prime
@@ -539,6 +546,8 @@ exchanges:
             url: https://docs.cdp.coinbase.com/sitemap.xml
         inventory_policy:
           scope_priority: 40
+          render_mode: auto
+          max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/prime/"
 
@@ -630,7 +639,10 @@ exchanges:
         seed_urls: ["https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation"]
         inventory_policy:
           mode: link_follow
+          render_mode: auto
           max_pages: 200
+          scope_prefixes:
+            - "https://docs.asterdex.com/"
 
   - exchange_id: apex
     display_name: ApeX Pro
@@ -673,4 +685,7 @@ exchanges:
         seed_urls: ["https://docs.paradex.trade/"]
         inventory_policy:
           mode: link_follow
+          render_mode: auto
           max_pages: 400
+          scope_prefixes:
+            - "https://docs.paradex.trade/"
