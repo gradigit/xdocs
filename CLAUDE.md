@@ -214,4 +214,6 @@ Research completed (docs/research/):
 - CCXT as cross-reference: Built `ccxt_xref.py` — 20/21 CEXes mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Next: Rebuild semantic index with new Jina v5 model (full rebuild required — 1024→768 dim change). Add link validation to maintainer workflow. Periodic CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Structured changelog extraction for drift detection (404 changelog pages already in store, no structured schema yet).
+Completed: Jina v5 semantic index rebuilt (768 dims, 155K chunks, 86% retrieval hit rate). Repo made self-contained (no hardcoded paths, bootstrap script). Registry entries completed for thin sections (Binance copy_trading/portfolio_margin_pro, Coinbase 4 sections, KuCoin futures merged into spot, Aster, Paradex). LanceDB hybrid search WHERE bug fixed.
+
+Next: Re-sync thin sections with fixed registry entries (incremental index build after). CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Add link validation to maintainer workflow. Structured changelog extraction for drift detection.

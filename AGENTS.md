@@ -117,7 +117,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
 
-Next: Rebuild semantic index (incremental). Add link validation to maintainer workflow. Periodic CCXT docs refresh. Add Tier 2 DEXes.
+Next: Re-sync thin sections with fixed registry entries (then incremental index build). CCXT docs refresh. Add Tier 2 DEXes. Add link validation to maintainer workflow.
 
 ## Non-Goals / Safety
 
