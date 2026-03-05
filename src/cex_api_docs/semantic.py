@@ -460,10 +460,19 @@ def semantic_search(
             )
         raise ValueError(f"Unsupported query_type={kind!r}; use vector|fts|hybrid")
 
+    # LanceDB hybrid search silently returns 0 rows when combined with .where(),
+    # so for hybrid mode we fetch extra unfiltered results and post-filter in Python.
+    _hybrid_post_filter = query_type == "hybrid" and exchange is not None
+
     def _with_exchange_filter(search_obj):
-        if exchange:
+        if exchange and not _hybrid_post_filter:
             return search_obj.where(f"exchange = '{exchange}'")
         return search_obj
+
+    if _hybrid_post_filter:
+        # Over-fetch to ensure enough exchange-matching results after post-filter.
+        # With 35 exchanges, a single exchange may be <5% of results — need ~20x.
+        fetch_limit = max(fetch_limit * 10, 200)
 
     search = _with_exchange_filter(_build_search(query_type))
     try:
@@ -520,6 +529,10 @@ def semantic_search(
             result["text"] = str(arrow_table.column("text")[i].as_py())
 
         raw_results.append(result)
+
+    # Post-filter for hybrid mode (LanceDB WHERE bug workaround).
+    if _hybrid_post_filter:
+        raw_results = [r for r in raw_results if r["exchange"] == exchange]
 
     rerank_applied = False
     rerank_reason = "policy_never"
