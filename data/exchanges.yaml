@@ -53,6 +53,7 @@ exchanges:
           - kind: sitemap
             url: https://developers.binance.com/sitemap.xml
         inventory_policy:
+          scope_priority: 50
           scope_prefixes:
             - "https://developers.binance.com/docs/copy_trading"
       - section_id: portfolio_margin_pro
@@ -62,6 +63,7 @@ exchanges:
           - kind: sitemap
             url: https://developers.binance.com/sitemap.xml
         inventory_policy:
+          scope_priority: 50
           scope_prefixes:
             - "https://developers.binance.com/docs/derivatives/portfolio-margin-pro/"
 
@@ -504,7 +506,7 @@ exchanges:
     sections:
       - section_id: advanced_trade
         base_urls: ["https://api.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/advanced-trade/docs/welcome"]
+        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/accounts/list-accounts"]
         doc_sources:
           - kind: sitemap
             url: https://docs.cdp.coinbase.com/sitemap.xml
@@ -513,10 +515,10 @@ exchanges:
           render_mode: auto
           max_pages: 500
           scope_prefixes:
-            - "https://docs.cdp.coinbase.com/advanced-trade/"
+            - "https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/"
       - section_id: exchange
         base_urls: ["https://api.exchange.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/exchange/docs/welcome"]
+        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/accounts/get-all-account-profile"]
         doc_sources:
           - kind: sitemap
             url: https://docs.cdp.coinbase.com/sitemap.xml
@@ -525,10 +527,10 @@ exchanges:
           render_mode: auto
           max_pages: 500
           scope_prefixes:
-            - "https://docs.cdp.coinbase.com/exchange/"
+            - "https://docs.cdp.coinbase.com/api-reference/exchange-api/"
       - section_id: intx
         base_urls: ["https://api.international.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/intx/docs/welcome"]
+        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/international-exchange-api/rest-api/assets/get-supported-networks"]
         doc_sources:
           - kind: sitemap
             url: https://docs.cdp.coinbase.com/sitemap.xml
@@ -537,10 +539,10 @@ exchanges:
           render_mode: auto
           max_pages: 500
           scope_prefixes:
-            - "https://docs.cdp.coinbase.com/intx/"
+            - "https://docs.cdp.coinbase.com/api-reference/international-exchange-api/"
       - section_id: prime
         base_urls: ["https://api.prime.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/prime/docs/rest-requests"]
+        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/prime-api/rest-api/activities/list-activities"]
         doc_sources:
           - kind: sitemap
             url: https://docs.cdp.coinbase.com/sitemap.xml
@@ -549,7 +551,7 @@ exchanges:
           render_mode: auto
           max_pages: 500
           scope_prefixes:
-            - "https://docs.cdp.coinbase.com/prime/"
+            - "https://docs.cdp.coinbase.com/api-reference/prime-api/"
 
   - exchange_id: bitmex
     display_name: BitMEX
