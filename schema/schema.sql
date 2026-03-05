@@ -176,3 +176,26 @@ CREATE TABLE IF NOT EXISTS coverage_gaps (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (exchange, section, protocol, field_name)
 );
+
+-- Structured changelog entries extracted from stored changelog pages.
+-- Used for drift detection: new entries appearing after a sync indicate API changes.
+CREATE TABLE IF NOT EXISTS changelog_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exchange_id TEXT NOT NULL,
+  section_id TEXT NOT NULL,
+  source_url TEXT NOT NULL,              -- canonical_url of the page this was extracted from
+  entry_date TEXT,                       -- ISO date (YYYY-MM-DD), NULL if not parseable
+  entry_text TEXT NOT NULL,              -- full markdown text of the entry
+  content_hash TEXT NOT NULL,            -- SHA-256 of entry_text (for dedup)
+  extracted_at TEXT NOT NULL,
+  UNIQUE(source_url, content_hash)
+);
+
+CREATE INDEX IF NOT EXISTS changelog_entries_exchange_section_idx
+  ON changelog_entries(exchange_id, section_id);
+
+CREATE INDEX IF NOT EXISTS changelog_entries_date_idx
+  ON changelog_entries(entry_date);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
+  USING fts5(exchange_id, section_id, entry_date, entry_text, content=changelog_entries, content_rowid=id);

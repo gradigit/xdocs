@@ -27,6 +27,7 @@ from .openapi_import import import_openapi
 from .postman_import import import_postman
 from .fsck import fsck_store
 from .pages import diff_pages, fts_optimize, fts_rebuild, get_page, search_pages
+from .changelog import extract_changelogs, list_changelogs
 from .quality import quality_check
 from .report import render_sync_markdown, store_report, render_store_report_markdown
 from .registry import load_registry
@@ -277,6 +278,17 @@ def main(argv: list[str] | None = None) -> None:
     vbu.add_argument("--retries", type=int, default=1)
 
     sub.add_parser("quality-check", help="Check stored pages for empty/thin content or tiny HTML (JS rendering failures)", parents=[common])
+
+    ec = sub.add_parser("extract-changelogs", help="Extract dated changelog entries from stored changelog pages into changelog_entries table", parents=[common])
+    ec.add_argument("--exchange", default=None, help="Limit to pages matching this exchange")
+    ec.add_argument("--limit-pages", type=int, default=0, help="Process at most N pages (0=all)")
+    ec.add_argument("--dry-run", action="store_true", help="Parse but do not write to DB")
+
+    lc = sub.add_parser("list-changelogs", help="List extracted changelog entries from changelog_entries table", parents=[common])
+    lc.add_argument("--exchange", default=None, help="Filter by exchange_id")
+    lc.add_argument("--section", default=None, help="Filter by section_id")
+    lc.add_argument("--since", default=None, help="Only entries >= this ISO date (YYYY-MM-DD)")
+    lc.add_argument("--limit", type=int, default=50, help="Max entries to return (default: 50)")
 
     bi = sub.add_parser("build-index", help="Build LanceDB semantic search index from stored pages (requires [semantic])", parents=[common])
     bi.add_argument("--limit", type=int, default=0, help="Max pages to embed (0=all)")
@@ -770,6 +782,27 @@ def main(argv: list[str] | None = None) -> None:
         if args.cmd == "quality-check":
             r = quality_check(docs_dir=args.docs_dir)
             _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "extract-changelogs":
+            r = extract_changelogs(
+                docs_dir=args.docs_dir,
+                exchange=args.exchange,
+                limit_pages=int(args.limit_pages),
+                dry_run=bool(args.dry_run),
+            )
+            _print_json(r)
+            return
+
+        if args.cmd == "list-changelogs":
+            r = list_changelogs(
+                docs_dir=args.docs_dir,
+                exchange=args.exchange,
+                section=getattr(args, "section", None),
+                since=getattr(args, "since", None),
+                limit=int(args.limit),
+            )
+            _print_json(r)
             return
 
         if args.cmd == "build-index":

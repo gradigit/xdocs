@@ -8,6 +8,7 @@
 # 1. Re-sync CCXT exchange (--force-refetch detects content changes via content_hash/prev_content_hash)
 # 2. Report changed pages
 # 3. Run ccxt-xref for validation
+# 4. Run check-links on CCXT pages (sample 50)
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -27,24 +28,33 @@ echo "[1/3] Re-syncing CCXT docs (force-refetch)..."
 "$PY" -m cex_api_docs.cli sync --exchange ccxt --force-refetch --docs-dir "$DOCS_DIR" 2>&1 | tee /tmp/ccxt_sync.json
 echo ""
 
-echo "[2/3] Checking for changed pages..."
+echo "[2/4] Checking for changed pages..."
 "$PY" -c "
 import json, sys
 try:
     data = json.load(open('/tmp/ccxt_sync.json'))
-    sections = data.get('result', {}).get('sections', [])
-    for s in sections:
-        fetched = s.get('fetch_result', {})
-        changed = fetched.get('changed', 0)
-        total = fetched.get('total', 0)
-        print(f\"  {s.get('exchange_id', '?')}/{s.get('section_id', '?')}: {changed}/{total} pages changed\")
+    t = data.get('result', {}).get('totals', {})
+    fetched = t.get('fetched', 0)
+    updated = t.get('updated_pages', 0)
+    unchanged = t.get('unchanged_pages', 0)
+    new_p = t.get('new_pages', 0)
+    print(f'  fetched={fetched}  updated={updated}  new={new_p}  unchanged={unchanged}')
 except Exception as e:
     print(f'  Could not parse sync output: {e}', file=sys.stderr)
 "
 echo ""
 
-echo "[3/3] Running CCXT cross-reference..."
+echo "[3/4] Running CCXT cross-reference (requires pip install ccxt)..."
 "$PY" -m cex_api_docs.cli ccxt-xref --docs-dir "$DOCS_DIR" 2>&1 | head -50
+echo ""
+
+echo "[4/4] Checking CCXT page link reachability (sample 50)..."
+"$PY" -m cex_api_docs.cli check-links \
+  --docs-dir "$DOCS_DIR" \
+  --exchange ccxt \
+  --sample 50 \
+  --concurrency 4 \
+  --delay-s 0.30 2>&1 | tail -20
 echo ""
 
 echo "CCXT refresh complete."

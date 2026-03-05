@@ -216,9 +216,9 @@ Research completed (docs/research/):
 - CCXT as cross-reference: Built `ccxt_xref.py` — 20/21 CEXes mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Completed: Jina v5 semantic index rebuilt (768 dims, 155K chunks, 86% retrieval hit rate). Repo made self-contained (no hardcoded paths, bootstrap script). Registry entries completed for thin sections (Binance copy_trading/portfolio_margin_pro, Coinbase 4 sections, KuCoin futures merged into spot, Aster, Paradex). LanceDB hybrid search WHERE bug fixed.
+Completed: Jina v5 semantic index rebuilt (768 dims, 155K chunks, 86% retrieval hit rate). Repo made self-contained (no hardcoded paths, bootstrap script). Registry entries completed for thin sections (Binance copy_trading/portfolio_margin_pro, Coinbase 4 sections, KuCoin futures merged into spot, Aster, Paradex). LanceDB hybrid search WHERE bug fixed. Thin sections re-synced (Coinbase docs migrated to /api-reference/ paths; 307 new pages). CCXT docs refreshed (189 pages updated). Link validation added to maintainer workflow (scripts/check_links.sh + step in refresh_ccxt_docs.sh). Structured changelog extraction: schema v4 (changelog_entries + FTS5), changelog.py module, extract-changelogs / list-changelogs CLI commands; 965 entries extracted from 308 pages.
 
-Next: Re-sync thin sections with fixed registry entries (incremental index build after). CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Add link validation to maintainer workflow. Structured changelog extraction for drift detection.
+Next: Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Incremental semantic index rebuild after new page additions. Periodic CCXT docs refresh. Changelog drift detection workflow (compare new entries after re-sync to detect API changes).
 
 ## Compact Instructions
 

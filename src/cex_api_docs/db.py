@@ -9,7 +9,7 @@ from typing import Any
 from .errors import CexApiDocsError
 
 
-SCHEMA_USER_VERSION = 3
+SCHEMA_USER_VERSION = 4
 
 
 def _migrate_2_to_3(conn: sqlite3.Connection) -> None:
@@ -50,6 +50,33 @@ ON inventory_scope_ownership(owner_exchange_id, owner_section_id, owner_priority
 """,
     ],
     (2, 3): [_migrate_2_to_3],
+    (3, 4): [
+        """
+CREATE TABLE IF NOT EXISTS changelog_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exchange_id TEXT NOT NULL,
+  section_id TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  entry_date TEXT,
+  entry_text TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  extracted_at TEXT NOT NULL,
+  UNIQUE(source_url, content_hash)
+);
+""",
+        """
+CREATE INDEX IF NOT EXISTS changelog_entries_exchange_section_idx
+  ON changelog_entries(exchange_id, section_id);
+""",
+        """
+CREATE INDEX IF NOT EXISTS changelog_entries_date_idx
+  ON changelog_entries(entry_date);
+""",
+        """
+CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
+  USING fts5(exchange_id, section_id, entry_date, entry_text, content=changelog_entries, content_rowid=id);
+""",
+    ],
 }
 
 
