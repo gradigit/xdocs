@@ -18,8 +18,10 @@ print(f"  Tokenizer loaded. Vocab size: {tokenizer.vocab_size}")
 
 # ---------- 2. Open LanceDB and read chunks ----------
 import lancedb
+from pathlib import Path
 
-LANCE_DIR = "/Users/aaaaa/Projects/cex-api-docs/cex-docs/lancedb-index"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+LANCE_DIR = str(REPO_ROOT / "cex-docs" / "lancedb-index")
 SAMPLE_SIZE = 1000
 
 print(f"\nOpening LanceDB at {LANCE_DIR}...")

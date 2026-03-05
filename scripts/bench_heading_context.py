@@ -12,7 +12,8 @@ import time
 
 import numpy as np
 
-sys.path.insert(0, "/Users/aaaaa/Projects/cex-api-docs/src")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
 # ---------------------------------------------------------------------------
 # 1. Load embedder and LanceDB
@@ -37,7 +38,7 @@ print(f"  Load time: {time.monotonic() - t0:.1f}s")
 print("\n[2/6] Reading chunks from LanceDB...")
 import lancedb
 
-db = lancedb.connect("/Users/aaaaa/Projects/cex-api-docs/cex-docs/lancedb-index/")
+db = lancedb.connect(str(REPO_ROOT / "cex-docs" / "lancedb-index"))
 table = db.open_table("pages")
 total_rows = table.count_rows()
 print(f"  Total rows in index: {total_rows:,}")

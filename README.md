@@ -270,7 +270,7 @@ launchd sample and setup guide:
 ### Keep demo workspace skills in sync
 
 ```bash
-python3 scripts/sync_demo_skills.py --demo-root /Users/aaaaa/Projects/cex-api-docs-demo-workspace
+python3 scripts/sync_demo_skills.py --demo-root /path/to/cex-api-docs-demo-workspace
 ```
 
 If the demo workspace path does not exist yet, clone/create it first, then rerun the sync command.

@@ -103,7 +103,6 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     pairs: list[tuple[Path, Path]] = [
         (repo_root / "src", runtime_root / "src"),
         (repo_root / "pyproject.toml", runtime_root / "pyproject.toml"),
-        (repo_root / "uv.lock", runtime_root / "uv.lock"),
         (repo_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md", runtime_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md"),
         (
             repo_root / ".claude" / "skills" / "cex-api-query" / "EVALUATIONS.md",
@@ -177,7 +176,6 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
     components: list[dict[str, Any]] = []
     runtime_rel_paths = [
         "pyproject.toml",
-        "uv.lock",
         "src",
         ".claude/skills/cex-api-query/SKILL.md",
         ".claude/skills/cex-api-query/EVALUATIONS.md",
@@ -239,7 +237,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sync a query-only runtime repo from maintainer repo + local snapshot.")
     parser.add_argument(
         "--runtime-root",
-        default="/Users/aaaaa/Projects/cex-api-docs-runtime",
+        required=True,
         help="Target runtime repo root path.",
     )
     parser.add_argument("--docs-dir", default="./cex-docs", help="Source docs snapshot directory.")

@@ -30,7 +30,6 @@ HANDOFF.md
 TODO.md
 todos/
 docs/archive/
-docs/ops/
 docs/plans/
 docs/reports/
 docs/research/
@@ -43,9 +42,9 @@ scripts/poc_*.py
 # Ephemeral local artifacts
 logs/
 reports/
-ops/
 poc-*.jpeg
 security_best_practices_report.md
+uv.lock
 
 # Platform-specific tool config
 .codex/

@@ -12,7 +12,7 @@ from pathlib import Path
 # Ensure project is importable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-PROJECT_DIR = Path("/Users/aaaaa/Projects/cex-api-docs")
+PROJECT_DIR = Path(__file__).resolve().parents[1]
 DOCS_DIR = str(PROJECT_DIR / "cex-docs")
 GOLDEN_QA = str(PROJECT_DIR / "tests/golden_qa.jsonl")
 

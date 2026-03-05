@@ -33,9 +33,14 @@ jq -r '.ok' /tmp/cex_sync_smoke.json
 echo "[5/8] Unit/integration tests..."
 "$PY" -m pytest -q
 
-echo "[6/8] Demo skill sync check..."
-"$PY" scripts/sync_demo_skills.py --demo-root /Users/aaaaa/Projects/cex-api-docs-demo-workspace >/tmp/cex_demo_sync.log
-tail -n 2 /tmp/cex_demo_sync.log
+DEMO_ROOT="${DEMO_ROOT:-}"
+if [[ -n "$DEMO_ROOT" ]]; then
+  echo "[6/8] Demo skill sync check..."
+  "$PY" scripts/sync_demo_skills.py --demo-root "$DEMO_ROOT" >/tmp/cex_demo_sync.log
+  tail -n 2 /tmp/cex_demo_sync.log
+else
+  echo "[6/8] Demo skill sync check... SKIPPED (set DEMO_ROOT env var to enable)"
+fi
 
 echo "[7/8] Runtime repo export smoke..."
 "$PY" scripts/sync_runtime_repo.py --runtime-root /tmp/cex-runtime-export-check --docs-dir "$DOCS_DIR" --no-data --clean >/tmp/cex_runtime_export.log

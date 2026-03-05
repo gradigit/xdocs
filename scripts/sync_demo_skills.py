@@ -27,7 +27,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sync core skill files from this repo into a demo workspace.")
     parser.add_argument(
         "--demo-root",
-        default="/Users/aaaaa/Projects/cex-api-docs-demo-workspace",
+        required=True,
         help="Demo workspace root path.",
     )
     args = parser.parse_args()
