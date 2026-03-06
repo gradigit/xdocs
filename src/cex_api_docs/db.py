@@ -47,15 +47,7 @@ CREATE VIRTUAL TABLE endpoints_fts USING fts5(
 );
 """)
 
-    # Configure BM25 column weights via rank function.
-    # pages_fts: title 10x more important than markdown body.
-    conn.execute(
-        "INSERT INTO pages_fts(pages_fts, rank) VALUES('rank', 'bm25(0.0, 10.0, 1.0)');"
-    )
-    # endpoints_fts: path 5x more important than search_text.
-    conn.execute(
-        "INSERT INTO endpoints_fts(endpoints_fts, rank) VALUES('rank', 'bm25(0.0, 0.0, 0.0, 0.0, 5.0, 1.0)');"
-    )
+    _configure_fts_rank_weights(conn)
 
 
 def _migrate_2_to_3(conn: sqlite3.Connection) -> None:
@@ -166,6 +158,26 @@ def _set_user_version(conn: sqlite3.Connection, version: int) -> None:
     conn.execute(f"PRAGMA user_version = {int(version)};")
 
 
+def _configure_fts_rank_weights(conn: sqlite3.Connection) -> None:
+    """Configure BM25 column weights for FTS5 tables.
+
+    pages_fts: title 10x more important than markdown body.
+    endpoints_fts: path 5x more important than search_text.
+    """
+    try:
+        conn.execute(
+            "INSERT INTO pages_fts(pages_fts, rank) VALUES('rank', 'bm25(0.0, 10.0, 1.0)');"
+        )
+    except sqlite3.OperationalError:
+        pass  # Table may not exist yet or rank already configured.
+    try:
+        conn.execute(
+            "INSERT INTO endpoints_fts(endpoints_fts, rank) VALUES('rank', 'bm25(0.0, 0.0, 0.0, 0.0, 5.0, 1.0)');"
+        )
+    except sqlite3.OperationalError:
+        pass
+
+
 def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_version: int) -> int:
     """
     Apply authoritative schema idempotently and set/verify PRAGMA user_version.
@@ -194,6 +206,9 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
 
     if current == 0:
         # Fresh database — set to expected version directly.
+        # Apply BM25 column weights (not in schema.sql because FTS5 rank config
+        # uses special INSERT syntax that isn't idempotent with CREATE IF NOT EXISTS).
+        _configure_fts_rank_weights(conn)
         _set_user_version(conn, expected_user_version)
     elif current < expected_user_version:
         # Apply migrations sequentially from current to expected.
