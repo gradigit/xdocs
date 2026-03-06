@@ -9,6 +9,7 @@ It crawls official exchange docs, stores/indexes them (SQLite FTS5 + optional La
 
 - **Cite-only**: never assert unsupported facts.
 - If sources are insufficient, return `unknown`, `undocumented`, or `conflict`.
+- **Exhaustive coverage**: no pages missing, no content missing, no endpoints missing, no partial data. If a crawl method fails, escalate through the cascade. A 0-page section is a bug. See CLAUDE.md for the full mandate.
 - Keep deterministic behavior in crawling, storage, indexing, and query paths.
 - Prefer machine-readable JSON command output.
 
@@ -99,7 +100,11 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 - Crawl validation pipeline implemented (10 phases, 25+ modules, 337 tests).
 - Semantic index: jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
-- 5,716+ pages in store across 35 exchanges (21 CEX, 13 DEX, 1 ref).
+- 8,673 pages in store across 35 exchanges (21 CEX, 13 DEX, 1 ref), 14.85M words, 3,603 endpoints.
+- Crawl targets bible v2 (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, 8 missing exchange candidates.
+- Multi-method crawl cascade: pipeline uses `--render auto` (requests + Playwright). Validation uses crawl4ai (primary), cloudscraper, headed browser, Agent Browser.
+- Structured changelog extraction (965 entries from 308 pages) for API drift detection.
+- CCXT cross-reference: 22 exchanges mapped, dict-of-dicts bug fixed.
 - Golden QA validation: three-level matching (exact/prefix/domain). Baseline: 68% exact, 82% prefix, 98% domain.
 - Optional reranking with `jina-reranker-v3-mlx`.
 
@@ -115,9 +120,9 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **8,673 pages, 14.85M words, 3,603 structured endpoints**. Store is at `cex-docs/`.
 
-Next: Re-sync thin sections with fixed registry entries (then incremental index build). CCXT docs refresh. Add Tier 2 DEXes. Add link validation to maintainer workflow.
+Next: Full exhaustive maintainer workflow — register 8 missing exchanges (MEXC, BingX first), import 870+ endpoints from verified specs, fix Kraken crawl gap (48 pages), widen Coinbase scope for FIX docs, re-sync Bithumb EN with Playwright, add Tier 2 DEXes.
 
 ## Non-Goals / Safety
 

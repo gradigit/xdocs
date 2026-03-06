@@ -215,7 +215,7 @@ Latest:
 
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
 - **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias. 15 exchanges went from 0→3,945 CCXT endpoints.
-- **Multi-method crawl cascade** — `requests` → `cloudscraper` → Playwright → `crawl4ai` → headed browser → Agent Browser. Installed: cloudscraper 1.2.71, crawl4ai 0.8.0, Playwright 1.58.0.
+- **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → `cloudscraper` → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, cloudscraper 1.2.71, Playwright 1.58.0.
 - **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
 - **Kraken crawl gap** — 48 REST API pages in sitemap never fetched; seed URL only reached guide pages.
 - **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.
