@@ -199,6 +199,7 @@ The pipeline has a linear progression:
 Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
+
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
 - **7 new CEXes synced** (kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin) with OpenAPI imports for bitmex, mercadobitcoin, coinbase/intx.
 - **4 Tier 1 DEX protocols synced** (aster, apex, grvt, paradex).
@@ -208,6 +209,7 @@ Latest:
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 
 Research completed (docs/research/):
+
 - LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
 - CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
@@ -217,3 +219,24 @@ Research completed (docs/research/):
 Completed: Jina v5 semantic index rebuilt (768 dims, 155K chunks, 86% retrieval hit rate). Repo made self-contained (no hardcoded paths, bootstrap script). Registry entries completed for thin sections (Binance copy_trading/portfolio_margin_pro, Coinbase 4 sections, KuCoin futures merged into spot, Aster, Paradex). LanceDB hybrid search WHERE bug fixed.
 
 Next: Re-sync thin sections with fixed registry entries (incremental index build after). CCXT docs refresh. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Add link validation to maintainer workflow. Structured changelog extraction for drift detection.
+
+## Compact Instructions
+
+When compacting, preserve:
+
+- The current forge pipeline stage and substep
+- All file paths from the last 10 tool calls
+- All test results and their pass/fail status
+- Any error messages being actively debugged
+- The exact milestone name and number from FORGE-STATUS.md
+
+## Forge Pipeline State
+
+After any context compaction, re-read these files immediately:
+
+1. FORGE-HANDOFF.md — what you were doing when compaction occurred
+2. FORGE-STATUS.md — current milestone and phase
+3. TODO.md — task checklist with completion status
+4. FORGE-MEMORY.md — cross-session learnings
+
+Then continue from the point described in FORGE-HANDOFF.md "What's In Progress".
