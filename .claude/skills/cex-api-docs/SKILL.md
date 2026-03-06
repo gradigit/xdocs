@@ -103,15 +103,24 @@ Follow the template in `docs/crawl-targets-bible.md` Section 8. Summary:
 7. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
 8. Update exchange counts in CLAUDE.md and the bible
 
-### Multi-Method Crawl Cascade (Reliability-First)
+### Sync Pipeline Render Modes
 
-`requests` fails on ~40% of exchanges (SPAs, Cloudflare, WAF). Start with the most reliable tool:
+The `sync` command supports three render modes via `--render`:
 
-1. **`crawl4ai`** (default) — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot
-2. **`requests`** (fast path) — ONLY for known-static sites: GitHub Markdown, Docusaurus, raw spec files
-3. **`cloudscraper`** (fallback) — when crawl4ai is unavailable or rate-limited
-4. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
-5. **Agent Browser** — login-gated, infinite scroll, complex interaction
+- **`http`** (default) — `requests` library, fast, works for static HTML
+- **`auto`** — tries `requests` first, falls back to Playwright for thin/failed pages
+- **`playwright`** — headless Chromium for JS-rendered SPAs
+
+Use `--render auto` for most exchanges. Use `--render playwright` for sites like Bithumb EN and MercadoBitcoin.
+
+### Post-Sync Validation (Multi-Method)
+
+`requests` fails on ~40% of exchanges (SPAs, Cloudflare, WAF). After sync, validate output:
+
+1. **`crawl4ai`** (primary validation) — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot
+2. **`cloudscraper`** (alternative) — when crawl4ai is unavailable or rate-limited
+3. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
+4. **Agent Browser** — login-gated, infinite scroll, complex interaction
 
 ```bash
 # Quick test with cloudscraper

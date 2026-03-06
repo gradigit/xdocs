@@ -38,12 +38,18 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 4. **Reliability-first crawling.** No single crawl method works for all sites. The default should be the most reliable tool, with lighter tools as optimizations for known-safe sites. `requests` fails on ~40% of our exchanges (SPAs, Cloudflare, WAF). `cloudscraper` fails on Gate.io and all JS SPAs. Starting with unreliable tools means re-crawling nearly half the registry — no time saved.
 
-   **Default cascade (reliability-first):**
-   - **Default**: `crawl4ai` — works on ~95% of sites, returns LLM-ready markdown directly, handles JS + anti-bot (1.58MB from Gate.io vs 403 from requests/cloudscraper)
-   - **Fast path**: `requests` — use ONLY for known-static sites (GitHub Markdown, Docusaurus static HTML, raw API specs). ~60% success rate overall, but near-100% for static content.
-   - **Fallback 1**: `cloudscraper` — when crawl4ai is unavailable or rate-limited. Adds Cloudflare bypass over requests. ~70% success rate.
-   - **Fallback 2**: Headed browser (Playwright/crawl4ai with `headless=False`) — for CAPTCHA solving, headless detection bypass, debugging
-   - **Fallback 3**: Agent Browser — interactive crawling for login-gated, infinite scroll, complex navigation
+   **Pipeline render modes** (what `cex-api-docs sync --render` supports):
+   - `http` (default): `requests` library — fast, works for static HTML (~60% of exchanges)
+   - `auto`: tries `requests` first, falls back to Playwright for thin/failed pages
+   - `playwright`: headless Chromium — for JS-rendered SPAs
+
+   **Validation/spot-check cascade** (manual tools for verifying crawl output):
+   - **Primary**: `crawl4ai` — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot (1.58MB from Gate.io vs 403 from requests/cloudscraper). Use for spot-checking and validating pipeline output.
+   - **Alternative**: `cloudscraper` — Cloudflare bypass. ~70% success rate.
+   - **Fallback**: Headed browser (Playwright/crawl4ai with `headless=False`) — CAPTCHA solving, headless detection bypass
+   - **Last resort**: Agent Browser — login-gated, infinite scroll, complex navigation
+
+   **Note**: `crawl4ai` is not yet integrated into the sync pipeline's `--render` modes. It is installed as a standalone validation tool. For the sync pipeline, use `--render auto` (requests + Playwright fallback).
 
 5. **Cross-validate everything.** Just because one crawl method succeeds doesn't mean the content is complete. Spot-check a sample of pages with a different method. Compare endpoint counts from specs vs page extraction vs CCXT. Flag discrepancies for manual review.
 
@@ -58,13 +64,17 @@ This document catalogs ALL known crawlable API documentation sources for every e
 | Headed browser | Playwright/crawl4ai `headless=False` | OK (visible) | OK (visible) | OK (visible) | CAPTCHA solving, headless detection bypass, debugging |
 | Agent Browser | Interactive | OK (manual) | OK (manual) | OK (manual) | Login-gated, infinite scroll |
 
-**Recommended crawl cascade (reliability-first)**:
-1. Use `crawl4ai` as default (works on ~95% of sites, best output quality, ~8-16s/page)
-2. For known-static sites (GitHub, Docusaurus, raw specs) → use `requests` as fast path (~0.1s/page)
-3. If crawl4ai unavailable or rate-limited → fall back to `cloudscraper`
-4. On CAPTCHA / headless detection → try headed browser (`headless=False`)
-5. On complex interaction (login, scroll, multi-step) → use Agent Browser
-6. Spot-check 5% of `requests`-crawled pages with `crawl4ai` to validate content completeness
+**Recommended sync pipeline settings**:
+1. Use `--render auto` for most exchanges (requests + Playwright fallback)
+2. Use `--render http` for known-static sites (GitHub, Docusaurus, raw specs) — ~0.1s/page
+3. Use `--render playwright` when auto doesn't pick up JS content (Bithumb EN, MercadoBitcoin)
+
+**Post-sync validation cascade (manual)**:
+1. Spot-check 5% of pages with `crawl4ai` — compare word count and content against stored markdown
+2. If crawl4ai unavailable → use `cloudscraper` for comparison
+3. On CAPTCHA / headless detection → try headed browser (`headless=False`)
+4. On complex interaction (login, scroll, multi-step) → use Agent Browser
+5. If discrepancy > 20%, flag exchange for full re-crawl with `--render auto`
 
 **Known-static sites (safe for `requests` fast path)**:
 GitHub Markdown (bitbank, grvt, ccxt), Docusaurus with static export (bybit, kraken, bitmex, whitebit), raw spec files (openapi.json/yaml), RSS/Atom feeds
@@ -103,11 +113,11 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 | exchange | type | sections | pages | words | endpoints | ccxt_eps |
 |---|---|---:|---:|---:|---:|---:|
 | binance | CEX | 9 | 1,860 | 1,565,114 | 1,425 | 794 |
-| okx | CEX | 3 | 3 | 346,183 | 313 | 345 |
-| bybit | CEX | 1 | 312 | 294,514 | 129 | 309 |
+| okx | CEX | 4 | 3 | 346,183 | 313 | 345 |
+| bybit | CEX | 2 | 312 | 294,514 | 129 | 309 |
 | bitget | CEX | 5 | 179 | 155,625 | 233 | 565 |
 | gateio | CEX | 1 | 2 | 314,594 | 363 | 280 |
-| kucoin | CEX | 2 | 433 | 1,053,797 | 124 | 220 |
+| kucoin | CEX | 1 | 433 | 1,053,797 | 124 | 220 |
 | htx | CEX | 4 | 4 | 410,801 | 454 | 544 |
 | cryptocom | CEX | 1 | 1 | 58,832 | 63 | 119 |
 | bitstamp | CEX | 1 | 1 | 37,256 | 82 | 255 |
@@ -137,13 +147,16 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 | kwenta | DEX-CONTRACT | 1 | 83 | 41,183 | 0 | — |
 | perp | DEFUNCT | 1 | 1 | 121 | 0 | — |
 | ccxt | REF | 1 | 2,037 | 6,925,008 | 0 | — |
-| **TOTAL** | | **59** | **8,515** | **14,126,884** | **3,603** | |
+| **TOTAL (owned)** | | **61** | **8,515** | **14,126,884** | **3,603** | |
+| *+ orphaned pages* | | | *158* | *724,390* | | |
+| **GRAND TOTAL** | | **61** | **8,673** | **14,851,274** | **3,603** | |
 
 Notes:
 - `ccxt_eps` = CCXT `describe().api` endpoint count (post dict-of-dicts fix). Gap between `endpoints` and `ccxt_eps` indicates extraction opportunities.
 - `DEX-REST` = DEX with documented REST API endpoints. `DEX-CONTRACT` = smart-contract-only, no REST API. `DEX-SDK` = SDK-based access only.
-- 158 orphaned pages exist in DB without scope ownership (mostly from pre-scope-system imports).
+- 158 orphaned pages exist in DB without scope ownership (mostly from pre-scope-system imports); these add 724K words to the grand total.
 - `htx/dm` has 82 endpoints and `crypto_com/exchange` has 63 endpoints stored under variant IDs (accounted for in totals).
+- Section count is 61 per `exchanges.yaml`. Two websocket-only sections (okx/websocket, bybit/websocket) have 0 stored pages but are valid registry entries.
 
 ### 2b. Documentation Platforms
 

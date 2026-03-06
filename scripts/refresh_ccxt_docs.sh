@@ -24,7 +24,7 @@ fi
 
 export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
 
-echo "[1/3] Re-syncing CCXT docs (force-refetch)..."
+echo "[1/4] Re-syncing CCXT docs (force-refetch)..."
 "$PY" -m cex_api_docs.cli sync --exchange ccxt --force-refetch --docs-dir "$DOCS_DIR" 2>&1 | tee /tmp/ccxt_sync.json
 echo ""
 
