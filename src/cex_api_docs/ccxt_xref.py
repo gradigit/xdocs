@@ -34,7 +34,7 @@ CCXT_EXCHANGE_MAP: dict[str, str | None] = {
     "cryptocom": "cryptocom",
     "bitstamp": "bitstamp",
     "bitfinex": "bitfinex",
-    "dydx": "dydx",
+    "dydx": None,  # removed in ccxt 4.x
     "hyperliquid": "hyperliquid",
     "upbit": "upbit",
     "bithumb": "bithumb",
@@ -47,6 +47,17 @@ CCXT_EXCHANGE_MAP: dict[str, str | None] = {
     "whitebit": "whitebit",
     "bitbank": "bitbank",
     "mercadobitcoin": "mercado",
+    "mexc": "mexc",
+    "bingx": "bingx",
+    "deribit": "deribit",
+    "backpack": None,  # removed in ccxt 4.x
+    "coinex": "coinex",
+    "woo": "woo",
+    "phemex": "phemex",
+    "gemini": "gemini",
+    "orderly": None,  # no CCXT class
+    "bluefin": None,  # no CCXT class
+    "nado": None,  # no CCXT class
 }
 
 # Sub-exchange classes that match specific sections.
@@ -83,15 +94,23 @@ def _load_ccxt_exchange(ccxt_id: str) -> Any:
 def _normalize_path(path: str) -> str:
     """Normalize an API path for comparison.
 
-    Strips leading scheme+host, removes Postman ``{{url}}`` prefix,
-    collapses path parameter placeholders to ``{}``.
+    Strips leading scheme+host, removes Postman variable prefixes
+    (``{{url}}``, ``{{host}}``, ``{{baseUrl}}``, etc.), collapses path
+    parameter placeholders to ``{}``, and removes zero-width characters.
     """
+    # Strip zero-width characters (U+200B, U+FEFF, etc.).
+    path = re.sub(r"[\u200b\u200c\u200d\ufeff\u00ad]", "", path)
+
     # Strip scheme + host if present.
     if path.startswith("http://") or path.startswith("https://"):
         path = urlsplit(path).path
 
-    # Strip Postman {{url}} prefix.
-    path = re.sub(r"^\{\{url\}\}", "", path)
+    # Strip any Postman {{variable}} prefix ({{url}}, {{host}}, {{baseUrl}}, etc.).
+    path = re.sub(r"^\{\{[^}]*\}\}", "", path)
+
+    # Strip query string for path-only comparison.
+    if "?" in path:
+        path = path.split("?", 1)[0]
 
     # Normalize path parameters: {param}, :param, <param> → {}
     path = re.sub(r"\{[^}]+\}", "{}", path)
@@ -100,6 +119,15 @@ def _normalize_path(path: str) -> str:
 
     # Strip trailing slash for consistency.
     return path.rstrip("/") or "/"
+
+
+def _strip_version_prefix(path: str) -> str:
+    """Strip common API version prefixes for suffix-based matching.
+
+    Strips patterns like ``/api/v5/``, ``/v2/``, ``/sapi/v1/``,
+    ``/dapi/v1/``, ``/fapi/v1/``, ``/papi/v1/``, ``/eapi/v1/``.
+    """
+    return re.sub(r"^/(?:(?:[a-z]+)?api/)?v\d+(?:\.\d+)?", "", path) or "/"
 
 
 def _extract_ccxt_endpoints(exchange_obj: Any) -> list[dict[str, str]]:
@@ -274,12 +302,34 @@ def ccxt_cross_reference(
             ccxt_path_set = set(ccxt_paths.keys())
             our_path_set = set(our_paths.keys())
 
-            missing_from_us = sorted(ccxt_path_set - our_path_set)
-            unique_to_us = sorted(our_path_set - ccxt_path_set)
+            # Two-pass matching: exact first, then suffix (version-stripped).
+            shared_exact = ccxt_path_set & our_path_set
 
-            # Method mismatches on shared paths.
+            # Suffix match for paths that differ only by version prefix.
+            ccxt_remaining = ccxt_path_set - shared_exact
+            our_remaining = our_path_set - shared_exact
+            suffix_matched: set[str] = set()  # CCXT paths matched by suffix
+            our_suffix_matched: set[str] = set()
+
+            if ccxt_remaining and our_remaining:
+                our_suffix_map: dict[str, str] = {}
+                for p in our_remaining:
+                    stripped = _strip_version_prefix(p)
+                    our_suffix_map[stripped] = p
+                for cp in ccxt_remaining:
+                    stripped = _strip_version_prefix(cp)
+                    if stripped in our_suffix_map:
+                        suffix_matched.add(cp)
+                        our_suffix_matched.add(our_suffix_map[stripped])
+
+            all_matched_ccxt = shared_exact | suffix_matched
+            all_matched_ours = shared_exact | our_suffix_matched
+            missing_from_us = sorted(ccxt_path_set - all_matched_ccxt)
+            unique_to_us = sorted(our_path_set - all_matched_ours)
+
+            # Method mismatches on shared paths (exact matches only).
             method_mismatches: list[dict[str, Any]] = []
-            for path in sorted(ccxt_path_set & our_path_set):
+            for path in sorted(shared_exact):
                 ccxt_methods = ccxt_paths[path]
                 our_methods = our_paths[path]
                 if ccxt_methods != our_methods:
@@ -306,7 +356,9 @@ def ccxt_cross_reference(
                 "ccxt_id": ccxt_id,
                 "ccxt_endpoints": len(ccxt_eps),
                 "our_endpoints": len(our_eps),
-                "shared_paths": len(ccxt_path_set & our_path_set),
+                "shared_paths": len(all_matched_ccxt),
+                "shared_exact": len(shared_exact),
+                "shared_suffix": len(suffix_matched),
                 "missing_from_us": missing_from_us[:50],
                 "missing_from_us_count": len(missing_from_us),
                 "unique_to_us": unique_to_us[:50],

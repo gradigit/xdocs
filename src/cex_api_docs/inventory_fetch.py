@@ -47,7 +47,8 @@ def _get_render_backend(allowed_domains: set[str]):
 
     # 2. Node.js playwright (secondary — lower per-page overhead, exposes HTTP status).
     try:
-        from .nodepwfetch import NodePlaywrightFetcher
+        from .nodepwfetch import NodePlaywrightFetcher, _find_node_pw_module
+        _find_node_pw_module()  # Validate Node.js playwright is actually available.
         backend = NodePlaywrightFetcher(allowed_domains=allowed_domains)
         log.info("render backend: node-playwright")
         return backend

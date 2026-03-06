@@ -439,19 +439,26 @@ def semantic_search(
     lancedb = _require_lancedb()
     lance_db = lancedb.connect(_lance_dir(docs_dir))
     table = lance_db.open_table(TABLE_NAME)
-    embedder = get_embedder()
 
     # Fetch more candidates when reranking is possible.
     fetch_limit = limit * 3 if rerank_policy in {_RERANK_POLICY_ALWAYS, _RERANK_POLICY_AUTO} else limit * 2
 
+    _cached_query_vector = None
+
+    def _get_query_vector():
+        nonlocal _cached_query_vector
+        if _cached_query_vector is None:
+            embedder = get_embedder()
+            _cached_query_vector = embedder.embed_texts([query], is_query=True)[0]
+        return _cached_query_vector
+
     def _build_search(kind: str):
         if kind == "vector":
-            query_vector = embedder.embed_texts([query], is_query=True)[0]
-            return table.search(query_vector).limit(fetch_limit)
+            return table.search(_get_query_vector()).limit(fetch_limit)
         if kind == "fts":
             return table.search(query, query_type="fts").limit(fetch_limit)
         if kind == "hybrid":
-            query_vector = embedder.embed_texts([query], is_query=True)[0]
+            query_vector = _get_query_vector()
             return (
                 table.search(query_type="hybrid")
                 .vector(query_vector)
@@ -491,6 +498,8 @@ def semantic_search(
             retry = _with_exchange_filter(_build_search(query_type))
             arrow_table = retry.to_arrow()
         except Exception:
+            if query_type == "fts":
+                raise  # Don't fall back to vector for explicit FTS queries.
             logger.warning(
                 "FTS index create/retry failed; falling back to vector-only search.",
                 exc_info=True,

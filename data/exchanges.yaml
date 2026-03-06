@@ -239,6 +239,24 @@ exchanges:
           mode: link_follow
           render_mode: auto
           max_pages: 2000
+      - section_id: fix
+        base_urls: ["https://www.bitstamp.net"]
+        seed_urls: ["https://www.bitstamp.net/fix/v2/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 100
+          scope_prefixes:
+            - "https://www.bitstamp.net/fix/"
+      - section_id: websocket
+        base_urls: ["wss://ws.bitstamp.net"]
+        seed_urls: ["https://www.bitstamp.net/websocket/v2/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 100
+          scope_prefixes:
+            - "https://www.bitstamp.net/websocket/"
 
   - exchange_id: bitfinex
     display_name: Bitfinex
@@ -491,7 +509,9 @@ exchanges:
     sections:
       - section_id: spot
         base_urls: ["https://api.kraken.com"]
-        seed_urls: ["https://docs.kraken.com/api/docs/guides/global-intro"]
+        seed_urls:
+          - "https://docs.kraken.com/api/docs/guides/global-intro"
+          - "https://docs.kraken.com/api/docs/rest-api/get-server-time"
         doc_sources:
           - kind: sitemap
             url: https://docs.kraken.com/sitemap.xml
@@ -531,6 +551,7 @@ exchanges:
           max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/api-reference/exchange-api/"
+            - "https://docs.cdp.coinbase.com/exchange/fix-api/"
       - section_id: intx
         base_urls: ["https://api.international.coinbase.com"]
         seed_urls: ["https://docs.cdp.coinbase.com/api-reference/international-exchange-api/rest-api/assets/get-supported-networks"]
@@ -543,6 +564,7 @@ exchanges:
           max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/api-reference/international-exchange-api/"
+            - "https://docs.cdp.coinbase.com/international-exchange/fix-api/"
       - section_id: prime
         base_urls: ["https://api.prime.coinbase.com"]
         seed_urls: ["https://docs.cdp.coinbase.com/api-reference/prime-api/rest-api/activities/list-activities"]
@@ -555,6 +577,19 @@ exchanges:
           max_pages: 500
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/api-reference/prime-api/"
+            - "https://docs.cdp.coinbase.com/prime/fix-api/"
+      - section_id: derivatives_fix
+        base_urls: ["https://api.international.coinbase.com"]
+        seed_urls: ["https://docs.cdp.coinbase.com/derivatives/fix/overview"]
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.cdp.coinbase.com/sitemap.xml
+        inventory_policy:
+          scope_priority: 50
+          render_mode: auto
+          max_pages: 100
+          scope_prefixes:
+            - "https://docs.cdp.coinbase.com/derivatives/fix/"
 
   - exchange_id: bitmex
     display_name: BitMEX
@@ -694,3 +729,182 @@ exchanges:
           max_pages: 400
           scope_prefixes:
             - "https://docs.paradex.trade/"
+
+  - exchange_id: mexc
+    display_name: "MEXC Global"
+    allowed_domains:
+      - www.mexc.com
+    sections:
+      - section_id: spot
+        base_urls: ["https://api.mexc.com"]
+        seed_urls: ["https://www.mexc.com/api-docs/spot-v3/introduction"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto  # Akamai WAF blocks requests; needs Playwright
+          max_pages: 50
+          scope_prefixes:
+            - "https://www.mexc.com/api-docs/spot-v3/"
+      - section_id: futures
+        base_urls: ["https://contract.mexc.com"]
+        seed_urls: ["https://www.mexc.com/api-docs/futures/integration-guide"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 50
+          scope_prefixes:
+            - "https://www.mexc.com/api-docs/futures/"
+      - section_id: broker
+        base_urls: ["https://api.mexc.com"]
+        seed_urls: ["https://www.mexc.com/api-docs/broker/mexc-broker-introduction"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 10
+          scope_prefixes:
+            - "https://www.mexc.com/api-docs/broker/"
+
+  - exchange_id: bingx
+    display_name: BingX
+    allowed_domains:
+      - bingx-api.github.io
+    sections:
+      - section_id: api
+        base_urls: ["https://open-api.bingx.com"]
+        seed_urls: ["https://bingx-api.github.io/docs-v3/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: playwright  # Vue.js SPA, all content in JS bundle
+          max_pages: 10  # Single-page SPA, expect 1-2 pages
+
+  - exchange_id: deribit
+    display_name: Deribit
+    allowed_domains:
+      - docs.deribit.com
+    sections:
+      - section_id: api
+        base_urls: ["https://www.deribit.com/api/v2"]
+        seed_urls: ["https://docs.deribit.com/"]
+        inventory_policy:
+          mode: inventory
+          sitemap_urls: ["https://docs.deribit.com/sitemap.xml"]
+          render_mode: auto  # Mintlify platform
+          max_pages: 1100
+          scope_prefixes:
+            - "https://docs.deribit.com/"
+
+  - exchange_id: backpack
+    display_name: Backpack
+    allowed_domains:
+      - docs.backpack.exchange
+    sections:
+      - section_id: api
+        base_urls: ["https://api.backpack.exchange"]
+        seed_urls: ["https://docs.backpack.exchange/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: playwright  # Redocly SPA
+          max_pages: 10  # Single-page SPA
+
+  - exchange_id: coinex
+    display_name: CoinEx
+    allowed_domains:
+      - docs.coinex.com
+    sections:
+      - section_id: api
+        base_urls: ["https://api.coinex.com/v2"]
+        seed_urls: ["https://docs.coinex.com/api/v2/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: http  # Docusaurus, multi-page static
+          max_pages: 200
+          scope_prefixes:
+            - "https://docs.coinex.com/api/"
+
+  - exchange_id: woo
+    display_name: "WOO X"
+    allowed_domains:
+      - docs.woox.io
+    sections:
+      - section_id: api
+        base_urls: ["https://api.woox.io"]
+        seed_urls: ["https://docs.woox.io/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto  # Single-page SPA
+          max_pages: 10
+
+  - exchange_id: phemex
+    display_name: Phemex
+    allowed_domains:
+      - phemex-docs.github.io
+    sections:
+      - section_id: api
+        base_urls: ["https://api.phemex.com"]
+        seed_urls: ["https://phemex-docs.github.io/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: http  # Slate static HTML, single-page
+          max_pages: 10
+
+  - exchange_id: gemini
+    display_name: Gemini
+    allowed_domains:
+      - docs.gemini.com
+    sections:
+      - section_id: api
+        base_urls: ["https://api.gemini.com"]
+        seed_urls: ["https://docs.gemini.com/"]
+        inventory_policy:
+          mode: inventory
+          sitemap_urls: ["https://docs.gemini.com/sitemap.xml"]
+          render_mode: auto  # Mintlify-like, JS redirect
+          max_pages: 200
+          scope_prefixes:
+            - "https://docs.gemini.com/"
+
+  - exchange_id: orderly
+    display_name: Orderly Network
+    allowed_domains:
+      - orderly.network
+    sections:
+      - section_id: docs
+        base_urls: ["https://api.orderly.org"]
+        seed_urls: ["https://orderly.network/docs/introduction"]
+        inventory_policy:
+          mode: inventory
+          sitemap_urls: ["https://orderly.network/docs/sitemap.xml"]
+          render_mode: http
+          max_pages: 900
+          scope_prefixes:
+            - "https://orderly.network/docs/"
+
+  - exchange_id: bluefin
+    display_name: Bluefin
+    allowed_domains:
+      - bluefin-exchange.readme.io
+    sections:
+      - section_id: api
+        base_urls: ["https://trade.bluefin.io"]
+        seed_urls: ["https://bluefin-exchange.readme.io/"]
+        inventory_policy:
+          mode: link_follow
+          render_mode: http  # ReadMe.io
+          max_pages: 100
+          scope_prefixes:
+            - "https://bluefin-exchange.readme.io/"
+
+  - exchange_id: nado
+    display_name: Nado
+    allowed_domains:
+      - docs.nado.xyz
+    sections:
+      - section_id: docs
+        base_urls: ["https://api.nado.xyz"]
+        seed_urls: ["https://docs.nado.xyz/"]
+        inventory_policy:
+          mode: inventory
+          sitemap_urls: ["https://docs.nado.xyz/sitemap-pages.xml"]
+          render_mode: http  # GitBook
+          max_pages: 250
+          scope_prefixes:
+            - "https://docs.nado.xyz/"

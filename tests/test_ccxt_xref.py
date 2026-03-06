@@ -13,6 +13,7 @@ from cex_api_docs.ccxt_xref import (
     CCXT_EXCHANGE_MAP,
     _extract_ccxt_endpoints,
     _normalize_path,
+    _strip_version_prefix,
     ccxt_cross_reference,
 )
 from cex_api_docs.db import open_db
@@ -43,8 +44,37 @@ class TestNormalizePath(unittest.TestCase):
     def test_strips_postman_url(self) -> None:
         self.assertEqual(_normalize_path("{{url}}/api/v3/order"), "/api/v3/order")
 
+    def test_strips_postman_host(self) -> None:
+        self.assertEqual(_normalize_path("{{host}}/contract/public/details"), "/contract/public/details")
+
+    def test_strips_postman_baseurl(self) -> None:
+        self.assertEqual(_normalize_path("{{baseUrl}}/v2/ticker"), "/v2/ticker")
+
+    def test_strips_zero_width_chars(self) -> None:
+        self.assertEqual(_normalize_path("/v5/market\u200b/ticker"), "/v5/market/ticker")
+
+    def test_strips_query_string(self) -> None:
+        self.assertEqual(_normalize_path("/api/v1/ticker?symbol=BTC"), "/api/v1/ticker")
+
     def test_root_path(self) -> None:
         self.assertEqual(_normalize_path("/"), "/")
+
+
+class TestStripVersionPrefix(unittest.TestCase):
+    def test_api_v3(self) -> None:
+        self.assertEqual(_strip_version_prefix("/api/v3/ticker"), "/ticker")
+
+    def test_sapi_v1(self) -> None:
+        self.assertEqual(_strip_version_prefix("/sapi/v1/order"), "/order")
+
+    def test_plain_v2(self) -> None:
+        self.assertEqual(_strip_version_prefix("/v2/ticker"), "/ticker")
+
+    def test_no_version(self) -> None:
+        self.assertEqual(_strip_version_prefix("/ticker"), "/ticker")
+
+    def test_fapi_v1(self) -> None:
+        self.assertEqual(_strip_version_prefix("/fapi/v1/ticker"), "/ticker")
 
 
 class TestExtractCcxtEndpoints(unittest.TestCase):
@@ -200,6 +230,9 @@ class TestCcxtCrossReference(unittest.TestCase):
             self.assertEqual(binance["ccxt_id"], "binance")
             self.assertGreater(binance["ccxt_endpoints"], 0)
             self.assertEqual(binance["our_endpoints"], 2)
+            self.assertIn("shared_exact", binance)
+            self.assertIn("shared_suffix", binance)
+            self.assertEqual(binance["shared_paths"], binance["shared_exact"] + binance["shared_suffix"])
             self.assertEqual(binance["error_codes_in_ccxt"], 2)
             self.assertEqual(binance["rate_limit_ms"], 100)
 
@@ -226,6 +259,8 @@ class TestExchangeMap(unittest.TestCase):
             "hyperliquid", "upbit", "bithumb", "coinone", "korbit",
             "kraken", "coinbase", "bitmex", "bitmart", "whitebit",
             "bitbank", "mercadobitcoin",
+            "mexc", "bingx", "deribit", "backpack", "coinex",
+            "woo", "phemex", "gemini", "orderly", "bluefin", "nado",
         }
         self.assertEqual(set(CCXT_EXCHANGE_MAP.keys()), expected)
 
