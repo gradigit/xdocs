@@ -41,7 +41,8 @@ This document catalogs ALL known crawlable API documentation sources for every e
    - **Method 2**: `cloudscraper` — bypasses Cloudflare challenges (works for BitMart, Bitstamp; fails Gate.io)
    - **Method 3**: Playwright (`--render auto`) — handles JS-rendered SPAs (OKX, Gate.io, HTX, Bithumb EN)
    - **Method 4**: `crawl4ai` — full browser automation with LLM-optimized markdown output (1.58MB from Gate.io vs 403 from cloudscraper)
-   - **Method 5**: Agent Browser — interactive crawling for sites requiring login, scrolling, or complex navigation
+   - **Method 5**: Headed browser (Playwright/crawl4ai with `headless=False`) — visible browser for debugging, CAPTCHA solving, and sites that detect headless mode
+   - **Method 6**: Agent Browser — interactive crawling for sites requiring login, scrolling, or complex navigation
 
 5. **Cross-validate everything.** Just because one crawl method succeeds doesn't mean the content is complete. Spot-check a sample of pages with a different method. Compare endpoint counts from specs vs page extraction vs CCXT. Flag discrepancies for manual review.
 
@@ -53,14 +54,16 @@ This document catalogs ALL known crawlable API documentation sources for every e
 | `cloudscraper` | CF bypass | FAIL (403) | 200, 548KB content | 200, 1.87MB w/ Swagger | Cloudflare-protected sites |
 | Playwright | Browser | OK (JS render) | OK (full SPA) | OK (bypasses WAF) | JS-rendered SPAs |
 | `crawl4ai` | Browser+AI | OK (1.58MB markdown) | OK (full content) | OK | Best all-around for LLM-ready output |
+| Headed browser | Playwright/crawl4ai `headless=False` | OK (visible) | OK (visible) | OK (visible) | CAPTCHA solving, headless detection bypass, debugging |
 | Agent Browser | Interactive | OK (manual) | OK (manual) | OK (manual) | Login-gated, infinite scroll |
 
 **Recommended crawl cascade**:
 1. Try `requests` first (fastest, cheapest)
 2. On 403/challenge → try `cloudscraper`
-3. On thin HTML / JS-required → try Playwright or `crawl4ai`
-4. On complex interaction needed → use Agent Browser
-5. Always spot-check 5% of pages with `crawl4ai` to validate `requests` output
+3. On thin HTML / JS-required → try Playwright or `crawl4ai` (headless)
+4. On headless detection / CAPTCHA → try headed browser (`headless=False`)
+5. On complex interaction (login, scroll, multi-step) → use Agent Browser
+6. Always spot-check 5% of pages with `crawl4ai` to validate `requests` output
 
 ### 1c. Known Crawl Failure Modes
 
@@ -1128,8 +1131,9 @@ After any sync, the maintainer workflow should:
 | Cloudflare-protected | `cloudscraper` | `crawl4ai` |
 | JS-rendered SPA | Playwright (`--render auto`) | `crawl4ai` |
 | WAF-blocked | `cloudscraper` | `crawl4ai` |
-| Heavy anti-bot (403 from all) | `crawl4ai` | Agent Browser (manual) |
-| Login-gated / infinite scroll | Agent Browser | — |
+| Heavy anti-bot (403 from all) | `crawl4ai` | Headed browser, then Agent Browser |
+| Headless detection / CAPTCHA | Headed browser (`headless=False`) | Agent Browser (manual solve) |
+| Login-gated / infinite scroll | Agent Browser | Headed browser with manual steps |
 | Rate-limited after sync | `crawl4ai` (with delays) | wait + retry |
 
 ### 10e. Installed Crawl Tools

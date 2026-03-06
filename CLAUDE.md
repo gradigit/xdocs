@@ -196,16 +196,20 @@ The pipeline has a linear progression:
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **5,716+ pages, 7.6M words, ~3,600 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **8,673 pages, 14.85M words, 3,603 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 
+- **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
+- **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias. 15 exchanges went from 0→3,945 CCXT endpoints.
+- **Multi-method crawl cascade** — `requests` → `cloudscraper` → Playwright → `crawl4ai` → headed browser → Agent Browser. Installed: cloudscraper 1.2.71, crawl4ai 0.8.0, Playwright 1.58.0.
+- **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
+- **Kraken crawl gap** — 48 REST API pages in sitemap never fetched; seed URL only reached guide pages.
+- **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.
+- **llms.txt mapped** — 13 of 35 exchanges have it (ReadMe.io / GitBook auto-generate).
+- **Missing exchanges identified** — MEXC (~$3.59B), BingX (~$6.5B futures), Deribit, Backpack, CoinEx, WOO X, Phemex, Gemini.
+- **870+ importable endpoints** from verified specs not yet imported (KuCoin 250, WhiteBIT 100+, BitMart 111, Coinbase Prime 95, Paradex 67, Lighter 72, dYdX 43, Coinbase Exchange 38).
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
-- **7 new CEXes synced** (kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin) with OpenAPI imports for bitmex, mercadobitcoin, coinbase/intx.
-- **4 Tier 1 DEX protocols synced** (aster, apex, grvt, paradex).
-- **CCXT wiki synced** (188 pages) + cross-reference module (`ccxt_xref.py`).
-- **Coinbase scope dedup** — added `scope_priority` + `scope_prefixes` to 4 Coinbase sections sharing one sitemap.
-- **LanceDB semantic index** — jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading context injection. Chunks prepend `[Page Title > Section Heading]` for disambiguation.
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 
 Research completed (docs/research/):
@@ -213,12 +217,10 @@ Research completed (docs/research/):
 - LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
 - CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
-- CCXT as cross-reference: Built `ccxt_xref.py` — 20/21 CEXes mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
+- CCXT as cross-reference: Built `ccxt_xref.py` — 22 exchanges mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Completed: Jina v5 semantic index rebuilt (768 dims, 155K chunks, 86% retrieval hit rate). Repo made self-contained (no hardcoded paths, bootstrap script). Registry entries completed for thin sections (Binance copy_trading/portfolio_margin_pro, Coinbase 4 sections, KuCoin futures merged into spot, Aster, Paradex). LanceDB hybrid search WHERE bug fixed. Thin sections re-synced (Coinbase docs migrated to /api-reference/ paths; 307 new pages). CCXT docs refreshed (189 pages updated). Link validation added to maintainer workflow (scripts/check_links.sh + step in refresh_ccxt_docs.sh). Structured changelog extraction: schema v4 (changelog_entries + FTS5), changelog.py module, extract-changelogs / list-changelogs CLI commands; 965 entries extracted from 308 pages.
-
-Next: Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Incremental semantic index rebuild after new page additions. Periodic CCXT docs refresh. Changelog drift detection workflow (compare new entries after re-sync to detect API changes).
+Next: Register 8 missing exchanges (MEXC, BingX first). Import 870+ endpoints from verified specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, BitMart Postman, Coinbase Prime). Fix Kraken crawl gap. Widen Coinbase scope_prefixes for FIX docs. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Periodic CCXT docs refresh. Changelog drift detection.
 
 ## Compact Instructions
 

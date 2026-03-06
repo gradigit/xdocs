@@ -92,11 +92,51 @@ python3 scripts/sync_runtime_repo.py \
 
 ### Adding a New Exchange
 
-1. Add entry to `data/exchanges.yaml` (exchange_id, sections, seed_urls, allowed_domains, scope_prefixes)
-2. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs`
-3. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
-4. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
-5. Update section count in CLAUDE.md
+Follow the template in `docs/crawl-targets-bible.md` Section 8. Summary:
+
+1. Check the bible for existing research on the exchange (Section 6: Missing Exchanges)
+2. Add entry to `data/exchanges.yaml` (exchange_id, sections, seed_urls, allowed_domains, scope_prefixes)
+3. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs`
+4. Multi-method crawl validation (see below)
+5. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
+6. Import any available specs (OpenAPI, Postman)
+7. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
+8. Update exchange counts in CLAUDE.md and the bible
+
+### Multi-Method Crawl Cascade
+
+No single crawl method works for all sites. Use this cascade:
+
+1. **`requests`** (fastest) — static HTML, GitHub Markdown
+2. **`cloudscraper`** — Cloudflare-protected sites (BitMart, Bitstamp)
+3. **Playwright** (`--render auto`) — JS-rendered SPAs (OKX, Gate.io, HTX)
+4. **`crawl4ai`** — best all-around for anti-bot sites (1.58MB from Gate.io vs 403 from others)
+5. **Headed browser** (Playwright/crawl4ai with `headless=False`) — CAPTCHA, headless detection
+6. **Agent Browser** — login-gated, infinite scroll, complex interaction
+
+```bash
+# Quick test with cloudscraper
+python3 -c "import cloudscraper; s=cloudscraper.create_scraper(); r=s.get('URL'); print(r.status_code, len(r.text))"
+
+# Test with crawl4ai
+python3 -c "
+import asyncio
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+async def test():
+    async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as c:
+        r = await c.arun(url='URL', config=CrawlerRunConfig())
+        print(f'Success: {r.success}, Length: {len(r.markdown or \"\")}')
+asyncio.run(test())
+"
+```
+
+After sync, spot-check 5% of pages with an alternate method. If content differs >20%, re-crawl the entire exchange with the browser method.
+
+### Source Trust & Drift
+
+Official API docs pages are the closest thing to ground truth. Specs, Postman collections, and CCXT metadata all drift independently. See `docs/crawl-targets-bible.md` Section 10 for the full trust hierarchy and drift detection strategy.
+
+Key rule: **crawl all sources, import all specs, then cross-reference**. Flag discrepancies for manual review. Never treat any single source as 100% accurate.
 
 ### Registry Gotchas
 
@@ -104,6 +144,8 @@ python3 scripts/sync_runtime_repo.py \
 - **URL migration**: when an exchange reorganises docs, update `seed_urls` and `scope_prefixes`; old orphaned pages stay in store but won't be re-fetched. See Coinbase 2026-03.
 - **JS rendering**: set `render_mode: auto` for sites that require it (Coinbase, KuCoin, Aster, Paradex).
 - **Binance sitemap 404**: expected — pipeline falls back to link-follow automatically.
+- **Sitemaps are hints, not truth**: always cross-validate with link-follow and nav extraction. Kraken's sitemap has 48 REST pages our crawler missed.
+- **Coinbase scope gap**: FIX docs at `/exchange/fix-api/` etc. are outside current `/api-reference/` scope_prefixes.
 
 ---
 
@@ -158,9 +200,22 @@ cex-api-docs validate-base-urls
 
 ## Troubleshooting (403 / WAF / Seed Drift)
 
-If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift, see:
+If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift:
 
-- `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+1. Try `cloudscraper` (handles Cloudflare challenges)
+2. Try `crawl4ai` with headless browser (handles JS rendering + anti-bot)
+3. Try headed browser (`headless=False`) for CAPTCHA or headless detection
+4. Use Agent Browser for login-gated or interactive sites
+5. See `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+
+### Crawl Tool Availability
+
+| Tool | Install | Use Case |
+|------|---------|----------|
+| `cloudscraper` | `pip install cloudscraper` | Cloudflare bypass |
+| `crawl4ai` | `pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown, best all-around |
+| Playwright | `pip install playwright && playwright install chromium` | JS rendering |
+| Agent Browser | `.claude/skills/agent-browser/` | Interactive crawling |
 
 ## Find Sources
 
