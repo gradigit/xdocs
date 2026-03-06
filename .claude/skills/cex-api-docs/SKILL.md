@@ -17,6 +17,10 @@ description: >
   - `undocumented` (sources crawled but fact not stated)
   - `conflict` (sources disagree; return both)
 
+## Exhaustive Coverage Mandate
+
+The store must be 100% exhaustive. No pages missing, no content missing, no endpoints missing, no partial data. If a crawl method fails, escalate through the cascade until content is captured. A 0-page section or 0-endpoint exchange with known specs is a bug, not an acceptable state. See CLAUDE.md for the full mandate.
+
 ## Local Store
 
 Default store root: `./cex-docs/` (override via `--docs-dir` everywhere).

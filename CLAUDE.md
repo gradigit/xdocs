@@ -123,6 +123,19 @@ The pipeline has a linear progression:
 7. **Query / Answer** (`answer.py`, `lookup.py`, `classify.py`, `pages.py`) -- cite-only answer assembly using FTS5 search + endpoint DB + semantic fallback. Input classification routes errors, paths, payloads, code, and questions to appropriate search commands. Returns `unknown`/`undocumented`/`conflict` when sources are insufficient.
 8. **Quality & Validation** (`quality.py`, `fsck.py`, `extraction_verify.py`, `crawl_targets.py`, `crawl_coverage.py`, `live_validate.py`, `link_check.py`) -- content quality gate, structural extraction verification, multi-method crawl target discovery, coverage audit with gap backfill, live site validation, stored page reachability checks.
 
+## Exhaustive Coverage Mandate
+
+**The goal is 100% exhaustive coverage. No exceptions.**
+
+- **No pages missing.** Every documented page for every registered exchange must be in the store. If a crawl method fails, escalate through the cascade until it works: `--render auto` → Playwright → crawl4ai → headed browser → Agent Browser. A 0-page section is a bug, not an acceptable state.
+- **No content missing.** If a page renders in a browser but our stored markdown is empty/thin, the crawl method is wrong. Fix it. Single-page SPAs (OKX, Gate.io, HTX) must be crawled with browser rendering. Swagger UIs (MercadoBitcoin) must have their specs imported. Localize.js sites (Bithumb EN) must use Playwright to get translated content.
+- **No endpoints missing.** Every available spec (OpenAPI, Postman, AsyncAPI) must be imported. Every CCXT endpoint gap must be investigated. If an exchange has 200 CCXT endpoints and we have 0, that's a failure.
+- **No inaccurate data.** Cross-reference all sources. Specs drift from docs. Postman collections go stale. CCXT metadata is community-maintained. Official API doc pages are closest to ground truth. Flag conflicts, never silently accept one source.
+- **No partial data.** If an exchange has FIX docs, WebSocket docs, changelogs, or multiple API versions — they all get crawled and indexed. Scope gaps (like Coinbase FIX docs outside scope_prefixes) must be fixed, not documented as known issues.
+- **Everything verified and validated.** After every sync: quality-check, spot-check with alternate crawl method, cross-reference endpoint counts against CCXT. After every spec import: verify endpoint count matches spec. After every new exchange: validate-crawl-targets with --enable-nav.
+
+The crawl cascade exists precisely so that nothing falls through the cracks. "This exchange needs Playwright" is not an excuse for 0 pages — it means install Playwright and re-sync.
+
 ## Conventions
 
 - Cite-only outputs: no unsupported claims. If not backed by sources, return `unknown` / `undocumented` / `conflict`.
