@@ -12,7 +12,7 @@ description: >
   Aster, ApeX, GRVT, or Paradex API documentation. Also activates when user pastes
   API errors, endpoint paths, request payloads, or code snippets related to exchange APIs.
 metadata:
-  version: "2.8.0"
+  version: "2.10.0"
 ---
 
 # CEX API Query v2
@@ -196,7 +196,7 @@ Expected style:
 
 Add this block before final answer close:
 
-- `skill_used`: `cex-api-query@2.8.0`
+- `skill_used`: `cex-api-query@2.10.0`
 - `search_mode`: `semantic/hybrid` | `fts` | `mixed`
 - `rerank_policy`: `auto` | `always` | `never`
 - `rerank_applied`: `yes/no`
@@ -257,19 +257,23 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 
 ## What's In The Store
 
-SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints.
+SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints. **10,718 pages, 16.72M words, 4,872 structured endpoints** across 46 exchanges.
 
 ```bash
 source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
 ```
 
-**Exchanges with endpoints:** Binance (spot, futures_usdm, futures_coinm, portfolio_margin), OKX (rest), Gate.io (v4), HTX (spot, dm, coin_margined_swap, usdt_swap), Bybit (v5), Bitget (v2), Bitstamp (rest), Bitfinex (v2), Hyperliquid (api), KuCoin (spot, futures), Crypto.com (exchange), Upbit (rest_en), dYdX (docs), Bithumb (rest), Korbit (rest), Coinone (rest), Kraken (spot, futures), Coinbase (advanced_trade, exchange, intx), BitMEX (rest), BitMart (spot), Mercado Bitcoin (rest).
+**CEX with structured endpoints (21):** Binance (spot 703, futures_usdm 192, futures_coinm 130, portfolio_margin 225, margin_trading 59, options 46, wallet 47, copy_trading 2, portfolio_margin_pro 21), OKX (rest 313), Gate.io (v4 363), HTX (spot 87, dm 82, coin_margined_swap 72, usdt_swap 131), Bybit (v5 129), Bitget (v2 102, copy_trading 45, margin 45, earn 27, broker 14), Bitstamp (rest 82), Bitfinex (v2 81), KuCoin (spot 250, futures 54), Crypto.com (exchange 63), Upbit (rest_en 44), Bithumb (rest 36), Korbit (rest 32), Coinone (rest 22), Coinbase (intx 49, prime 97, exchange 45), BitMEX (rest 95), BitMart (spot 48, futures 46), WhiteBIT (v4 137), Mercado Bitcoin (v4 31).
 
-**DEX protocols with pages:** Aster (docs), ApeX (docs), GRVT (docs), Paradex (docs).
+**DEX with structured endpoints (4):** dYdX (docs 83), Hyperliquid (api 75), Paradex (api 97), Lighter (docs 58).
 
-**CCXT reference docs:** 188 wiki pages + docs.ccxt.com landing page. Used for cross-reference validation via `ccxt-xref` command.
+**CEX with pages but no endpoints yet:** Kraken (spot 58p, futures 39p), Bitbank (rest 195p).
 
-**Additional sections with pages but no extracted endpoints yet:** Binance (options, margin_trading, wallet, copy_trading, portfolio_margin_pro), Bitget (copy_trading, margin, earn, broker), OKX (websocket, broker, changelog), Bybit (websocket).
+**DEX with pages but no endpoints yet:** Aevo (144p), Drift (135p), GMX (201p), Gains (196p), Kwenta (89p), Aster (171p), ApeX (5p), GRVT (271p), Perpetual Protocol (36p, DEFUNCT).
+
+**CCXT reference docs:** 2,073 wiki pages + docs.ccxt.com. Used for cross-reference validation via `ccxt-xref` command.
+
+**Other sections (pages only):** OKX (websocket, broker, changelog), Bybit (websocket), Upbit (rest_ko 60p), Coinbase (derivatives_fix 8p), Bitstamp (fix 1p, websocket 1p).
 
 **Single-page doc sites:** OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit serve their entire API reference from 1-4 large HTML pages (up to 325K words each). When reading these, search within the file — don't print all of it.
 
@@ -291,4 +295,4 @@ Update this skill when:
 3. **Better retrieval patterns discovered** — add to routing table or query patterns
 4. **Agent fails to find known information** — add the successful search strategy as a pattern
 
-Current version: 2.8.0
+Current version: 2.10.0

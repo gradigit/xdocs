@@ -58,10 +58,14 @@ cex-api-docs sync --docs-dir ./cex-docs --resume --concurrency 4
 cex-api-docs search-pages "rate limit OR weight" --docs-dir ./cex-docs
 cex-api-docs answer "..." --docs-dir ./cex-docs
 
-# Endpoint import/search
+# Endpoint import/search/lookup
 cex-api-docs import-openapi --exchange <exchange> --section <section> --url <spec-url> --docs-dir ./cex-docs
 cex-api-docs import-postman --exchange <exchange> --section <section> --url <collection-url> --docs-dir ./cex-docs
 cex-api-docs search-endpoints "..." --docs-dir ./cex-docs
+cex-api-docs lookup-endpoint /api/v5/account/balance --method GET --exchange okx --docs-dir ./cex-docs
+cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+cex-api-docs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs
+cex-api-docs link-endpoints --docs-dir ./cex-docs
 
 # Semantic retrieval (optional extras)
 cex-api-docs build-index --docs-dir ./cex-docs
@@ -69,11 +73,23 @@ cex-api-docs compact-index --docs-dir ./cex-docs
 cex-api-docs semantic-search "..." --docs-dir ./cex-docs --mode hybrid --rerank-policy auto
 cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
 
+# Quality / coverage
+cex-api-docs quality-check --docs-dir ./cex-docs
+cex-api-docs coverage --docs-dir ./cex-docs
+cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+cex-api-docs extract-changelogs --docs-dir ./cex-docs
+
 # Crawl validation
 cex-api-docs sanitize-check --docs-dir ./cex-docs
 cex-api-docs validate-crawl-targets --exchange <exchange> --docs-dir ./cex-docs
 cex-api-docs crawl-coverage --exchange <exchange> --docs-dir ./cex-docs
 cex-api-docs check-links --sample 50 --docs-dir ./cex-docs
+
+# Maintenance
+cex-api-docs migrate-schema --docs-dir ./cex-docs
+cex-api-docs fts-rebuild --docs-dir ./cex-docs
+cex-api-docs fsck --docs-dir ./cex-docs
+cex-api-docs store-report --docs-dir ./cex-docs
 
 # CCXT cross-reference
 cex-api-docs ccxt-xref --docs-dir ./cex-docs
@@ -81,32 +97,39 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Code Areas
 
+- `src/cex_api_docs/cli.py` — CLI entrypoint (51 subcommands)
+- `src/cex_api_docs/sync.py` — inventory + fetch orchestration
+- `src/cex_api_docs/endpoints.py` — endpoint CRUD, FTS search, review queue
+- `src/cex_api_docs/openapi_import.py` — OpenAPI/Swagger spec import
+- `src/cex_api_docs/postman_import.py` — Postman collection import
 - `src/cex_api_docs/semantic.py` — semantic index/search
-- `src/cex_api_docs/chunker.py` — heading-aware chunking (mistune AST)
-- `src/cex_api_docs/validate.py` — golden QA retrieval validation
-- `src/cex_api_docs/reranker.py` — cross-encoder reranking
 - `src/cex_api_docs/answer.py` — cite-only answer assembly
-- `src/cex_api_docs/cli.py` — CLI entrypoint
-- `schema/schema.sql` — canonical DB schema
-- `data/exchanges.yaml` — exchange/section registry
+- `src/cex_api_docs/lookup.py` — endpoint path lookup + error code search
+- `src/cex_api_docs/classify.py` — input classification
 - `src/cex_api_docs/crawl_targets.py` — multi-method URL discovery
 - `src/cex_api_docs/crawl_coverage.py` — coverage audit + gap backfill
-- `src/cex_api_docs/extraction_verify.py` — HTML→markdown quality scoring
-- `src/cex_api_docs/link_check.py` — stored page reachability checks
 - `src/cex_api_docs/ccxt_xref.py` — CCXT cross-reference validation
+- `src/cex_api_docs/quality.py` — content quality gate
+- `src/cex_api_docs/changelog.py` — changelog extraction for drift detection
+- `src/cex_api_docs/validate.py` — golden QA retrieval validation
 - `src/cex_api_docs/embeddings.py` — embedding backend selection (MLX/SentenceTransformers)
+- `src/cex_api_docs/reranker.py` — cross-encoder reranking
+- `schema/schema.sql` — canonical DB schema (v4)
+- `data/exchanges.yaml` — exchange/section registry (46 exchanges, 78 sections)
+- `.claude/skills/cex-api-docs/SKILL.md` — maintainer workflow skill
+- `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill
+- `.claude/skills/cex-discovery/SKILL.md` — exhaustive crawl target discovery skill
 
 ## Current Context (from latest handoff)
 
 - Crawl validation pipeline implemented (10 phases, 25+ modules, 337 tests).
 - Semantic index: jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
-- 8,673 pages in store across 35 exchanges (21 CEX, 13 DEX, 1 ref), 14.85M words, 3,603 endpoints.
-- Crawl targets bible v2 (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, 8 missing exchange candidates.
+- 10,718 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.72M words, 4,872 endpoints, 78 sections.
+- Crawl targets bible v3 (`docs/crawl-targets-bible.md`) — 46 registered exchanges, all 8 missing exchanges now registered.
+- 11 new exchanges: MEXC (114ep), BingX, Deribit (173ep), Backpack (22ep), CoinEx, WOO X, Phemex, Gemini, Orderly (203ep), Bluefin, Nado.
+- CCXT cross-reference: 33 exchanges mapped (korbit/orderly/bluefin/nado = None).
+- Spec imports: KuCoin (250), WhiteBIT (137), BitMart (94), Coinbase Prime (97) + Exchange (45), Paradex (97), Lighter (58), dYdX (83), MEXC (114 Postman), Deribit (173), Backpack (22), Orderly (203).
 - Multi-method crawl cascade: pipeline uses `--render auto` (requests + Playwright). Validation uses crawl4ai (primary), cloudscraper, headed browser, Agent Browser.
-- Structured changelog extraction (965 entries from 308 pages) for API drift detection.
-- CCXT cross-reference: 22 exchanges mapped, dict-of-dicts bug fixed.
-- Golden QA validation: three-level matching (exact/prefix/domain). Baseline: 68% exact, 82% prefix, 98% domain.
-- Optional reranking with `jina-reranker-v3-mlx`.
 
 ## Gotchas
 
@@ -120,9 +143,9 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **8,673 pages, 14.85M words, 3,603 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,718 pages, 16.72M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
 
-Next: Full exhaustive maintainer workflow — register 8 missing exchanges (MEXC, BingX first), import 870+ endpoints from verified specs, fix Kraken crawl gap (48 pages), widen Coinbase scope for FIX docs, re-sync Bithumb EN with Playwright, add Tier 2 DEXes.
+Next: Periodic CCXT docs refresh, changelog drift detection, import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime).
 
 ## Non-Goals / Safety
 

@@ -96,6 +96,44 @@ cex-api-docs check-links [--exchange X] [--sample N] --docs-dir ./cex-docs
 
 # Enhanced audit
 cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage --include-live-validation --exchange X
+
+# Schema migration (dry-run by default, --apply to execute)
+cex-api-docs migrate-schema --docs-dir ./cex-docs
+cex-api-docs migrate-schema --docs-dir ./cex-docs --apply
+
+# Diff pages between crawl runs
+cex-api-docs diff --docs-dir ./cex-docs
+
+# Discover sitemap/spec URLs from registry seeds
+cex-api-docs discover-sources --docs-dir ./cex-docs
+
+# Render sync JSON artifact into Markdown report
+cex-api-docs report <sync-artifact.json>
+
+# Ingest a browser-captured page into the store (HTML or markdown)
+cex-api-docs ingest-page --exchange binance --section spot --url <page-url> --html-file page.html --docs-dir ./cex-docs
+
+# Import AsyncAPI spec (stub — no CEX specs implemented yet)
+cex-api-docs import-asyncapi --exchange whitebit --section v4 --url <spec-url> --docs-dir ./cex-docs
+
+# Endpoint field coverage aggregation
+cex-api-docs coverage --docs-dir ./cex-docs
+
+# Compute + persist endpoint completeness gaps
+cex-api-docs coverage-gaps --docs-dir ./cex-docs
+cex-api-docs coverage-gaps-list --docs-dir ./cex-docs
+
+# Detect stale endpoint citations vs current page content
+cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+
+# Rebuild FTS5 indexes from stored markdown
+cex-api-docs fts-rebuild --docs-dir ./cex-docs
+
+# Golden QA retrieval validation (requires [semantic])
+cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
+
+# Resolve docs_url for spec-imported endpoints
+cex-api-docs link-endpoints --docs-dir ./cex-docs
 ```
 
 Note: The legacy `crawl` command still works but emits a deprecation warning. Use `sync` or `inventory`+`fetch-inventory` instead.
@@ -106,9 +144,9 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 35 exchanges (61 sections): seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 46 exchanges (78 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (`sync_runtime_repo.py`, `run_sync_preset.sh`, benchmarks).
-- `.claude/skills/` Claude Code skill definitions (auto-discovered by Claude Code).
+- `.claude/skills/` Claude Code skill definitions: `cex-api-docs` (maintainer), `cex-api-query` (query/answer), `cex-discovery` (new exchange discovery).
 
 ## Data Flow
 
@@ -142,12 +180,13 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - Deterministic code: crawling, storage, indexing, querying, diffing.
 - Agent boundary: agent does interpretation and extraction; code does deterministic I/O and validation.
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
+- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update CLAUDE.md, README.md, AGENTS.md, all three SKILL.md files (cex-api-docs, cex-api-query, cex-discovery), and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `.claude/skills/cex-api-docs/SKILL.md` for the full checklist.
 
 ## Key Files
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs
 - `schema/schema.sql` SQLite schema (pages, endpoints, FTS5, review queue, inventories, coverage_gaps)
-- `src/cex_api_docs/cli.py` CLI entrypoint (35+ subcommands)
+- `src/cex_api_docs/cli.py` CLI entrypoint (51 subcommands)
 - `src/cex_api_docs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
 - `src/cex_api_docs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
 - `src/cex_api_docs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
@@ -163,7 +202,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
 - `src/cex_api_docs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
 - `src/cex_api_docs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
-- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 35 exchanges; Binance has richer heuristics)
+- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 46 exchanges; Binance has richer heuristics)
 - `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + cex-api-query skill)
 - `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
 - `src/cex_api_docs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
@@ -181,6 +220,20 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
 - `src/cex_api_docs/reranker.py` Cross-encoder reranking (jina-reranker-v3-mlx)
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
+- `src/cex_api_docs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
+- `src/cex_api_docs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
+- `src/cex_api_docs/coverage.py` Endpoint field_status coverage aggregation
+- `src/cex_api_docs/coverage_gaps.py` Endpoint completeness gap computation + persistence
+- `src/cex_api_docs/stale_citations.py` Stale citation detection (endpoint citations vs current page content)
+- `src/cex_api_docs/resolve_docs_urls.py` Docs URL resolution for spec-imported endpoints (link-endpoints command)
+- `src/cex_api_docs/asyncapi_import.py` AsyncAPI spec import (stub — no CEX specs implemented yet)
+- `src/cex_api_docs/ingest_page.py` Manual page ingestion from browser capture (HTML or markdown input)
+- `src/cex_api_docs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
+- `src/cex_api_docs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
+- `src/cex_api_docs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
+- `.claude/skills/cex-api-docs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
+- `.claude/skills/cex-api-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
+- `.claude/skills/cex-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
 
 ## Gotchas
 
@@ -195,7 +248,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
 - **`extract_page_markdown` return order**: Returns `(html, title, md_norm, word_count)` — first element is decoded HTML string, not markdown. The normalized markdown is the third element.
 - **Raw string regex**: In `r"..."` strings, use single backslash for regex escapes (`\w`, `\s`, `\S`). Double backslash (`\\w`) matches literal backslash + letter. Previously caused silent failures in charset detection and robots.txt sitemap parsing.
-- **Single-page doc exchanges**: OKX (224K words), Gate.io (256K), HTX (325K across 4 pages), Crypto.com (35K), Bitstamp (22K), Korbit (25K) serve their entire API reference from 1-2 HTML files. This is correct — the pipeline handles them fine. Don't treat low page counts as errors.
+- **Single-page doc exchanges**: OKX (224K words), Gate.io (256K), HTX (325K across 4 pages), Crypto.com (35K), Bitstamp (22K), Korbit (25K), Phemex (53K), Backpack (31K), WOO X (20K), BingX (1K) serve their entire API reference from 1-2 HTML files. This is correct — the pipeline handles them fine. Don't treat low page counts as errors.
 - **Gate.io rate-limits aggressively**: After syncing, HTTP requests return 403 ("Access Denied"). Content is already in the store; re-sync may need longer delays or `--render auto`.
 - **Binance sitemap is 404**: Despite being configured in `exchanges.yaml`, `developers.binance.com/sitemap.xml` returns 404. The pipeline falls back to link-follow automatically.
 - **OpenAPI import needs `--base-url` for some specs**: KuCoin official OpenAPI specs have no `servers[].url` field. Pass `--base-url` explicitly or the import fails with `EBADOPENAPI`.
@@ -209,7 +262,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 35 exchanges (21 CEX, 13 DEX, 1 ref), 61 sections in registry. Synced: **8,673 pages, 14.85M words, 3,603 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,718 pages, 16.72M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 
@@ -219,9 +272,9 @@ Latest:
 - **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
 - **Kraken crawl gap** — 48 REST API pages in sitemap never fetched; seed URL only reached guide pages.
 - **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.
-- **llms.txt mapped** — 13 of 35 exchanges have it (ReadMe.io / GitBook auto-generate).
-- **Missing exchanges identified** — MEXC (~$3.59B), BingX (~$6.5B futures), Deribit, Backpack, CoinEx, WOO X, Phemex, Gemini.
-- **870+ importable endpoints** from verified specs not yet imported (KuCoin 250, WhiteBIT 100+, BitMart 111, Coinbase Prime 95, Paradex 67, Lighter 72, dYdX 43, Coinbase Exchange 38).
+- **llms.txt mapped** — 13 of 46 exchanges have it (ReadMe.io / GitBook auto-generate).
+- **11 new exchanges registered** — MEXC (21p, 114ep), BingX (1p), Deribit (530p, 173ep), Backpack (1p, 22ep), CoinEx (489p), WOO X (1p), Phemex (1p), Gemini (135p), Orderly (527p, 203ep), Bluefin (62p), Nado (192p). Pacifica deferred (insufficient docs).
+- **3 new OpenAPI spec imports** — Deribit (173 ops), Orderly (203 ops), Backpack (22 ops).
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 
@@ -233,7 +286,7 @@ Research completed (docs/research/):
 - CCXT as cross-reference: Built `ccxt_xref.py` — 22 exchanges mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
-Next: Register 8 missing exchanges (MEXC, BingX first). Import 870+ endpoints from verified specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, BitMart Postman, Coinbase Prime). Fix Kraken crawl gap. Widen Coinbase scope_prefixes for FIX docs. Add Tier 2 DEXes (Orderly, Pacifica, Nado, Bluefin). Periodic CCXT docs refresh. Changelog drift detection.
+Next: Periodic CCXT docs refresh. Changelog drift detection. Import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime). Pacifica re-evaluation when docs mature.
 
 ## Compact Instructions
 

@@ -140,11 +140,11 @@ The skill uses this retrieval strategy for question-style prompts:
 
 ## Supported exchanges
 
-Registry currently includes 35 exchanges (21 CEX, 13 DEX, 1 reference):
+Registry currently includes 46 exchanges (29 CEX, 16 DEX, 1 reference):
 
-**CEX (21):** binance, okx, bybit, bitget, gateio, kucoin, htx, cryptocom, bitstamp, bitfinex, upbit, bithumb, coinone, korbit, kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin
+**CEX (29):** binance, okx, bybit, bitget, gateio, kucoin, htx, cryptocom, bitstamp, bitfinex, upbit, bithumb, coinone, korbit, kraken, coinbase, bitmex, bitmart, whitebit, bitbank, mercadobitcoin, mexc, bingx, deribit, backpack, coinex, woo, phemex, gemini
 
-**DEX (13):** dydx, hyperliquid, gmx, drift, aevo, perpetual, gains, kwenta, lighter, aster, apex, grvt, paradex
+**DEX (16):** dydx, hyperliquid, gmx, drift, aevo, perpetual, gains, kwenta, lighter, aster, apex, grvt, paradex, orderly, bluefin, nado
 
 **Reference:** ccxt
 
@@ -174,6 +174,15 @@ cex-api-docs semantic-search "how to sign okx request" --exchange okx --mode hyb
 cex-api-docs answer "Explain Upbit private account auth requirements with citations" --docs-dir ./cex-docs
 ```
 
+### Endpoint import
+
+```bash
+cex-api-docs import-openapi --exchange kucoin --section spot --url <spec-url> --base-url https://api.kucoin.com --docs-dir ./cex-docs --continue-on-error
+cex-api-docs import-postman --exchange bitmart --section spot --url <collection-url> --docs-dir ./cex-docs --continue-on-error
+cex-api-docs link-endpoints --docs-dir ./cex-docs    # resolve docs_url for imported endpoints
+cex-api-docs ccxt-xref --docs-dir ./cex-docs          # cross-reference against CCXT
+```
+
 ### Validation / quality
 
 ```bash
@@ -182,6 +191,9 @@ cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs
 cex-api-docs fsck --docs-dir ./cex-docs
 cex-api-docs migrate-schema --docs-dir ./cex-docs          # dry-run
 cex-api-docs migrate-schema --docs-dir ./cex-docs --apply  # apply pending DB migrations
+cex-api-docs quality-check --docs-dir ./cex-docs
+cex-api-docs coverage --docs-dir ./cex-docs
+cex-api-docs detect-stale-citations --docs-dir ./cex-docs
 
 # Crawl validation
 cex-api-docs sanitize-check --docs-dir ./cex-docs
@@ -289,21 +301,30 @@ Production rollout guide:
 
 ## Project structure
 
-- `src/cex_api_docs/cli.py` — CLI entrypoint
+- `src/cex_api_docs/cli.py` — CLI entrypoint (51 subcommands)
+- `src/cex_api_docs/sync.py` — inventory + fetch orchestration (cron-friendly)
+- `src/cex_api_docs/inventory.py` — doc URL enumeration (sitemaps + link-follow)
+- `src/cex_api_docs/inventory_fetch.py` — page fetching (--resume, --concurrency, --render auto)
+- `src/cex_api_docs/endpoints.py` — endpoint CRUD, FTS search, review queue
+- `src/cex_api_docs/openapi_import.py` — OpenAPI/Swagger spec import
+- `src/cex_api_docs/postman_import.py` — Postman collection import
 - `src/cex_api_docs/semantic.py` — vector/fts/hybrid retrieval + rerank policy
 - `src/cex_api_docs/answer.py` — cite-only answer composition
-- `src/cex_api_docs/chunker.py` — markdown chunking for semantic index
-- `src/cex_api_docs/validate.py` — retrieval evaluation
+- `src/cex_api_docs/lookup.py` — endpoint path lookup + error code search
+- `src/cex_api_docs/classify.py` — input classification (error/endpoint/payload/code/question)
 - `src/cex_api_docs/crawl_targets.py` — multi-method URL discovery
 - `src/cex_api_docs/crawl_coverage.py` — coverage audit + gap backfill
-- `src/cex_api_docs/link_check.py` — stored page reachability checks
 - `src/cex_api_docs/ccxt_xref.py` — CCXT cross-reference validation
+- `src/cex_api_docs/quality.py` — content quality gate (empty/thin/tiny_html)
+- `src/cex_api_docs/changelog.py` — changelog extraction for API drift detection
+- `src/cex_api_docs/validate.py` — golden QA retrieval evaluation
 - `src/cex_api_docs/embeddings.py` — embedding backend selection (Jina MLX / SentenceTransformers)
-- `src/cex_api_docs/chunker.py` — markdown chunking for semantic index
 - `scripts/sync_runtime_repo.py` — sync maintainer repo → runtime repo
-- `schema/schema.sql` — SQLite schema
-- `data/exchanges.yaml` — exchange registry
-- `.claude/skills/cex-api-query/SKILL.md` — agent skill workflow
+- `schema/schema.sql` — SQLite schema (v4)
+- `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections)
+- `.claude/skills/cex-api-docs/SKILL.md` — maintainer workflow skill
+- `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill
+- `.claude/skills/cex-discovery/SKILL.md` — exhaustive crawl target discovery skill
 
 ---
 

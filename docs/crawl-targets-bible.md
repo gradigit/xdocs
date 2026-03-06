@@ -1,8 +1,8 @@
 # Crawl Targets Bible
 
-**Generated**: 2026-03-06 (v2 — exhaustive audit refresh)
-**Coverage**: 35 registered + 8 recommended additions (29 CEX, 14 DEX, 1 reference)
-**Store snapshot** (live DB): 8,673 pages, 14.85M words, 3,603 structured endpoints
+**Generated**: 2026-03-06 (v3 — 11 new exchanges registered)
+**Coverage**: 46 registered (29 CEX, 16 DEX, 1 reference)
+**Store snapshot** (live DB): 10,718 pages, 16.72M words, 4,872 structured endpoints (78 sections)
 
 This document catalogs ALL known crawlable API documentation sources for every exchange in the registry, plus verified candidates for addition. It is the authoritative reference for maintaining `data/exchanges.yaml` entries, onboarding new exchanges, and planning endpoint extraction campaigns.
 
@@ -117,27 +117,27 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 | bybit | CEX | 2 | 312 | 294,514 | 129 | 309 |
 | bitget | CEX | 5 | 179 | 155,625 | 233 | 565 |
 | gateio | CEX | 1 | 2 | 314,594 | 363 | 280 |
-| kucoin | CEX | 1 | 433 | 1,053,797 | 124 | 220 |
+| kucoin | CEX | 2 | 433 | 1,053,797 | 304 | 220 |
 | htx | CEX | 4 | 4 | 410,801 | 454 | 544 |
 | cryptocom | CEX | 1 | 1 | 58,832 | 63 | 119 |
-| bitstamp | CEX | 1 | 1 | 37,256 | 82 | 255 |
+| bitstamp | CEX | 3 | 3 | 49,531 | 82 | 255 |
 | bitfinex | CEX | 1 | 118 | 55,700 | 81 | 136 |
 | upbit | CEX | 2 | 355 | 217,525 | 44 | 51 |
 | bithumb | CEX | 1 | 153 | 36,735 | 36 | 28 |
 | coinone | CEX | 1 | 91 | 62,489 | 22 | 63 |
 | korbit | CEX | 1 | 2 | 25,230 | 32 | — |
-| kraken | CEX | 2 | 65 | 32,228 | 0 | 54 |
-| coinbase | CEX | 4 | 383 | 310,207 | 49 | 90 |
+| kraken | CEX | 2 | 107 | 55,000 | 0 | 54 |
+| coinbase | CEX | 5 | 413 | 330,000 | 191 | 90 |
 | bitmex | CEX | 1 | 142 | 53,731 | 95 | 93 |
-| bitmart | CEX | 2 | 2 | 73,289 | 0 | 113 |
-| whitebit | CEX | 1 | 161 | 98,291 | 0 | 110 |
+| bitmart | CEX | 2 | 2 | 73,289 | 94 | 113 |
+| whitebit | CEX | 1 | 161 | 98,291 | 137 | 110 |
 | bitbank | CEX | 1 | 175 | 270,858 | 0 | 28 |
 | mercadobitcoin | CEX | 1 | 1 | 0 | 31 | 21 |
-| dydx | DEX-REST | 1 | 283 | 133,753 | 34 | — |
+| dydx | DEX-REST | 1 | 283 | 133,753 | 83 | — |
 | hyperliquid | DEX-REST | 1 | 32 | 26,109 | 75 | 8 |
 | aevo | DEX-REST | 1 | 144 | 79,208 | 0 | — |
-| paradex | DEX-REST | 1 | 624 | 342,258 | 0 | — |
-| lighter | DEX-REST | 1 | 49 | 24,758 | 0 | — |
+| paradex | DEX-REST | 1 | 624 | 342,258 | 97 | — |
+| lighter | DEX-REST | 1 | 49 | 24,758 | 58 | — |
 | aster | DEX-REST | 1 | 147 | 119,948 | 0 | — |
 | apex | DEX-REST | 1 | 5 | 133,667 | 0 | — |
 | grvt | DEX-REST | 1 | 205 | 305,233 | 0 | — |
@@ -147,29 +147,44 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 | kwenta | DEX-CONTRACT | 1 | 83 | 41,183 | 0 | — |
 | perp | DEFUNCT | 1 | 1 | 121 | 0 | — |
 | ccxt | REF | 1 | 2,037 | 6,925,008 | 0 | — |
-| **TOTAL (owned)** | | **61** | **8,515** | **14,126,884** | **3,603** | |
-| *+ orphaned pages* | | | *158* | *724,390* | | |
-| **GRAND TOTAL** | | **61** | **8,673** | **14,851,274** | **3,603** | |
+| mexc | CEX | 3 | 21 | 78,290 | 114 | 176 |
+| bingx | CEX | 1 | 1 | 1,224 | 0 | 154 |
+| deribit | CEX | 1 | 530 | 536,861 | 173 | 122 |
+| backpack | DEX-REST | 1 | 1 | 30,989 | 22 | — |
+| coinex | CEX | 1 | 489 | 236,632 | 0 | 233 |
+| woo | CEX | 1 | 1 | 19,860 | 0 | 82 |
+| phemex | CEX | 1 | 1 | 53,344 | 0 | 112 |
+| gemini | CEX | 1 | 135 | 97,844 | 0 | 55 |
+| orderly | DEX-REST | 1 | 527 | 353,567 | 203 | — |
+| bluefin | DEX-REST | 1 | 62 | 11,421 | 0 | — |
+| nado | DEX-REST | 1 | 192 | 138,138 | 0 | — |
+| **TOTAL (owned)** | | **78** | **10,558** | **16,000,820** | **4,872** | |
+| *+ orphaned pages* | | | *160* | *723,166* | | |
+| **GRAND TOTAL** | | **78** | **10,718** | **16,723,986** | **4,872** | |
 
 Notes:
 - `ccxt_eps` = CCXT `describe().api` endpoint count (post dict-of-dicts fix). Gap between `endpoints` and `ccxt_eps` indicates extraction opportunities.
 - `DEX-REST` = DEX with documented REST API endpoints. `DEX-CONTRACT` = smart-contract-only, no REST API. `DEX-SDK` = SDK-based access only.
 - 158 orphaned pages exist in DB without scope ownership (mostly from pre-scope-system imports); these add 724K words to the grand total.
 - `htx/dm` has 82 endpoints and `crypto_com/exchange` has 63 endpoints stored under variant IDs (accounted for in totals).
-- Section count is 61 per `exchanges.yaml`. Two websocket-only sections (okx/websocket, bybit/websocket) have 0 stored pages but are valid registry entries.
+- Section count is 75 per `exchanges.yaml`. Two websocket-only sections (okx/websocket, bybit/websocket) have 0 stored pages but are valid registry entries.
+- Pacifica deferred from M4 — insufficient API documentation for crawling.
+- Bluefin: 49 login-gated pages (changelog/discuss) could not be fetched — 64 API doc pages captured.
 
 ### 2b. Documentation Platforms
 
 | Platform | Exchanges |
 |----------|-----------|
-| Custom SPA | Binance, OKX, Bitget, Gate.io, KuCoin, Crypto.com, Korbit, BitMart, Aster |
-| ReadMe.io | Bitfinex, Upbit, Bithumb, Coinone, Aevo, ApeX |
-| Docusaurus | Bybit, Kraken, BitMEX, WhiteBIT |
-| GitBook | Hyperliquid, dYdX, Paradex, Lighter, Drift, GMX, Gains, Kwenta |
-| GitHub Pages | HTX (legacy) |
-| Swagger/Redoc | Bitstamp (Redoc), MercadoBitcoin (Swagger UI) |
+| Custom SPA | Binance, OKX, Bitget, Gate.io, KuCoin, Crypto.com, Korbit, BitMart, Aster, MEXC, WOO X |
+| ReadMe.io | Bitfinex, Upbit, Bithumb, Coinone, Aevo, ApeX, Bluefin |
+| Docusaurus | Bybit, Kraken, BitMEX, WhiteBIT, CoinEx |
+| GitBook | Hyperliquid, dYdX, Paradex, Lighter, Drift, GMX, Gains, Kwenta, Nado |
+| Mintlify | Deribit, Gemini |
+| GitHub Pages | HTX (legacy), Phemex (Slate), BingX (Vue.js SPA) |
+| Swagger/Redoc | Bitstamp (Redoc), MercadoBitcoin (Swagger UI), Backpack (Redocly) |
 | GitHub Markdown | Bitbank, CCXT, GRVT |
 | Custom (CDP) | Coinbase |
+| Custom | Orderly |
 
 ### 2c. OpenAPI / Swagger Spec Availability (verified live 2026-03-06)
 
@@ -182,7 +197,9 @@ Notes:
 | **Live** | Lighter | `raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json` | 225KB, 72 paths | NO |
 | **Live** | dYdX | `raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json` | 115KB, 43 paths | NO |
 | **NEW Live** | WhiteBIT | 7 OpenAPI specs at `docs.whitebit.com/openapi/` (public v1/v2/v4, private v4, trade v1/v4, oauth2) | ~200KB+ total | NO — HIGH PRIORITY |
-| **NEW Live** | Backpack | `github.com/CKS-Systems/backpack-client/blob/main/openapi.json` | ~100KB | NO |
+| **NEW Live** | Deribit | `docs.deribit.com/specifications/deribit_openapi.json` | 1.3MB, 173 ops | YES |
+| **NEW Live** | Backpack | `github.com/CKS-Systems/backpack-client/blob/main/openapi.json` | ~100KB, 22 ops | YES |
+| **NEW Live** | Orderly | `github.com/OrderlyNetwork/documentation-public/evm.openapi.yaml` | 461KB, 203 ops | YES |
 | **GitHub** | Binance | `binance/binance-api-swagger/spot_api.yaml` | 850KB | Already have 703 eps via Postman |
 | **GitHub** | KuCoin | `Kucoin/kucoin-universal-sdk/spec/rest/entry/openapi-*.json` (9 files) | 2.9MB total, 250 ops | NO — HIGH PRIORITY |
 | **GitHub** | GRVT | `gravity-technologies/api-spec/src/codegen/apispec.json` | ~460KB | NO (custom format, not OpenAPI) |
@@ -758,9 +775,9 @@ Bybit, OKX, and BitMEX do NOT have official FIX APIs. OKX/BitMEX FIX access is o
 
 ---
 
-## 6. Missing Exchanges — Recommended Additions
+## 6. Previously Missing Exchanges — Now Registered
 
-These exchanges are **not in the registry** but should be based on volume, API documentation quality, and CCXT coverage.
+These exchanges were identified as missing in v2 and have been **registered, synced, and spec-imported** in v3 (2026-03-06).
 
 ### MEXC Global — CRITICAL (Tier 1 CEX, top-5 by volume)
 
@@ -1053,26 +1070,12 @@ Use this checklist when adding a new exchange to the registry.
 | Coinbase | FIX + sandbox docs outside scope_prefixes | Widen scope_prefixes or add new sections |
 | Bithumb EN | 0 pages (requires Playwright) | Install Playwright, re-sync with render_mode: playwright |
 
-### Priority 3: Register Missing Exchanges
+### Priority 3: Register Missing Exchanges — ✓ DONE (v3)
 
-| Exchange | Priority | Volume | CCXT | Effort |
-|----------|----------|--------|------|--------|
-| MEXC | CRITICAL | ~$3.59B | Yes | Medium (Custom SPA) |
-| BingX | CRITICAL | ~$6.5B futures | Yes | Low (GitHub Pages) |
-| Deribit | HIGH | ~$1B | Yes | Medium (JSON-RPC format) |
-| Backpack | HIGH | ~$1.5B futures | Yes | Low (has OpenAPI) |
-| CoinEx | MEDIUM | ~$200M | Yes | Low |
-| WOO X | MEDIUM | ~$600M | Yes | Low |
-| Phemex | MEDIUM | ~$1.57B | Yes | Low (GitHub Pages) |
-| Gemini | MEDIUM | ~$60M | Yes | Low |
+All 8 missing CEX exchanges and 3 of 4 Tier 2 DEXes have been registered, synced, and spec-imported.
+Pacifica deferred (insufficient API documentation).
 
-### Priority 4: Tier 2 DEX Additions
-
-| Exchange | Rationale | Effort |
-|----------|-----------|--------|
-| Orderly Network | 192-path OpenAPI, 694-URL sitemap, Mintlify | Medium |
-| Pacifica | 97 API doc URLs in sitemap, active changelog | Low |
-| Bluefin | ReadMe.io (easy crawl), ~22 endpoints | Low |
+### Priority 4: Remaining Gaps
 | Nado | Active changelog, 3 SDKs | Low |
 
 ### Priority 5: New Sections for Existing Exchanges

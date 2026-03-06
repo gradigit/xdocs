@@ -27,6 +27,44 @@ Default store root: `./cex-docs/` (override via `--docs-dir` everywhere).
 
 ## Maintainer Workflow
 
+### Fresh Agent: Start Here
+
+If you are starting a new session with no prior context, follow these steps before doing anything:
+
+1. **Read CLAUDE.md** — project overview, conventions, exhaustive coverage mandate, current phase, gotchas
+2. **Read this skill** (you're reading it) — the end-to-end maintainer workflow
+3. **Read the registry** (`data/exchanges.yaml`) — all 46 exchanges, 78 sections, seed URLs, render modes, scope settings
+4. **Read the bible** (`docs/crawl-targets-bible.md`) — all 11 sections; per-exchange crawl notes, spec URLs, failure modes, missing exchanges, import priorities
+5. **Assess current store state**:
+
+```bash
+source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
+```
+
+6. **Determine what phase to start from**:
+   - Store empty or missing → Phase 0 (full workflow from scratch)
+   - Store exists but outdated → Phase 0 (readiness check) then Phase 2 (sync)
+   - Store current but specs not imported → Phase 3 (spec imports)
+   - Store current and complete → Phase 4 (validation) then Phase 5 (doc update)
+   - Adding new exchange → "Adding a New Exchange" section below
+
+7. **Check for pending inventory entries** (decides `--resume` vs fresh sync):
+
+```bash
+source .venv/bin/activate && python3 -c "
+import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
+for r in conn.execute('''
+    SELECT i.exchange_id, i.section_id, ie.status, COUNT(*)
+    FROM inventories i JOIN inventory_entries ie ON ie.inventory_id = i.id
+    WHERE ie.status IN (\"pending\", \"error\")
+    GROUP BY i.exchange_id, i.section_id, ie.status
+    ORDER BY i.exchange_id'''):
+    print(f'{r[0]:20s} {r[1]:20s} {r[2]:10s} {r[3]:5d}')
+"
+```
+
+If pending/error entries exist, use `--resume` for sync. If store is empty, proceed with full sync.
+
 ### Setup (once)
 
 ```bash
@@ -96,16 +134,218 @@ python3 scripts/sync_runtime_repo.py \
 
 ### Adding a New Exchange
 
-Follow the template in `docs/crawl-targets-bible.md` Section 8. Summary:
+**Use the `cex-discovery` skill** (`.claude/skills/cex-discovery/SKILL.md`) to run exhaustive discovery before registering. The discovery skill produces a bible entry and a ready-to-paste `exchanges.yaml` config block.
 
-1. Check the bible for existing research on the exchange (Section 6: Missing Exchanges)
-2. Add entry to `data/exchanges.yaml` (exchange_id, sections, seed_urls, allowed_domains, scope_prefixes)
-3. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs`
-4. Multi-method crawl validation (see below)
-5. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
-6. Import any available specs (OpenAPI, Postman)
-7. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
-8. Update exchange counts in CLAUDE.md and the bible
+Summary after discovery is complete:
+
+1. Run the `cex-discovery` skill for the target exchange — produces bible entry + registry YAML
+2. Add the bible entry to `docs/crawl-targets-bible.md` (Section 3-5 per exchange type)
+3. Add the registry entry to `data/exchanges.yaml`
+4. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs --render auto`
+5. Multi-method crawl validation (see "Post-Sync Validation" below)
+6. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
+7. Import any discovered specs (OpenAPI, Postman, AsyncAPI)
+8. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
+9. Follow "Updating Skills & Documentation" checklist (all 7 files)
+
+### Updating Skills & Documentation
+
+After any significant store change (new exchange, spec import, crawl gap fix, new CLI command), update these files:
+
+1. **CLAUDE.md** — Commands section, Key Files, Current Phase stats
+2. **cex-api-query SKILL.md** (`.claude/skills/cex-api-query/SKILL.md`) — "What's In The Store" section: endpoint counts per exchange/section, DEX page counts, CCXT stats. Bump `version` in metadata when changing content.
+3. **cex-api-docs SKILL.md** (this file) — CLI command reference, workflow steps
+4. **cex-discovery SKILL.md** (`.claude/skills/cex-discovery/SKILL.md`) — exchange list, spec patterns, platform detection (update when new exchange types or doc platforms are encountered)
+5. **README.md** — Exchange counts, project structure, command examples
+6. **AGENTS.md** — Current context stats, command reference
+7. **Bible** (`docs/crawl-targets-bible.md`) — Coverage table (Section 2a), spec status, section counts
+
+**How to verify:**
+
+```bash
+# Get current numbers
+cex-api-docs store-report --docs-dir ./cex-docs
+
+# Cross-check endpoints in query skill against DB
+source .venv/bin/activate && python3 -c "
+import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
+for r in conn.execute('SELECT exchange, section, COUNT(*) FROM endpoints GROUP BY exchange, section ORDER BY exchange, section'):
+    print(f'{r[0]:20s} {r[1]:25s} {r[2]:5d}')
+print(f\"Total: {conn.execute('SELECT COUNT(*) FROM endpoints').fetchone()[0]}\")"
+```
+
+### Full Exhaustive Sync Workflow
+
+When executing a complete sync (all exchanges, all specs, all validation), follow this end-to-end workflow. **Every phase has mandatory pre-checks.**
+
+#### Phase 0: Pre-Crawl Readiness (mandatory before any sync)
+
+1. **Read the registry** (`data/exchanges.yaml`) — verify all sections, seed URLs, render modes, scope settings. Cross-reference against the bible for correctness.
+2. **Read the full bible** (`docs/crawl-targets-bible.md`, all 11 sections) — note per-exchange crawl notes, known failure modes, spec URLs, pending additions, and import commands.
+3. **Baseline snapshot** — record current counts to measure delta after sync:
+
+```bash
+cex-api-docs store-report --docs-dir ./cex-docs
+```
+
+4. **Inventory state check** — identify pending/error entries (decides `--resume` vs fresh):
+
+```bash
+source .venv/bin/activate && python3 -c "
+import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
+for r in conn.execute('''
+    SELECT i.exchange_id, i.section_id, ie.status, COUNT(*)
+    FROM inventories i JOIN inventory_entries ie ON ie.inventory_id = i.id
+    WHERE ie.status IN (\"pending\", \"error\")
+    GROUP BY i.exchange_id, i.section_id, ie.status
+    ORDER BY i.exchange_id'''):
+    print(f'{r[0]:20s} {r[1]:20s} {r[2]:10s} {r[3]:5d}')
+"
+```
+
+5. **Render mode review** — cross-check `render_mode` in exchanges.yaml against bible Section 1c failure modes. Sites that MUST have `render_mode: auto` or `playwright`:
+   - `auto`: Gate.io, OKX, HTX, Crypto.com, KuCoin, Bitstamp, Bitfinex, Coinbase, Aevo, dYdX, Drift, Gains, Kwenta, Lighter, Aster, ApeX, Paradex, Korbit, Coinone, BitMart
+   - `playwright`: Bithumb EN, MercadoBitcoin
+
+6. **Spec URL liveness** — verify all import URLs are reachable before starting imports:
+
+```bash
+for url in \
+  "https://raw.githubusercontent.com/Kucoin/kucoin-universal-sdk/main/spec/rest/entry/openapi-spot.json" \
+  "https://docs.whitebit.com/openapi/public/http-v4.yaml" \
+  "https://raw.githubusercontent.com/bitmartexchange/bitmart-postman-api/master/collections/Spot.postman_collection.json" \
+  "https://api.prime.coinbase.com/v1/openapi.yaml" \
+  "https://api.prod.paradex.trade/swagger/doc.json" \
+  "https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json" \
+  "https://raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json" \
+  "https://raw.githubusercontent.com/metalocal/coinbase-exchange-api/main/api.oas3.json"; do
+  code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+  echo "$code $url"
+done
+```
+
+If any URL returns non-200, check the bible for alternatives before proceeding.
+
+#### Phase 1: Registry Alignment
+
+Before syncing, ensure `data/exchanges.yaml` matches the bible:
+
+1. **Verify existing sections** — seed URLs, allowed_domains, scope_prefixes, render_mode all match bible Section 3-5 per-exchange entries
+2. **Fix known gaps** documented in the bible:
+   - Kraken: seed URL only discovered guide pages, not `/rest-api/` pages (sitemap has 48 REST pages)
+   - Coinbase: FIX docs at `/exchange/fix-api/`, `/international-exchange/fix-api/`, `/prime/fix-api/`, `/derivatives/fix/` outside current scope_prefixes
+   - Bithumb EN: `render_mode: playwright` required (Localize.js)
+3. **Add new exchanges** from bible Section 6 (MEXC, BingX = CRITICAL; Deribit, Backpack = HIGH)
+4. **Add new sections** from bible Section 2k (FIX docs) and Section 5 (new priorities)
+
+#### Phase 2: Sync Execution
+
+```bash
+# Full sync with JS fallback (1-4 hours for all 46 exchanges)
+cex-api-docs sync --docs-dir ./cex-docs --render auto --concurrency 2
+
+# If interrupted, resume (reuses inventories, fetches only pending/error)
+cex-api-docs sync --docs-dir ./cex-docs --resume --concurrency 2
+
+# Re-sync specific exchange (e.g., after fixing registry entry)
+cex-api-docs sync --exchange kraken --docs-dir ./cex-docs --render auto
+```
+
+**Timeout handling**: Full sync takes 1-4 hours. Use `--concurrency 2` to balance speed vs rate limits. If running agentically, use background execution for the sync and check progress via `store-report`. If an exchange fails (403, timeout), re-sync it individually. Gate.io rate-limits aggressively — may need `--concurrency 1` or longer delays.
+
+#### Phase 3: Spec Imports
+
+Import all verified specs. See bible Section 9 for the full priority list with exact commands.
+
+```bash
+# KuCoin (9 files, all need --base-url since specs lack servers[])
+for spec in openapi-spot openapi-futures openapi-account openapi-margin openapi-broker openapi-earn openapi-copytrading openapi-viplending openapi-affiliate; do
+  base_url="https://api.kucoin.com"
+  [[ "$spec" == *futures* || "$spec" == *copytrading* ]] && base_url="https://api-futures.kucoin.com"
+  cex-api-docs import-openapi --exchange kucoin --section spot \
+    --url "https://raw.githubusercontent.com/Kucoin/kucoin-universal-sdk/main/spec/rest/entry/${spec}.json" \
+    --base-url "$base_url" --docs-dir ./cex-docs --continue-on-error
+done
+
+# WhiteBIT (7 OpenAPI specs)
+for spec in public/http-v4.yaml public/http-v2.yaml public/http-v1.yaml \
+  private/main_api_v4.yaml private/http-trade-v4.yaml private/http-trade-v1.yaml oauth2.yaml; do
+  cex-api-docs import-openapi --exchange whitebit --section v4 \
+    --url "https://docs.whitebit.com/openapi/${spec}" --docs-dir ./cex-docs --continue-on-error
+done
+
+# BitMart (2 Postman collections: Spot 54 + Futures 57 = 111 endpoints)
+cex-api-docs import-postman --exchange bitmart --section spot \
+  --url "https://raw.githubusercontent.com/bitmartexchange/bitmart-postman-api/master/collections/Spot.postman_collection.json" \
+  --docs-dir ./cex-docs --continue-on-error
+cex-api-docs import-postman --exchange bitmart --section futures \
+  --url "https://raw.githubusercontent.com/bitmartexchange/bitmart-postman-api/master/collections/Futures.postman_collection.json" \
+  --docs-dir ./cex-docs --continue-on-error
+
+# Coinbase Prime (351KB, ~95 endpoints)
+cex-api-docs import-openapi --exchange coinbase --section prime \
+  --url "https://api.prime.coinbase.com/v1/openapi.yaml" --docs-dir ./cex-docs --continue-on-error
+
+# Paradex (380KB, 67 paths — spec lacks servers[], needs --base-url)
+cex-api-docs import-openapi --exchange paradex --section api \
+  --url "https://api.prod.paradex.trade/swagger/doc.json" \
+  --base-url "https://api.prod.paradex.trade/v1" --docs-dir ./cex-docs --continue-on-error
+
+# Lighter (225KB, 72 paths — spec lacks servers[], needs --base-url)
+cex-api-docs import-openapi --exchange lighter --section docs \
+  --url "https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json" \
+  --base-url "https://api.lighter.xyz" --docs-dir ./cex-docs --continue-on-error
+
+# dYdX (115KB, 43 paths — spec lacks servers[], needs --base-url)
+cex-api-docs import-openapi --exchange dydx --section docs \
+  --url "https://raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json" \
+  --base-url "https://indexer.dydx.trade/v4" --docs-dir ./cex-docs --continue-on-error
+
+# Coinbase Exchange (community spec, 157KB, 38 paths)
+cex-api-docs import-openapi --exchange coinbase --section exchange \
+  --url "https://raw.githubusercontent.com/metalocal/coinbase-exchange-api/main/api.oas3.json" \
+  --docs-dir ./cex-docs --continue-on-error
+
+# Link imported endpoints to doc pages
+cex-api-docs link-endpoints --docs-dir ./cex-docs
+```
+
+After each import, verify endpoint count matches bible expectations. If count is significantly lower, check for `--continue-on-error` output for parsing failures.
+
+#### Phase 4: Post-Sync Validation
+
+```bash
+# Quality gate (empty/thin/tiny_html pages)
+cex-api-docs quality-check --docs-dir ./cex-docs
+
+# Store consistency (DB/file mismatches)
+cex-api-docs fsck --docs-dir ./cex-docs
+
+# CCXT cross-reference (gap detection)
+cex-api-docs ccxt-xref --docs-dir ./cex-docs
+
+# Changelog extraction (API drift detection)
+cex-api-docs extract-changelogs --docs-dir ./cex-docs
+
+# Stale citation detection
+cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+
+# Semantic index rebuild
+cex-api-docs build-index --incremental --docs-dir ./cex-docs
+cex-api-docs compact-index --docs-dir ./cex-docs
+
+# Coverage gaps
+cex-api-docs coverage-gaps --docs-dir ./cex-docs
+
+# Final report — compare against Phase 0 baseline
+cex-api-docs store-report --docs-dir ./cex-docs
+```
+
+Spot-check 5% of pages with `crawl4ai`. If content differs >20% from stored markdown, flag the exchange for re-crawl with `--render auto`.
+
+#### Phase 5: Update Documentation
+
+Follow the "Updating Skills & Documentation" checklist above. This is NOT optional — every sync that changes page/endpoint counts must update all 6 doc files.
 
 ### Sync Pipeline Render Modes
 
