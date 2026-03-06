@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator
 
 from .db import open_db
 from .errors import CexApiDocsError
+from .fts_util import sanitize_fts_query, endpoint_search_text
 from .fs import atomic_write_text
 from .hashing import sha256_hex_text
 from .lock import acquire_write_lock
@@ -511,17 +512,7 @@ INSERT INTO review_queue (
                 )
 
         # Update endpoints_fts (rowid = endpoints.rowid).
-        search_text = json.dumps(
-            {
-                "description": description_str,
-                "required_permissions": record.get("required_permissions"),
-                "rate_limit": record.get("rate_limit"),
-                "error_codes": record.get("error_codes"),
-                "field_status": field_status,
-            },
-            sort_keys=True,
-            ensure_ascii=False,
-        )
+        search_text = endpoint_search_text(record)
         conn.execute("DELETE FROM endpoints_fts WHERE rowid = ?;", (endpoint_rowid,))
         conn.execute(
             """
@@ -633,7 +624,7 @@ def search_endpoints(
     conn = open_db(db_path)
     try:
         where = ["endpoints_fts MATCH ?"]
-        params: list[Any] = [query]
+        params: list[Any] = [sanitize_fts_query(query)]
         if exchange:
             where.append("endpoints_fts.exchange = ?")
             params.append(exchange)
@@ -650,7 +641,7 @@ SELECT
   endpoints_fts.method,
   endpoints_fts.path,
   snippet(endpoints_fts, 5, '[', ']', '...', 12) AS snippet,
-  bm25(endpoints_fts) AS rank
+  rank
 FROM endpoints_fts
 WHERE {' AND '.join(where)}
 ORDER BY rank

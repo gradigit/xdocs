@@ -6,6 +6,7 @@ from typing import Any
 
 from .db import open_db
 from .errors import CexApiDocsError
+from .fts_util import endpoint_search_text
 from .lock import acquire_write_lock
 from .store import require_store_db
 from .urlcanon import canonicalize_url
@@ -25,7 +26,7 @@ SELECT
   p.content_hash,
   p.crawled_at,
   snippet(pages_fts, 2, '[', ']', '...', 12) AS snippet,
-  bm25(pages_fts) AS rank
+  rank
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ?
@@ -217,11 +218,13 @@ def fts_rebuild(*, docs_dir: str, lock_timeout_s: float) -> dict[str, Any]:
                         record = json.loads(er["json"]) if er["json"] else {}
                     except (ValueError, TypeError):
                         record = {}
-                    method = record.get("method", "")
-                    path = record.get("path", "")
+                    http = record.get("http") or {}
+                    method = http.get("method", "") if isinstance(http, dict) else ""
+                    path = http.get("path", "") if isinstance(http, dict) else ""
+                    search_text = endpoint_search_text(record)
                     conn.execute(
                         "INSERT INTO endpoints_fts(rowid, endpoint_id, exchange, section, method, path, search_text) VALUES (?, ?, ?, ?, ?, ?, ?);",
-                        (er["rowid"], er["endpoint_id"], er["exchange"], er["section"], method, path, er["json"] or ""),
+                        (er["rowid"], er["endpoint_id"], er["exchange"], er["section"], method, path, search_text),
                     )
                     rebuilt_endpoints += 1
 

@@ -94,7 +94,7 @@ def resolve_docs_url(
                 JOIN pages p ON pages_fts.rowid = p.id
                 WHERE pages_fts MATCH ?
                   AND p.canonical_url LIKE ?
-                ORDER BY bm25(pages_fts)
+                ORDER BY rank
                 LIMIT 10;
                 """,
                 (fts_query, domain_like),

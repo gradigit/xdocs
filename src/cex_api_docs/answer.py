@@ -6,8 +6,14 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+import logging
+
+from .classify import classify_input
 from .db import open_db
+from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms
 from .registry import load_registry
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_question(q: str) -> str:
@@ -35,10 +41,10 @@ SELECT
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
-ORDER BY bm25(pages_fts)
+ORDER BY rank
 LIMIT 1;
 """,
-        (query, url_prefix + "%"),
+        (sanitize_fts_query(query), url_prefix + "%"),
     ).fetchone()
     if row is None:
         return None
@@ -48,9 +54,10 @@ LIMIT 1;
 def _make_excerpt(md: str, *, needle_re: re.Pattern[str], target_len: int = 400, hard_max: int = 600) -> tuple[str, int, int]:
     m = needle_re.search(md)
     if not m:
-        # Fallback: first N chars.
+        # Fallback: first N chars, snapped to boundary.
         end = min(len(md), target_len)
-        excerpt = md[:end]
+        end = _snap_end_forward(md, end)
+        excerpt = _clean_excerpt(md[:end])
         return excerpt, 0, end
 
     idx = m.start()
@@ -58,8 +65,65 @@ def _make_excerpt(md: str, *, needle_re: re.Pattern[str], target_len: int = 400,
     end = min(len(md), start + target_len)
     if end - start > hard_max:
         end = start + hard_max
-    excerpt = md[start:end]
+
+    # Snap start backward to nearest newline or whitespace boundary.
+    start = _snap_start_backward(md, start)
+    # Snap end forward to nearest sentence end or paragraph break.
+    end = _snap_end_forward(md, end)
+    # Enforce hard max after snapping.
+    if end - start > hard_max:
+        end = start + hard_max
+        end = _snap_end_forward(md, end)
+
+    excerpt = _clean_excerpt(md[start:end])
     return excerpt, start, end
+
+
+def _snap_start_backward(md: str, pos: int) -> int:
+    """Snap start position backward to nearest newline or word boundary."""
+    if pos == 0:
+        return 0
+    # Look for newline within 50 chars backward.
+    search_start = max(0, pos - 50)
+    nl = md.rfind("\n", search_start, pos)
+    if nl != -1:
+        return nl + 1
+    # Fall back to word boundary.
+    sp = md.rfind(" ", search_start, pos)
+    if sp != -1:
+        return sp + 1
+    return pos
+
+
+def _snap_end_forward(md: str, pos: int) -> int:
+    """Snap end position forward to nearest sentence end or paragraph break."""
+    if pos >= len(md):
+        return len(md)
+    # Look for paragraph break (double newline) within 80 chars.
+    para = md.find("\n\n", pos, min(len(md), pos + 80))
+    if para != -1:
+        return para
+    # Look for sentence-ending punctuation followed by space or newline.
+    for i in range(pos, min(len(md), pos + 80)):
+        if md[i] in ".!?" and (i + 1 >= len(md) or md[i + 1] in " \n\t"):
+            return i + 1
+    # Fall back to newline.
+    nl = md.find("\n", pos, min(len(md), pos + 80))
+    if nl != -1:
+        return nl
+    # Fall back to word boundary.
+    sp = md.find(" ", pos, min(len(md), pos + 50))
+    if sp != -1:
+        return sp
+    return pos
+
+
+def _clean_excerpt(text: str) -> str:
+    """Strip zero-width characters and broken markdown fragments."""
+    # Remove zero-width chars.
+    text = re.sub(r"[\u200b\u200c\u200d\ufeff\u00ad]", "", text)
+    # Strip leading/trailing whitespace.
+    return text.strip()
 
 
 def _claim(claim_id: str, *, text: str, citation: dict[str, Any]) -> dict[str, Any]:
@@ -115,10 +179,10 @@ SELECT
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
-ORDER BY bm25(pages_fts)
+ORDER BY rank
 LIMIT ?;
 """,
-        (query, url_prefix + "%", int(limit)),
+        (sanitize_fts_query(query), url_prefix + "%", int(limit)),
     )
     return [dict(r) for r in cur.fetchall()]
 
@@ -160,9 +224,11 @@ def _search_pages_with_semantic(
                 ).fetchone()
                 if row:
                     sem_results_raw.append(dict(row))
-        except (ImportError, Exception):
-            # Semantic search is optional; index may not exist.
+        except ImportError:
+            # Semantic search extras not installed — expected in minimal installs.
             pass
+        except Exception:
+            logger.warning("Semantic search failed (non-fatal)", exc_info=True)
 
     if not sem_results_raw:
         return fts_results[:limit]
@@ -216,10 +282,8 @@ def _search_endpoints_for_answer(
     limit: int = 5,
 ) -> list[dict[str, Any]]:
     """Search endpoint records and return relevant fields for answer composition."""
-    # Sanitize for FTS5, filtering out FTS5 keywords that would break syntax.
-    fts_keywords = {"OR", "AND", "NOT", "NEAR"}
-    terms = [t for t in re.findall(r"[A-Za-z0-9_]+", query) if t.upper() not in fts_keywords]
-    fts_query = " OR ".join(terms[:8]) if terms else query
+    terms = [t for t in re.findall(r"[A-Za-z0-9_]+", query) if len(t) > 1]
+    fts_query = build_fts_query(terms) if terms else sanitize_fts_query(query)
     if not fts_query.strip():
         return []
 
@@ -234,7 +298,7 @@ SELECT
   endpoints_fts.method,
   endpoints_fts.path,
   snippet(endpoints_fts, 5, '[', ']', '...', 12) AS snippet,
-  bm25(endpoints_fts) AS rank
+  rank
 FROM endpoints_fts
 WHERE {' AND '.join(where)}
 ORDER BY rank
@@ -263,12 +327,12 @@ LIMIT ?;
 
 
 def _detect_exchange(norm: str, reg) -> list:
-    """Match exchange names/IDs in the normalized question text."""
+    """Match exchange names/IDs in the normalized question text using word boundaries."""
     matches = []
     for ex in reg.exchanges:
         ex_id = ex.exchange_id.lower()
         display = ex.display_name.lower()
-        if ex_id in norm or display in norm:
+        if re.search(rf"\b{re.escape(ex_id)}\b", norm) or re.search(rf"\b{re.escape(display)}\b", norm):
             matches.append(ex)
     return matches
 
@@ -317,24 +381,43 @@ def _resolve_endpoint_citation_url(
     return None
 
 
+def _directory_prefix(url: str) -> str:
+    """Extract directory prefix from a URL (strip trailing path segment).
+
+    e.g. 'https://example.com/docs/ws/connect' -> 'https://example.com/docs/ws/'
+    This ensures searches match sibling pages, not just the exact seed URL.
+    """
+    # Strip query/fragment.
+    clean = url.split("?")[0].split("#")[0]
+    if clean.endswith("/"):
+        return clean
+    # Strip last path segment.
+    last_slash = clean.rfind("/")
+    if last_slash > 8:  # after https://
+        return clean[:last_slash + 1]
+    return clean
+
+
 def _generic_search_answer(
     conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
 ) -> dict[str, Any]:
     """Generic cite-only answer for any exchange: FTS search across all sections."""
-    seed_prefixes = {sec.section_id: sec.seed_urls[0] for sec in exchange.sections if sec.seed_urls}
-    # Also search by allowed_domains as a fallback prefix.
+    # Use directory prefixes (not exact seed URLs) for broader matching.
+    seed_prefixes = {}
+    for sec in exchange.sections:
+        if sec.seed_urls:
+            seed_prefixes[sec.section_id] = _directory_prefix(sec.seed_urls[0])
+    # Domain-level fallback — always searched regardless of section results.
     domain_prefixes = [f"https://{d}" for d in (exchange.allowed_domains or [])]
 
     claims: list[dict[str, Any]] = []
     notes: list[str] = []
     c = 1
+    max_claims = 10  # Reduced from 20 for precision.
 
     # Build FTS query from question terms (strip common words).
-    terms = [w for w in re.sub(r"[^\w\s]", " ", norm).split() if len(w) > 2 and w not in {
-        "the", "and", "for", "what", "how", "does", "this", "that", "with", "from",
-        "are", "can", "api", exchange.exchange_id.lower(),
-    }]
-    fts_query = " OR ".join(terms[:8]) if terms else norm
+    terms = extract_search_terms(norm, extra_stopwords={exchange.exchange_id.lower()})
+    fts_query = build_fts_query(terms) if terms else sanitize_fts_query(norm)
 
     # Search endpoints for relevant results.
     endpoint_results = _search_endpoints_for_answer(conn, query=fts_query, exchange=exchange.exchange_id, limit=3)
@@ -363,8 +446,10 @@ def _generic_search_answer(
         })
         c += 1
 
-    # Search each section, collect top results.
+    # Search each section using directory prefix, collect top results.
     for section_id, prefix in seed_prefixes.items():
+        if c > max_claims:
+            break
         candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=3, docs_dir=docs_dir, exchange=exchange.exchange_id)
         for cand in candidates:
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
@@ -384,37 +469,38 @@ def _generic_search_answer(
             }
             claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}:{section_id}] {excerpt}", citation=citation))
             c += 1
-            if c > 20:
+            if c > max_claims:
                 break
-        if c > 20:
-            break
 
-    # Fallback: search by domain prefix if no page claims found.
-    page_claims = [cl for cl in claims if cl.get("kind") != "ENDPOINT"]
-    if not page_claims:
-        for dp in domain_prefixes:
-            candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id)
-            for cand in candidates:
-                md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
-                if not md_path or not md_path.exists():
-                    continue
-                md = md_path.read_text(encoding="utf-8")
-                needle_re = re.compile("|".join(re.escape(t) for t in terms[:4]) if terms else re.escape(norm[:30]), re.IGNORECASE)
-                excerpt, start, end = _make_excerpt(md, needle_re=needle_re)
-                citation = {
-                    "url": cand["canonical_url"],
-                    "crawled_at": cand["crawled_at"],
-                    "content_hash": cand["content_hash"],
-                    "path_hash": cand["path_hash"],
-                    "excerpt": excerpt,
-                    "excerpt_start": start,
-                    "excerpt_end": end,
-                }
-                claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}] {excerpt}", citation=citation))
-                c += 1
-                if c > 20:
-                    break
-            if page_claims or len(claims) > len(endpoint_results):
+    # Always search domain-level too (not just as fallback).
+    # This catches pages outside section prefixes.
+    seen_urls = {cl["citations"][0]["url"] for cl in claims if cl.get("citations")}
+    for dp in domain_prefixes:
+        if c > max_claims:
+            break
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id)
+        for cand in candidates:
+            if cand["canonical_url"] in seen_urls:
+                continue
+            md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
+            if not md_path or not md_path.exists():
+                continue
+            md = md_path.read_text(encoding="utf-8")
+            needle_re = re.compile("|".join(re.escape(t) for t in terms[:4]) if terms else re.escape(norm[:30]), re.IGNORECASE)
+            excerpt, start, end = _make_excerpt(md, needle_re=needle_re)
+            citation = {
+                "url": cand["canonical_url"],
+                "crawled_at": cand["crawled_at"],
+                "content_hash": cand["content_hash"],
+                "path_hash": cand["path_hash"],
+                "excerpt": excerpt,
+                "excerpt_start": start,
+                "excerpt_end": end,
+            }
+            claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}] {excerpt}", citation=citation))
+            seen_urls.add(cand["canonical_url"])
+            c += 1
+            if c > max_claims:
                 break
 
     if not claims:
@@ -677,6 +763,119 @@ def _binance_answer(
     }
 
 
+def _augment_with_classification(
+    conn: sqlite3.Connection,
+    result: dict[str, Any],
+    *,
+    classification,
+    exchange,
+    docs_dir: str,
+) -> dict[str, Any]:
+    """Augment answer with classification-specific search results.
+
+    Classification is used as AUGMENTATION: if error_message, prepend error
+    search results; if endpoint_path, prepend path lookup. The generic search
+    results are always preserved (F4: augment, not replace).
+    """
+    if classification.confidence < 0.5:
+        return result
+
+    existing_ids = {cl.get("endpoint_id") for cl in result.get("claims", []) if cl.get("endpoint_id")}
+    existing_urls = set()
+    for cl in result.get("claims", []):
+        for cit in cl.get("citations", []):
+            if cit.get("url"):
+                existing_urls.add(cit["url"])
+
+    augmented_claims: list[dict[str, Any]] = []
+    c_start = len(result.get("claims", [])) + 1
+
+    if classification.input_type == "error_message":
+        # Prepend error code search results.
+        error_codes = classification.signals.get("error_codes", [])
+        for ec_info in error_codes[:2]:  # Max 2 error codes.
+            code = ec_info.get("code", "")
+            if not code:
+                continue
+            try:
+                from .lookup import search_error_code
+                error_results = search_error_code(
+                    docs_dir=docs_dir,
+                    error_code=code,
+                    exchange=exchange.exchange_id,
+                    limit=3,
+                )
+                for er in error_results:
+                    if er.get("source_type") == "page":
+                        url = er.get("canonical_url", "")
+                        if url in existing_urls:
+                            continue
+                        existing_urls.add(url)
+                        augmented_claims.append({
+                            "id": f"c{c_start}",
+                            "kind": "SOURCE",
+                            "text": f"[{exchange.exchange_id}:error] {er.get('snippet', '')}",
+                            "citations": [{"url": url}],
+                        })
+                        c_start += 1
+                    elif er.get("source_type") == "endpoint":
+                        ep_id = er.get("endpoint_id", "")
+                        if ep_id in existing_ids:
+                            continue
+                        existing_ids.add(ep_id)
+                        augmented_claims.append({
+                            "id": f"c{c_start}",
+                            "kind": "ENDPOINT",
+                            "text": f"[{exchange.exchange_id}:{er.get('section', '')}] {er.get('method', '')} {er.get('path', '')} — {er.get('snippet', '')}",
+                            "citations": [],
+                            "endpoint_id": ep_id,
+                        })
+                        c_start += 1
+            except Exception:
+                logger.debug("Error code augmentation failed for %s", code, exc_info=True)
+
+    elif classification.input_type == "endpoint_path":
+        # Prepend endpoint path lookup results.
+        path = classification.signals.get("path", "")
+        method = classification.signals.get("method")
+        if path:
+            try:
+                from .lookup import lookup_endpoint_by_path
+                path_results = lookup_endpoint_by_path(
+                    docs_dir=docs_dir,
+                    path=path,
+                    method=method,
+                    exchange=exchange.exchange_id,
+                )
+                for record in path_results[:3]:
+                    ep_id = record.get("endpoint_id", "")
+                    if ep_id in existing_ids:
+                        continue
+                    existing_ids.add(ep_id)
+                    http = record.get("http", {})
+                    augmented_claims.append({
+                        "id": f"c{c_start}",
+                        "kind": "ENDPOINT",
+                        "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
+                        "citations": [{"url": record.get("docs_url", "")}] if record.get("docs_url") else [],
+                        "endpoint_id": ep_id,
+                    })
+                    c_start += 1
+            except Exception:
+                logger.debug("Endpoint path augmentation failed for %s", path, exc_info=True)
+
+    if augmented_claims:
+        # Prepend augmented claims (they're more specific) and re-number.
+        all_claims = augmented_claims + result.get("claims", [])
+        for i, cl in enumerate(all_claims, 1):
+            cl["id"] = f"c{i}"
+        result["claims"] = all_claims
+        if result.get("status") == "unknown" and augmented_claims:
+            result["status"] = "ok"
+
+    return result
+
+
 def answer_question(
     *,
     docs_dir: str,
@@ -764,11 +963,23 @@ def answer_question(
 
     conn = open_db(db_path)
     try:
+        # Classify input to augment search (F4: augment, don't replace).
+        classification = classify_input(question)
+
         # Binance: use richer Binance-specific logic.
         if exchange.exchange_id == "binance":
-            return _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir)
+            result = _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir)
+        else:
+            # All other exchanges: generic cite-only search.
+            result = _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir)
 
-        # All other exchanges: generic cite-only search.
-        return _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir)
+        # Augment with classification-specific results.
+        result = _augment_with_classification(
+            conn, result,
+            classification=classification,
+            exchange=exchange,
+            docs_dir=docs_dir,
+        )
+        return result
     finally:
         conn.close()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -8,8 +9,53 @@ from typing import Any
 
 from .errors import CexApiDocsError
 
+logger = logging.getLogger(__name__)
 
-SCHEMA_USER_VERSION = 4
+
+SCHEMA_USER_VERSION = 5
+
+
+def _migrate_4_to_5(conn: sqlite3.Connection) -> None:
+    """Switch FTS5 tables to porter stemming tokenizer.
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS preserves old tokenizer on existing DBs,
+    so we must DROP + CREATE to apply the new tokenizer. FTS content is rebuilt
+    by running ``fts-rebuild`` after migration.
+    """
+    # Drop old FTS tables (content is rebuilt by fts-rebuild).
+    conn.execute("DROP TABLE IF EXISTS pages_fts;")
+    conn.execute("DROP TABLE IF EXISTS endpoints_fts;")
+
+    # Recreate with porter stemming.
+    conn.execute("""
+CREATE VIRTUAL TABLE pages_fts USING fts5(
+  canonical_url UNINDEXED,
+  title,
+  markdown,
+  tokenize = 'porter unicode61'
+);
+""")
+    conn.execute("""
+CREATE VIRTUAL TABLE endpoints_fts USING fts5(
+  endpoint_id UNINDEXED,
+  exchange UNINDEXED,
+  section UNINDEXED,
+  method UNINDEXED,
+  path,
+  search_text,
+  tokenize = 'porter unicode61'
+);
+""")
+
+    # Configure BM25 column weights via rank function.
+    # pages_fts: title 10x more important than markdown body.
+    conn.execute(
+        "INSERT INTO pages_fts(pages_fts, rank) VALUES('rank', 'bm25(0.0, 10.0, 1.0)');"
+    )
+    # endpoints_fts: path 5x more important than search_text.
+    conn.execute(
+        "INSERT INTO endpoints_fts(endpoints_fts, rank) VALUES('rank', 'bm25(0.0, 0.0, 0.0, 0.0, 5.0, 1.0)');"
+    )
 
 
 def _migrate_2_to_3(conn: sqlite3.Connection) -> None:
@@ -77,6 +123,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
   USING fts5(exchange_id, section_id, entry_date, entry_text, content=changelog_entries, content_rowid=id);
 """,
     ],
+    (4, 5): [_migrate_4_to_5],
 }
 
 
@@ -173,6 +220,11 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
                     ) from e
             v += 1
             _set_user_version(conn, v)
+            if key == (4, 5):
+                logger.warning(
+                    "Migrated FTS5 tables to porter stemming (v4→v5). "
+                    "Run 'cex-api-docs fts-rebuild' to repopulate search indexes."
+                )
 
     return _get_user_version(conn)
 

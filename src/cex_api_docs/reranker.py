@@ -1,64 +1,39 @@
-"""Cross-encoder reranking via jina-reranker-v3-mlx (Apple Silicon MLX).
+"""Cross-encoder reranking via FlashRank (ONNX, CPU-only, no PyTorch).
 
+Uses ms-marco-MiniLM-L-12-v2 (~34MB, ~80ms for 20 docs on CPU).
 Lazy-loads the model on first use. Requires ``pip install cex-api-docs[reranker]``
-which installs ``mlx`` and ``mlx-lm``. The model weights (~1.2 GB) are downloaded
-from HuggingFace on first use and cached locally.
+which installs ``flashrank``.
 
-License: CC BY-NC 4.0 (acceptable for internal tooling).
+License: Apache 2.0.
 """
 
 from __future__ import annotations
 
 import logging
-import sys
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-_REPO_ID = "jinaai/jina-reranker-v3-mlx"
-_reranker = None
+_MODEL_NAME = "ms-marco-MiniLM-L-12-v2"
+_ranker = None
 
 
-def _require_reranker():
-    """Lazy-load the jina-reranker-v3-mlx model."""
-    global _reranker
-    if _reranker is not None:
-        return _reranker
+def _require_ranker():
+    """Lazy-load the FlashRank model."""
+    global _ranker
+    if _ranker is not None:
+        return _ranker
 
     try:
-        import mlx  # noqa: F401 — verify mlx is installed
+        from flashrank import Ranker
     except ImportError:
         raise ImportError(
-            "mlx is not installed. Run: pip install cex-api-docs[reranker]"
+            "flashrank is not installed. Run: pip install cex-api-docs[reranker]"
         )
 
-    try:
-        from huggingface_hub import snapshot_download
-    except ImportError:
-        raise ImportError(
-            "huggingface_hub is not installed. Run: pip install huggingface_hub"
-        )
-
-    logger.info("Downloading jina-reranker-v3-mlx model (first use may take a few minutes)...")
-    model_dir = snapshot_download(_REPO_ID)
-
-    # The rerank.py module is bundled inside the downloaded model repo.
-    if model_dir not in sys.path:
-        sys.path.insert(0, model_dir)
-
-    try:
-        from rerank import MLXReranker  # type: ignore[import-not-found]
-    except ImportError as e:
-        raise ImportError(
-            f"Could not import MLXReranker from downloaded model at {model_dir}: {e}"
-        )
-
-    logger.info("Loading jina-reranker-v3-mlx model...")
-    _reranker = MLXReranker(
-        model_path=model_dir,
-        projector_path=f"{model_dir}/projector.safetensors",
-    )
-    return _reranker
+    logger.info("Loading FlashRank model %s (first use downloads ~34MB)...", _MODEL_NAME)
+    _ranker = Ranker(model_name=_MODEL_NAME)
+    return _ranker
 
 
 def rerank(
@@ -68,7 +43,7 @@ def rerank(
     top_n: int = 5,
     text_key: str = "text",
 ) -> list[dict[str, Any]]:
-    """Rerank search results using jina-reranker-v3-mlx cross-encoder.
+    """Rerank search results using FlashRank cross-encoder.
 
     Args:
         query: The search query.
@@ -82,19 +57,25 @@ def rerank(
     if not results:
         return []
 
-    reranker = _require_reranker()
+    ranker = _require_ranker()
 
-    documents = [r.get(text_key, "") for r in results]
+    # Build passages list for FlashRank.
+    # FlashRank expects list of dicts with "id" and "text" keys.
+    from flashrank import RerankRequest
 
-    # Score all documents against the query.
-    ranked = reranker.rerank(query, documents, top_n=top_n)
+    passages = []
+    for i, r in enumerate(results):
+        passages.append({"id": i, "text": r.get(text_key, "")})
 
-    # Map back to original result dicts, adding rerank_score.
+    request = RerankRequest(query=query, passages=passages)
+    ranked = ranker.rerank(request)
+
+    # FlashRank returns dicts with "id", "text", "score" keys, sorted by score desc.
     output: list[dict[str, Any]] = []
-    for item in ranked:
-        idx = item["index"]
+    for item in ranked[:top_n]:
+        idx = int(item["id"])
         result_copy = dict(results[idx])
-        result_copy["rerank_score"] = item["relevance_score"]
+        result_copy["rerank_score"] = float(item["score"])
         output.append(result_copy)
 
     return output

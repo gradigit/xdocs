@@ -61,7 +61,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(
   canonical_url UNINDEXED,
   title,
   markdown,
-  tokenize = 'unicode61'
+  tokenize = 'porter unicode61'
 );
 
 CREATE TABLE IF NOT EXISTS endpoints (
@@ -88,7 +88,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS endpoints_fts USING fts5(
   method UNINDEXED,
   path,
   search_text,
-  tokenize = 'unicode61'
+  tokenize = 'porter unicode61'
 );
 
 CREATE TABLE IF NOT EXISTS endpoint_sources (

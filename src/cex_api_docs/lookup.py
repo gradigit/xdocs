@@ -71,16 +71,18 @@ def search_error_code(
     try:
         results: list[dict[str, Any]] = []
 
-        # Phase 1: Search endpoints_fts for the error code string.
-        results.extend(
-            _search_error_in_endpoints(conn, error_code=error_code, exchange=exchange, limit=limit)
-        )
+        # Phase 1: Search pages_fts FIRST (error definition pages are most useful).
+        # Search with broader limit to ensure error definition pages are found.
+        page_results = _search_error_in_pages(conn, error_code=error_code, exchange=exchange, limit=limit * 3)
+        # Strongly boost pages with "error" in URL path (definition pages).
+        page_results.sort(key=lambda r: (0 if "error" in r.get("canonical_url", "").lower() else 1, r.get("rank", 0)))
+        results.extend(page_results[:limit])
 
-        # Phase 2: Search pages_fts for the error code string.
+        # Phase 2: Search endpoints_fts for affected endpoints.
         remaining = max(0, limit - len(results))
         if remaining > 0:
             results.extend(
-                _search_error_in_pages(conn, error_code=error_code, exchange=exchange, limit=remaining)
+                _search_error_in_endpoints(conn, error_code=error_code, exchange=exchange, limit=remaining)
             )
 
         return results[:limit]
@@ -118,7 +120,7 @@ SELECT
   endpoints_fts.method,
   endpoints_fts.path,
   snippet(endpoints_fts, 5, '[', ']', '...', 12) AS snippet,
-  bm25(endpoints_fts) AS rank
+  rank
 FROM endpoints_fts
 WHERE {' AND '.join(where)}
 ORDER BY rank
@@ -171,7 +173,7 @@ SELECT
   p.markdown_path,
   p.word_count,
   snippet(pages_fts, 2, '[', ']', '...', 12) AS snippet,
-  bm25(pages_fts) AS rank
+  rank
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE {' AND '.join(where)}

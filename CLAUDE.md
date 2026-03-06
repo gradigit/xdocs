@@ -218,7 +218,8 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
 - `src/cex_api_docs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
 - `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
-- `src/cex_api_docs/reranker.py` Cross-encoder reranking (jina-reranker-v3-mlx)
+- `src/cex_api_docs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, endpoint search text, BM25 normalization)
+- `src/cex_api_docs/reranker.py` Cross-encoder reranking (FlashRank, ms-marco-MiniLM-L-12-v2, ONNX CPU)
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
 - `src/cex_api_docs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
 - `src/cex_api_docs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
@@ -243,6 +244,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
 - **Playwright is optional**: install with `pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
 - **Semantic search model**: `jina-embeddings-v5-text-nano` (768 dims, last-token pooling, EuroBERT backbone). MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-nano-mlx`), not mlx-embeddings. Query-only install: `pip install -e ".[semantic-query]"` (Mac). Full install: `pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads ~495MB model from HuggingFace (cached after that). LanceDB index stored at `cex-docs/lancedb-index/`.
+- **LanceDB compaction**: Use `table.optimize(cleanup_older_than=timedelta(days=0))` not the deprecated `compact_files()` + `cleanup_old_versions()`. The CLI `compact-index` command wraps this. Run periodically after large index builds to reduce fragment count and disk usage.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.
 - **Schema path resolution**: `cli.py` resolves `schema/schema.sql` relative to the package install location (`Path(__file__).parents[2]`). This works with `pip install -e .` but will break if the source tree is moved after install.
@@ -262,12 +264,12 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,718 pages, 16.72M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,724 pages, 16.73M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
-- **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias. 15 exchanges went from 0→3,945 CCXT endpoints.
+- **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).
 - **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → `cloudscraper` → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, cloudscraper 1.2.71, Playwright 1.58.0.
 - **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
 - **Kraken crawl gap** — 48 REST API pages in sitemap never fetched; seed URL only reached guide pages.
@@ -277,13 +279,15 @@ Latest:
 - **3 new OpenAPI spec imports** — Deribit (173 ops), Orderly (203 ops), Backpack (22 ops).
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
+- **Verification fixes** — Semantic FTS cold-start (14.1s → 1.0s via deferred embedder loading), render cascade validation (`_find_node_pw_module()` at selection time), LanceDB compaction (3,568 → 9 fragments, 2.4GB → 908MB via `table.optimize()`).
+- **Query pipeline overhaul (M2)** — 18 quality issues fixed across 4 phases: shared `fts_util.py` (FTS5 sanitization, hyphen/colon quoting, AND/OR query logic), values-only `search_text` (no JSON key pollution), porter stemming + BM25 column weights on FTS5 tables (schema v4→v5), classification augmentation in answer pipeline, pages-first error code search with URL boost, directory prefix matching, FlashRank reranker (ms-marco-MiniLM-L-12-v2, 302ms/20 docs on CPU), BM25 score normalization, excerpt boundary snapping, word-boundary exchange detection. 367 tests (346 existing + 21 new).
 
 Research completed (docs/research/):
 
 - LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
 - CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
-- CCXT as cross-reference: Built `ccxt_xref.py` — 22 exchanges mapped (korbit has no CCXT class, mercadobitcoin remaps to `mercado`).
+- CCXT as cross-reference: Built `ccxt_xref.py` — 33 exchanges mapped (korbit/orderly/bluefin/nado have no CCXT class, mercadobitcoin remaps to `mercado`, dydx/backpack removed in ccxt 4.x).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
 
 Next: Periodic CCXT docs refresh. Changelog drift detection. Import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime). Pacifica re-evaluation when docs mature.

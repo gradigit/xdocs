@@ -47,9 +47,7 @@ ccxt = [
   "ccxt>=4.4",
 ]
 reranker = [
-  "huggingface_hub>=0.27",
-  "mlx>=0.20",
-  "mlx-lm>=0.20",
+  "flashrank>=0.2",
 ]
 
 [project.scripts]

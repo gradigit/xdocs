@@ -47,12 +47,13 @@ def _lance_dir(docs_dir: str) -> str:
 
 def compact_index(*, docs_dir: str) -> dict[str, Any]:
     """Compact LanceDB index: merge fragments + cleanup old versions."""
+    from datetime import timedelta
+
     lancedb = _require_lancedb()
     lance_db = lancedb.connect(_lance_dir(docs_dir))
     table = lance_db.open_table(TABLE_NAME)
     pre = table.count_rows()
-    table.compact_files()
-    table.cleanup_old_versions()
+    table.optimize(cleanup_older_than=timedelta(days=0))
     post = table.count_rows()
     return {"rows": post, "pre_compact_rows": pre, "lance_dir": _lance_dir(docs_dir)}
 
@@ -613,7 +614,7 @@ SELECT
   p.title,
   p.domain,
   p.word_count,
-  bm25(pages_fts) AS rank
+  rank
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ?
