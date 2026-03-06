@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "486365a6a0caafd96cb9828c561cf336441dfb17d5c731caca2ec4012d1ab900",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/minutes/{unit}",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ubd84(Minute) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-minutes",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "225fc9eea8aad31a21a04b99cc701825b7f0cac403528286b90eed287e5c1e1b",
+      "path_hash": "183f945bff00551e1d818b9d33c5ab11985c5d381b60b2eb20fd3c923bbb7078",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 8049,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-minutes",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "225fc9eea8aad31a21a04b99cc701825b7f0cac403528286b90eed287e5c1e1b",
+      "path_hash": "183f945bff00551e1d818b9d33c5ab11985c5d381b60b2eb20fd3c923bbb7078",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 8049,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-minutes",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "225fc9eea8aad31a21a04b99cc701825b7f0cac403528286b90eed287e5c1e1b",
+      "path_hash": "183f945bff00551e1d818b9d33c5ab11985c5d381b60b2eb20fd3c923bbb7078",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 8054,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-minutes",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "225fc9eea8aad31a21a04b99cc701825b7f0cac403528286b90eed287e5c1e1b",
+      "path_hash": "183f945bff00551e1d818b9d33c5ab11985c5d381b60b2eb20fd3c923bbb7078",
+      "field_name": "description",
+      "excerpt": "\ubd84(Minute) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8032,
+      "excerpt_end": 8047
+    }
+  ]
+}

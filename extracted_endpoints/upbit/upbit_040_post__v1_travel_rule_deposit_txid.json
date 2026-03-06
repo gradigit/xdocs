@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "a18d2285bc5f186e8537d0241f14fdff985dd585ac1408d48534a252fbc3dbdf",
+  "http": {
+    "method": "POST",
+    "path": "/v1/travel_rule/deposit/txid",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc785\uae08 TxID\ub85c \uacc4\uc815\uc8fc \uac80\uc99d \uc694\uccad",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-txid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "aa0b3ecbe55b43d67d240056c317dc7684250ec2126532cac4e85704e0012675",
+      "path_hash": "bcd1c03039d5077d20fe18ad605cb0475408aed02d38e7e581b286ea4541c119",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/travel_rule/deposit/txid",
+      "excerpt_start": 8055,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-txid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "aa0b3ecbe55b43d67d240056c317dc7684250ec2126532cac4e85704e0012675",
+      "path_hash": "bcd1c03039d5077d20fe18ad605cb0475408aed02d38e7e581b286ea4541c119",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/travel_rule/deposit/txid",
+      "excerpt_start": 8055,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-txid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "aa0b3ecbe55b43d67d240056c317dc7684250ec2126532cac4e85704e0012675",
+      "path_hash": "bcd1c03039d5077d20fe18ad605cb0475408aed02d38e7e581b286ea4541c119",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/travel_rule/deposit/txid",
+      "excerpt_start": 8061,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-txid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "aa0b3ecbe55b43d67d240056c317dc7684250ec2126532cac4e85704e0012675",
+      "path_hash": "bcd1c03039d5077d20fe18ad605cb0475408aed02d38e7e581b286ea4541c119",
+      "field_name": "description",
+      "excerpt": "\uc785\uae08 TxID\ub85c \uacc4\uc815\uc8fc \uac80\uc99d \uc694\uccad",
+      "excerpt_start": 8035,
+      "excerpt_end": 8053
+    }
+  ]
+}

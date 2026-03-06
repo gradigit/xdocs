@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "suspected_redirect_stubs": 0,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "gmx",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 11602,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "gmx",
+        "final_host": "docs.gmx.io",
+        "final_url": "https://docs.gmx.io/docs/intro/",
+        "http_status": 200,
+        "markdown_chars": 1921,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "docs",
+        "seed_host": "docs.gmx.io",
+        "seed_host_allowed": true,
+        "seed_url": "https://docs.gmx.io/docs/intro/",
+        "suspected_redirect_stub": false,
+        "word_count": 142
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

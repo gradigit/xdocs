@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "e4e58c4eda71a05a587dd4b25f430faba7c168170bfa1455137d34521cdc2d41",
+  "http": {
+    "method": "DELETE",
+    "path": "/v1/order",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uac1c\ubcc4 \uc8fc\ubb38 \ucde8\uc18c \uc811\uc218",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-order",
+      "crawled_at": "2026-02-10T17:53:08+00:00",
+      "content_hash": "eed4d11ca66b8d4ef405455df3156604563a9384c2405cd888092eb25f64f09f",
+      "path_hash": "ac9d8bb3c2929f9ba5aa6365d600c26ea1d0dbbc14e9a7126d6fb93561f9aa44",
+      "field_name": "http.method",
+      "excerpt": "delete\n\nhttps://api.upbit.com/v1/order",
+      "excerpt_start": 8041,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-order",
+      "crawled_at": "2026-02-10T17:53:08+00:00",
+      "content_hash": "eed4d11ca66b8d4ef405455df3156604563a9384c2405cd888092eb25f64f09f",
+      "path_hash": "ac9d8bb3c2929f9ba5aa6365d600c26ea1d0dbbc14e9a7126d6fb93561f9aa44",
+      "field_name": "http.path",
+      "excerpt": "delete\n\nhttps://api.upbit.com/v1/order",
+      "excerpt_start": 8041,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-order",
+      "crawled_at": "2026-02-10T17:53:08+00:00",
+      "content_hash": "eed4d11ca66b8d4ef405455df3156604563a9384c2405cd888092eb25f64f09f",
+      "path_hash": "ac9d8bb3c2929f9ba5aa6365d600c26ea1d0dbbc14e9a7126d6fb93561f9aa44",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/order",
+      "excerpt_start": 8049,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-order",
+      "crawled_at": "2026-02-10T17:53:08+00:00",
+      "content_hash": "eed4d11ca66b8d4ef405455df3156604563a9384c2405cd888092eb25f64f09f",
+      "path_hash": "ac9d8bb3c2929f9ba5aa6365d600c26ea1d0dbbc14e9a7126d6fb93561f9aa44",
+      "field_name": "description",
+      "excerpt": "\uac1c\ubcc4 \uc8fc\ubb38 \ucde8\uc18c \uc811\uc218",
+      "excerpt_start": 8028,
+      "excerpt_end": 8039
+    }
+  ]
+}

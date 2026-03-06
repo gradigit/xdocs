@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "ff24b96b797b97c6771986dbe6f7362a79ec4c1bd66374ffb7c50be4b524367e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/accounts",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uacc4\uc815 \uc794\uace0 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-balance",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "00885def3605d7e95e71c5a0b4e2a0ebb868db4f5220219e04fe1ad012e70818",
+      "path_hash": "31bb1506e155e79c2b6527f14572a0f278a907e4312046d510c256e9c5946fa1",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/accounts",
+      "excerpt_start": 8035,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-balance",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "00885def3605d7e95e71c5a0b4e2a0ebb868db4f5220219e04fe1ad012e70818",
+      "path_hash": "31bb1506e155e79c2b6527f14572a0f278a907e4312046d510c256e9c5946fa1",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/accounts",
+      "excerpt_start": 8035,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-balance",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "00885def3605d7e95e71c5a0b4e2a0ebb868db4f5220219e04fe1ad012e70818",
+      "path_hash": "31bb1506e155e79c2b6527f14572a0f278a907e4312046d510c256e9c5946fa1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/accounts",
+      "excerpt_start": 8040,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-balance",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "00885def3605d7e95e71c5a0b4e2a0ebb868db4f5220219e04fe1ad012e70818",
+      "path_hash": "31bb1506e155e79c2b6527f14572a0f278a907e4312046d510c256e9c5946fa1",
+      "field_name": "description",
+      "excerpt": "\uacc4\uc815 \uc794\uace0 \uc870\ud68c",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

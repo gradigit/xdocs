@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "87a478164c1a79cefeeff1dbe2012d459eaf083f760a1ca315890bda3bac7e35",
+  "http": {
+    "method": "POST",
+    "path": "/v1/travel_rule/deposit/uuid",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc785\uae08 UUID\ub85c \uacc4\uc815\uc8fc \uac80\uc99d \uc694\uccad",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-uuid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "d1fd4a6a88ab37c771a184a49b97df7d01f2fe97f2a3c48e2165d4c1e7c882a8",
+      "path_hash": "fadd62f40e7aae0053bcfd4002b102bb5e35ddb6f2bb94f68f7fe5dc8264570a",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/travel_rule/deposit/uuid",
+      "excerpt_start": 8055,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-uuid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "d1fd4a6a88ab37c771a184a49b97df7d01f2fe97f2a3c48e2165d4c1e7c882a8",
+      "path_hash": "fadd62f40e7aae0053bcfd4002b102bb5e35ddb6f2bb94f68f7fe5dc8264570a",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/travel_rule/deposit/uuid",
+      "excerpt_start": 8055,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-uuid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "d1fd4a6a88ab37c771a184a49b97df7d01f2fe97f2a3c48e2165d4c1e7c882a8",
+      "path_hash": "fadd62f40e7aae0053bcfd4002b102bb5e35ddb6f2bb94f68f7fe5dc8264570a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/travel_rule/deposit/uuid",
+      "excerpt_start": 8061,
+      "excerpt_end": 8110
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/verify-travelrule-by-uuid",
+      "crawled_at": "2026-02-10T17:53:28+00:00",
+      "content_hash": "d1fd4a6a88ab37c771a184a49b97df7d01f2fe97f2a3c48e2165d4c1e7c882a8",
+      "path_hash": "fadd62f40e7aae0053bcfd4002b102bb5e35ddb6f2bb94f68f7fe5dc8264570a",
+      "field_name": "description",
+      "excerpt": "\uc785\uae08 UUID\ub85c \uacc4\uc815\uc8fc \uac80\uc99d \uc694\uccad",
+      "excerpt_start": 8035,
+      "excerpt_end": 8053
+    }
+  ]
+}

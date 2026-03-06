@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "c99a249b1b4bd96c1aa21031c362265ba074125ed9b1e7dda78027f8e57e9a15",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orders/chance",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ud398\uc5b4\ubcc4 \uc8fc\ubb38 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-order-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "8fe83207275b7a6771e05ae50101855469831e1242f2912f529071e484570eda",
+      "path_hash": "1ef97c74e1b4232a3b648ea7f1aabcc29cfa90f349029ddd3a4800d9b0e08f26",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/chance",
+      "excerpt_start": 8049,
+      "excerpt_end": 8092
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-order-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "8fe83207275b7a6771e05ae50101855469831e1242f2912f529071e484570eda",
+      "path_hash": "1ef97c74e1b4232a3b648ea7f1aabcc29cfa90f349029ddd3a4800d9b0e08f26",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/chance",
+      "excerpt_start": 8049,
+      "excerpt_end": 8092
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-order-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "8fe83207275b7a6771e05ae50101855469831e1242f2912f529071e484570eda",
+      "path_hash": "1ef97c74e1b4232a3b648ea7f1aabcc29cfa90f349029ddd3a4800d9b0e08f26",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders/chance",
+      "excerpt_start": 8054,
+      "excerpt_end": 8092
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-order-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "8fe83207275b7a6771e05ae50101855469831e1242f2912f529071e484570eda",
+      "path_hash": "1ef97c74e1b4232a3b648ea7f1aabcc29cfa90f349029ddd3a4800d9b0e08f26",
+      "field_name": "description",
+      "excerpt": "\ud398\uc5b4\ubcc4 \uc8fc\ubb38 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 8032,
+      "excerpt_end": 8047
+    }
+  ]
+}

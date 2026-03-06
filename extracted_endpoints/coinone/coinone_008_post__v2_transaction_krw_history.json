@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "17e6b02255194c496c1588158664d90aa82382d07409effad466948bdfdb069d",
+  "http": {
+    "method": "POST",
+    "path": "/v2/transaction/krw/history",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc6d0\ud654 \uc785\ucd9c\uae08 \ub0b4\uc5ed \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/krw-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:40+00:00",
+      "content_hash": "c2104591d148a575d8cfddd0872a843e91e2f1322f4897b3fd615357833899ea",
+      "path_hash": "d21ccf097a3eab38fce94a34432d4f2a6c7f1837d49837353510683d6e5c5a2a",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/transaction/krw/history",
+      "excerpt_start": 7589,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/krw-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:40+00:00",
+      "content_hash": "c2104591d148a575d8cfddd0872a843e91e2f1322f4897b3fd615357833899ea",
+      "path_hash": "d21ccf097a3eab38fce94a34432d4f2a6c7f1837d49837353510683d6e5c5a2a",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/transaction/krw/history",
+      "excerpt_start": 7589,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/krw-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:40+00:00",
+      "content_hash": "c2104591d148a575d8cfddd0872a843e91e2f1322f4897b3fd615357833899ea",
+      "path_hash": "d21ccf097a3eab38fce94a34432d4f2a6c7f1837d49837353510683d6e5c5a2a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/transaction/krw/history",
+      "excerpt_start": 7595,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/krw-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:40+00:00",
+      "content_hash": "c2104591d148a575d8cfddd0872a843e91e2f1322f4897b3fd615357833899ea",
+      "path_hash": "d21ccf097a3eab38fce94a34432d4f2a6c7f1837d49837353510683d6e5c5a2a",
+      "field_name": "description",
+      "excerpt": "\uc6d0\ud654 \uc785\ucd9c\uae08 \ub0b4\uc5ed \uc870\ud68c",
+      "excerpt_start": 7567,
+      "excerpt_end": 7579
+    }
+  ]
+}

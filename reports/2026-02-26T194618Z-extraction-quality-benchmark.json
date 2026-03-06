@@ -1,0 +1,54 @@
+{
+  "cmd": "bench-extraction-quality",
+  "docs_dir": "/Users/aaaaa/Projects/cex-api-docs/cex-docs",
+  "generated_at": "2026-02-26T19:46:19Z",
+  "quality_counts": {
+    "empty": 4,
+    "ok_ge_50": 4386,
+    "thin_lt_50": 147,
+    "total": 4537
+  },
+  "sample_metrics": {
+    "avg_word_count": 1422.742,
+    "code_tag_occurrences": 123,
+    "domain_distribution_top20": {
+      "api-docs.aevo.xyz": 12,
+      "apidocs.bithumb.com": 13,
+      "bybit-exchange.github.io": 44,
+      "developers.binance.com": 216,
+      "docs.bitfinex.com": 13,
+      "docs.coinone.co.kr": 8,
+      "docs.drift.trade": 15,
+      "docs.dydx.xyz": 21,
+      "docs.gains.trade": 13,
+      "docs.gmx.io": 6,
+      "docs.kwenta.io": 2,
+      "docs.lighter.xyz": 3,
+      "docs.perp.com": 5,
+      "docs.upbit.com": 35,
+      "github.com": 22,
+      "hyperliquid.gitbook.io": 4,
+      "localhost": 2,
+      "raw.githubusercontent.com": 4,
+      "www.bitget.com": 10,
+      "www.kucoin.com": 51
+    },
+    "fence_occurrences": 2758,
+    "heading_line_occurrences": 7149,
+    "html_table_occurrences": 1,
+    "link_occurrences": 58431,
+    "pages_with_code_tags": 6,
+    "pages_with_fenced_code": 293,
+    "pages_with_headings": 492,
+    "pages_with_html_table_markup": 1,
+    "pages_with_links": 494,
+    "pages_with_table_like_lines": 269,
+    "sample_pages": 500,
+    "table_like_line_occurrences": 15231
+  },
+  "sample_size_requested": 500,
+  "store_totals": {
+    "pages": 4537,
+    "words": 6394560
+  }
+}

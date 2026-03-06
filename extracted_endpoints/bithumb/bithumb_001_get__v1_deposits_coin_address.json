@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "f20a0501e8dc91baf78fcca95d5a2c4d8c9ceb9932e21d88653e741708d21300",
+  "http": {
+    "method": "GET",
+    "path": "/v1/deposits/coin_address",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uac1c\ubcc4 \uc785\uae08 \uc8fc\uc18c \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B0%9C%EB%B3%84-%EC%9E%85%EA%B8%88-%EC%A3%BC%EC%86%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:48:50+00:00",
+      "content_hash": "5ae086fb816db7604db6cb09a5e4ee526805a28dfa41f99c2555c671b946e880",
+      "path_hash": "08444a52c7a986539443859684d88711b249a855713aae07172ce85bf88ccb63",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/deposits/coin_address",
+      "excerpt_start": 6195,
+      "excerpt_end": 6248
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B0%9C%EB%B3%84-%EC%9E%85%EA%B8%88-%EC%A3%BC%EC%86%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:48:50+00:00",
+      "content_hash": "5ae086fb816db7604db6cb09a5e4ee526805a28dfa41f99c2555c671b946e880",
+      "path_hash": "08444a52c7a986539443859684d88711b249a855713aae07172ce85bf88ccb63",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/deposits/coin_address",
+      "excerpt_start": 6195,
+      "excerpt_end": 6248
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B0%9C%EB%B3%84-%EC%9E%85%EA%B8%88-%EC%A3%BC%EC%86%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:48:50+00:00",
+      "content_hash": "5ae086fb816db7604db6cb09a5e4ee526805a28dfa41f99c2555c671b946e880",
+      "path_hash": "08444a52c7a986539443859684d88711b249a855713aae07172ce85bf88ccb63",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/deposits/coin_address",
+      "excerpt_start": 6200,
+      "excerpt_end": 6248
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B0%9C%EB%B3%84-%EC%9E%85%EA%B8%88-%EC%A3%BC%EC%86%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:48:50+00:00",
+      "content_hash": "5ae086fb816db7604db6cb09a5e4ee526805a28dfa41f99c2555c671b946e880",
+      "path_hash": "08444a52c7a986539443859684d88711b249a855713aae07172ce85bf88ccb63",
+      "field_name": "description",
+      "excerpt": "\uac1c\ubcc4 \uc785\uae08 \uc8fc\uc18c \uc870\ud68c",
+      "excerpt_start": 6182,
+      "excerpt_end": 6193
+    }
+  ]
+}

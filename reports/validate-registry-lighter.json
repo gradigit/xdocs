@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "suspected_redirect_stubs": 0,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "lighter",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 229536,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "lighter",
+        "final_host": "docs.lighter.xyz",
+        "final_url": "https://docs.lighter.xyz/trading/api",
+        "http_status": 200,
+        "markdown_chars": 3801,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "docs",
+        "seed_host": "docs.lighter.xyz",
+        "seed_host_allowed": true,
+        "seed_url": "https://docs.lighter.xyz/trading/api",
+        "suspected_redirect_stub": false,
+        "word_count": 265
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

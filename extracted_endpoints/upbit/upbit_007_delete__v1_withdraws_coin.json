@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "711c810206a40610d9a226d0abd29a094acc88a3147c3c55c451b6f302b07c35",
+  "http": {
+    "method": "DELETE",
+    "path": "/v1/withdraws/coin",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ub514\uc9c0\ud138 \uc790\uc0b0 \ucd9c\uae08 \ucde8\uc18c \uc694\uccad",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-withdrawal",
+      "crawled_at": "2026-02-10T17:53:09+00:00",
+      "content_hash": "37645ac0a480a93e7de5565fcd8724f50eba02d80f410020bf0f50218284bf1f",
+      "path_hash": "3fd9c80fb05841ea87ed56f72aefbe984559763716a302e451ad2a32dcc2d8df",
+      "field_name": "http.method",
+      "excerpt": "delete\n\nhttps://api.upbit.com/v1/withdraws/coin",
+      "excerpt_start": 8049,
+      "excerpt_end": 8096
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-withdrawal",
+      "crawled_at": "2026-02-10T17:53:09+00:00",
+      "content_hash": "37645ac0a480a93e7de5565fcd8724f50eba02d80f410020bf0f50218284bf1f",
+      "path_hash": "3fd9c80fb05841ea87ed56f72aefbe984559763716a302e451ad2a32dcc2d8df",
+      "field_name": "http.path",
+      "excerpt": "delete\n\nhttps://api.upbit.com/v1/withdraws/coin",
+      "excerpt_start": 8049,
+      "excerpt_end": 8096
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-withdrawal",
+      "crawled_at": "2026-02-10T17:53:09+00:00",
+      "content_hash": "37645ac0a480a93e7de5565fcd8724f50eba02d80f410020bf0f50218284bf1f",
+      "path_hash": "3fd9c80fb05841ea87ed56f72aefbe984559763716a302e451ad2a32dcc2d8df",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/withdraws/coin",
+      "excerpt_start": 8057,
+      "excerpt_end": 8096
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-withdrawal",
+      "crawled_at": "2026-02-10T17:53:09+00:00",
+      "content_hash": "37645ac0a480a93e7de5565fcd8724f50eba02d80f410020bf0f50218284bf1f",
+      "path_hash": "3fd9c80fb05841ea87ed56f72aefbe984559763716a302e451ad2a32dcc2d8df",
+      "field_name": "description",
+      "excerpt": "\ub514\uc9c0\ud138 \uc790\uc0b0 \ucd9c\uae08 \ucde8\uc18c \uc694\uccad",
+      "excerpt_start": 8032,
+      "excerpt_end": 8047
+    }
+  ]
+}

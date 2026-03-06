@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "3ddc083c2b7de76cbe0f5d26eda0978862acba23240deb98beedae07f7445784",
+  "http": {
+    "method": "POST",
+    "path": "/v1/withdraws/coin",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uac00\uc0c1 \uc790\uc0b0 \ucd9c\uae08\ud558\uae30",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%94%94%EC%A7%80%ED%84%B8-%EC%9E%90%EC%82%B0-%EC%B6%9C%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:54+00:00",
+      "content_hash": "780ad060bd878157b4a263380f5cec9d9d0b9762ca8362ced1d56a422f019e9e",
+      "path_hash": "bc52507cfd175203891841227507bf91f2c05810e212efb204d467f73f8eda88",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v1/withdraws/coin",
+      "excerpt_start": 6193,
+      "excerpt_end": 6240
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%94%94%EC%A7%80%ED%84%B8-%EC%9E%90%EC%82%B0-%EC%B6%9C%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:54+00:00",
+      "content_hash": "780ad060bd878157b4a263380f5cec9d9d0b9762ca8362ced1d56a422f019e9e",
+      "path_hash": "bc52507cfd175203891841227507bf91f2c05810e212efb204d467f73f8eda88",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v1/withdraws/coin",
+      "excerpt_start": 6193,
+      "excerpt_end": 6240
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%94%94%EC%A7%80%ED%84%B8-%EC%9E%90%EC%82%B0-%EC%B6%9C%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:54+00:00",
+      "content_hash": "780ad060bd878157b4a263380f5cec9d9d0b9762ca8362ced1d56a422f019e9e",
+      "path_hash": "bc52507cfd175203891841227507bf91f2c05810e212efb204d467f73f8eda88",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/withdraws/coin",
+      "excerpt_start": 6199,
+      "excerpt_end": 6240
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%94%94%EC%A7%80%ED%84%B8-%EC%9E%90%EC%82%B0-%EC%B6%9C%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:54+00:00",
+      "content_hash": "780ad060bd878157b4a263380f5cec9d9d0b9762ca8362ced1d56a422f019e9e",
+      "path_hash": "bc52507cfd175203891841227507bf91f2c05810e212efb204d467f73f8eda88",
+      "field_name": "description",
+      "excerpt": "\uac00\uc0c1 \uc790\uc0b0 \ucd9c\uae08\ud558\uae30",
+      "excerpt_start": 6181,
+      "excerpt_end": 6191
+    }
+  ]
+}

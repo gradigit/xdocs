@@ -1,0 +1,65 @@
+{
+  "exchange": "dydx",
+  "section": "docs",
+  "protocol": "http",
+  "endpoint_id": "c32118e80c071206323766378087aed39c523a36a757bb489b7d0198767092b2",
+  "http": {
+    "method": "GET",
+    "path": "/v4/compliance/screen/{address}",
+    "base_url": "https://indexer.dydx.trade/v4"
+  },
+  "description": "Screen an address to see if it is restricted",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "description",
+      "excerpt": "Get Compliance Screen",
+      "excerpt_start": 66234,
+      "excerpt_end": 66255
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.method",
+      "excerpt": "Get Compliance Screen",
+      "excerpt_start": 66234,
+      "excerpt_end": 66255
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.path",
+      "excerpt": "Get Compliance Screen",
+      "excerpt_start": 66234,
+      "excerpt_end": 66255
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.base_url",
+      "excerpt": "Get Compliance Screen",
+      "excerpt_start": 66234,
+      "excerpt_end": 66255
+    }
+  ]
+}

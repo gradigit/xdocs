@@ -1,0 +1,72 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "fetch-inventory",
+    "config": {
+      "adaptive_delay": true,
+      "allowed_domains": [
+        "docs.upbit.com"
+      ],
+      "concurrency": 2,
+      "conditional": true,
+      "delay_s": 0.2,
+      "exchange_id": "upbit",
+      "force_refetch": true,
+      "ignore_robots": false,
+      "inventory_id": 45,
+      "limit": null,
+      "max_bytes": 10000000,
+      "max_domain_delay_s": 10.0,
+      "max_redirects": 5,
+      "render_mode": "http",
+      "resume": false,
+      "retries": 1,
+      "scope_dedupe": true,
+      "scope_group": "upbit",
+      "scope_priority": 100,
+      "section_id": "rest_en",
+      "timeout_s": 15.0
+    },
+    "counts": {
+      "dedupe_skipped": 0,
+      "entries": 464,
+      "errors": 0,
+      "fetched": 464,
+      "new_pages": 0,
+      "retry_after_applied": 0,
+      "revalidated_unchanged": 0,
+      "skipped": 0,
+      "stored": 464,
+      "unchanged_pages": 302,
+      "updated_pages": 162
+    },
+    "crawl_run_id": 347,
+    "docs_dir": "cex-docs",
+    "domain_delay_snapshot": {
+      "docs.upbit.com": {
+        "current_delay_s": 0.2,
+        "last_status": 200,
+        "next_allowed_in_s": 0.0,
+        "retry_after_applied": 0,
+        "throttle_events": 0
+      }
+    },
+    "ended_at": "2026-02-26T19:56:48+00:00",
+    "errors": [],
+    "exchange_id": "upbit",
+    "inventory_id": 45,
+    "robots": {
+      "docs.upbit.com": {
+        "error": null,
+        "fetched_at": "2026-02-26T19:49:20+00:00",
+        "http_status": 200,
+        "policy": "parsed",
+        "robots_url": "https://docs.upbit.com/robots.txt"
+      }
+    },
+    "schema_version": "v1",
+    "section_id": "rest_en",
+    "started_at": "2026-02-26T19:49:20+00:00"
+  },
+  "schema_version": "v1"
+}

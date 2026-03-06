@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "164f18b0b33469b432429594f6ebbf490379fec38201b765f8794147ebff3510",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/days",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc77c(Day) \uce94\ub4e4",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9D%BCday-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:00+00:00",
+      "content_hash": "7b4daf7ac26c8043131447ad370c1a91151116fb2c7736f92c532859f728f060",
+      "path_hash": "fcc031297d6f883cc80bfbaffe91dc2a4878436f9be53d1f6cb30480fda663cd",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/days",
+      "excerpt_start": 6191,
+      "excerpt_end": 6235
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9D%BCday-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:00+00:00",
+      "content_hash": "7b4daf7ac26c8043131447ad370c1a91151116fb2c7736f92c532859f728f060",
+      "path_hash": "fcc031297d6f883cc80bfbaffe91dc2a4878436f9be53d1f6cb30480fda663cd",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/days",
+      "excerpt_start": 6191,
+      "excerpt_end": 6235
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9D%BCday-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:00+00:00",
+      "content_hash": "7b4daf7ac26c8043131447ad370c1a91151116fb2c7736f92c532859f728f060",
+      "path_hash": "fcc031297d6f883cc80bfbaffe91dc2a4878436f9be53d1f6cb30480fda663cd",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/candles/days",
+      "excerpt_start": 6196,
+      "excerpt_end": 6235
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9D%BCday-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:00+00:00",
+      "content_hash": "7b4daf7ac26c8043131447ad370c1a91151116fb2c7736f92c532859f728f060",
+      "path_hash": "fcc031297d6f883cc80bfbaffe91dc2a4878436f9be53d1f6cb30480fda663cd",
+      "field_name": "description",
+      "excerpt": "\uc77c(Day) \uce94\ub4e4",
+      "excerpt_start": 6180,
+      "excerpt_end": 6189
+    }
+  ]
+}

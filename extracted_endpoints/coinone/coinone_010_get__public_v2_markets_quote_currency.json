@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "a3aeef6b8c4eaa60f68fc79904729c83b6c1196772ea66b4fce30dcb8e9b784a",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/markets/{quote_currency}",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc804\uccb4 \uc885\ubaa9 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/markets",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "0d06a32c1efc3e19ad16df39537e01b37d596fdafc9e696f4550d451b1601d0f",
+      "path_hash": "22c308de40ef353f275af0b1a38637d8d322de5ba768f82f67f114d0c7a62a03",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/markets/{quote_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7652
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/markets",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "0d06a32c1efc3e19ad16df39537e01b37d596fdafc9e696f4550d451b1601d0f",
+      "path_hash": "22c308de40ef353f275af0b1a38637d8d322de5ba768f82f67f114d0c7a62a03",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/markets/{quote_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7652
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/markets",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "0d06a32c1efc3e19ad16df39537e01b37d596fdafc9e696f4550d451b1601d0f",
+      "path_hash": "22c308de40ef353f275af0b1a38637d8d322de5ba768f82f67f114d0c7a62a03",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/markets/{quote_currency}",
+      "excerpt_start": 7592,
+      "excerpt_end": 7652
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/markets",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "0d06a32c1efc3e19ad16df39537e01b37d596fdafc9e696f4550d451b1601d0f",
+      "path_hash": "22c308de40ef353f275af0b1a38637d8d322de5ba768f82f67f114d0c7a62a03",
+      "field_name": "description",
+      "excerpt": "\uc804\uccb4 \uc885\ubaa9 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 7566,
+      "excerpt_end": 7577
+    }
+  ]
+}

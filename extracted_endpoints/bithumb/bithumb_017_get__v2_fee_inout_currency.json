@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "e85a438fe21b73fcf8a543f396ef8b8ea3298f996a483e6ac0326e79885929d3",
+  "http": {
+    "method": "GET",
+    "path": "/v2/fee/inout/{currency}",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc785\ucd9c\uae08 \uc218\uc218\ub8cc \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%EC%88%98%EC%88%98%EB%A3%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:49:01+00:00",
+      "content_hash": "183feabbc0271c2413b86214bcc15c3571b3a6dae9dc26ac5af93e1f031eacf4",
+      "path_hash": "59c5da640ae9d467a29414ad2bbdb8fc745d18c151d57bdc7c9d864f86455583",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v2/fee/inout/{currency}",
+      "excerpt_start": 6193,
+      "excerpt_end": 6245
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%EC%88%98%EC%88%98%EB%A3%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:49:01+00:00",
+      "content_hash": "183feabbc0271c2413b86214bcc15c3571b3a6dae9dc26ac5af93e1f031eacf4",
+      "path_hash": "59c5da640ae9d467a29414ad2bbdb8fc745d18c151d57bdc7c9d864f86455583",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v2/fee/inout/{currency}",
+      "excerpt_start": 6193,
+      "excerpt_end": 6245
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%EC%88%98%EC%88%98%EB%A3%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:49:01+00:00",
+      "content_hash": "183feabbc0271c2413b86214bcc15c3571b3a6dae9dc26ac5af93e1f031eacf4",
+      "path_hash": "59c5da640ae9d467a29414ad2bbdb8fc745d18c151d57bdc7c9d864f86455583",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v2/fee/inout/{currency}",
+      "excerpt_start": 6198,
+      "excerpt_end": 6245
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%EC%88%98%EC%88%98%EB%A3%8C-%EC%A1%B0%ED%9A%8C",
+      "crawled_at": "2026-02-10T17:49:01+00:00",
+      "content_hash": "183feabbc0271c2413b86214bcc15c3571b3a6dae9dc26ac5af93e1f031eacf4",
+      "path_hash": "59c5da640ae9d467a29414ad2bbdb8fc745d18c151d57bdc7c9d864f86455583",
+      "field_name": "description",
+      "excerpt": "\uc785\ucd9c\uae08 \uc218\uc218\ub8cc \uc870\ud68c",
+      "excerpt_start": 6181,
+      "excerpt_end": 6191
+    }
+  ]
+}

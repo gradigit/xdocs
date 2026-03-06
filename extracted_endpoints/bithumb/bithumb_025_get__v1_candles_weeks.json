@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "41dd9aa9843f597be80bf4f69a862a32bc6ff93fac7b277ee71b3cf2ed5dfeec",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/weeks",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc8fc(Week) \uce94\ub4e4",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BCweek-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:03+00:00",
+      "content_hash": "8b1047474261b417b3cc93ac99097a737556990079df7b9de06ed20405d64531",
+      "path_hash": "ebe6beb684c2076693dda3bb9ec43bc371ae0cf3b6229204a275cb17bf0c95f5",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/weeks",
+      "excerpt_start": 6193,
+      "excerpt_end": 6238
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BCweek-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:03+00:00",
+      "content_hash": "8b1047474261b417b3cc93ac99097a737556990079df7b9de06ed20405d64531",
+      "path_hash": "ebe6beb684c2076693dda3bb9ec43bc371ae0cf3b6229204a275cb17bf0c95f5",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/weeks",
+      "excerpt_start": 6193,
+      "excerpt_end": 6238
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BCweek-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:03+00:00",
+      "content_hash": "8b1047474261b417b3cc93ac99097a737556990079df7b9de06ed20405d64531",
+      "path_hash": "ebe6beb684c2076693dda3bb9ec43bc371ae0cf3b6229204a275cb17bf0c95f5",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/candles/weeks",
+      "excerpt_start": 6198,
+      "excerpt_end": 6238
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BCweek-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:49:03+00:00",
+      "content_hash": "8b1047474261b417b3cc93ac99097a737556990079df7b9de06ed20405d64531",
+      "path_hash": "ebe6beb684c2076693dda3bb9ec43bc371ae0cf3b6229204a275cb17bf0c95f5",
+      "field_name": "description",
+      "excerpt": "\uc8fc(Week) \uce94\ub4e4",
+      "excerpt_start": 6181,
+      "excerpt_end": 6191
+    }
+  ]
+}

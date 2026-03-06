@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "7c8d0ce54663dd2c46844262a94843fca7b4b29cffc07948b9e55ae6bded9f7e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/months",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc6d4(Month) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-months",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "eeca201867978d7673b241afad6e2917c086c9ff3cf7fd5f07afd92b82f1e095",
+      "path_hash": "1706da1c51060ac0d2da703fc72aa38642cc789d380020ff77a6e568d01a764f",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/months",
+      "excerpt_start": 8047,
+      "excerpt_end": 8091
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-months",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "eeca201867978d7673b241afad6e2917c086c9ff3cf7fd5f07afd92b82f1e095",
+      "path_hash": "1706da1c51060ac0d2da703fc72aa38642cc789d380020ff77a6e568d01a764f",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/months",
+      "excerpt_start": 8047,
+      "excerpt_end": 8091
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-months",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "eeca201867978d7673b241afad6e2917c086c9ff3cf7fd5f07afd92b82f1e095",
+      "path_hash": "1706da1c51060ac0d2da703fc72aa38642cc789d380020ff77a6e568d01a764f",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/months",
+      "excerpt_start": 8052,
+      "excerpt_end": 8091
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-months",
+      "crawled_at": "2026-02-10T17:53:15+00:00",
+      "content_hash": "eeca201867978d7673b241afad6e2917c086c9ff3cf7fd5f07afd92b82f1e095",
+      "path_hash": "1706da1c51060ac0d2da703fc72aa38642cc789d380020ff77a6e568d01a764f",
+      "field_name": "description",
+      "excerpt": "\uc6d4(Month) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8031,
+      "excerpt_end": 8045
+    }
+  ]
+}

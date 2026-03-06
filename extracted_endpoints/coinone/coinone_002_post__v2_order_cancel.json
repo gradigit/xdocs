@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "9e09406e32a7fbcbd0896eee68826afee853be773610030894eb08bb00063e3f",
+  "http": {
+    "method": "POST",
+    "path": "/v2/order/cancel",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc8fc\ubb38 \ucde8\uc18c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/cancel-order-1",
+      "crawled_at": "2026-02-10T17:45:28+00:00",
+      "content_hash": "ef9fc485709cb1e7ef1ece97cc972e4dc22356f28486193b835bda55ac872d8e",
+      "path_hash": "4c6545b142eeb22dea27fca21398d622522de0ba30a35182f7c8ca24aa383372",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/order/cancel",
+      "excerpt_start": 7575,
+      "excerpt_end": 7622
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/cancel-order-1",
+      "crawled_at": "2026-02-10T17:45:28+00:00",
+      "content_hash": "ef9fc485709cb1e7ef1ece97cc972e4dc22356f28486193b835bda55ac872d8e",
+      "path_hash": "4c6545b142eeb22dea27fca21398d622522de0ba30a35182f7c8ca24aa383372",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/order/cancel",
+      "excerpt_start": 7575,
+      "excerpt_end": 7622
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/cancel-order-1",
+      "crawled_at": "2026-02-10T17:45:28+00:00",
+      "content_hash": "ef9fc485709cb1e7ef1ece97cc972e4dc22356f28486193b835bda55ac872d8e",
+      "path_hash": "4c6545b142eeb22dea27fca21398d622522de0ba30a35182f7c8ca24aa383372",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/order/cancel",
+      "excerpt_start": 7581,
+      "excerpt_end": 7622
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/cancel-order-1",
+      "crawled_at": "2026-02-10T17:45:28+00:00",
+      "content_hash": "ef9fc485709cb1e7ef1ece97cc972e4dc22356f28486193b835bda55ac872d8e",
+      "path_hash": "4c6545b142eeb22dea27fca21398d622522de0ba30a35182f7c8ca24aa383372",
+      "field_name": "description",
+      "excerpt": "\uc8fc\ubb38 \ucde8\uc18c",
+      "excerpt_start": 7560,
+      "excerpt_end": 7565
+    }
+  ]
+}

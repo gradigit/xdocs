@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "28d841dd4614eeabdb47e8f50dedd7cdeb85e6640e867556c71612c17f2eb75d",
+  "http": {
+    "method": "POST",
+    "path": "/info/spotMeta",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve spot metadata",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 6835,
+      "excerpt_end": 6876
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 6835,
+      "excerpt_end": 6876
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 6835,
+      "excerpt_end": 6876
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "description",
+      "excerpt": "Retrieve spot metadata",
+      "excerpt_start": 6811,
+      "excerpt_end": 6833
+    }
+  ]
+}

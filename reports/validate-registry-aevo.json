@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "suspected_redirect_stubs": 0,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "aevo",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 247007,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "aevo",
+        "final_host": "api-docs.aevo.xyz",
+        "final_url": "https://api-docs.aevo.xyz/reference/overview",
+        "http_status": 200,
+        "markdown_chars": 15886,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "api",
+        "seed_host": "api-docs.aevo.xyz",
+        "seed_host_allowed": true,
+        "seed_url": "https://api-docs.aevo.xyz/reference/overview",
+        "suspected_redirect_stub": false,
+        "word_count": 522
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

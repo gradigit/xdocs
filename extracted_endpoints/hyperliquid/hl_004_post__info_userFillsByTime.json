@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "7eb411931b05cafbbce2948030440b5ced1683143c004939270b30be82d369b5",
+  "http": {
+    "method": "POST",
+    "path": "/info/userFillsByTime",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve a user's fills by time: Returns at most 2000 fills per response and only the 10000 most recent fills are available",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9878,
+      "excerpt_end": 9919
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9878,
+      "excerpt_end": 9919
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9878,
+      "excerpt_end": 9919
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "description",
+      "excerpt": "Retrieve a user's fills by time",
+      "excerpt_start": 9845,
+      "excerpt_end": 9876
+    }
+  ]
+}

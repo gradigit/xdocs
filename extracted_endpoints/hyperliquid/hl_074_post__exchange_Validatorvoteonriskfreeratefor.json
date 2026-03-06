@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "84c359cb91d2b0e4c68d3fcb02a300475f104caae00c181034d6cc2ce0e0ea96",
+  "http": {
+    "method": "POST",
+    "path": "/exchange/Validatorvoteonriskfreeratefor",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Validator vote on risk-free rate for aligned quote asset",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 33822,
+      "excerpt_end": 33867
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 33822,
+      "excerpt_end": 33867
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 33822,
+      "excerpt_end": 33867
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "description",
+      "excerpt": "Validator vote on risk-free rate for aligned quote asset",
+      "excerpt_start": 33764,
+      "excerpt_end": 33820
+    }
+  ]
+}

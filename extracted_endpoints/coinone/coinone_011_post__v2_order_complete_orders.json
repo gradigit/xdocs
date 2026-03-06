@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "893e92104f97d84450c1b47395bb6d1e1f3f5f41c8e4c0b2490998c2143c6b7f",
+  "http": {
+    "method": "POST",
+    "path": "/v2/order/complete_orders",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\b\uccb4\uacb0 \uc8fc\ubb38 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/my-complete-orders",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "298a7c9fad2c32efb52edb9131ea41a0920fb6e25f2e1cfa4695f1d83fe0da8d",
+      "path_hash": "3e13dc7e41ecffa43c21e6151fb04d459c31c32529eb15e3fb4b7424ea60b7ce",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/order/complete_orders",
+      "excerpt_start": 7583,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/my-complete-orders",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "298a7c9fad2c32efb52edb9131ea41a0920fb6e25f2e1cfa4695f1d83fe0da8d",
+      "path_hash": "3e13dc7e41ecffa43c21e6151fb04d459c31c32529eb15e3fb4b7424ea60b7ce",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/order/complete_orders",
+      "excerpt_start": 7583,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/my-complete-orders",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "298a7c9fad2c32efb52edb9131ea41a0920fb6e25f2e1cfa4695f1d83fe0da8d",
+      "path_hash": "3e13dc7e41ecffa43c21e6151fb04d459c31c32529eb15e3fb4b7424ea60b7ce",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/order/complete_orders",
+      "excerpt_start": 7589,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/my-complete-orders",
+      "crawled_at": "2026-02-10T17:45:42+00:00",
+      "content_hash": "298a7c9fad2c32efb52edb9131ea41a0920fb6e25f2e1cfa4695f1d83fe0da8d",
+      "path_hash": "3e13dc7e41ecffa43c21e6151fb04d459c31c32529eb15e3fb4b7424ea60b7ce",
+      "field_name": "description",
+      "excerpt": "\b\uccb4\uacb0 \uc8fc\ubb38 \uc870\ud68c",
+      "excerpt_start": 7564,
+      "excerpt_end": 7573
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "724e1c5ac17abf5cd604c3e65a5bae33f673c8ba9735ceaed90ec190f4c44d81",
+  "http": {
+    "method": "GET",
+    "path": "/v1/withdraws/coin_addresses",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ucd9c\uae08 \ud5c8\uc6a9 \uc8fc\uc18c \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-withdrawal-addresses",
+      "crawled_at": "2026-02-10T17:53:24+00:00",
+      "content_hash": "eb566eb69c7cc4db855d807f98d458d432a84f018fa5825115e8a8faa1bb6928",
+      "path_hash": "e1dee321c2721a2727ea243943239225b723698e59b17128e4369ba1985edf2b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraws/coin_addresses",
+      "excerpt_start": 8047,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-withdrawal-addresses",
+      "crawled_at": "2026-02-10T17:53:24+00:00",
+      "content_hash": "eb566eb69c7cc4db855d807f98d458d432a84f018fa5825115e8a8faa1bb6928",
+      "path_hash": "e1dee321c2721a2727ea243943239225b723698e59b17128e4369ba1985edf2b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraws/coin_addresses",
+      "excerpt_start": 8047,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-withdrawal-addresses",
+      "crawled_at": "2026-02-10T17:53:24+00:00",
+      "content_hash": "eb566eb69c7cc4db855d807f98d458d432a84f018fa5825115e8a8faa1bb6928",
+      "path_hash": "e1dee321c2721a2727ea243943239225b723698e59b17128e4369ba1985edf2b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/withdraws/coin_addresses",
+      "excerpt_start": 8052,
+      "excerpt_end": 8101
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-withdrawal-addresses",
+      "crawled_at": "2026-02-10T17:53:24+00:00",
+      "content_hash": "eb566eb69c7cc4db855d807f98d458d432a84f018fa5825115e8a8faa1bb6928",
+      "path_hash": "e1dee321c2721a2727ea243943239225b723698e59b17128e4369ba1985edf2b",
+      "field_name": "description",
+      "excerpt": "\ucd9c\uae08 \ud5c8\uc6a9 \uc8fc\uc18c \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8031,
+      "excerpt_end": 8045
+    }
+  ]
+}

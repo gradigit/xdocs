@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "49c0c3cea3099c089ac1d556c3335327fae694ac35b54713c8079a8c7268da50",
+  "http": {
+    "method": "POST",
+    "path": "/exchange/Withdrawfromstaking",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Withdraw from staking: This method is used to transfer native token from staking into the user's spot account. Note that transfers from staking to spot account go through a 7 day unstaking queue.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 23377,
+      "excerpt_end": 23422
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 23377,
+      "excerpt_end": 23422
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 23377,
+      "excerpt_end": 23422
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "description",
+      "excerpt": "Withdraw from staking",
+      "excerpt_start": 23354,
+      "excerpt_end": 23375
+    }
+  ]
+}

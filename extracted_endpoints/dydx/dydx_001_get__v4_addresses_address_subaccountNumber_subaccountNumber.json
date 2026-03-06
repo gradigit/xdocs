@@ -1,0 +1,65 @@
+{
+  "exchange": "dydx",
+  "section": "docs",
+  "protocol": "http",
+  "endpoint_id": "0c2dc3b9c550efadef1f04fac96ce897e22d12d83257c39aeb0d27396e47f71b",
+  "http": {
+    "method": "GET",
+    "path": "/v4/addresses/{address}/subaccountNumber/{subaccountNumber}",
+    "base_url": "https://indexer.dydx.trade/v4"
+  },
+  "description": "Retrieves a specific subaccount associated with a given address and subaccount number",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "description",
+      "excerpt": "Get Subaccount",
+      "excerpt_start": 2772,
+      "excerpt_end": 2786
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.method",
+      "excerpt": "Get Subaccount",
+      "excerpt_start": 2772,
+      "excerpt_end": 2786
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.path",
+      "excerpt": "Get Subaccount",
+      "excerpt_start": 2772,
+      "excerpt_end": 2786
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.base_url",
+      "excerpt": "Get Subaccount",
+      "excerpt_start": 2772,
+      "excerpt_end": 2786
+    }
+  ]
+}

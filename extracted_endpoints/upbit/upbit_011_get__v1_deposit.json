@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "4aaa77d38c79a33400d71c9189d24ccad35cbe70a010dfa28b227e95cc66acd2",
+  "http": {
+    "method": "GET",
+    "path": "/v1/deposit",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uac1c\ubcc4 \uc785\uae08 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-deposit",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "0c9e7598490f67f31782a576a6bb30c062853a171fdbeb75cb5d6e9ba859ca02",
+      "path_hash": "91c94c7683a7f532af7b63c4e094cf2953993729c37ea9a5ede9354b8214ac92",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/deposit",
+      "excerpt_start": 8035,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-deposit",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "0c9e7598490f67f31782a576a6bb30c062853a171fdbeb75cb5d6e9ba859ca02",
+      "path_hash": "91c94c7683a7f532af7b63c4e094cf2953993729c37ea9a5ede9354b8214ac92",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/deposit",
+      "excerpt_start": 8035,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-deposit",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "0c9e7598490f67f31782a576a6bb30c062853a171fdbeb75cb5d6e9ba859ca02",
+      "path_hash": "91c94c7683a7f532af7b63c4e094cf2953993729c37ea9a5ede9354b8214ac92",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/deposit",
+      "excerpt_start": 8040,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-deposit",
+      "crawled_at": "2026-02-10T17:53:11+00:00",
+      "content_hash": "0c9e7598490f67f31782a576a6bb30c062853a171fdbeb75cb5d6e9ba859ca02",
+      "path_hash": "91c94c7683a7f532af7b63c4e094cf2953993729c37ea9a5ede9354b8214ac92",
+      "field_name": "description",
+      "excerpt": "\uac1c\ubcc4 \uc785\uae08 \uc870\ud68c",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

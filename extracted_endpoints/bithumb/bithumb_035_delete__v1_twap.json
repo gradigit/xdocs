@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "c97abb6da667b44a496e915bec57ebe38c66a3299bbd0dec869de31ba9fd5092",
+  "http": {
+    "method": "DELETE",
+    "path": "/v1/twap",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "TWAP - \uc8fc\ubb38 \ucde8\uc18c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/twap-%EC%A3%BC%EB%AC%B8-%EC%B7%A8%EC%86%8C",
+      "crawled_at": "2026-02-10T17:50:24+00:00",
+      "content_hash": "a1a5267ead8d2cd760e364ce262369c4feae6d6cb9cecc3204dbb428eb320e31",
+      "path_hash": "541ced9224f3945c9d29f1f84409f91339bf839e83750cf32939a4c64a9aa2c1",
+      "field_name": "http.method",
+      "excerpt": "delete\n\nhttps://api.bithumb.com/v1/twap",
+      "excerpt_start": 6197,
+      "excerpt_end": 6236
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/twap-%EC%A3%BC%EB%AC%B8-%EC%B7%A8%EC%86%8C",
+      "crawled_at": "2026-02-10T17:50:24+00:00",
+      "content_hash": "a1a5267ead8d2cd760e364ce262369c4feae6d6cb9cecc3204dbb428eb320e31",
+      "path_hash": "541ced9224f3945c9d29f1f84409f91339bf839e83750cf32939a4c64a9aa2c1",
+      "field_name": "http.path",
+      "excerpt": "delete\n\nhttps://api.bithumb.com/v1/twap",
+      "excerpt_start": 6197,
+      "excerpt_end": 6236
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/twap-%EC%A3%BC%EB%AC%B8-%EC%B7%A8%EC%86%8C",
+      "crawled_at": "2026-02-10T17:50:24+00:00",
+      "content_hash": "a1a5267ead8d2cd760e364ce262369c4feae6d6cb9cecc3204dbb428eb320e31",
+      "path_hash": "541ced9224f3945c9d29f1f84409f91339bf839e83750cf32939a4c64a9aa2c1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/twap",
+      "excerpt_start": 6205,
+      "excerpt_end": 6236
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/twap-%EC%A3%BC%EB%AC%B8-%EC%B7%A8%EC%86%8C",
+      "crawled_at": "2026-02-10T17:50:24+00:00",
+      "content_hash": "a1a5267ead8d2cd760e364ce262369c4feae6d6cb9cecc3204dbb428eb320e31",
+      "path_hash": "541ced9224f3945c9d29f1f84409f91339bf839e83750cf32939a4c64a9aa2c1",
+      "field_name": "description",
+      "excerpt": "TWAP - \uc8fc\ubb38 \ucde8\uc18c",
+      "excerpt_start": 6183,
+      "excerpt_end": 6195
+    }
+  ]
+}

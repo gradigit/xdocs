@@ -1,0 +1,110 @@
+{
+  "cmd": "bench-crawl-refresh",
+  "cwd": "/Users/aaaaa/Projects/cex-api-docs",
+  "docs_dir": "/Users/aaaaa/Projects/cex-api-docs/cex-docs",
+  "generated_at": "2026-02-26T15:38:38Z",
+  "modes": [
+    "full",
+    "resume"
+  ],
+  "runs": [
+    {
+      "config": {
+        "concurrency": 2,
+        "delay_s": 0.25,
+        "exchange": "bitget",
+        "force_refetch": false,
+        "ignore_robots": false,
+        "inventory_max_pages": null,
+        "limit": null,
+        "max_bytes": 10000000,
+        "max_redirects": 5,
+        "render_mode": "auto",
+        "resume": false,
+        "retries": 2,
+        "scope_dedupe": true,
+        "section": "broker",
+        "timeout_s": 20.0
+      },
+      "crawl_run_ids": [
+        191
+      ],
+      "db_metrics": {
+        "domains_with_429": {},
+        "http_status_counts": {
+          "200": 16
+        },
+        "raw_bytes_sum": 514732,
+        "status_429_count": 0
+      },
+      "duration_s": 69.0,
+      "ended_at_cli": "2026-02-26T15:38:38Z",
+      "fetch_error_domains": {},
+      "mode": "full",
+      "sections_count": 1,
+      "started_at_cli": "2026-02-26T15:37:29Z",
+      "sync_ended_at": "2026-02-26T15:38:38+00:00",
+      "sync_started_at": "2026-02-26T15:37:29+00:00",
+      "totals": {
+        "dedupe_skipped": 0,
+        "errors": 0,
+        "fetched": 16,
+        "inventories": 1,
+        "inventory_urls": 16,
+        "new_pages": 0,
+        "skipped": 0,
+        "stored": 16,
+        "unchanged_pages": 16,
+        "updated_pages": 0
+      }
+    },
+    {
+      "config": {
+        "concurrency": 2,
+        "delay_s": 0.25,
+        "exchange": "bitget",
+        "force_refetch": false,
+        "ignore_robots": false,
+        "inventory_max_pages": null,
+        "limit": null,
+        "max_bytes": 10000000,
+        "max_redirects": 5,
+        "render_mode": "auto",
+        "resume": true,
+        "retries": 2,
+        "scope_dedupe": true,
+        "section": "broker",
+        "timeout_s": 20.0
+      },
+      "crawl_run_ids": [
+        192
+      ],
+      "db_metrics": {
+        "domains_with_429": {},
+        "http_status_counts": {},
+        "raw_bytes_sum": 0,
+        "status_429_count": 0
+      },
+      "duration_s": 0.0,
+      "ended_at_cli": "2026-02-26T15:38:38Z",
+      "fetch_error_domains": {},
+      "mode": "resume",
+      "sections_count": 1,
+      "started_at_cli": "2026-02-26T15:38:38Z",
+      "sync_ended_at": "2026-02-26T15:38:38+00:00",
+      "sync_started_at": "2026-02-26T15:38:38+00:00",
+      "totals": {
+        "dedupe_skipped": 0,
+        "errors": 0,
+        "fetched": 0,
+        "inventories": 1,
+        "inventory_urls": 16,
+        "new_pages": 0,
+        "skipped": 0,
+        "stored": 0,
+        "unchanged_pages": 0,
+        "updated_pages": 0
+      }
+    }
+  ]
+}

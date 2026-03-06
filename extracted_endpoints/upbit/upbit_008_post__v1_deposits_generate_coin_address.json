@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "83ac02538a95269dbd90e9cbaf47b705430b89ef0d2e3790cd16c040b3732f6a",
+  "http": {
+    "method": "POST",
+    "path": "/v1/deposits/generate_coin_address",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc785\uae08 \uc8fc\uc18c \uc0dd\uc131 \uc694\uccad",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/create-deposit-address",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "c3608a5425b36adcaedb2f99cd08868a6c51b7d8728f9eca208a72d36de6ae89",
+      "path_hash": "866fb99290ea85c832c380cffd8cc6ccf3a11f881cd9301440150a49e88dfe9a",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/deposits/generate_coin_address",
+      "excerpt_start": 8041,
+      "excerpt_end": 8102
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/create-deposit-address",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "c3608a5425b36adcaedb2f99cd08868a6c51b7d8728f9eca208a72d36de6ae89",
+      "path_hash": "866fb99290ea85c832c380cffd8cc6ccf3a11f881cd9301440150a49e88dfe9a",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/deposits/generate_coin_address",
+      "excerpt_start": 8041,
+      "excerpt_end": 8102
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/create-deposit-address",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "c3608a5425b36adcaedb2f99cd08868a6c51b7d8728f9eca208a72d36de6ae89",
+      "path_hash": "866fb99290ea85c832c380cffd8cc6ccf3a11f881cd9301440150a49e88dfe9a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/deposits/generate_coin_address",
+      "excerpt_start": 8047,
+      "excerpt_end": 8102
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/create-deposit-address",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "c3608a5425b36adcaedb2f99cd08868a6c51b7d8728f9eca208a72d36de6ae89",
+      "path_hash": "866fb99290ea85c832c380cffd8cc6ccf3a11f881cd9301440150a49e88dfe9a",
+      "field_name": "description",
+      "excerpt": "\uc785\uae08 \uc8fc\uc18c \uc0dd\uc131 \uc694\uccad",
+      "excerpt_start": 8028,
+      "excerpt_end": 8039
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "d8ea4c96cb3cbd13458290f0a7c68a1657e3ceabfe926918f2164cb199209ce3",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/minutes/{unit}",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\ubd84(Minute) \uce94\ub4e4",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%B6%84minute-%EC%BA%94%EB%93%A4-1",
+      "crawled_at": "2026-02-10T17:48:55+00:00",
+      "content_hash": "10dd0ba8ef6d085db8d50426550e80e09f30e018196b4a0bf4c30e79e2ac0fd1",
+      "path_hash": "0cbd4597914d4012075ffee19a8b78563ffa254c648e07d1a287044920f67154",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 6197,
+      "excerpt_end": 6251
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%B6%84minute-%EC%BA%94%EB%93%A4-1",
+      "crawled_at": "2026-02-10T17:48:55+00:00",
+      "content_hash": "10dd0ba8ef6d085db8d50426550e80e09f30e018196b4a0bf4c30e79e2ac0fd1",
+      "path_hash": "0cbd4597914d4012075ffee19a8b78563ffa254c648e07d1a287044920f67154",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 6197,
+      "excerpt_end": 6251
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%B6%84minute-%EC%BA%94%EB%93%A4-1",
+      "crawled_at": "2026-02-10T17:48:55+00:00",
+      "content_hash": "10dd0ba8ef6d085db8d50426550e80e09f30e018196b4a0bf4c30e79e2ac0fd1",
+      "path_hash": "0cbd4597914d4012075ffee19a8b78563ffa254c648e07d1a287044920f67154",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/candles/minutes/{unit}",
+      "excerpt_start": 6202,
+      "excerpt_end": 6251
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EB%B6%84minute-%EC%BA%94%EB%93%A4-1",
+      "crawled_at": "2026-02-10T17:48:55+00:00",
+      "content_hash": "10dd0ba8ef6d085db8d50426550e80e09f30e018196b4a0bf4c30e79e2ac0fd1",
+      "path_hash": "0cbd4597914d4012075ffee19a8b78563ffa254c648e07d1a287044920f67154",
+      "field_name": "description",
+      "excerpt": "\ubd84(Minute) \uce94\ub4e4",
+      "excerpt_start": 6183,
+      "excerpt_end": 6195
+    }
+  ]
+}

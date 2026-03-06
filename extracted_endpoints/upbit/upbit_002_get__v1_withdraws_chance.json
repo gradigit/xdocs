@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "eafcadb865232c2e4ab719cfac95e288beb870f0c453d9164338f56585d28c3f",
+  "http": {
+    "method": "GET",
+    "path": "/v1/withdraws/chance",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ucd9c\uae08 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-withdrawal-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "132d0879c3ad816b3bc08ab30bd4c81226d145aa59c6e4519d54588529d87ec6",
+      "path_hash": "cc13d07c89cd7efcdec821520761b3a26c3ea3fedd16b186d36c2e47841d0fa3",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraws/chance",
+      "excerpt_start": 8041,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-withdrawal-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "132d0879c3ad816b3bc08ab30bd4c81226d145aa59c6e4519d54588529d87ec6",
+      "path_hash": "cc13d07c89cd7efcdec821520761b3a26c3ea3fedd16b186d36c2e47841d0fa3",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraws/chance",
+      "excerpt_start": 8041,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-withdrawal-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "132d0879c3ad816b3bc08ab30bd4c81226d145aa59c6e4519d54588529d87ec6",
+      "path_hash": "cc13d07c89cd7efcdec821520761b3a26c3ea3fedd16b186d36c2e47841d0fa3",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/withdraws/chance",
+      "excerpt_start": 8046,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-withdrawal-information",
+      "crawled_at": "2026-02-10T17:53:06+00:00",
+      "content_hash": "132d0879c3ad816b3bc08ab30bd4c81226d145aa59c6e4519d54588529d87ec6",
+      "path_hash": "cc13d07c89cd7efcdec821520761b3a26c3ea3fedd16b186d36c2e47841d0fa3",
+      "field_name": "description",
+      "excerpt": "\ucd9c\uae08 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 8028,
+      "excerpt_end": 8039
+    }
+  ]
+}

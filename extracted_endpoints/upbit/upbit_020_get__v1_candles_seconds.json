@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "19cc909d6f4ff4d9a4e7965f742b84e5c2bdcbb8ad6ba5692456c2b58969f5e8",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/seconds",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ucd08(Second) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-seconds",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "c94abd210d34442f102a80398f027f5ce7be402f6682cb38e4b39cdf62318fde",
+      "path_hash": "5474d9daa52f598da6bc204c66e04869aaf061036f5c1e5171a7efc696bd1d4a",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/seconds",
+      "excerpt_start": 8049,
+      "excerpt_end": 8094
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-seconds",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "c94abd210d34442f102a80398f027f5ce7be402f6682cb38e4b39cdf62318fde",
+      "path_hash": "5474d9daa52f598da6bc204c66e04869aaf061036f5c1e5171a7efc696bd1d4a",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/seconds",
+      "excerpt_start": 8049,
+      "excerpt_end": 8094
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-seconds",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "c94abd210d34442f102a80398f027f5ce7be402f6682cb38e4b39cdf62318fde",
+      "path_hash": "5474d9daa52f598da6bc204c66e04869aaf061036f5c1e5171a7efc696bd1d4a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/seconds",
+      "excerpt_start": 8054,
+      "excerpt_end": 8094
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-seconds",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "c94abd210d34442f102a80398f027f5ce7be402f6682cb38e4b39cdf62318fde",
+      "path_hash": "5474d9daa52f598da6bc204c66e04869aaf061036f5c1e5171a7efc696bd1d4a",
+      "field_name": "description",
+      "excerpt": "\ucd08(Second) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8032,
+      "excerpt_end": 8047
+    }
+  ]
+}

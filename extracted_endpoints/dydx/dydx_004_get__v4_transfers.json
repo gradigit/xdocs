@@ -1,0 +1,65 @@
+{
+  "exchange": "dydx",
+  "section": "docs",
+  "protocol": "http",
+  "endpoint_id": "1acdd579e284f98890ab5745e055b5f1a72e3afbe753dc9b5becee919fce9688",
+  "http": {
+    "method": "GET",
+    "path": "/v4/transfers",
+    "base_url": "https://indexer.dydx.trade/v4"
+  },
+  "description": "Retrieves the transfer history for a specific subaccount",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "description",
+      "excerpt": "Get Transfers",
+      "excerpt_start": 10279,
+      "excerpt_end": 10292
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.method",
+      "excerpt": "Get Transfers",
+      "excerpt_start": 10279,
+      "excerpt_end": 10292
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.path",
+      "excerpt": "Get Transfers",
+      "excerpt_start": 10279,
+      "excerpt_end": 10292
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.base_url",
+      "excerpt": "Get Transfers",
+      "excerpt_start": 10279,
+      "excerpt_end": 10292
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[1/7] Schema migration dry-run...
+schema_user_version=2 target=2 upgrade_required=false
+[2/7] Registry/base-url validation smoke...
+true
+[3/7] Retrieval command smoke...
+question
+[4/7] Sync preset smoke...
+true
+[5/7] Unit/integration tests...
+........................................................................ [ 87%]
+..........                                                               [100%]
+=============================== warnings summary ===============================
+tests/test_semantic.py::TestSemantic::test_build_index_and_search
+  <frozen importlib._bootstrap>:491: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+tests/test_semantic.py::TestSemantic::test_build_index_and_search
+  <frozen importlib._bootstrap>:491: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+tests/test_semantic.py::TestSemantic::test_build_index_and_search
+  /Users/aaaaa/Projects/cex-api-docs/.venv/lib/python3.14/site-packages/joblib/_multiprocessing_helpers.py:44: UserWarning: [Errno 28] No space left on device.  joblib will operate in serial mode
+    warnings.warn("%s.  joblib will operate in serial mode" % (e,))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+82 passed, 3 warnings in 14.99s
+<sys>:0: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+[6/7] Demo skill sync check...
+/Users/aaaaa/Projects/cex-api-docs/.claude/skills/cex-api-docs/SKILL.md -> /Users/aaaaa/Projects/cex-api-docs-demo-workspace/.claude/skills/cex-api-docs/SKILL.md
+Synced 3 skill files into /Users/aaaaa/Projects/cex-api-docs-demo-workspace
+[7/7] Runtime repo export smoke...
+data_paths_copied=0
+manifest=/private/tmp/cex-runtime-export-check/runtime-manifest.json
+✅ pre_share_check completed

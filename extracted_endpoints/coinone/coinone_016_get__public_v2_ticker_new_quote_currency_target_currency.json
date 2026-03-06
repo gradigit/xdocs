@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "9aa722987b603feb3c8fdd78200a68de95e93f3ccf6f8d5259162777d0d7fe8e",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/ticker_new/{quote_currency}/{target_currency}",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uac1c\ubcc4 \ud2f0\ucee4 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/ticker",
+      "crawled_at": "2026-02-10T17:45:56+00:00",
+      "content_hash": "8c627c026d82c4275678be20cb1893a984f10dd6f7d5686d3ed4767362a26d2e",
+      "path_hash": "1a5bb3ae44df1ff1217d0c7acc0edabb1d9feb0aed78994d9c70e8326158e0b3",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/ticker_new/{quote_currency}/{target_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7673
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/ticker",
+      "crawled_at": "2026-02-10T17:45:56+00:00",
+      "content_hash": "8c627c026d82c4275678be20cb1893a984f10dd6f7d5686d3ed4767362a26d2e",
+      "path_hash": "1a5bb3ae44df1ff1217d0c7acc0edabb1d9feb0aed78994d9c70e8326158e0b3",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/ticker_new/{quote_currency}/{target_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7673
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/ticker",
+      "crawled_at": "2026-02-10T17:45:56+00:00",
+      "content_hash": "8c627c026d82c4275678be20cb1893a984f10dd6f7d5686d3ed4767362a26d2e",
+      "path_hash": "1a5bb3ae44df1ff1217d0c7acc0edabb1d9feb0aed78994d9c70e8326158e0b3",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/ticker_new/{quote_currency}/{target_currency}",
+      "excerpt_start": 7592,
+      "excerpt_end": 7673
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/ticker",
+      "crawled_at": "2026-02-10T17:45:56+00:00",
+      "content_hash": "8c627c026d82c4275678be20cb1893a984f10dd6f7d5686d3ed4767362a26d2e",
+      "path_hash": "1a5bb3ae44df1ff1217d0c7acc0edabb1d9feb0aed78994d9c70e8326158e0b3",
+      "field_name": "description",
+      "excerpt": "\uac1c\ubcc4 \ud2f0\ucee4 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 7566,
+      "excerpt_end": 7577
+    }
+  ]
+}

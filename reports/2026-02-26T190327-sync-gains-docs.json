@@ -1,0 +1,961 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "sync",
+    "config": {
+      "adaptive_delay": true,
+      "concurrency": 2,
+      "conditional": true,
+      "delay_s": 0.25,
+      "exchange": "gains",
+      "force_refetch": true,
+      "ignore_robots": false,
+      "inventory_max_pages": 80,
+      "limit": null,
+      "max_bytes": 10000000,
+      "max_domain_delay_s": 20.0,
+      "max_redirects": 5,
+      "render_mode": "auto",
+      "resume": false,
+      "retries": 1,
+      "scope_dedupe": true,
+      "section": "docs",
+      "timeout_s": 15.0
+    },
+    "docs_dir": "cex-docs",
+    "ended_at": "2026-02-26T19:04:12+00:00",
+    "post": {
+      "coverage_gaps": {
+        "cmd": "coverage-gaps",
+        "counts": {
+          "endpoints": 0,
+          "rows": 0,
+          "rows_with_gaps": 0
+        },
+        "filters": {
+          "exchange": "gains",
+          "section": "docs"
+        },
+        "sample": [],
+        "schema_version": "v1",
+        "updated_at": "2026-02-26T19:04:12+00:00"
+      },
+      "quality_check": {
+        "cmd": "quality-check",
+        "counts": {
+          "empty": 3,
+          "ok": 4004,
+          "thin": 146,
+          "tiny_html": 0,
+          "total": 4153
+        },
+        "issues": [
+          {
+            "type": "thin",
+            "url": "https://apidocs.bithumb.com/",
+            "word_count": 24
+          },
+          {
+            "type": "thin",
+            "url": "https://apidocs.bithumb.com/v2.1.0",
+            "word_count": 24
+          },
+          {
+            "type": "thin",
+            "url": "https://apidocs.bithumb.com/v2.1.0/",
+            "word_count": 24
+          },
+          {
+            "type": "empty",
+            "url": "https://binance-docs.github.io/apidocs/pm/en/",
+            "word_count": 0
+          },
+          {
+            "type": "empty",
+            "url": "https://binance-docs.github.io/apidocs/spot/en/",
+            "word_count": 0
+          },
+          {
+            "type": "thin",
+            "url": "https://developers.binance.com/docs/alpha/introduction",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://developers.binance.com/docs/binance-pay/release-note-v1-0-1",
+            "word_count": 24
+          },
+          {
+            "type": "thin",
+            "url": "https://developers.binance.com/docs/fiat/Introduction",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://developers.binance.com/docs/mini-program/framework",
+            "word_count": 34
+          },
+          {
+            "type": "thin",
+            "url": "https://developers.binance.com/docs/search",
+            "word_count": 23
+          },
+          {
+            "type": "empty",
+            "url": "https://developers.binance.com/en",
+            "word_count": 0
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.coinone.co.kr/reference/2-factor-authentication",
+            "word_count": 32
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.coinone.co.kr/reference/send-btc",
+            "word_count": 32
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.coinone.co.kr/search",
+            "word_count": 31
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/cosmovisor",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/integration/integration-guide",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/performing-upgrades",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types-of-upgrades",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/Address",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/OK",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/Subaccount_id",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/account",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/account_authenticator",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/address",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/address_response",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/api_order_status",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/api_time_in_force",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/asset_position",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/asset_position_response_object",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/asset_positions_map",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/bad-request",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/base_account",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/block",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/block_height_initial_message",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/block_height_update_message",
+            "word_count": 45
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/block_id",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/bridge_event",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/broadcast_mode",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/candles_initial_message",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/candles_update_message",
+            "word_count": 45
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/client_id",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/clob_pair",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/coin",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/commission",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/commission_rates",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/commit",
+            "word_count": 43
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/commit_sig",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/compliance_response",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/compliance_v2_response",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/consensus",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/cosmos",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/data",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/delayed_complete_bridge_messages",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/delegation",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/delegation_response",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/description",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/equity_tier_limit",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/equity_tier_limit_configuration",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/evidence",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/evidence_list",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/evidence_sum",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/gas_info",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/get_node_info_response",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/good_til_oneof",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/header",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/height_response",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/historical_block_trading_reward",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/historical_funding_response_object",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/historical_trading_reward_aggregation",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/i32",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/i64",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/key_pair",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/list_orders_response",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/market_mapper_rev_share_details",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/market_mapper_revenue_share_params",
+            "word_count": 28
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/market_price",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/markets_initial_message",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/markets_update_message",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/megavault_owner_shares_response",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/message_complete_bridge",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/metadata",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/module",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/not-found",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/num_shares",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/ok",
+            "word_count": 35
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/oracle_price_market",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_batch",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_book_response_object",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_book_response_price_level",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_id_obj",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_market_params",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/order_router_rev_share",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/orders_initial_message",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/orders_update_message",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/parent_subaccount_response_object",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/parent_subaccounts_initial_message",
+            "word_count": 48
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/part_set_header",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_clob_metadata",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_fee_tier",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_market_map",
+            "word_count": 45
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_market_type",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_params",
+            "word_count": 48
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_position",
+            "word_count": 45
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/perpetual_positions_map",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/pnl_tick_interval",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/query_market_mapper_revenue_share_details_response",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/query_market_mapper_revenue_share_params_response",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/query_megavault_withdrawal_info_response",
+            "word_count": 43
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/query_order_router_revenue_share_response",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/query_unconditional_revenue_share_config_response",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/recipient_config",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/rewards_params",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/share_unlock",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/sparkline_response_object",
+            "word_count": 45
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/sparkline_time_period",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/spot_clob_metadata",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/subaccount",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/subaccount_id",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/subaccount_info",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/subaccounts_initial_message",
+            "word_count": 48
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/time_response",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/timestamp",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trade_id",
+            "word_count": 39
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trade_type",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trade_update",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trades_initial_message",
+            "word_count": 37
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trades_update_message",
+            "word_count": 44
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/trading_reward_subaccount_message",
+            "word_count": 47
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/tx",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/tx_hash",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/tx_options",
+            "word_count": 41
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/u64",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/unbonding_delegations",
+            "word_count": 41
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/unbounding_delegation_entry",
+            "word_count": 46
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/unconditional_rev_share_config",
+            "word_count": 36
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/user_stats",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/vault_historical_pnl",
+            "word_count": 38
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/vault_position",
+            "word_count": 42
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/version_info",
+            "word_count": 49
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/types/wallet",
+            "word_count": 40
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/vercel/path1/docs/pages/nodes/running-node/required-node-configs",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/vercel/path1/docs/pages/nodes/running-node/snapshots",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.dydx.xyz/vercel/path1/docs/pages/nodes/running-node/voting",
+            "word_count": 8
+          },
+          {
+            "type": "thin",
+            "url": "https://docs.perp.com/search/",
+            "word_count": 14
+          },
+          {
+            "type": "thin",
+            "url": "https://www.bitget.com/api-doc/copytrading/future-copytrade/broker/Broker-Query-Current-Traces",
+            "word_count": 3
+          },
+          {
+            "type": "thin",
+            "url": "https://www.bitget.com/api-doc/copytrading/future-copytrade/broker/Broker-Query-History-Traces",
+            "word_count": 3
+          },
+          {
+            "type": "thin",
+            "url": "https://www.bitget.com/api-doc/copytrading/future-copytrade/broker/Broker-Query-Traders",
+            "word_count": 3
+          },
+          {
+            "type": "thin",
+            "url": "https://www.bitget.com/api-doc/margin/common/intro",
+            "word_count": 3
+          }
+        ]
+      },
+      "stale_citations": {
+        "cmd": "detect-stale-citations",
+        "counts": {
+          "missing_source": 0,
+          "review_items_created": 0,
+          "stale_citation": 0,
+          "total_findings": 0
+        },
+        "dry_run": false,
+        "filters": {
+          "exchange": "gains",
+          "section": "docs"
+        },
+        "sample": [],
+        "schema_version": "v1"
+      }
+    },
+    "schema_version": "v1",
+    "sections": [
+      {
+        "exchange_id": "gains",
+        "fetch": {
+          "cmd": "fetch-inventory",
+          "config": {
+            "adaptive_delay": true,
+            "allowed_domains": [
+              "docs.gains.trade"
+            ],
+            "concurrency": 2,
+            "conditional": true,
+            "delay_s": 0.25,
+            "exchange_id": "gains",
+            "force_refetch": true,
+            "ignore_robots": false,
+            "inventory_id": 73,
+            "limit": null,
+            "max_bytes": 10000000,
+            "max_domain_delay_s": 20.0,
+            "max_redirects": 5,
+            "render_mode": "auto",
+            "resume": false,
+            "retries": 1,
+            "scope_dedupe": true,
+            "scope_group": "gains",
+            "scope_priority": 100,
+            "section_id": "docs",
+            "timeout_s": 15.0
+          },
+          "counts": {
+            "dedupe_skipped": 0,
+            "entries": 118,
+            "errors": 0,
+            "fetched": 118,
+            "new_pages": 114,
+            "retry_after_applied": 0,
+            "revalidated_unchanged": 0,
+            "skipped": 0,
+            "stored": 118,
+            "unchanged_pages": 4,
+            "updated_pages": 0
+          },
+          "crawl_run_id": 283,
+          "docs_dir": "cex-docs",
+          "domain_delay_snapshot": {
+            "docs.gains.trade": {
+              "current_delay_s": 0.25,
+              "last_status": 200,
+              "next_allowed_in_s": 0.0,
+              "retry_after_applied": 0,
+              "throttle_events": 0
+            }
+          },
+          "ended_at": "2026-02-26T19:04:12+00:00",
+          "errors": [],
+          "exchange_id": "gains",
+          "inventory_id": 73,
+          "robots": {
+            "docs.gains.trade": {
+              "error": null,
+              "fetched_at": "2026-02-26T19:03:27+00:00",
+              "http_status": 200,
+              "policy": "parsed",
+              "robots_url": "https://docs.gains.trade/robots.txt"
+            }
+          },
+          "schema_version": "v1",
+          "section_id": "docs",
+          "started_at": "2026-02-26T19:03:27+00:00"
+        },
+        "inventory": {
+          "counts": {
+            "errors": 0,
+            "link_follow_discovered": 117,
+            "link_follow_queue_dropped": 0,
+            "link_follow_queue_max": 118,
+            "link_follow_skipped_robots": 0,
+            "link_follow_visited": 80,
+            "robot_sitemaps": 0,
+            "scope_prefixes": 1,
+            "seed_urls": 1,
+            "sitemap_candidates": 0,
+            "urls_in_scope": 118,
+            "urls_in_sitemaps": 0,
+            "visited_sitemaps": 0
+          },
+          "diff": {
+            "added": 0,
+            "removed": 0
+          },
+          "errors": [],
+          "generated_at": "2026-02-26T19:02:56+00:00",
+          "inventory_hash": "c27a6f8862b33487787e87e0efc9158d6a2fa3e2defe694665bc0385ae0ddca4",
+          "inventory_id": 73,
+          "samples": {
+            "sitemaps": [],
+            "urls": [
+              "https://docs.gains.trade/",
+              "https://docs.gains.trade/archived",
+              "https://docs.gains.trade/archived/nfts",
+              "https://docs.gains.trade/bridges",
+              "https://docs.gains.trade/bridges/arbitrum-less-than-greater-than-polygon-bridge",
+              "https://docs.gains.trade/bridges/erc20-matic-bridge",
+              "https://docs.gains.trade/bridges/nft-matic-bridge",
+              "https://docs.gains.trade/community",
+              "https://docs.gains.trade/community/gtrade-guardians",
+              "https://docs.gains.trade/developer",
+              "https://docs.gains.trade/developer/integrators",
+              "https://docs.gains.trade/developer/integrators/backend",
+              "https://docs.gains.trade/developer/integrators/contests",
+              "https://docs.gains.trade/developer/integrators/guides",
+              "https://docs.gains.trade/developer/integrators/guides/backend-endpoint-refactor",
+              "https://docs.gains.trade/developer/integrators/guides/calculating-borrowing-fees",
+              "https://docs.gains.trade/developer/integrators/guides/calculating-liquidation-price",
+              "https://docs.gains.trade/developer/integrators/guides/history-endpoints-migration",
+              "https://docs.gains.trade/developer/integrators/guides/mark-+-index-introduction",
+              "https://docs.gains.trade/developer/integrators/guides/support-endpoints-migration"
+            ]
+          },
+          "url_count": 118
+        },
+        "resumed": false,
+        "section_id": "docs"
+      }
+    ],
+    "started_at": "2026-02-26T19:02:56+00:00",
+    "totals": {
+      "dedupe_skipped": 0,
+      "errors": 0,
+      "fetched": 118,
+      "inventories": 1,
+      "inventory_urls": 118,
+      "new_pages": 114,
+      "retry_after_applied": 0,
+      "revalidated_unchanged": 0,
+      "skipped": 0,
+      "stored": 118,
+      "unchanged_pages": 4,
+      "updated_pages": 0
+    }
+  },
+  "schema_version": "v1"
+}

@@ -1,0 +1,61 @@
+[
+  {
+    "exchange": "binance",
+    "semantic_n": 2,
+    "semantic_top2": [
+      "https://developers.binance.com/docs/wallet/travel-rule/questionnaire-requirements",
+      "https://developers.binance.com/docs/wallet/account/api-key-permission"
+    ],
+    "endpoint_kw": "account",
+    "endpoint_n": 5,
+    "endpoint_top1": "GET /sapi/v1/sub-account/margin/account",
+    "semantic_latency_s": 3.4634452080354095
+  },
+  {
+    "exchange": "okx",
+    "semantic_n": 1,
+    "semantic_top2": [
+      "https://www.okx.com/docs-v5/en/"
+    ],
+    "endpoint_kw": "balance",
+    "endpoint_n": 5,
+    "endpoint_top1": "GET /api/v5/account/balance",
+    "semantic_latency_s": 0.18676716601476073
+  },
+  {
+    "exchange": "bybit",
+    "semantic_n": 0,
+    "semantic_top2": [],
+    "endpoint_kw": "wallet",
+    "endpoint_n": 2,
+    "endpoint_top1": "GET {{url}}/v5/account/wallet-balance?accountType=UNIFIED",
+    "semantic_latency_s": 0.17628483299631625
+  },
+  {
+    "exchange": "bitget",
+    "semantic_n": 0,
+    "semantic_top2": [],
+    "endpoint_kw": "assets",
+    "endpoint_n": 5,
+    "endpoint_top1": "GET /spot/account/subaccount-assets",
+    "semantic_latency_s": 0.19994791701901704
+  },
+  {
+    "exchange": "upbit",
+    "semantic_n": 0,
+    "semantic_top2": [],
+    "endpoint_kw": "accounts",
+    "endpoint_n": 1,
+    "endpoint_top1": "GET /v1/accounts",
+    "semantic_latency_s": 0.19232929195277393
+  },
+  {
+    "exchange": "bithumb",
+    "semantic_n": 0,
+    "semantic_top2": [],
+    "endpoint_kw": "accounts",
+    "endpoint_n": 1,
+    "endpoint_top1": "GET /v1/accounts",
+    "semantic_latency_s": 0.1976228749845177
+  }
+]

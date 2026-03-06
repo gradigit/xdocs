@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "bf8ff0b62bddf3e6bc002bca8c436ee0eccf9f546f31d929e7ddaaed05319579",
+  "http": {
+    "method": "GET",
+    "path": "/v1/deposits/chance/coin",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ub514\uc9c0\ud138 \uc790\uc0b0 \uc785\uae08 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-deposit-information",
+      "crawled_at": "2026-02-10T17:53:05+00:00",
+      "content_hash": "7ff05e864408e81d381e04e9daf5d26e7f23c28f0a0797e39d5fd72c44d766dd",
+      "path_hash": "cf0367410a8f0a6613bf8f74d748c6d4e6adf31679919ebf03f1c5ef4bcef83b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/deposits/chance/coin",
+      "excerpt_start": 8055,
+      "excerpt_end": 8105
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-deposit-information",
+      "crawled_at": "2026-02-10T17:53:05+00:00",
+      "content_hash": "7ff05e864408e81d381e04e9daf5d26e7f23c28f0a0797e39d5fd72c44d766dd",
+      "path_hash": "cf0367410a8f0a6613bf8f74d748c6d4e6adf31679919ebf03f1c5ef4bcef83b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/deposits/chance/coin",
+      "excerpt_start": 8055,
+      "excerpt_end": 8105
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-deposit-information",
+      "crawled_at": "2026-02-10T17:53:05+00:00",
+      "content_hash": "7ff05e864408e81d381e04e9daf5d26e7f23c28f0a0797e39d5fd72c44d766dd",
+      "path_hash": "cf0367410a8f0a6613bf8f74d748c6d4e6adf31679919ebf03f1c5ef4bcef83b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/deposits/chance/coin",
+      "excerpt_start": 8060,
+      "excerpt_end": 8105
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/available-deposit-information",
+      "crawled_at": "2026-02-10T17:53:05+00:00",
+      "content_hash": "7ff05e864408e81d381e04e9daf5d26e7f23c28f0a0797e39d5fd72c44d766dd",
+      "path_hash": "cf0367410a8f0a6613bf8f74d748c6d4e6adf31679919ebf03f1c5ef4bcef83b",
+      "field_name": "description",
+      "excerpt": "\ub514\uc9c0\ud138 \uc790\uc0b0 \uc785\uae08 \uac00\ub2a5 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 8035,
+      "excerpt_end": 8053
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "exchange": "binance",
+    "semantic_results": 2,
+    "semantic_top1": "https://developers.binance.com/docs/wallet/travel-rule/questionnaire-requirements",
+    "semantic_latency_s": 3.618517457973212,
+    "fallback_used": false,
+    "fallback_endpoint_hits": 0,
+    "fallback_top1_path": null
+  },
+  {
+    "exchange": "okx",
+    "semantic_results": 1,
+    "semantic_top1": "https://www.okx.com/docs-v5/en/",
+    "semantic_latency_s": 0.20513925002887845,
+    "fallback_used": false,
+    "fallback_endpoint_hits": 0,
+    "fallback_top1_path": null
+  },
+  {
+    "exchange": "bybit",
+    "semantic_results": 0,
+    "semantic_top1": null,
+    "semantic_latency_s": 0.1842198750237003,
+    "fallback_used": true,
+    "fallback_endpoint_hits": 2,
+    "fallback_top1_path": "{{url}}/v5/account/wallet-balance?accountType=UNIFIED"
+  },
+  {
+    "exchange": "bitget",
+    "semantic_results": 0,
+    "semantic_top1": null,
+    "semantic_latency_s": 0.17213133396580815,
+    "fallback_used": true,
+    "fallback_endpoint_hits": 0,
+    "fallback_top1_path": null
+  },
+  {
+    "exchange": "upbit",
+    "semantic_results": 0,
+    "semantic_top1": null,
+    "semantic_latency_s": 0.15875433303881437,
+    "fallback_used": true,
+    "fallback_endpoint_hits": 0,
+    "fallback_top1_path": null
+  },
+  {
+    "exchange": "bithumb",
+    "semantic_results": 0,
+    "semantic_top1": null,
+    "semantic_latency_s": 0.16784295800607651,
+    "fallback_used": true,
+    "fallback_endpoint_hits": 0,
+    "fallback_top1_path": null
+  }
+]

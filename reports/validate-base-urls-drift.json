@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "result": {
+    "checked_at": "2026-02-26T18:01:03+00:00",
+    "cmd": "validate-base-urls",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "drift",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "base_url": "https://docs.drift.trade",
+        "checked_at": "2026-02-26T18:01:03+00:00",
+        "content_type": "text/plain",
+        "exchange_id": "drift",
+        "host": "docs.drift.trade",
+        "http_status": 307,
+        "ok": true,
+        "port": 443,
+        "scheme": "https",
+        "section_id": "docs",
+        "skipped": false
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

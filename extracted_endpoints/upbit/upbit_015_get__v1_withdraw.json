@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "4893fa32cb1a281e9c29e61d4634100671cc93ffc27b8bffe6a5df11adcd127b",
+  "http": {
+    "method": "GET",
+    "path": "/v1/withdraw",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uac1c\ubcc4 \ucd9c\uae08 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-withdrawal",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "4626ce0b0fcbf43b181d0798e7e5ff3645b0038a439c2f1c487d9a8aaa5fe9af",
+      "path_hash": "7ace5b1fa9718ab77c7780cfda0f85e0c5432e1d1a71927f21bcadff614136eb",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraw",
+      "excerpt_start": 8035,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-withdrawal",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "4626ce0b0fcbf43b181d0798e7e5ff3645b0038a439c2f1c487d9a8aaa5fe9af",
+      "path_hash": "7ace5b1fa9718ab77c7780cfda0f85e0c5432e1d1a71927f21bcadff614136eb",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/withdraw",
+      "excerpt_start": 8035,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-withdrawal",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "4626ce0b0fcbf43b181d0798e7e5ff3645b0038a439c2f1c487d9a8aaa5fe9af",
+      "path_hash": "7ace5b1fa9718ab77c7780cfda0f85e0c5432e1d1a71927f21bcadff614136eb",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/withdraw",
+      "excerpt_start": 8040,
+      "excerpt_end": 8073
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-withdrawal",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "4626ce0b0fcbf43b181d0798e7e5ff3645b0038a439c2f1c487d9a8aaa5fe9af",
+      "path_hash": "7ace5b1fa9718ab77c7780cfda0f85e0c5432e1d1a71927f21bcadff614136eb",
+      "field_name": "description",
+      "excerpt": "\uac1c\ubcc4 \ucd9c\uae08 \uc870\ud68c",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

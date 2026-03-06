@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "66acf256eda58f0ffae61892536f405f21e036537ea4457020e8e0bd7699fa56",
+  "http": {
+    "method": "POST",
+    "path": "/v2/account/deposit_address",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc785\uae08 \uc8fc\uc18c \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/deposit-address",
+      "crawled_at": "2026-02-10T17:45:33+00:00",
+      "content_hash": "7d48ec1502a3b34de6803e9193959c1d3efae2677d63356be9d3725807307b7e",
+      "path_hash": "653c509cfd066114352be004531a3b4cb25436888c8283a2659a881247bc7b59",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/deposit_address",
+      "excerpt_start": 7581,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/deposit-address",
+      "crawled_at": "2026-02-10T17:45:33+00:00",
+      "content_hash": "7d48ec1502a3b34de6803e9193959c1d3efae2677d63356be9d3725807307b7e",
+      "path_hash": "653c509cfd066114352be004531a3b4cb25436888c8283a2659a881247bc7b59",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/deposit_address",
+      "excerpt_start": 7581,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/deposit-address",
+      "crawled_at": "2026-02-10T17:45:33+00:00",
+      "content_hash": "7d48ec1502a3b34de6803e9193959c1d3efae2677d63356be9d3725807307b7e",
+      "path_hash": "653c509cfd066114352be004531a3b4cb25436888c8283a2659a881247bc7b59",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/account/deposit_address",
+      "excerpt_start": 7587,
+      "excerpt_end": 7639
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/deposit-address",
+      "crawled_at": "2026-02-10T17:45:33+00:00",
+      "content_hash": "7d48ec1502a3b34de6803e9193959c1d3efae2677d63356be9d3725807307b7e",
+      "path_hash": "653c509cfd066114352be004531a3b4cb25436888c8283a2659a881247bc7b59",
+      "field_name": "description",
+      "excerpt": "\uc785\uae08 \uc8fc\uc18c \uc870\ud68c",
+      "excerpt_start": 7563,
+      "excerpt_end": 7571
+    }
+  ]
+}

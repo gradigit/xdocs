@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "dd1d609e1d0d098ba458724701035ee4ab00756337e1875641aa16c8cbdf20bd",
+  "http": {
+    "method": "POST",
+    "path": "/v1/withdraws/krw",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc6d0\ud654 \ucd9c\uae08 \uc694\uccad",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/withdraw-krw",
+      "crawled_at": "2026-02-10T17:53:33+00:00",
+      "content_hash": "2ec41c545e006a7f2740a30c9d410526737ed14d623cfa215cebf5c105751c61",
+      "path_hash": "c70821a16159a23f7549c00191c5d8539ef71f99378d644e194a8f5b53ee7252",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/withdraws/krw",
+      "excerpt_start": 8035,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/withdraw-krw",
+      "crawled_at": "2026-02-10T17:53:33+00:00",
+      "content_hash": "2ec41c545e006a7f2740a30c9d410526737ed14d623cfa215cebf5c105751c61",
+      "path_hash": "c70821a16159a23f7549c00191c5d8539ef71f99378d644e194a8f5b53ee7252",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/withdraws/krw",
+      "excerpt_start": 8035,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/withdraw-krw",
+      "crawled_at": "2026-02-10T17:53:33+00:00",
+      "content_hash": "2ec41c545e006a7f2740a30c9d410526737ed14d623cfa215cebf5c105751c61",
+      "path_hash": "c70821a16159a23f7549c00191c5d8539ef71f99378d644e194a8f5b53ee7252",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/withdraws/krw",
+      "excerpt_start": 8041,
+      "excerpt_end": 8079
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/withdraw-krw",
+      "crawled_at": "2026-02-10T17:53:33+00:00",
+      "content_hash": "2ec41c545e006a7f2740a30c9d410526737ed14d623cfa215cebf5c105751c61",
+      "path_hash": "c70821a16159a23f7549c00191c5d8539ef71f99378d644e194a8f5b53ee7252",
+      "field_name": "description",
+      "excerpt": "\uc6d0\ud654 \ucd9c\uae08 \uc694\uccad",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

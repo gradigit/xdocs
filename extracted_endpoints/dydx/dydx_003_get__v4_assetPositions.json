@@ -1,0 +1,65 @@
+{
+  "exchange": "dydx",
+  "section": "docs",
+  "protocol": "http",
+  "endpoint_id": "80fa96726de4634c8364150c0b9e3cb4623c82e22edd6d154c13a620b0f61483",
+  "http": {
+    "method": "GET",
+    "path": "/v4/assetPositions",
+    "base_url": "https://indexer.dydx.trade/v4"
+  },
+  "description": "Retrieves asset positions and respective details of a specific subaccount",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "description",
+      "excerpt": "Get Asset Positions",
+      "excerpt_start": 7289,
+      "excerpt_end": 7308
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.method",
+      "excerpt": "Get Asset Positions",
+      "excerpt_start": 7289,
+      "excerpt_end": 7308
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.path",
+      "excerpt": "Get Asset Positions",
+      "excerpt_start": 7289,
+      "excerpt_end": 7308
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.base_url",
+      "excerpt": "Get Asset Positions",
+      "excerpt_start": 7289,
+      "excerpt_end": 7308
+    }
+  ]
+}

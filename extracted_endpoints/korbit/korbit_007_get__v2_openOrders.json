@@ -1,0 +1,65 @@
+{
+  "exchange": "korbit",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "a920ef912ff327fb4620b651f89b13ce80cc6e64a77caea375a33116dec5000b",
+  "http": {
+    "method": "GET",
+    "path": "/v2/openOrders",
+    "base_url": "https://api.korbit.co.kr/v1"
+  },
+  "description": "Query the list of open orders for a single trading pair. Only orders with the status `open` or `partiallyFilled` are queried.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.method",
+      "excerpt": "GET/v2/openOrders",
+      "excerpt_start": 41411,
+      "excerpt_end": 41428
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.path",
+      "excerpt": "GET/v2/openOrders",
+      "excerpt_start": 41411,
+      "excerpt_end": 41428
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.korbit.co.kr",
+      "excerpt_start": 2965,
+      "excerpt_end": 2989
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "description",
+      "excerpt": "Query the list of open orders for a single trading pair. Only orders with the status `open` or `partiallyFilled` are queried.",
+      "excerpt_start": 41430,
+      "excerpt_end": 41555
+    }
+  ]
+}

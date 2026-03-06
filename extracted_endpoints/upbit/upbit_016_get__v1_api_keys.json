@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "848bc055659fed9eb1fbb1a22606d61f1af7d769bfd89a3e3972312c3e465bbf",
+  "http": {
+    "method": "GET",
+    "path": "/v1/api_keys",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "API Key \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-api-keys",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "ef7935b79dcbbe8cd83520fe90ae14f58c453ad7302a914761bc0696c32bb32c",
+      "path_hash": "09b42a50911f3c16203b920fc79d9bb0c08a2fc98d2dc121e0b7e81477103e4b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/api_keys",
+      "excerpt_start": 8045,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-api-keys",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "ef7935b79dcbbe8cd83520fe90ae14f58c453ad7302a914761bc0696c32bb32c",
+      "path_hash": "09b42a50911f3c16203b920fc79d9bb0c08a2fc98d2dc121e0b7e81477103e4b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/api_keys",
+      "excerpt_start": 8045,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-api-keys",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "ef7935b79dcbbe8cd83520fe90ae14f58c453ad7302a914761bc0696c32bb32c",
+      "path_hash": "09b42a50911f3c16203b920fc79d9bb0c08a2fc98d2dc121e0b7e81477103e4b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/api_keys",
+      "excerpt_start": 8050,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-api-keys",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "ef7935b79dcbbe8cd83520fe90ae14f58c453ad7302a914761bc0696c32bb32c",
+      "path_hash": "09b42a50911f3c16203b920fc79d9bb0c08a2fc98d2dc121e0b7e81477103e4b",
+      "field_name": "description",
+      "excerpt": "API Key \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8030,
+      "excerpt_end": 8043
+    }
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "changed_rankings": [
+    {
+      "query": "How to check account balance on Binance",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/derivatives/portfolio-margin/account/Account-Balance",
+        "https://developers.binance.com/docs/babt/apis-spec",
+        "https://developers.binance.com/docs/binance-open-api/apis"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/derivatives/portfolio-margin/account",
+        "https://developers.binance.com/docs/derivatives/portfolio-margin/account/Account-Balance",
+        "https://developers.binance.com/docs/wallet/asset/query-user-wallet-balance"
+      ]
+    },
+    {
+      "query": "Binance spot trading rate limits",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_count_decrement",
+        "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/event-format",
+        "https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Query-Rate-Limit"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/faqs/order_count_decrement",
+        "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/rate-limits",
+        "https://developers.binance.com/docs/binance-spot-api-docs/enums"
+      ]
+    },
+    {
+      "query": "place a new order on Binance",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/margin_trading/trade/Margin-Account-New-Order",
+        "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/trading-requests",
+        "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/trading-requests"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/trading-requests",
+        "https://developers.binance.com/docs/binance-spot-api-docs/testnet/websocket-api/trading-requests",
+        "https://developers.binance.com/docs/binance_connect/sandbox"
+      ]
+    },
+    {
+      "query": "Binance API key permissions",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/wallet/account/api-key-permission",
+        "https://developers.binance.com/docs/binance_link/exchange-link/account",
+        "https://developers.binance.com/docs/binance-spot-api-docs/fix-api"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/fix-api",
+        "https://developers.binance.com/docs/binance-spot-api-docs/testnet/fix-api",
+        "https://developers.binance.com/docs/wallet/account/api-key-permission"
+      ]
+    },
+    {
+      "query": "Binance websocket stream endpoints",
+      "hit_no_rerank": true,
+      "hit_rerank": true,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams",
+        "https://developers.binance.com/docs/derivatives/options-trading/websocket-market-streams/Trade-Streams",
+        "https://developers.binance.com/docs/binance-spot-api-docs/testnet/web-socket-streams"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/binance-spot-api-docs/faqs/market_data_only",
+        "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams",
+        "https://developers.binance.com/docs/binance-spot-api-docs/websocket-api/general-api-information"
+      ]
+    },
+    {
+      "query": "Bybit get wallet balance",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://bybit-exchange.github.io/docs/v5/account/wallet-balance",
+        "https://bybit-exchange.github.io/docs/v5/websocket/private/wallet",
+        "https://bybit-exchange.github.io/docs/v5/account/unified-trans-amnt"
+      ],
+      "rerank_top3": [
+        "https://bybit-exchange.github.io/docs/v5/account/wallet-balance",
+        "https://bybit-exchange.github.io/docs/v5/account/get-mmp-state",
+        "https://bybit-exchange.github.io/docs/v5/account/get-user-setting-config"
+      ]
+    },
+    {
+      "query": "Bybit place order API",
+      "hit_no_rerank": true,
+      "hit_rerank": true,
+      "no_rerank_top3": [
+        "https://bybit-exchange.github.io/docs/v5/order/batch-place",
+        "https://bybit-exchange.github.io/docs/v5/copytrade",
+        "https://bybit-exchange.github.io/docs/v5/order/create-order"
+      ],
+      "rerank_top3": [
+        "https://bybit-exchange.github.io/docs/v5/order/create-order",
+        "https://bybit-exchange.github.io/docs/v5/spread/trade/create-order",
+        "https://bybit-exchange.github.io/docs/v5/order/batch-place"
+      ]
+    },
+    {
+      "query": "KuCoin API authentication",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://www.kucoin.com/docs-new/rest/ua/flex-transfer",
+        "https://www.kucoin.com/docs-new/rest/broker/api-broker/get-broker-rebate",
+        "https://www.kucoin.com/docs-new/rest/ua/get-account-currency-assets-classic"
+      ],
+      "rerank_top3": [
+        "https://www.kucoin.com/docs-new/websocket-api/base-info/get-public-token-spot-margin",
+        "https://www.kucoin.com/docs-new/rest/ua/get-account-mode",
+        "https://www.kucoin.com/docs-new/rest/ua/get-actual-fee"
+      ]
+    },
+    {
+      "query": "KuCoin get account balance",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://www.kucoin.com/docs-new/rest/ua/account/get-account-overview-uta",
+        "https://www.kucoin.com/docs-new/rest/account-info/sub-account/add-subaccount-futures-permission",
+        "https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-cross-margin"
+      ],
+      "rerank_top3": [
+        "https://www.kucoin.com/docs-new/rest/ua/account/get-account-overview-uta",
+        "https://www.kucoin.com/docs-new/rest/account-info/sub-account/get-subaccount-detail-balance",
+        "https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-cross-margin"
+      ]
+    },
+    {
+      "query": "Bitget copy trading API",
+      "hit_no_rerank": true,
+      "hit_rerank": true,
+      "no_rerank_top3": [
+        "https://www.bitget.com/api-doc/copytrading/intro",
+        "https://www.bitget.com/api-doc/copytrading/spot-copytrade/follower/Query-History-Orders",
+        "https://www.bitget.com/api-doc/copytrading/future-copytrade/trader/Trader-Config-Setting-Symbols"
+      ],
+      "rerank_top3": [
+        "https://www.bitget.com/api-doc/copytrading/intro",
+        "https://www.bitget.com/api-doc/copytrading/spot-copytrade/trader/Config-Query-Followers",
+        "https://www.bitget.com/api-doc/copytrading/spot-copytrade/trader/Config-Query-Settings"
+      ]
+    },
+    {
+      "query": "Gate.io spot order endpoint",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://www.gate.com/docs/apiv4/index.html",
+        "https://www.gate.com/docs/developers/apiv4/"
+      ],
+      "rerank_top3": [
+        "https://www.gate.com/docs/developers/apiv4/",
+        "https://www.gate.com/docs/apiv4/index.html"
+      ]
+    },
+    {
+      "query": "Binance margin account endpoints",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://developers.binance.com/docs/margin_trading/best-practice",
+        "https://developers.binance.com/docs/derivatives/usds-margined-futures/portfolio-margin-endpoints/Classic-Portfolio-Margin-Account-Information",
+        "https://developers.binance.com/docs/derivatives/options-trading/account"
+      ],
+      "rerank_top3": [
+        "https://developers.binance.com/docs/derivatives/options-trading/account",
+        "https://developers.binance.com/docs/derivatives/usds-margined-futures/portfolio-margin-endpoints/Classic-Portfolio-Margin-Account-Information",
+        "https://developers.binance.com/docs/derivatives/coin-margined-futures/portfolio-margin-endpoints/Classic-Portfolio-Margin-Account-Information"
+      ]
+    },
+    {
+      "query": "HTX API rate limit rules",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [],
+      "rerank_top3": [
+        "https://huobiapi.github.io/docs/dm/v1/en/"
+      ]
+    },
+    {
+      "query": "dYdX perpetual trading API",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://docs.dydx.xyz/concepts/trading/assets",
+        "https://docs.dydx.xyz/types/perpetual",
+        "https://docs.dydx.xyz/node-client/public/"
+      ],
+      "rerank_top3": [
+        "https://docs.dydx.xyz/node-client/public/",
+        "https://docs.dydx.xyz/types/perpetual",
+        "https://docs.dydx.xyz/interaction/data/market"
+      ]
+    },
+    {
+      "query": "Hyperliquid order types",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2"
+      ],
+      "rerank_top3": [
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/bridge2",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/error-responses"
+      ]
+    },
+    {
+      "query": "Upbit market information API",
+      "hit_no_rerank": false,
+      "hit_rerank": false,
+      "no_rerank_top3": [
+        "https://docs.upbit.com/kr/docs/ai-guide",
+        "https://docs.upbit.com/kr/changelog/%EC%A0%90%EA%B2%80-%EC%84%9C%EB%B2%84-%EC%A0%90%EA%B2%80-%EC%95%88%EB%82%B4-0524-0200~",
+        "https://docs.upbit.com/kr/docs/developer-center-overview%20"
+      ],
+      "rerank_top3": [
+        "https://docs.upbit.com/kr/docs/ai-guide",
+        "https://docs.upbit.com/kr/docs/developer-center-overview",
+        "https://docs.upbit.com/kr/docs/developer-center-overview%20"
+      ]
+    }
+  ],
+  "improved": 0,
+  "regressed": 0,
+  "unchanged": 20
+}

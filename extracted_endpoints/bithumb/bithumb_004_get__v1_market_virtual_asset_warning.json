@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "59548546448a74df14cbc503db25e74f5a9705911f8d089f1eb0ce941ecd6add",
+  "http": {
+    "method": "GET",
+    "path": "/v1/market/virtual_asset_warning",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uacbd\ubcf4\uc81c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B2%BD%EB%B3%B4%EC%A0%9C",
+      "crawled_at": "2026-02-10T17:48:51+00:00",
+      "content_hash": "1bbcbccab7b211339a288dd54229409def5982cc9f29f79bad71d8b1410f3ec2",
+      "path_hash": "95b05f75efc349aeef73a7c70e962fa543274e40e0839f6545d6ee1caae45c1b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/market/virtual_asset_warning",
+      "excerpt_start": 6179,
+      "excerpt_end": 6239
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B2%BD%EB%B3%B4%EC%A0%9C",
+      "crawled_at": "2026-02-10T17:48:51+00:00",
+      "content_hash": "1bbcbccab7b211339a288dd54229409def5982cc9f29f79bad71d8b1410f3ec2",
+      "path_hash": "95b05f75efc349aeef73a7c70e962fa543274e40e0839f6545d6ee1caae45c1b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/market/virtual_asset_warning",
+      "excerpt_start": 6179,
+      "excerpt_end": 6239
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B2%BD%EB%B3%B4%EC%A0%9C",
+      "crawled_at": "2026-02-10T17:48:51+00:00",
+      "content_hash": "1bbcbccab7b211339a288dd54229409def5982cc9f29f79bad71d8b1410f3ec2",
+      "path_hash": "95b05f75efc349aeef73a7c70e962fa543274e40e0839f6545d6ee1caae45c1b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/market/virtual_asset_warning",
+      "excerpt_start": 6184,
+      "excerpt_end": 6239
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EA%B2%BD%EB%B3%B4%EC%A0%9C",
+      "crawled_at": "2026-02-10T17:48:51+00:00",
+      "content_hash": "1bbcbccab7b211339a288dd54229409def5982cc9f29f79bad71d8b1410f3ec2",
+      "path_hash": "95b05f75efc349aeef73a7c70e962fa543274e40e0839f6545d6ee1caae45c1b",
+      "field_name": "description",
+      "excerpt": "\uacbd\ubcf4\uc81c",
+      "excerpt_start": 6174,
+      "excerpt_end": 6177
+    }
+  ]
+}

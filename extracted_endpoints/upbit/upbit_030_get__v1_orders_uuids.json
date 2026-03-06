@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "96c8ce3df8408324f15c4b959cef7ad538fd86e2786fa841dcae1dbf9bafa7fc",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orders/uuids",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "id\ub85c \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orders-by-ids",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "6de3cf4e6c8d1e176d047e3a40c066ceefa9fee99024ab5973827b4114b0bb20",
+      "path_hash": "5d11c4b776b0252339af496a7da1fc9dee310616e1323a3a14265e29ddbb03b0",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/uuids",
+      "excerpt_start": 8043,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orders-by-ids",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "6de3cf4e6c8d1e176d047e3a40c066ceefa9fee99024ab5973827b4114b0bb20",
+      "path_hash": "5d11c4b776b0252339af496a7da1fc9dee310616e1323a3a14265e29ddbb03b0",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/uuids",
+      "excerpt_start": 8043,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orders-by-ids",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "6de3cf4e6c8d1e176d047e3a40c066ceefa9fee99024ab5973827b4114b0bb20",
+      "path_hash": "5d11c4b776b0252339af496a7da1fc9dee310616e1323a3a14265e29ddbb03b0",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders/uuids",
+      "excerpt_start": 8048,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orders-by-ids",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "6de3cf4e6c8d1e176d047e3a40c066ceefa9fee99024ab5973827b4114b0bb20",
+      "path_hash": "5d11c4b776b0252339af496a7da1fc9dee310616e1323a3a14265e29ddbb03b0",
+      "field_name": "description",
+      "excerpt": "id\ub85c \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8029,
+      "excerpt_end": 8041
+    }
+  ]
+}

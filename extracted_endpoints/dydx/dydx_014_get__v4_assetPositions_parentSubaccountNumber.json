@@ -1,0 +1,65 @@
+{
+  "exchange": "dydx",
+  "section": "docs",
+  "protocol": "http",
+  "endpoint_id": "ffc8f167b55d74d46f3dacff6b758fb67f136dfef5185a4d90f8a75919aeb302",
+  "http": {
+    "method": "GET",
+    "path": "/v4/assetPositions/parentSubaccountNumber",
+    "base_url": "https://indexer.dydx.trade/v4"
+  },
+  "description": "Query for asset positions for a parent subaccount",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "description",
+      "excerpt": "Get Parent Asset Positions",
+      "excerpt_start": 34324,
+      "excerpt_end": 34350
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.method",
+      "excerpt": "Get Parent Asset Positions",
+      "excerpt_start": 34324,
+      "excerpt_end": 34350
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.path",
+      "excerpt": "Get Parent Asset Positions",
+      "excerpt_start": 34324,
+      "excerpt_end": 34350
+    },
+    {
+      "url": "https://docs.dydx.xyz/indexer-client/http",
+      "crawled_at": "2026-02-10T17:46:14+00:00",
+      "content_hash": "f09c2427511141d713f338a2324a736ccf13f51e9ead44df17d8314e37212184",
+      "path_hash": "c67e2ab623b48a9cf7c85630826c7b00a1beb239e6dbb02247f6e5cefd15c339",
+      "field_name": "http.base_url",
+      "excerpt": "Get Parent Asset Positions",
+      "excerpt_start": 34324,
+      "excerpt_end": 34350
+    }
+  ]
+}

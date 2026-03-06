@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "24166d1437e7785b1a3cb70ad00148dc5c8bbb044b17551c077637a99b1bc9d5",
+  "http": {
+    "method": "POST",
+    "path": "/v2/orders",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc8fc\ubb38\ud558\uae30 [BETA]",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BC%EB%AC%B8%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:50:20+00:00",
+      "content_hash": "14a9f9fbc8b26c880d56211196209c463df92e1370497399f87e183d09f41fe7",
+      "path_hash": "845cfe8720be4d99d27c2f47c13f2b4b3b2064fe2e70c0a57f1aaf8800cae0e8",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v2/orders",
+      "excerpt_start": 6195,
+      "excerpt_end": 6234
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BC%EB%AC%B8%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:50:20+00:00",
+      "content_hash": "14a9f9fbc8b26c880d56211196209c463df92e1370497399f87e183d09f41fe7",
+      "path_hash": "845cfe8720be4d99d27c2f47c13f2b4b3b2064fe2e70c0a57f1aaf8800cae0e8",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v2/orders",
+      "excerpt_start": 6195,
+      "excerpt_end": 6234
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BC%EB%AC%B8%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:50:20+00:00",
+      "content_hash": "14a9f9fbc8b26c880d56211196209c463df92e1370497399f87e183d09f41fe7",
+      "path_hash": "845cfe8720be4d99d27c2f47c13f2b4b3b2064fe2e70c0a57f1aaf8800cae0e8",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v2/orders",
+      "excerpt_start": 6201,
+      "excerpt_end": 6234
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%A3%BC%EB%AC%B8%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:50:20+00:00",
+      "content_hash": "14a9f9fbc8b26c880d56211196209c463df92e1370497399f87e183d09f41fe7",
+      "path_hash": "845cfe8720be4d99d27c2f47c13f2b4b3b2064fe2e70c0a57f1aaf8800cae0e8",
+      "field_name": "description",
+      "excerpt": "\uc8fc\ubb38\ud558\uae30 [BETA]",
+      "excerpt_start": 6182,
+      "excerpt_end": 6193
+    }
+  ]
+}

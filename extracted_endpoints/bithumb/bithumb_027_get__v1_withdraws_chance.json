@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "2da4f8f61aa336928edc3852236b76ffa15cb9379ccd0ed4ebd087fe6ee14b5d",
+  "http": {
+    "method": "GET",
+    "path": "/v1/withdraws/chance",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\ucd9c\uae08 \uac00\ub2a5 \uc815\ubcf4",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B6%9C%EA%B8%88-%EA%B0%80%EB%8A%A5-%EC%A0%95%EB%B3%B4",
+      "crawled_at": "2026-02-10T17:49:07+00:00",
+      "content_hash": "868c4df71753ef004df7c8a8fd452d8aadf7402cf3c4e8653e2c647bca460ca0",
+      "path_hash": "70260306fe3d3e69d8dea3c0ced59f2b91c868bd4d0884ac743be18814765ab2",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/withdraws/chance",
+      "excerpt_start": 6189,
+      "excerpt_end": 6237
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B6%9C%EA%B8%88-%EA%B0%80%EB%8A%A5-%EC%A0%95%EB%B3%B4",
+      "crawled_at": "2026-02-10T17:49:07+00:00",
+      "content_hash": "868c4df71753ef004df7c8a8fd452d8aadf7402cf3c4e8653e2c647bca460ca0",
+      "path_hash": "70260306fe3d3e69d8dea3c0ced59f2b91c868bd4d0884ac743be18814765ab2",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/withdraws/chance",
+      "excerpt_start": 6189,
+      "excerpt_end": 6237
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B6%9C%EA%B8%88-%EA%B0%80%EB%8A%A5-%EC%A0%95%EB%B3%B4",
+      "crawled_at": "2026-02-10T17:49:07+00:00",
+      "content_hash": "868c4df71753ef004df7c8a8fd452d8aadf7402cf3c4e8653e2c647bca460ca0",
+      "path_hash": "70260306fe3d3e69d8dea3c0ced59f2b91c868bd4d0884ac743be18814765ab2",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/withdraws/chance",
+      "excerpt_start": 6194,
+      "excerpt_end": 6237
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B6%9C%EA%B8%88-%EA%B0%80%EB%8A%A5-%EC%A0%95%EB%B3%B4",
+      "crawled_at": "2026-02-10T17:49:07+00:00",
+      "content_hash": "868c4df71753ef004df7c8a8fd452d8aadf7402cf3c4e8653e2c647bca460ca0",
+      "path_hash": "70260306fe3d3e69d8dea3c0ced59f2b91c868bd4d0884ac743be18814765ab2",
+      "field_name": "description",
+      "excerpt": "\ucd9c\uae08 \uac00\ub2a5 \uc815\ubcf4",
+      "excerpt_start": 6179,
+      "excerpt_end": 6187
+    }
+  ]
+}

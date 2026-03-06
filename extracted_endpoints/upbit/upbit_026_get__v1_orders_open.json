@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "23cc52adb6d0a7d150e8b8e4530a45c4e0b77476831c5d66432933fd5d082489",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orders/open",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uccb4\uacb0 \ub300\uae30 \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-open-orders",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "4eab10770d4f7f166eae273b74db736997af8469d23b3867ced08d53c7502d28",
+      "path_hash": "2d1fd8ed179e710d61bb3bbde70922eb49b5e88b6690c3896eaf992ab501ffa4",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/open",
+      "excerpt_start": 8047,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-open-orders",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "4eab10770d4f7f166eae273b74db736997af8469d23b3867ced08d53c7502d28",
+      "path_hash": "2d1fd8ed179e710d61bb3bbde70922eb49b5e88b6690c3896eaf992ab501ffa4",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/open",
+      "excerpt_start": 8047,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-open-orders",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "4eab10770d4f7f166eae273b74db736997af8469d23b3867ced08d53c7502d28",
+      "path_hash": "2d1fd8ed179e710d61bb3bbde70922eb49b5e88b6690c3896eaf992ab501ffa4",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders/open",
+      "excerpt_start": 8052,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-open-orders",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "4eab10770d4f7f166eae273b74db736997af8469d23b3867ced08d53c7502d28",
+      "path_hash": "2d1fd8ed179e710d61bb3bbde70922eb49b5e88b6690c3896eaf992ab501ffa4",
+      "field_name": "description",
+      "excerpt": "\uccb4\uacb0 \ub300\uae30 \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8031,
+      "excerpt_end": 8045
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "0374cbaca8ca729b467a3a501047b40801892917e3b11a39f76b0da267cd39d4",
+  "http": {
+    "method": "POST",
+    "path": "/v1/orders",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc8fc\ubb38 \uc0dd\uc131",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/new-order",
+      "crawled_at": "2026-02-10T17:53:25+00:00",
+      "content_hash": "671e781835b4cd86d7f8b782dbbc6ebdeb5e10427f31a0106f51e97877ee6496",
+      "path_hash": "d882e1835aa1dfa6e7d70277d227f6a50fc5fb7065cc75d23128b363a1f0d6b1",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/orders",
+      "excerpt_start": 8029,
+      "excerpt_end": 8066
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/new-order",
+      "crawled_at": "2026-02-10T17:53:25+00:00",
+      "content_hash": "671e781835b4cd86d7f8b782dbbc6ebdeb5e10427f31a0106f51e97877ee6496",
+      "path_hash": "d882e1835aa1dfa6e7d70277d227f6a50fc5fb7065cc75d23128b363a1f0d6b1",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/orders",
+      "excerpt_start": 8029,
+      "excerpt_end": 8066
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/new-order",
+      "crawled_at": "2026-02-10T17:53:25+00:00",
+      "content_hash": "671e781835b4cd86d7f8b782dbbc6ebdeb5e10427f31a0106f51e97877ee6496",
+      "path_hash": "d882e1835aa1dfa6e7d70277d227f6a50fc5fb7065cc75d23128b363a1f0d6b1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders",
+      "excerpt_start": 8035,
+      "excerpt_end": 8066
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/new-order",
+      "crawled_at": "2026-02-10T17:53:25+00:00",
+      "content_hash": "671e781835b4cd86d7f8b782dbbc6ebdeb5e10427f31a0106f51e97877ee6496",
+      "path_hash": "d882e1835aa1dfa6e7d70277d227f6a50fc5fb7065cc75d23128b363a1f0d6b1",
+      "field_name": "description",
+      "excerpt": "\uc8fc\ubb38 \uc0dd\uc131",
+      "excerpt_start": 8022,
+      "excerpt_end": 8027
+    }
+  ]
+}

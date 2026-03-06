@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "8d46d64c1fe33ff0910cab1890b129db9fa1faaa885ca25486cbb2207fd4dbbe",
+  "http": {
+    "method": "POST",
+    "path": "/exchange/SendAsset",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Send Asset: This generalized method is used to transfer tokens between different perp DEXs, spot balance, users, and/or sub-accounts. Use \"\" to specify the default USDC perp DEX and \"spot\" to specify spot. Only the collateral token can be transferred to or from a perp DEX.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 19544,
+      "excerpt_end": 19589
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 19544,
+      "excerpt_end": 19589
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 19544,
+      "excerpt_end": 19589
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "description",
+      "excerpt": "Send Asset",
+      "excerpt_start": 19532,
+      "excerpt_end": 19542
+    }
+  ]
+}

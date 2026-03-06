@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "0ea2fd31f6e87cdc9c78a3f04afe15ac66e3524372f5337ba7d7b6fedde45e22",
+  "http": {
+    "method": "GET",
+    "path": "/v1/status/wallet",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc785\ucd9c\uae08 \ud604\ud669",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%ED%98%84%ED%99%A9",
+      "crawled_at": "2026-02-10T17:49:02+00:00",
+      "content_hash": "8a7248bac83e83cd7a7532344d680713fab4b432b32e188737dcd200d013c1f7",
+      "path_hash": "abb83d7c87cb2dd0d71b014b2313f890cf1247904751d6889d4b71027fa91af3",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/status/wallet",
+      "excerpt_start": 6185,
+      "excerpt_end": 6230
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%ED%98%84%ED%99%A9",
+      "crawled_at": "2026-02-10T17:49:02+00:00",
+      "content_hash": "8a7248bac83e83cd7a7532344d680713fab4b432b32e188737dcd200d013c1f7",
+      "path_hash": "abb83d7c87cb2dd0d71b014b2313f890cf1247904751d6889d4b71027fa91af3",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/status/wallet",
+      "excerpt_start": 6185,
+      "excerpt_end": 6230
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%ED%98%84%ED%99%A9",
+      "crawled_at": "2026-02-10T17:49:02+00:00",
+      "content_hash": "8a7248bac83e83cd7a7532344d680713fab4b432b32e188737dcd200d013c1f7",
+      "path_hash": "abb83d7c87cb2dd0d71b014b2313f890cf1247904751d6889d4b71027fa91af3",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/status/wallet",
+      "excerpt_start": 6190,
+      "excerpt_end": 6230
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9E%85%EC%B6%9C%EA%B8%88-%ED%98%84%ED%99%A9",
+      "crawled_at": "2026-02-10T17:49:02+00:00",
+      "content_hash": "8a7248bac83e83cd7a7532344d680713fab4b432b32e188737dcd200d013c1f7",
+      "path_hash": "abb83d7c87cb2dd0d71b014b2313f890cf1247904751d6889d4b71027fa91af3",
+      "field_name": "description",
+      "excerpt": "\uc785\ucd9c\uae08 \ud604\ud669",
+      "excerpt_start": 6177,
+      "excerpt_end": 6183
+    }
+  ]
+}

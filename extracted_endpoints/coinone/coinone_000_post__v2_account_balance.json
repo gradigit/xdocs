@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "dccc7d6bb7db454c773c3a24fcda0a9f27f407b819437f81212442f8054f447c",
+  "http": {
+    "method": "POST",
+    "path": "/v2/account/balance",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc794\uace0 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/balance",
+      "crawled_at": "2026-02-10T17:45:27+00:00",
+      "content_hash": "6ccb824d6270da55a47c5301168f445873d4ce73954d36b31d9cf015bd287698",
+      "path_hash": "680a5456c0dcd41fe296109f65fb47304c0b80b8e22983754a2542ae6eed20f4",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/balance",
+      "excerpt_start": 7575,
+      "excerpt_end": 7625
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/balance",
+      "crawled_at": "2026-02-10T17:45:27+00:00",
+      "content_hash": "6ccb824d6270da55a47c5301168f445873d4ce73954d36b31d9cf015bd287698",
+      "path_hash": "680a5456c0dcd41fe296109f65fb47304c0b80b8e22983754a2542ae6eed20f4",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/balance",
+      "excerpt_start": 7575,
+      "excerpt_end": 7625
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/balance",
+      "crawled_at": "2026-02-10T17:45:27+00:00",
+      "content_hash": "6ccb824d6270da55a47c5301168f445873d4ce73954d36b31d9cf015bd287698",
+      "path_hash": "680a5456c0dcd41fe296109f65fb47304c0b80b8e22983754a2542ae6eed20f4",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/account/balance",
+      "excerpt_start": 7581,
+      "excerpt_end": 7625
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/balance",
+      "crawled_at": "2026-02-10T17:45:27+00:00",
+      "content_hash": "6ccb824d6270da55a47c5301168f445873d4ce73954d36b31d9cf015bd287698",
+      "path_hash": "680a5456c0dcd41fe296109f65fb47304c0b80b8e22983754a2542ae6eed20f4",
+      "field_name": "description",
+      "excerpt": "\uc794\uace0 \uc870\ud68c",
+      "excerpt_start": 7560,
+      "excerpt_end": 7565
+    }
+  ]
+}

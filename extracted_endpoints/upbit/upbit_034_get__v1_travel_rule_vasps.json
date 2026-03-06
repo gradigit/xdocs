@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "9b62a69556d0e027f219e32069be262cdb399c738e43c18771d16ea173fc793c",
+  "http": {
+    "method": "GET",
+    "path": "/v1/travel_rule/vasps",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uacc4\uc815\uc8fc \ud655\uc778 \uc11c\ube44\uc2a4 \uc9c0\uc6d0 \uac70\ub798\uc18c \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-travelrule-vasps",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "65726c283d288bdb6d97878ec42366308f991bd49a3b9672c221373bfb87fd37",
+      "path_hash": "ebbf3404007e2683c9841dda801cb97e97d63accd471325def1dc9ad97ef1118",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/travel_rule/vasps",
+      "excerpt_start": 8065,
+      "excerpt_end": 8112
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-travelrule-vasps",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "65726c283d288bdb6d97878ec42366308f991bd49a3b9672c221373bfb87fd37",
+      "path_hash": "ebbf3404007e2683c9841dda801cb97e97d63accd471325def1dc9ad97ef1118",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/travel_rule/vasps",
+      "excerpt_start": 8065,
+      "excerpt_end": 8112
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-travelrule-vasps",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "65726c283d288bdb6d97878ec42366308f991bd49a3b9672c221373bfb87fd37",
+      "path_hash": "ebbf3404007e2683c9841dda801cb97e97d63accd471325def1dc9ad97ef1118",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/travel_rule/vasps",
+      "excerpt_start": 8070,
+      "excerpt_end": 8112
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-travelrule-vasps",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "65726c283d288bdb6d97878ec42366308f991bd49a3b9672c221373bfb87fd37",
+      "path_hash": "ebbf3404007e2683c9841dda801cb97e97d63accd471325def1dc9ad97ef1118",
+      "field_name": "description",
+      "excerpt": "\uacc4\uc815\uc8fc \ud655\uc778 \uc11c\ube44\uc2a4 \uc9c0\uc6d0 \uac70\ub798\uc18c \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8040,
+      "excerpt_end": 8063
+    }
+  ]
+}

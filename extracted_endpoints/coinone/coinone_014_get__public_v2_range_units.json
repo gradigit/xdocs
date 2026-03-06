@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "e7279d798132bdbe78ddfd88ffcf526903ca4320abeb71c9ecfa314fab0377b8",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/range_units",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\ud638\uac00 \ub2e8\uc704 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/range-units",
+      "crawled_at": "2026-02-10T17:45:53+00:00",
+      "content_hash": "ba453eadc1962c886d08be1c036971bd71a6035e81037e52eda0dfa49df4a355",
+      "path_hash": "501c906f2dada215bc406b953262d7c1b797d16ee72d17e22878fe0e8d561c39",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/range_units",
+      "excerpt_start": 7581,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/range-units",
+      "crawled_at": "2026-02-10T17:45:53+00:00",
+      "content_hash": "ba453eadc1962c886d08be1c036971bd71a6035e81037e52eda0dfa49df4a355",
+      "path_hash": "501c906f2dada215bc406b953262d7c1b797d16ee72d17e22878fe0e8d561c39",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/range_units",
+      "excerpt_start": 7581,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/range-units",
+      "crawled_at": "2026-02-10T17:45:53+00:00",
+      "content_hash": "ba453eadc1962c886d08be1c036971bd71a6035e81037e52eda0dfa49df4a355",
+      "path_hash": "501c906f2dada215bc406b953262d7c1b797d16ee72d17e22878fe0e8d561c39",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/range_units",
+      "excerpt_start": 7586,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/range-units",
+      "crawled_at": "2026-02-10T17:45:53+00:00",
+      "content_hash": "ba453eadc1962c886d08be1c036971bd71a6035e81037e52eda0dfa49df4a355",
+      "path_hash": "501c906f2dada215bc406b953262d7c1b797d16ee72d17e22878fe0e8d561c39",
+      "field_name": "description",
+      "excerpt": "\ud638\uac00 \ub2e8\uc704 \uc870\ud68c",
+      "excerpt_start": 7563,
+      "excerpt_end": 7571
+    }
+  ]
+}

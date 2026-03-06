@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "1be30617cb114827d1cbf9b6a7c5b5d0585d72e2cee7cd11bcf7e9b5a1ce61d6",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/trades/{quote_currency}/{target_currency}",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\ucd5c\uadfc \uccb4\uacb0 \uc8fc\ubb38 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/recent-completed-orders",
+      "crawled_at": "2026-02-10T17:45:54+00:00",
+      "content_hash": "8530611cb340490e2360523bdb4dfb66b40b24b2ffa1e1789190ba1187f8e83e",
+      "path_hash": "37fcb56d2b2d14a0b71d5dd4ec4895bde52204538172a384025e5860e624ad1d",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/trades/{quote_currency}/{target_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7669
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/recent-completed-orders",
+      "crawled_at": "2026-02-10T17:45:54+00:00",
+      "content_hash": "8530611cb340490e2360523bdb4dfb66b40b24b2ffa1e1789190ba1187f8e83e",
+      "path_hash": "37fcb56d2b2d14a0b71d5dd4ec4895bde52204538172a384025e5860e624ad1d",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/trades/{quote_currency}/{target_currency}",
+      "excerpt_start": 7587,
+      "excerpt_end": 7669
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/recent-completed-orders",
+      "crawled_at": "2026-02-10T17:45:54+00:00",
+      "content_hash": "8530611cb340490e2360523bdb4dfb66b40b24b2ffa1e1789190ba1187f8e83e",
+      "path_hash": "37fcb56d2b2d14a0b71d5dd4ec4895bde52204538172a384025e5860e624ad1d",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/trades/{quote_currency}/{target_currency}",
+      "excerpt_start": 7592,
+      "excerpt_end": 7669
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/recent-completed-orders",
+      "crawled_at": "2026-02-10T17:45:54+00:00",
+      "content_hash": "8530611cb340490e2360523bdb4dfb66b40b24b2ffa1e1789190ba1187f8e83e",
+      "path_hash": "37fcb56d2b2d14a0b71d5dd4ec4895bde52204538172a384025e5860e624ad1d",
+      "field_name": "description",
+      "excerpt": "\ucd5c\uadfc \uccb4\uacb0 \uc8fc\ubb38 \uc870\ud68c",
+      "excerpt_start": 7566,
+      "excerpt_end": 7577
+    }
+  ]
+}

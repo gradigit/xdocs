@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "suspected_redirect_stubs": 0,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "kwenta",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 288015,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "kwenta",
+        "final_host": "docs.kwenta.io",
+        "final_url": "https://docs.kwenta.io/",
+        "http_status": 200,
+        "markdown_chars": 4586,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "docs",
+        "seed_host": "docs.kwenta.io",
+        "seed_host_allowed": true,
+        "seed_url": "https://docs.kwenta.io/",
+        "suspected_redirect_stub": false,
+        "word_count": 232
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

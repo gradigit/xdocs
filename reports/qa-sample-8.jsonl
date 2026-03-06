@@ -1,0 +1,8 @@
+{"query": "How to check account balance on Binance", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints"], "expected_exchange": "binance", "tags": ["keyword", "account"]}
+{"query": "Binance spot trading rate limits", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/general-info"], "expected_exchange": "binance", "tags": ["rate-limit"]}
+{"query": "place a new order on Binance", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints"], "expected_exchange": "binance", "tags": ["trading"]}
+{"query": "Binance API key permissions", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/general-info"], "expected_exchange": "binance", "tags": ["auth", "permissions"]}
+{"query": "Binance websocket stream endpoints", "expected_urls": ["https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams"], "expected_exchange": "binance", "tags": ["websocket"]}
+{"query": "Bybit get wallet balance", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/asset/balance"], "expected_exchange": "bybit", "tags": ["keyword", "balance"]}
+{"query": "Bybit place order API", "expected_urls": ["https://bybit-exchange.github.io/docs/v5/order/create-order"], "expected_exchange": "bybit", "tags": ["trading"]}
+{"query": "OKX funding rate API", "expected_urls": ["https://www.okx.com/docs-v5/en/"], "expected_exchange": "okx", "tags": ["funding-rate"]}

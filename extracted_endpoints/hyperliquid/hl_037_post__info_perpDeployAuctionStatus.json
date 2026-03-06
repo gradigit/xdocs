@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "af24a217e19bc7947f38bbb5d07259bf09d65d7cb0a69212431f5299185941b0",
+  "http": {
+    "method": "POST",
+    "path": "/info/perpDeployAuctionStatus",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve information about the Perp Deploy Auction",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 11171,
+      "excerpt_end": 11212
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 11171,
+      "excerpt_end": 11212
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 11171,
+      "excerpt_end": 11212
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "description",
+      "excerpt": "Retrieve information about the Perp Deploy Auction",
+      "excerpt_start": 11119,
+      "excerpt_end": 11169
+    }
+  ]
+}

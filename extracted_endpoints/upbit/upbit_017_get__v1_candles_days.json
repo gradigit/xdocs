@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "9d7bb1d780a9b78f6b1a5c5b280e4609109d43653932096223880047e9b579b5",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/days",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc77c(Day) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-days",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "20c3f9b10de11a8f00d373aeb2d29ba83ed2c657f20ee0ac10df69ab48a7e222",
+      "path_hash": "5a2613e940ada1aecbc7ce189b1d9ca6c81dc66017b2b1f2a8456fde637eda1b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/days",
+      "excerpt_start": 8043,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-days",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "20c3f9b10de11a8f00d373aeb2d29ba83ed2c657f20ee0ac10df69ab48a7e222",
+      "path_hash": "5a2613e940ada1aecbc7ce189b1d9ca6c81dc66017b2b1f2a8456fde637eda1b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/days",
+      "excerpt_start": 8043,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-days",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "20c3f9b10de11a8f00d373aeb2d29ba83ed2c657f20ee0ac10df69ab48a7e222",
+      "path_hash": "5a2613e940ada1aecbc7ce189b1d9ca6c81dc66017b2b1f2a8456fde637eda1b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/days",
+      "excerpt_start": 8048,
+      "excerpt_end": 8085
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-days",
+      "crawled_at": "2026-02-10T17:53:14+00:00",
+      "content_hash": "20c3f9b10de11a8f00d373aeb2d29ba83ed2c657f20ee0ac10df69ab48a7e222",
+      "path_hash": "5a2613e940ada1aecbc7ce189b1d9ca6c81dc66017b2b1f2a8456fde637eda1b",
+      "field_name": "description",
+      "excerpt": "\uc77c(Day) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8029,
+      "excerpt_end": 8041
+    }
+  ]
+}

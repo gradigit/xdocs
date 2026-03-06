@@ -1,0 +1,48 @@
+{
+  "cmd": "bench-extraction-quality",
+  "docs_dir": "/Users/aaaaa/Projects/cex-api-docs/cex-docs",
+  "generated_at": "2026-02-26T16:41:26Z",
+  "quality_counts": {
+    "empty": 3,
+    "ok_ge_50": 3670,
+    "thin_lt_50": 146,
+    "total": 3819
+  },
+  "sample_metrics": {
+    "avg_word_count": 1408.058,
+    "code_tag_occurrences": 2314,
+    "domain_distribution_top20": {
+      "apidocs.bithumb.com": 17,
+      "bybit-exchange.github.io": 59,
+      "developers.binance.com": 238,
+      "docs.bitfinex.com": 17,
+      "docs.coinone.co.kr": 9,
+      "docs.dydx.xyz": 44,
+      "docs.upbit.com": 41,
+      "huobiapi.github.io": 1,
+      "hyperliquid.gitbook.io": 3,
+      "localhost": 1,
+      "raw.githubusercontent.com": 3,
+      "www.bitget.com": 16,
+      "www.kucoin.com": 50,
+      "www.okx.com": 1
+    },
+    "fence_occurrences": 365,
+    "heading_line_occurrences": 8568,
+    "html_table_occurrences": 0,
+    "link_occurrences": 49084,
+    "pages_with_code_tags": 324,
+    "pages_with_fenced_code": 11,
+    "pages_with_headings": 492,
+    "pages_with_html_table_markup": 0,
+    "pages_with_links": 493,
+    "pages_with_table_like_lines": 288,
+    "sample_pages": 500,
+    "table_like_line_occurrences": 19431
+  },
+  "sample_size_requested": 500,
+  "store_totals": {
+    "pages": 3819,
+    "words": 4610108
+  }
+}

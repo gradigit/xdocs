@@ -1,0 +1,65 @@
+{
+  "exchange": "korbit",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "b6fa4ffba035325393f2d22430e645368ac54695e79594fe79b4e18193059b16",
+  "http": {
+    "method": "GET",
+    "path": "/v2/balance",
+    "base_url": "https://api.korbit.co.kr/v1"
+  },
+  "description": "Get balance.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.method",
+      "excerpt": "GET/v2/balance",
+      "excerpt_start": 56521,
+      "excerpt_end": 56535
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.path",
+      "excerpt": "GET/v2/balance",
+      "excerpt_start": 56521,
+      "excerpt_end": 56535
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.korbit.co.kr",
+      "excerpt_start": 2965,
+      "excerpt_end": 2989
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "description",
+      "excerpt": "Get balance.",
+      "excerpt_start": 56537,
+      "excerpt_end": 56549
+    }
+  ]
+}

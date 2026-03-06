@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "26970c31f29750c08a28c5e7566156dda161c16f45d1f3a27ec87f588293485e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/trades/ticks",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ucd5c\uadfc \uccb4\uacb0 \ub0b4\uc5ed \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/recent-trades-history",
+      "crawled_at": "2026-02-10T17:53:26+00:00",
+      "content_hash": "c13495fd8ba8be66c9908fe48e15e8bfa9449deb053ca9dd5edb37ac63642bb4",
+      "path_hash": "54835b93de0828b89c666138d0b318799cbe5494914136563e5e4a8235eeab4f",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/trades/ticks",
+      "excerpt_start": 8041,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/recent-trades-history",
+      "crawled_at": "2026-02-10T17:53:26+00:00",
+      "content_hash": "c13495fd8ba8be66c9908fe48e15e8bfa9449deb053ca9dd5edb37ac63642bb4",
+      "path_hash": "54835b93de0828b89c666138d0b318799cbe5494914136563e5e4a8235eeab4f",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/trades/ticks",
+      "excerpt_start": 8041,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/recent-trades-history",
+      "crawled_at": "2026-02-10T17:53:26+00:00",
+      "content_hash": "c13495fd8ba8be66c9908fe48e15e8bfa9449deb053ca9dd5edb37ac63642bb4",
+      "path_hash": "54835b93de0828b89c666138d0b318799cbe5494914136563e5e4a8235eeab4f",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/trades/ticks",
+      "excerpt_start": 8046,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/recent-trades-history",
+      "crawled_at": "2026-02-10T17:53:26+00:00",
+      "content_hash": "c13495fd8ba8be66c9908fe48e15e8bfa9449deb053ca9dd5edb37ac63642bb4",
+      "path_hash": "54835b93de0828b89c666138d0b318799cbe5494914136563e5e4a8235eeab4f",
+      "field_name": "description",
+      "excerpt": "\ucd5c\uadfc \uccb4\uacb0 \ub0b4\uc5ed \uc870\ud68c",
+      "excerpt_start": 8028,
+      "excerpt_end": 8039
+    }
+  ]
+}

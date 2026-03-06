@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "5f6c9bc411014ad17778067cc7e4ced2b350fde5b89a76942031c16c42404a54",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/weeks",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc8fc(Week) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-weeks",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "0f6721499653929e1763c528a015bf169ffcd1528b8b42397bc41c4d11e81e42",
+      "path_hash": "9d60ac45dc7876af150ba1be697482f91570fbdf5a272a4c3fc18553c9b8c3cd",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/weeks",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-weeks",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "0f6721499653929e1763c528a015bf169ffcd1528b8b42397bc41c4d11e81e42",
+      "path_hash": "9d60ac45dc7876af150ba1be697482f91570fbdf5a272a4c3fc18553c9b8c3cd",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/weeks",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-weeks",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "0f6721499653929e1763c528a015bf169ffcd1528b8b42397bc41c4d11e81e42",
+      "path_hash": "9d60ac45dc7876af150ba1be697482f91570fbdf5a272a4c3fc18553c9b8c3cd",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/weeks",
+      "excerpt_start": 8050,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-weeks",
+      "crawled_at": "2026-02-10T17:53:16+00:00",
+      "content_hash": "0f6721499653929e1763c528a015bf169ffcd1528b8b42397bc41c4d11e81e42",
+      "path_hash": "9d60ac45dc7876af150ba1be697482f91570fbdf5a272a4c3fc18553c9b8c3cd",
+      "field_name": "description",
+      "excerpt": "\uc8fc(Week) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8030,
+      "excerpt_end": 8043
+    }
+  ]
+}

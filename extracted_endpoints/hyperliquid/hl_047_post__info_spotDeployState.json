@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "42b4baf91fe58adc60b851653ce63dba61b52eeeda77ce448862eee160f55977",
+  "http": {
+    "method": "POST",
+    "path": "/info/spotDeployState",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve information about the Spot Deploy Auction",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9249,
+      "excerpt_end": 9290
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9249,
+      "excerpt_end": 9290
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 9249,
+      "excerpt_end": 9290
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "ea5258811a4c18bce7fa314e06371420332c84a011a0d7f65adbef129792eca0",
+      "path_hash": "687dd55a82f36ad984c980afb2c54b48e9c00bd5b255202720d18435b9dbf24f",
+      "field_name": "description",
+      "excerpt": "Retrieve information about the Spot Deploy Auction",
+      "excerpt_start": 9197,
+      "excerpt_end": 9247
+    }
+  ]
+}

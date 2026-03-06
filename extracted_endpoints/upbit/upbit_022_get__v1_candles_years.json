@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "7f75c9870dd1ff0b2112a8ad7d845af644449b2ca412a1543f4d4d81d0098e27",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/years",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc5f0(Year) \uce94\ub4e4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-years",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "bf1a376a00018f3a8d12b6540ff442ef57227743d44386a368713e88e11c271d",
+      "path_hash": "118a30e04fffbe4518f51d5edcfecd2163519b2773e37dab6b8d6335a66f0c4b",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/years",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-years",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "bf1a376a00018f3a8d12b6540ff442ef57227743d44386a368713e88e11c271d",
+      "path_hash": "118a30e04fffbe4518f51d5edcfecd2163519b2773e37dab6b8d6335a66f0c4b",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/candles/years",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-years",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "bf1a376a00018f3a8d12b6540ff442ef57227743d44386a368713e88e11c271d",
+      "path_hash": "118a30e04fffbe4518f51d5edcfecd2163519b2773e37dab6b8d6335a66f0c4b",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/candles/years",
+      "excerpt_start": 8050,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-candles-years",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "bf1a376a00018f3a8d12b6540ff442ef57227743d44386a368713e88e11c271d",
+      "path_hash": "118a30e04fffbe4518f51d5edcfecd2163519b2773e37dab6b8d6335a66f0c4b",
+      "field_name": "description",
+      "excerpt": "\uc5f0(Year) \uce94\ub4e4 \uc870\ud68c",
+      "excerpt_start": 8030,
+      "excerpt_end": 8043
+    }
+  ]
+}

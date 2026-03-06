@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 3,
+      "suspected_redirect_stubs": 0,
+      "total": 3
+    },
+    "filters": {
+      "exchange": "ccxt",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 246878,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "ccxt",
+        "final_host": "github.com",
+        "final_url": "https://github.com/ccxt/ccxt/wiki",
+        "http_status": 200,
+        "markdown_chars": 24893,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "manual",
+        "seed_host": "github.com",
+        "seed_host_allowed": true,
+        "seed_url": "https://github.com/ccxt/ccxt/wiki",
+        "suspected_redirect_stub": false,
+        "word_count": 1229
+      },
+      {
+        "bytes": 416983,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "ccxt",
+        "final_host": "github.com",
+        "final_url": "https://github.com/ccxt/ccxt/wiki/Exchange-Markets",
+        "http_status": 200,
+        "markdown_chars": 50749,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "manual",
+        "seed_host": "github.com",
+        "seed_host_allowed": true,
+        "seed_url": "https://github.com/ccxt/ccxt/wiki/Exchange-Markets",
+        "suspected_redirect_stub": false,
+        "word_count": 2171
+      },
+      {
+        "bytes": 1730714,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "ccxt",
+        "final_host": "github.com",
+        "final_url": "https://github.com/ccxt/ccxt/wiki/Manual",
+        "http_status": 200,
+        "markdown_chars": 446092,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "manual",
+        "seed_host": "github.com",
+        "seed_host_allowed": true,
+        "seed_url": "https://github.com/ccxt/ccxt/wiki/Manual",
+        "suspected_redirect_stub": false,
+        "word_count": 51891
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

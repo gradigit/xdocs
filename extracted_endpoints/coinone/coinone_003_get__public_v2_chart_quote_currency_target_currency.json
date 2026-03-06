@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "64daee445f22dd350e034a78aa135592bb43e81a1f465eba38bfd3406cd2df07",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/chart/{quote_currency}/{target_currency}",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uce94\ub4e4 \ucc28\ud2b8 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/chart",
+      "crawled_at": "2026-02-10T17:45:29+00:00",
+      "content_hash": "30e289da47fa1ade11ed6d79d24e7f1279657768daaba042a55ed761bfa35adf",
+      "path_hash": "10f289f20887119dc5a7ed50c1b003666648a84b323f4fcd87290f6529be73d8",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/chart/{quote_currency}/{target_currency}",
+      "excerpt_start": 7581,
+      "excerpt_end": 7662
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/chart",
+      "crawled_at": "2026-02-10T17:45:29+00:00",
+      "content_hash": "30e289da47fa1ade11ed6d79d24e7f1279657768daaba042a55ed761bfa35adf",
+      "path_hash": "10f289f20887119dc5a7ed50c1b003666648a84b323f4fcd87290f6529be73d8",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/chart/{quote_currency}/{target_currency}",
+      "excerpt_start": 7581,
+      "excerpt_end": 7662
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/chart",
+      "crawled_at": "2026-02-10T17:45:29+00:00",
+      "content_hash": "30e289da47fa1ade11ed6d79d24e7f1279657768daaba042a55ed761bfa35adf",
+      "path_hash": "10f289f20887119dc5a7ed50c1b003666648a84b323f4fcd87290f6529be73d8",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/chart/{quote_currency}/{target_currency}",
+      "excerpt_start": 7586,
+      "excerpt_end": 7662
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/chart",
+      "crawled_at": "2026-02-10T17:45:29+00:00",
+      "content_hash": "30e289da47fa1ade11ed6d79d24e7f1279657768daaba042a55ed761bfa35adf",
+      "path_hash": "10f289f20887119dc5a7ed50c1b003666648a84b323f4fcd87290f6529be73d8",
+      "field_name": "description",
+      "excerpt": "\uce94\ub4e4 \ucc28\ud2b8 \uc870\ud68c",
+      "excerpt_start": 7563,
+      "excerpt_end": 7571
+    }
+  ]
+}

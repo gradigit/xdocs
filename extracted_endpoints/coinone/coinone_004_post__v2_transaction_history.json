@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "446e1861fe1a12e6272db47733115970091a94014766c6a517967b6b5abb7d2b",
+  "http": {
+    "method": "POST",
+    "path": "/v2/transaction/history",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uac00\uc0c1\uc790\uc0b0 \uc785\ucd9c\uae08 \ub0b4\uc5ed \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/coin-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:30+00:00",
+      "content_hash": "af46c9a355afc23e774c16f140398a3e5b792963a3f4730b8daf4fc9363a86e3",
+      "path_hash": "91ff739492065e07b18a9e14fd1038cb61b3c0a0113dbd0e44a7a47f4ca9844d",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/transaction/history",
+      "excerpt_start": 7593,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/coin-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:30+00:00",
+      "content_hash": "af46c9a355afc23e774c16f140398a3e5b792963a3f4730b8daf4fc9363a86e3",
+      "path_hash": "91ff739492065e07b18a9e14fd1038cb61b3c0a0113dbd0e44a7a47f4ca9844d",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/transaction/history",
+      "excerpt_start": 7593,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/coin-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:30+00:00",
+      "content_hash": "af46c9a355afc23e774c16f140398a3e5b792963a3f4730b8daf4fc9363a86e3",
+      "path_hash": "91ff739492065e07b18a9e14fd1038cb61b3c0a0113dbd0e44a7a47f4ca9844d",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/transaction/history",
+      "excerpt_start": 7599,
+      "excerpt_end": 7647
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/coin-transaction-history-1",
+      "crawled_at": "2026-02-10T17:45:30+00:00",
+      "content_hash": "af46c9a355afc23e774c16f140398a3e5b792963a3f4730b8daf4fc9363a86e3",
+      "path_hash": "91ff739492065e07b18a9e14fd1038cb61b3c0a0113dbd0e44a7a47f4ca9844d",
+      "field_name": "description",
+      "excerpt": "\uac00\uc0c1\uc790\uc0b0 \uc785\ucd9c\uae08 \ub0b4\uc5ed \uc870\ud68c",
+      "excerpt_start": 7569,
+      "excerpt_end": 7583
+    }
+  ]
+}

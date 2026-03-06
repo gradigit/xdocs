@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "f313c338f26266546cbab3ca3db143e0d90c6b208c8d9019ee4acb9edd24f51f",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orderbook/instruments",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ud638\uac00 \uc815\ucc45 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbook-instruments",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "502b42c125098eb2bc111ccd4a0922a594a1ce1ae8e307943ee6fa265815ad89",
+      "path_hash": "2dff80927b327b231217af2ec3285b9ceb0e9d350873a4fee4cca8d2aca1c37a",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orderbook/instruments",
+      "excerpt_start": 8035,
+      "excerpt_end": 8086
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbook-instruments",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "502b42c125098eb2bc111ccd4a0922a594a1ce1ae8e307943ee6fa265815ad89",
+      "path_hash": "2dff80927b327b231217af2ec3285b9ceb0e9d350873a4fee4cca8d2aca1c37a",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orderbook/instruments",
+      "excerpt_start": 8035,
+      "excerpt_end": 8086
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbook-instruments",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "502b42c125098eb2bc111ccd4a0922a594a1ce1ae8e307943ee6fa265815ad89",
+      "path_hash": "2dff80927b327b231217af2ec3285b9ceb0e9d350873a4fee4cca8d2aca1c37a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orderbook/instruments",
+      "excerpt_start": 8040,
+      "excerpt_end": 8086
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbook-instruments",
+      "crawled_at": "2026-02-10T17:53:19+00:00",
+      "content_hash": "502b42c125098eb2bc111ccd4a0922a594a1ce1ae8e307943ee6fa265815ad89",
+      "path_hash": "2dff80927b327b231217af2ec3285b9ceb0e9d350873a4fee4cca8d2aca1c37a",
+      "field_name": "description",
+      "excerpt": "\ud638\uac00 \uc815\ucc45 \uc870\ud68c",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

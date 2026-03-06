@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "5461bfc87094495f0aa8da24b48f89d6b5835c72d7849cc364690588f089e2b4",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orderbook",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ud638\uac00 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbooks",
+      "crawled_at": "2026-02-10T17:53:20+00:00",
+      "content_hash": "cfe730fcc6ea9c96a224966989519b2f2a467743dfa14fcfbee932cc4c4df429",
+      "path_hash": "c002d0aa7f1d43d8e0a7fbbd75070f70c5802cbb9f7f15cd1c22994f198cbe64",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orderbook",
+      "excerpt_start": 8029,
+      "excerpt_end": 8068
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbooks",
+      "crawled_at": "2026-02-10T17:53:20+00:00",
+      "content_hash": "cfe730fcc6ea9c96a224966989519b2f2a467743dfa14fcfbee932cc4c4df429",
+      "path_hash": "c002d0aa7f1d43d8e0a7fbbd75070f70c5802cbb9f7f15cd1c22994f198cbe64",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orderbook",
+      "excerpt_start": 8029,
+      "excerpt_end": 8068
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbooks",
+      "crawled_at": "2026-02-10T17:53:20+00:00",
+      "content_hash": "cfe730fcc6ea9c96a224966989519b2f2a467743dfa14fcfbee932cc4c4df429",
+      "path_hash": "c002d0aa7f1d43d8e0a7fbbd75070f70c5802cbb9f7f15cd1c22994f198cbe64",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orderbook",
+      "excerpt_start": 8034,
+      "excerpt_end": 8068
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-orderbooks",
+      "crawled_at": "2026-02-10T17:53:20+00:00",
+      "content_hash": "cfe730fcc6ea9c96a224966989519b2f2a467743dfa14fcfbee932cc4c4df429",
+      "path_hash": "c002d0aa7f1d43d8e0a7fbbd75070f70c5802cbb9f7f15cd1c22994f198cbe64",
+      "field_name": "description",
+      "excerpt": "\ud638\uac00 \uc870\ud68c",
+      "excerpt_start": 8022,
+      "excerpt_end": 8027
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "02a0948e1e309cdee026b928eb0d50f8fd464590186e1f43ecf150063ff5ee86",
+  "http": {
+    "method": "GET",
+    "path": "/public/v2/currencies",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uc804\uccb4 \uac00\uc0c1\uc790\uc0b0 \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/currencies",
+      "crawled_at": "2026-02-10T17:45:32+00:00",
+      "content_hash": "83c438de8d42e9d49fadfc753f80ca4bbe076c01e7568a6ef21b2eaf971173a5",
+      "path_hash": "bc301389b86f627d9f956982f4e485372e8bfca1ef78285c5f371fcd8dc925dc",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/currencies",
+      "excerpt_start": 7591,
+      "excerpt_end": 7642
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/currencies",
+      "crawled_at": "2026-02-10T17:45:32+00:00",
+      "content_hash": "83c438de8d42e9d49fadfc753f80ca4bbe076c01e7568a6ef21b2eaf971173a5",
+      "path_hash": "bc301389b86f627d9f956982f4e485372e8bfca1ef78285c5f371fcd8dc925dc",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.coinone.co.kr/public/v2/currencies",
+      "excerpt_start": 7591,
+      "excerpt_end": 7642
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/currencies",
+      "crawled_at": "2026-02-10T17:45:32+00:00",
+      "content_hash": "83c438de8d42e9d49fadfc753f80ca4bbe076c01e7568a6ef21b2eaf971173a5",
+      "path_hash": "bc301389b86f627d9f956982f4e485372e8bfca1ef78285c5f371fcd8dc925dc",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/public/v2/currencies",
+      "excerpt_start": 7596,
+      "excerpt_end": 7642
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/currencies",
+      "crawled_at": "2026-02-10T17:45:32+00:00",
+      "content_hash": "83c438de8d42e9d49fadfc753f80ca4bbe076c01e7568a6ef21b2eaf971173a5",
+      "path_hash": "bc301389b86f627d9f956982f4e485372e8bfca1ef78285c5f371fcd8dc925dc",
+      "field_name": "description",
+      "excerpt": "\uc804\uccb4 \uac00\uc0c1\uc790\uc0b0 \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 7568,
+      "excerpt_end": 7581
+    }
+  ]
+}

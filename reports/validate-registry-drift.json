@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-registry",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "suspected_redirect_stubs": 0,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "drift",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "bytes": 278011,
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "drift",
+        "final_host": "docs.drift.trade",
+        "final_url": "https://docs.drift.trade/developers",
+        "http_status": 200,
+        "markdown_chars": 20462,
+        "meta_refresh": null,
+        "ok": true,
+        "redirect_chain": [],
+        "render_mode": "http",
+        "section_id": "docs",
+        "seed_host": "docs.drift.trade",
+        "seed_host_allowed": true,
+        "seed_url": "https://docs.drift.trade/developers",
+        "suspected_redirect_stub": false,
+        "word_count": 994
+      }
+    ]
+  },
+  "schema_version": "v1"
+}

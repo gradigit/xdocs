@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "1895754a03e17671c88809350f059812c76ca68f329aa68aef1c35df823d8ba3",
+  "http": {
+    "method": "GET",
+    "path": "/v1/market/all",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ud398\uc5b4 \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-trading-pairs",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "f89a9bfe66da117d57c2609a9544f495b197d5ff20f87a4e52251a11113a39eb",
+      "path_hash": "0ee535b356d51da65bcd5308d4c2b691ec505456a8b5d7a7aea03c5b8e85a01a",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/market/all",
+      "excerpt_start": 8035,
+      "excerpt_end": 8075
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-trading-pairs",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "f89a9bfe66da117d57c2609a9544f495b197d5ff20f87a4e52251a11113a39eb",
+      "path_hash": "0ee535b356d51da65bcd5308d4c2b691ec505456a8b5d7a7aea03c5b8e85a01a",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/market/all",
+      "excerpt_start": 8035,
+      "excerpt_end": 8075
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-trading-pairs",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "f89a9bfe66da117d57c2609a9544f495b197d5ff20f87a4e52251a11113a39eb",
+      "path_hash": "0ee535b356d51da65bcd5308d4c2b691ec505456a8b5d7a7aea03c5b8e85a01a",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/market/all",
+      "excerpt_start": 8040,
+      "excerpt_end": 8075
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-trading-pairs",
+      "crawled_at": "2026-02-10T17:53:23+00:00",
+      "content_hash": "f89a9bfe66da117d57c2609a9544f495b197d5ff20f87a4e52251a11113a39eb",
+      "path_hash": "0ee535b356d51da65bcd5308d4c2b691ec505456a8b5d7a7aea03c5b8e85a01a",
+      "field_name": "description",
+      "excerpt": "\ud398\uc5b4 \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

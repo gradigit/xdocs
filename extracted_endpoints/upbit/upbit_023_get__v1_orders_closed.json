@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "d75bd263b4945cf6b99b2367af5753172d2d48c7a6adfe03f6fc57e36748440d",
+  "http": {
+    "method": "GET",
+    "path": "/v1/orders/closed",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc885\ub8cc \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-closed-orders",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "587813a9c10d9459b2a9941ad61f592759adc752799c0d5be7bbc6b30ece99c1",
+      "path_hash": "d02c08be7cbe9a9b0d0b053a7719a6590e0eacec92d0f364b3f89163a2784708",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/closed",
+      "excerpt_start": 8041,
+      "excerpt_end": 8084
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-closed-orders",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "587813a9c10d9459b2a9941ad61f592759adc752799c0d5be7bbc6b30ece99c1",
+      "path_hash": "d02c08be7cbe9a9b0d0b053a7719a6590e0eacec92d0f364b3f89163a2784708",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/orders/closed",
+      "excerpt_start": 8041,
+      "excerpt_end": 8084
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-closed-orders",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "587813a9c10d9459b2a9941ad61f592759adc752799c0d5be7bbc6b30ece99c1",
+      "path_hash": "d02c08be7cbe9a9b0d0b053a7719a6590e0eacec92d0f364b3f89163a2784708",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders/closed",
+      "excerpt_start": 8046,
+      "excerpt_end": 8084
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-closed-orders",
+      "crawled_at": "2026-02-10T17:53:17+00:00",
+      "content_hash": "587813a9c10d9459b2a9941ad61f592759adc752799c0d5be7bbc6b30ece99c1",
+      "path_hash": "d02c08be7cbe9a9b0d0b053a7719a6590e0eacec92d0f364b3f89163a2784708",
+      "field_name": "description",
+      "excerpt": "\uc885\ub8cc \uc8fc\ubb38 \ubaa9\ub85d \uc870\ud68c",
+      "excerpt_start": 8028,
+      "excerpt_end": 8039
+    }
+  ]
+}

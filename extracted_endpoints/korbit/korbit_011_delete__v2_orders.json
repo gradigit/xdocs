@@ -1,0 +1,65 @@
+{
+  "exchange": "korbit",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "d1ce81558a943f200ff8d3eae22136d46785cb0c07545e7f367805e29ead1d55",
+  "http": {
+    "method": "DELETE",
+    "path": "/v2/orders",
+    "base_url": "https://api.korbit.co.kr/v1"
+  },
+  "description": "Requests to cancel an open order.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.method",
+      "excerpt": "DELETE/v2/orders",
+      "excerpt_start": 55182,
+      "excerpt_end": 55198
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.path",
+      "excerpt": "DELETE/v2/orders",
+      "excerpt_start": 55182,
+      "excerpt_end": 55198
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.korbit.co.kr",
+      "excerpt_start": 2965,
+      "excerpt_end": 2989
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "description",
+      "excerpt": "Requests to cancel an open order.",
+      "excerpt_start": 55200,
+      "excerpt_end": 55233
+    }
+  ]
+}

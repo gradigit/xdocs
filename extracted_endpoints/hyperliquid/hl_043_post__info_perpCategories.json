@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "0da7460cc1f3d70083258d3a54a71a1b1f00b87f4645f3bb780019e40cc8ab8d",
+  "http": {
+    "method": "POST",
+    "path": "/info/perpCategories",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve perp categories",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 13529,
+      "excerpt_end": 13570
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 13529,
+      "excerpt_end": 13570
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 13529,
+      "excerpt_end": 13570
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "21d598704ad5de93c662254343295d487294537f39ab4369002dd295d8e6693e",
+      "path_hash": "29e1fc32643d19d2fd1250dd56fc198a45f893d2706802f8ac922fa1783feb43",
+      "field_name": "description",
+      "excerpt": "Retrieve perp categories",
+      "excerpt_start": 13503,
+      "excerpt_end": 13527
+    }
+  ]
+}

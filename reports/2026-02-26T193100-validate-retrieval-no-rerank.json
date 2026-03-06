@@ -1,0 +1,223 @@
+{
+  "ok": true,
+  "result": {
+    "cmd": "validate-retrieval",
+    "hit_rate": 0.05,
+    "k": 5,
+    "mean_recall": 0.05,
+    "per_query": [
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints"
+        ],
+        "hit": false,
+        "query": "How to check account balance on Binance",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/derivatives/coin-margined-futures/general-info",
+          "https://developers.binance.com/docs/derivatives/change-log",
+          "https://developers.binance.com/docs/binance-spot-api-docs/"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/general-info"
+        ],
+        "hit": false,
+        "query": "Binance spot trading rate limits",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/",
+          "https://developers.binance.com/docs/derivatives/coin-margined-futures/general-info",
+          "https://developers.binance.com/docs/derivatives/change-log",
+          "https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info",
+          "https://developers.binance.com/docs/derivatives/usds-margined-futures/"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints"
+        ],
+        "hit": false,
+        "query": "place a new order on Binance",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/",
+          "https://developers.binance.com/docs/derivatives/change-log"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/general-info"
+        ],
+        "hit": false,
+        "query": "Binance API key permissions",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/derivatives/quick-start",
+          "https://developers.binance.com/docs/derivatives/portfolio-margin/"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams"
+        ],
+        "hit": false,
+        "query": "Binance websocket stream endpoints",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/binance-spot-api-docs/",
+          "https://developers.binance.com/docs/derivatives/change-log",
+          "https://developers.binance.com/docs/derivatives/coin-margined-futures/general-info"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://bybit-exchange.github.io/docs/v5/asset/balance"
+        ],
+        "hit": false,
+        "query": "Bybit get wallet balance",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://bybit-exchange.github.io/docs/v5/order/create-order"
+        ],
+        "hit": false,
+        "query": "Bybit place order API",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.okx.com/docs-v5/en/"
+        ],
+        "hit": false,
+        "query": "OKX funding rate API",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.okx.com/docs-v5/en/"
+        ],
+        "hit": false,
+        "query": "OKX order placement endpoint",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.kucoin.com/docs/basic-info/connection-method/authentication/creating-a-request"
+        ],
+        "hit": false,
+        "query": "KuCoin API authentication",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.kucoin.com/docs/rest/account/basic-info/get-account-list"
+        ],
+        "hit": false,
+        "query": "KuCoin get account balance",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.bitget.com/api-doc/copytrading/intro"
+        ],
+        "hit": false,
+        "query": "Bitget copy trading API",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.gate.com/docs/developers/apiv4/en/"
+        ],
+        "hit": false,
+        "query": "Gate.io spot order endpoint",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://www.gate.com/docs/apiv4/index.html"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://developers.binance.com/docs/margin_trading/Introduction"
+        ],
+        "hit": false,
+        "query": "Binance margin account endpoints",
+        "recall": 0.0,
+        "retrieved_urls": [
+          "https://developers.binance.com/docs/derivatives/change-log",
+          "https://developers.binance.com/docs/derivatives/coin-margined-futures/general-info",
+          "https://developers.binance.com/docs/derivatives/usds-margined-futures/",
+          "https://developers.binance.com/docs/derivatives/usds-margined-futures/general-info"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://huobiapi.github.io/docs/spot/v1/en/"
+        ],
+        "hit": true,
+        "query": "HTX API rate limit rules",
+        "recall": 1.0,
+        "retrieved_urls": [
+          "https://huobiapi.github.io/docs/spot/v1/en/"
+        ]
+      },
+      {
+        "expected_urls": [
+          "https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html"
+        ],
+        "hit": false,
+        "query": "Crypto.com exchange API overview",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://docs.dydx.xyz/"
+        ],
+        "hit": false,
+        "query": "dYdX perpetual trading API",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://hyperliquid.gitbook.io/hyperliquid-docs"
+        ],
+        "hit": false,
+        "query": "Hyperliquid order types",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://www.bitstamp.net/api/"
+        ],
+        "hit": false,
+        "query": "Bitstamp withdrawal endpoint",
+        "recall": 0.0,
+        "retrieved_urls": []
+      },
+      {
+        "expected_urls": [
+          "https://docs.upbit.com/reference"
+        ],
+        "hit": false,
+        "query": "Upbit market information API",
+        "recall": 0.0,
+        "retrieved_urls": []
+      }
+    ],
+    "rerank": false,
+    "total_queries": 20
+  },
+  "schema_version": "v1"
+}

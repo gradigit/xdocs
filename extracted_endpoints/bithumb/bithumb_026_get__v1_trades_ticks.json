@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "c69ba953f7ccd7d87565a76e080948fedba67f20087d8f71d9e944519678565e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/trades/ticks",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\ucd5c\uadfc \uccb4\uacb0 \ub0b4\uc5ed",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B5%9C%EA%B7%BC-%EC%B2%B4%EA%B2%B0-%EB%82%B4%EC%97%AD",
+      "crawled_at": "2026-02-10T17:49:06+00:00",
+      "content_hash": "f693a7d76822937c01e30b71d9dcf3c2e94f4ba2f3e48f416048ad591e78eda9",
+      "path_hash": "c818185d21ab0d698bffeaa26bf02831ea533b0648713186a6156a9f9b80b5f3",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/trades/ticks",
+      "excerpt_start": 6189,
+      "excerpt_end": 6233
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B5%9C%EA%B7%BC-%EC%B2%B4%EA%B2%B0-%EB%82%B4%EC%97%AD",
+      "crawled_at": "2026-02-10T17:49:06+00:00",
+      "content_hash": "f693a7d76822937c01e30b71d9dcf3c2e94f4ba2f3e48f416048ad591e78eda9",
+      "path_hash": "c818185d21ab0d698bffeaa26bf02831ea533b0648713186a6156a9f9b80b5f3",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/trades/ticks",
+      "excerpt_start": 6189,
+      "excerpt_end": 6233
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B5%9C%EA%B7%BC-%EC%B2%B4%EA%B2%B0-%EB%82%B4%EC%97%AD",
+      "crawled_at": "2026-02-10T17:49:06+00:00",
+      "content_hash": "f693a7d76822937c01e30b71d9dcf3c2e94f4ba2f3e48f416048ad591e78eda9",
+      "path_hash": "c818185d21ab0d698bffeaa26bf02831ea533b0648713186a6156a9f9b80b5f3",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/trades/ticks",
+      "excerpt_start": 6194,
+      "excerpt_end": 6233
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%B5%9C%EA%B7%BC-%EC%B2%B4%EA%B2%B0-%EB%82%B4%EC%97%AD",
+      "crawled_at": "2026-02-10T17:49:06+00:00",
+      "content_hash": "f693a7d76822937c01e30b71d9dcf3c2e94f4ba2f3e48f416048ad591e78eda9",
+      "path_hash": "c818185d21ab0d698bffeaa26bf02831ea533b0648713186a6156a9f9b80b5f3",
+      "field_name": "description",
+      "excerpt": "\ucd5c\uadfc \uccb4\uacb0 \ub0b4\uc5ed",
+      "excerpt_start": 6179,
+      "excerpt_end": 6187
+    }
+  ]
+}

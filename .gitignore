@@ -11,42 +11,10 @@ dist/
 build/
 *.egg-info/
 
-# Local agent artifacts (never commit)
-.claude/
-!.claude/skills/
-
-# Local doc store (must never be committed)
+# Local doc store (must never be committed — large data)
 cex-docs/
 cex-docs-*/
 
 # POC output data (large, regenerable)
 poc-binance-full/
-
-# Extracted endpoint JSON files (regenerable from stored markdown)
-extracted_endpoints/
-
-# Dev/session artifacts (not needed by end users)
-HANDOFF.md
-TODO.md
-todos/
-docs/archive/
-docs/plans/
-docs/reports/
-docs/research/
-docs/runbooks/
-docs/discussions/
-docs/solutions/
-scripts/poc_*.py
-.doc-manifest.yaml
-
-# Ephemeral local artifacts
-logs/
-reports/
 poc-*.jpeg
-security_best_practices_report.md
-uv.lock
-
-# Platform-specific tool config
-.codex/
-.playwright-mcp/
-.DS_Store

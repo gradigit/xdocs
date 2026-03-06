@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "753787ec31cf15574330a01e902d0352d06f2a761cf81b8bb41b65d842fceb12",
+  "http": {
+    "method": "POST",
+    "path": "/v1/deposits/krw",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc6d0\ud654 \uc785\uae08",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/deposit-krw",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "02e532d6346e3b8f1b0f5d480455291d44efb791213e02dbd7c0ff3e54b6bede",
+      "path_hash": "48ef0fa5bf821a975997e27d887180f45c03e4a4a67f7d7fca2fd34252e55ba2",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/deposits/krw",
+      "excerpt_start": 8029,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/deposit-krw",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "02e532d6346e3b8f1b0f5d480455291d44efb791213e02dbd7c0ff3e54b6bede",
+      "path_hash": "48ef0fa5bf821a975997e27d887180f45c03e4a4a67f7d7fca2fd34252e55ba2",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/deposits/krw",
+      "excerpt_start": 8029,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/deposit-krw",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "02e532d6346e3b8f1b0f5d480455291d44efb791213e02dbd7c0ff3e54b6bede",
+      "path_hash": "48ef0fa5bf821a975997e27d887180f45c03e4a4a67f7d7fca2fd34252e55ba2",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/deposits/krw",
+      "excerpt_start": 8035,
+      "excerpt_end": 8072
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/deposit-krw",
+      "crawled_at": "2026-02-10T17:53:10+00:00",
+      "content_hash": "02e532d6346e3b8f1b0f5d480455291d44efb791213e02dbd7c0ff3e54b6bede",
+      "path_hash": "48ef0fa5bf821a975997e27d887180f45c03e4a4a67f7d7fca2fd34252e55ba2",
+      "field_name": "description",
+      "excerpt": "\uc6d0\ud654 \uc785\uae08",
+      "excerpt_start": 8022,
+      "excerpt_end": 8027
+    }
+  ]
+}

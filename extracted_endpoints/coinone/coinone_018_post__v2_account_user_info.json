@@ -1,0 +1,65 @@
+{
+  "exchange": "coinone",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "ea4c0b9bf0b206add5d3134916722e2f0799455809396b360d6af44fa0c0b443",
+  "http": {
+    "method": "POST",
+    "path": "/v2/account/user_info",
+    "base_url": "https://api.coinone.co.kr"
+  },
+  "description": "\uace0\uac1d \uc815\ubcf4 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.coinone.co.kr/reference/user-information",
+      "crawled_at": "2026-02-10T17:45:58+00:00",
+      "content_hash": "57d109145f1c26a5bd8aeb2fbe981f27d773bcc30a29ca3826f7af83585f3fed",
+      "path_hash": "0b50d8f69513b1e19895521d1ef47c718cd99fb4c9482914ca530040341e1017",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/user_info",
+      "excerpt_start": 7581,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/user-information",
+      "crawled_at": "2026-02-10T17:45:58+00:00",
+      "content_hash": "57d109145f1c26a5bd8aeb2fbe981f27d773bcc30a29ca3826f7af83585f3fed",
+      "path_hash": "0b50d8f69513b1e19895521d1ef47c718cd99fb4c9482914ca530040341e1017",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.coinone.co.kr/v2/account/user_info",
+      "excerpt_start": 7581,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/user-information",
+      "crawled_at": "2026-02-10T17:45:58+00:00",
+      "content_hash": "57d109145f1c26a5bd8aeb2fbe981f27d773bcc30a29ca3826f7af83585f3fed",
+      "path_hash": "0b50d8f69513b1e19895521d1ef47c718cd99fb4c9482914ca530040341e1017",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.coinone.co.kr/v2/account/user_info",
+      "excerpt_start": 7587,
+      "excerpt_end": 7633
+    },
+    {
+      "url": "https://docs.coinone.co.kr/reference/user-information",
+      "crawled_at": "2026-02-10T17:45:58+00:00",
+      "content_hash": "57d109145f1c26a5bd8aeb2fbe981f27d773bcc30a29ca3826f7af83585f3fed",
+      "path_hash": "0b50d8f69513b1e19895521d1ef47c718cd99fb4c9482914ca530040341e1017",
+      "field_name": "description",
+      "excerpt": "\uace0\uac1d \uc815\ubcf4 \uc870\ud68c",
+      "excerpt_start": 7563,
+      "excerpt_end": 7571
+    }
+  ]
+}

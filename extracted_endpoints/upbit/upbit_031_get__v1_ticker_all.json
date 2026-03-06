@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "3e76f256ad410bfc2e056975beb52fb5bf449e18659ccbd8aeb60147332b1048",
+  "http": {
+    "method": "GET",
+    "path": "/v1/ticker/all",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ub9c8\ucf13 \ub2e8\uc704 \ud604\uc7ac\uac00 \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-quote-tickers",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "3e1a47113aeb8da3273252b655a90858be2ddad1e618dcc4e6a7c48a965608b5",
+      "path_hash": "a0108e207ae86e9316433db264d28237a0d07bde89d5b0ae3d4cd922f8f64aaa",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/ticker/all",
+      "excerpt_start": 8043,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-quote-tickers",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "3e1a47113aeb8da3273252b655a90858be2ddad1e618dcc4e6a7c48a965608b5",
+      "path_hash": "a0108e207ae86e9316433db264d28237a0d07bde89d5b0ae3d4cd922f8f64aaa",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/ticker/all",
+      "excerpt_start": 8043,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-quote-tickers",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "3e1a47113aeb8da3273252b655a90858be2ddad1e618dcc4e6a7c48a965608b5",
+      "path_hash": "a0108e207ae86e9316433db264d28237a0d07bde89d5b0ae3d4cd922f8f64aaa",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/ticker/all",
+      "excerpt_start": 8048,
+      "excerpt_end": 8083
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/list-quote-tickers",
+      "crawled_at": "2026-02-10T17:53:21+00:00",
+      "content_hash": "3e1a47113aeb8da3273252b655a90858be2ddad1e618dcc4e6a7c48a965608b5",
+      "path_hash": "a0108e207ae86e9316433db264d28237a0d07bde89d5b0ae3d4cd922f8f64aaa",
+      "field_name": "description",
+      "excerpt": "\ub9c8\ucf13 \ub2e8\uc704 \ud604\uc7ac\uac00 \uc870\ud68c",
+      "excerpt_start": 8029,
+      "excerpt_end": 8041
+    }
+  ]
+}

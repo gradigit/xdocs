@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "0baa062ebc8bdc48ed1d4c2c53c7790159f26bbd2cc8bb548d13b289d42e337e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/status/wallet",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\uc785\ucd9c\uae08 \uc11c\ube44\uc2a4 \uc0c1\ud0dc \uc870\ud68c",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-service-status",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "d5c231a959732f8f2ccb0706b2873a9c299ef2912478d62a6f9d48b9eaeeac19",
+      "path_hash": "ace5590c5b474178cfb5b041a5bebfc12f3475dffc6098a12c9e78bbda0dab43",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/status/wallet",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-service-status",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "d5c231a959732f8f2ccb0706b2873a9c299ef2912478d62a6f9d48b9eaeeac19",
+      "path_hash": "ace5590c5b474178cfb5b041a5bebfc12f3475dffc6098a12c9e78bbda0dab43",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.upbit.com/v1/status/wallet",
+      "excerpt_start": 8045,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-service-status",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "d5c231a959732f8f2ccb0706b2873a9c299ef2912478d62a6f9d48b9eaeeac19",
+      "path_hash": "ace5590c5b474178cfb5b041a5bebfc12f3475dffc6098a12c9e78bbda0dab43",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/status/wallet",
+      "excerpt_start": 8050,
+      "excerpt_end": 8088
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/get-service-status",
+      "crawled_at": "2026-02-10T17:53:13+00:00",
+      "content_hash": "d5c231a959732f8f2ccb0706b2873a9c299ef2912478d62a6f9d48b9eaeeac19",
+      "path_hash": "ace5590c5b474178cfb5b041a5bebfc12f3475dffc6098a12c9e78bbda0dab43",
+      "field_name": "description",
+      "excerpt": "\uc785\ucd9c\uae08 \uc11c\ube44\uc2a4 \uc0c1\ud0dc \uc870\ud68c",
+      "excerpt_start": 8030,
+      "excerpt_end": 8043
+    }
+  ]
+}

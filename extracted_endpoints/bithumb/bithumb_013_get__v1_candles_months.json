@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "077da9e27a92484649d4765260f1622d129068fcc35de29b59cc3f5a9059614e",
+  "http": {
+    "method": "GET",
+    "path": "/v1/candles/months",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc6d4(Month) \uce94\ub4e4",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%94month-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:48:58+00:00",
+      "content_hash": "2dd90e1045eb1497cd31b6e2220dfb9720693b735e8d90de7ddbcd1c256fa18e",
+      "path_hash": "f0c70c9af88304a7f2d38e52ee7145efa213f2982e95eab3cdecd9bc3ff56175",
+      "field_name": "http.method",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/months",
+      "excerpt_start": 6195,
+      "excerpt_end": 6241
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%94month-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:48:58+00:00",
+      "content_hash": "2dd90e1045eb1497cd31b6e2220dfb9720693b735e8d90de7ddbcd1c256fa18e",
+      "path_hash": "f0c70c9af88304a7f2d38e52ee7145efa213f2982e95eab3cdecd9bc3ff56175",
+      "field_name": "http.path",
+      "excerpt": "get\n\nhttps://api.bithumb.com/v1/candles/months",
+      "excerpt_start": 6195,
+      "excerpt_end": 6241
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%94month-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:48:58+00:00",
+      "content_hash": "2dd90e1045eb1497cd31b6e2220dfb9720693b735e8d90de7ddbcd1c256fa18e",
+      "path_hash": "f0c70c9af88304a7f2d38e52ee7145efa213f2982e95eab3cdecd9bc3ff56175",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/candles/months",
+      "excerpt_start": 6200,
+      "excerpt_end": 6241
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%94month-%EC%BA%94%EB%93%A4",
+      "crawled_at": "2026-02-10T17:48:58+00:00",
+      "content_hash": "2dd90e1045eb1497cd31b6e2220dfb9720693b735e8d90de7ddbcd1c256fa18e",
+      "path_hash": "f0c70c9af88304a7f2d38e52ee7145efa213f2982e95eab3cdecd9bc3ff56175",
+      "field_name": "description",
+      "excerpt": "\uc6d4(Month) \uce94\ub4e4",
+      "excerpt_start": 6182,
+      "excerpt_end": 6193
+    }
+  ]
+}

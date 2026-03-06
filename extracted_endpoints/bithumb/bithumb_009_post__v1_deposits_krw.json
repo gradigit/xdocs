@@ -1,0 +1,65 @@
+{
+  "exchange": "bithumb",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "ddbf401c71ae37e719ef1f430c2e3a4a7d54ef8736db83d3f1c2504d232b8e9e",
+  "http": {
+    "method": "POST",
+    "path": "/v1/deposits/krw",
+    "base_url": "https://api.bithumb.com"
+  },
+  "description": "\uc6d0\ud654 \uc785\uae08\ud558\uae30",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%90%ED%99%94-%EC%9E%85%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:57+00:00",
+      "content_hash": "d7dbd33a5eab09828d526e5cc82d26ea001c730a1df5feac5bdc00313ea78297",
+      "path_hash": "a347bf00e4107c3735cb7c5548b33b2df8aa4c0350f0bad21adb04f89e7c9126",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v1/deposits/krw",
+      "excerpt_start": 6187,
+      "excerpt_end": 6232
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%90%ED%99%94-%EC%9E%85%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:57+00:00",
+      "content_hash": "d7dbd33a5eab09828d526e5cc82d26ea001c730a1df5feac5bdc00313ea78297",
+      "path_hash": "a347bf00e4107c3735cb7c5548b33b2df8aa4c0350f0bad21adb04f89e7c9126",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.bithumb.com/v1/deposits/krw",
+      "excerpt_start": 6187,
+      "excerpt_end": 6232
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%90%ED%99%94-%EC%9E%85%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:57+00:00",
+      "content_hash": "d7dbd33a5eab09828d526e5cc82d26ea001c730a1df5feac5bdc00313ea78297",
+      "path_hash": "a347bf00e4107c3735cb7c5548b33b2df8aa4c0350f0bad21adb04f89e7c9126",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.bithumb.com/v1/deposits/krw",
+      "excerpt_start": 6193,
+      "excerpt_end": 6232
+    },
+    {
+      "url": "https://apidocs.bithumb.com/reference/%EC%9B%90%ED%99%94-%EC%9E%85%EA%B8%88%ED%95%98%EA%B8%B0",
+      "crawled_at": "2026-02-10T17:48:57+00:00",
+      "content_hash": "d7dbd33a5eab09828d526e5cc82d26ea001c730a1df5feac5bdc00313ea78297",
+      "path_hash": "a347bf00e4107c3735cb7c5548b33b2df8aa4c0350f0bad21adb04f89e7c9126",
+      "field_name": "description",
+      "excerpt": "\uc6d0\ud654 \uc785\uae08\ud558\uae30",
+      "excerpt_start": 6178,
+      "excerpt_end": 6185
+    }
+  ]
+}

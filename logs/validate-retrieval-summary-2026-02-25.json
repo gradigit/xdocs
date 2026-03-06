@@ -1,0 +1,14 @@
+{
+  "rerank_false": {
+    "hit_rate": 0.35,
+    "mean_recall": 0.35,
+    "total_queries": 20,
+    "runtime_s": 7.193326167063788
+  },
+  "rerank_true": {
+    "hit_rate": 0.35,
+    "mean_recall": 0.35,
+    "total_queries": 20,
+    "runtime_s": 68.25063016603235
+  }
+}

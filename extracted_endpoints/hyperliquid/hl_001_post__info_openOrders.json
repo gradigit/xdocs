@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "0ce32b0fb7517f9e801e00d890937a16e3a308935ac25ad61ba3276ffed8054a",
+  "http": {
+    "method": "POST",
+    "path": "/info/openOrders",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Retrieve a user's open orders: See a user's open orders",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 8090,
+      "excerpt_end": 8131
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 8090,
+      "excerpt_end": 8131
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 8090,
+      "excerpt_end": 8131
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "description",
+      "excerpt": "Retrieve a user's open orders",
+      "excerpt_start": 8059,
+      "excerpt_end": 8088
+    }
+  ]
+}

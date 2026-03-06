@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "8ef9ac87ac4d309f23dfe1daee4b9f17c77609428f03941ce419f94f0a068c07",
+  "http": {
+    "method": "POST",
+    "path": "/info/allBorrowLendReserveStates",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Query all borrow/lend reserve states",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 21918,
+      "excerpt_end": 21959
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 21918,
+      "excerpt_end": 21959
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/info`",
+      "excerpt_start": 21918,
+      "excerpt_end": 21959
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint",
+      "crawled_at": "2026-02-10T17:42:34+00:00",
+      "content_hash": "e7e2eb0b60e38503849bbe2b4eb2e6e297d70eb04c3533d3549c7c41ccc18c91",
+      "path_hash": "53d77f2340faf7188205a12bbabd1d6db9f8bcaff423b18c96bc944adc160579",
+      "field_name": "description",
+      "excerpt": "Query all borrow/lend reserve states",
+      "excerpt_start": 21880,
+      "excerpt_end": 21916
+    }
+  ]
+}

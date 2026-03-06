@@ -1,0 +1,93 @@
+{
+  "cmd": "bench-crawl-refresh",
+  "cwd": "/Users/aaaaa/Projects/cex-api-docs",
+  "docs_dir": "/Users/aaaaa/Projects/cex-api-docs/cex-docs",
+  "generated_at": "2026-02-26T15:29:21Z",
+  "modes": [
+    "resume"
+  ],
+  "runs": [
+    {
+      "config": {
+        "concurrency": 4,
+        "delay_s": 0.25,
+        "exchange": null,
+        "force_refetch": false,
+        "ignore_robots": false,
+        "inventory_max_pages": null,
+        "limit": null,
+        "max_bytes": 10000000,
+        "max_redirects": 5,
+        "render_mode": "auto",
+        "resume": true,
+        "retries": 2,
+        "section": null,
+        "timeout_s": 20.0
+      },
+      "crawl_run_ids": [
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188
+      ],
+      "db_metrics": {
+        "domains_with_429": {},
+        "http_status_counts": {},
+        "raw_bytes_sum": 0,
+        "status_429_count": 0
+      },
+      "duration_s": 0.0,
+      "ended_at_cli": "2026-02-26T15:29:21Z",
+      "fetch_error_domains": {},
+      "mode": "resume",
+      "sections_count": 37,
+      "started_at_cli": "2026-02-26T15:29:20Z",
+      "sync_ended_at": "2026-02-26T15:29:20+00:00",
+      "sync_started_at": "2026-02-26T15:29:20+00:00",
+      "totals": {
+        "errors": 0,
+        "fetched": 0,
+        "inventories": 37,
+        "inventory_urls": 7133,
+        "new_pages": 0,
+        "skipped": 0,
+        "stored": 0,
+        "unchanged_pages": 0,
+        "updated_pages": 0
+      }
+    }
+  ]
+}

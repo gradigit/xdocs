@@ -1,0 +1,65 @@
+{
+  "exchange": "korbit",
+  "section": "rest",
+  "protocol": "http",
+  "endpoint_id": "2df6e1d5f834f9f7eb897443e06ae893a2de32a4c4afa8ddfc536a48e3812acf",
+  "http": {
+    "method": "POST",
+    "path": "/v2/orders",
+    "base_url": "https://api.korbit.co.kr/v1"
+  },
+  "description": "Place a new order.",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.method",
+      "excerpt": "POST/v2/orders",
+      "excerpt_start": 50866,
+      "excerpt_end": 50880
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.path",
+      "excerpt": "POST/v2/orders",
+      "excerpt_start": 50866,
+      "excerpt_end": 50880
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.korbit.co.kr",
+      "excerpt_start": 2965,
+      "excerpt_end": 2989
+    },
+    {
+      "url": "https://docs.korbit.co.kr/index_en.html",
+      "crawled_at": "2026-02-10T17:42:33+00:00",
+      "content_hash": "2cba5c5c432b151a41e4605e90dfaf1cf56ef041f92eab1667d38c30ccf8ee36",
+      "path_hash": "a8a693920c57efab2dfe95ed0fb361f32d87daa8bb7a2e276eebb210df52e1d1",
+      "field_name": "description",
+      "excerpt": "Place a new order.",
+      "excerpt_start": 50882,
+      "excerpt_end": 50900
+    }
+  ]
+}

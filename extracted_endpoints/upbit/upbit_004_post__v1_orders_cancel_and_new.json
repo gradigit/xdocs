@@ -1,0 +1,65 @@
+{
+  "exchange": "upbit",
+  "section": "rest_en",
+  "protocol": "http",
+  "endpoint_id": "d94930496a84e8ed2f76cb1396b73db7df37a4cd3c7e8b18f5fbf637e22edc94",
+  "http": {
+    "method": "POST",
+    "path": "/v1/orders/cancel_and_new",
+    "base_url": "https://api.upbit.com/v1"
+  },
+  "description": "\ucde8\uc18c \ud6c4 \uc7ac\uc8fc\ubb38",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-and-new-order",
+      "crawled_at": "2026-02-10T17:53:07+00:00",
+      "content_hash": "d1a1f824a91eac8ca0211e2bb8996ffc7c6275edeb8b108aecc1567e372d7941",
+      "path_hash": "11d02c6e4835dafda2e892b5d3910a8b8f8a605ad5415763b2feba458a3bfbc0",
+      "field_name": "http.method",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/orders/cancel_and_new",
+      "excerpt_start": 8035,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-and-new-order",
+      "crawled_at": "2026-02-10T17:53:07+00:00",
+      "content_hash": "d1a1f824a91eac8ca0211e2bb8996ffc7c6275edeb8b108aecc1567e372d7941",
+      "path_hash": "11d02c6e4835dafda2e892b5d3910a8b8f8a605ad5415763b2feba458a3bfbc0",
+      "field_name": "http.path",
+      "excerpt": "post\n\nhttps://api.upbit.com/v1/orders/cancel_and_new",
+      "excerpt_start": 8035,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-and-new-order",
+      "crawled_at": "2026-02-10T17:53:07+00:00",
+      "content_hash": "d1a1f824a91eac8ca0211e2bb8996ffc7c6275edeb8b108aecc1567e372d7941",
+      "path_hash": "11d02c6e4835dafda2e892b5d3910a8b8f8a605ad5415763b2feba458a3bfbc0",
+      "field_name": "http.base_url",
+      "excerpt": "https://api.upbit.com/v1/orders/cancel_and_new",
+      "excerpt_start": 8041,
+      "excerpt_end": 8087
+    },
+    {
+      "url": "https://docs.upbit.com/kr/reference/cancel-and-new-order",
+      "crawled_at": "2026-02-10T17:53:07+00:00",
+      "content_hash": "d1a1f824a91eac8ca0211e2bb8996ffc7c6275edeb8b108aecc1567e372d7941",
+      "path_hash": "11d02c6e4835dafda2e892b5d3910a8b8f8a605ad5415763b2feba458a3bfbc0",
+      "field_name": "description",
+      "excerpt": "\ucde8\uc18c \ud6c4 \uc7ac\uc8fc\ubb38",
+      "excerpt_start": 8025,
+      "excerpt_end": 8033
+    }
+  ]
+}

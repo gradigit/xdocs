@@ -1,0 +1,161 @@
+# CEX API Docs Store Report
+
+- **Generated:** `2026-02-26T17:50:20+00:00`
+- **Store:** `cex-docs`
+
+## Inventories
+
+| Exchange | Section | Count | Latest |
+|---|---|---:|---|
+| binance | copy_trading | 1 | 2026-02-10T18:59:42+00:00 |
+| binance | futures_coinm | 2 | 2026-02-10T17:43:08+00:00 |
+| binance | futures_usdm | 2 | 2026-02-10T17:42:16+00:00 |
+| binance | margin_trading | 1 | 2026-02-10T18:59:38+00:00 |
+| binance | options | 1 | 2026-02-10T18:59:36+00:00 |
+| binance | portfolio_margin | 3 | 2026-02-10T17:43:47+00:00 |
+| binance | portfolio_margin_pro | 1 | 2026-02-10T18:59:44+00:00 |
+| binance | spot | 7 | 2026-02-10T17:41:44+00:00 |
+| binance | wallet | 1 | 2026-02-10T18:59:40+00:00 |
+| bitfinex | v2 | 4 | 2026-02-26T16:09:43+00:00 |
+| bitget | broker | 3 | 2026-02-26T15:37:29+00:00 |
+| bitget | copy_trading | 1 | 2026-02-10T18:59:50+00:00 |
+| bitget | earn | 1 | 2026-02-10T18:59:54+00:00 |
+| bitget | margin | 2 | 2026-02-10T19:20:47+00:00 |
+| bitget | v2 | 2 | 2026-02-10T17:41:50+00:00 |
+| bithumb | rest | 2 | 2026-02-10T17:42:25+00:00 |
+| bitstamp | rest | 2 | 2026-02-10T17:42:09+00:00 |
+| bybit | v5 | 2 | 2026-02-10T17:41:48+00:00 |
+| bybit | websocket | 2 | 2026-02-10T17:43:26+00:00 |
+| coinone | rest | 2 | 2026-02-10T17:42:26+00:00 |
+| cryptocom | exchange | 2 | 2026-02-10T17:42:07+00:00 |
+| dydx | docs | 1 | 2026-02-10T17:42:16+00:00 |
+| gateio | v4 | 4 | 2026-02-10T17:42:00+00:00 |
+| htx | coin_margined_swap | 1 | 2026-02-10T18:24:34+00:00 |
+| htx | derivatives | 1 | 2026-02-10T18:24:33+00:00 |
+| htx | spot | 2 | 2026-02-10T17:42:04+00:00 |
+| htx | usdt_swap | 1 | 2026-02-10T18:24:36+00:00 |
+| hyperliquid | api | 2 | 2026-02-10T17:41:52+00:00 |
+| korbit | rest | 2 | 2026-02-10T17:42:28+00:00 |
+| kucoin | futures | 1 | 2026-02-10T17:52:55+00:00 |
+| kucoin | spot | 1 | 2026-02-10T17:42:02+00:00 |
+| okx | broker | 1 | 2026-02-10T18:24:38+00:00 |
+| okx | changelog | 1 | 2026-02-10T18:24:40+00:00 |
+| okx | rest | 2 | 2026-02-10T17:41:46+00:00 |
+| okx | websocket | 2 | 2026-02-10T17:44:33+00:00 |
+| upbit | rest_en | 1 | 2026-02-10T17:42:23+00:00 |
+| upbit | rest_ko | 1 | 2026-02-10T17:52:24+00:00 |
+
+## Latest Inventory Entry Status
+
+| Exchange/Section | Fetched | Pending | Error | Skipped |
+|---|---:|---:|---:|---:|
+| binance/copy_trading | 1853 | 0 | 0 | 0 |
+| binance/futures_coinm | 121 | 0 | 0 | 0 |
+| binance/futures_usdm | 167 | 0 | 0 | 0 |
+| binance/margin_trading | 80 | 0 | 0 | 0 |
+| binance/options | 74 | 0 | 0 | 0 |
+| binance/portfolio_margin | 122 | 0 | 0 | 0 |
+| binance/portfolio_margin_pro | 28 | 0 | 0 | 0 |
+| binance/spot | 93 | 0 | 0 | 0 |
+| binance/wallet | 1853 | 0 | 0 | 0 |
+| bitfinex/v2 | 118 | 0 | 0 | 0 |
+| bitget/broker | 16 | 0 | 0 | 0 |
+| bitget/copy_trading | 51 | 0 | 0 | 0 |
+| bitget/earn | 28 | 0 | 0 | 0 |
+| bitget/margin | 53 | 0 | 0 | 0 |
+| bitget/v2 | 35 | 0 | 0 | 0 |
+| bithumb/rest | 304 | 0 | 0 | 0 |
+| bitstamp/rest | 1 | 0 | 0 | 0 |
+| bybit/v5 | 308 | 0 | 0 | 0 |
+| bybit/websocket | 1 | 0 | 0 | 0 |
+| coinone/rest | 107 | 0 | 0 | 0 |
+| cryptocom/exchange | 1 | 0 | 0 | 0 |
+| dydx/docs | 284 | 0 | 0 | 0 |
+| gateio/v4 | 1 | 0 | 0 | 0 |
+| htx/coin_margined_swap | 1 | 0 | 0 | 0 |
+| htx/derivatives | 1 | 0 | 0 | 0 |
+| htx/spot | 1 | 0 | 0 | 0 |
+| htx/usdt_swap | 1 | 0 | 0 | 0 |
+| hyperliquid/api | 32 | 0 | 0 | 0 |
+| korbit/rest | 2 | 0 | 0 | 0 |
+| kucoin/futures | 434 | 0 | 0 | 0 |
+| kucoin/spot | 434 | 0 | 0 | 0 |
+| okx/broker | 1 | 0 | 0 | 0 |
+| okx/changelog | 1 | 0 | 0 | 0 |
+| okx/rest | 1 | 0 | 0 | 0 |
+| okx/websocket | 1 | 0 | 0 | 0 |
+| upbit/rest_en | 464 | 0 | 0 | 0 |
+| upbit/rest_ko | 60 | 0 | 0 | 0 |
+
+## Pages
+
+- **Total pages:** 3819
+- **Total word count:** 4,610,108
+
+### Top Domains
+
+| Domain | Pages |
+|---|---:|
+| https://developers.binance.com/ | 1862 |
+| https://www.kucoin.com/ | 434 |
+| https://bybit-exchange.github.io/ | 308 |
+| https://docs.upbit.com/ | 303 |
+| https://docs.dydx.xyz/ | 284 |
+| https://www.bitget.com/ | 184 |
+| https://apidocs.bithumb.com/ | 149 |
+| https://docs.bitfinex.com/ | 118 |
+| https://docs.coinone.co.kr/ | 91 |
+| https://raw.githubusercontent.com/ | 34 |
+| https://hyperliquid.gitbook.io/ | 32 |
+| http://localhost:18765/ | 5 |
+| https://huobiapi.github.io/ | 4 |
+| https://www.okx.com/ | 3 |
+| https://binance-docs.github.io/ | 2 |
+| https://docs.korbit.co.kr/ | 2 |
+| https://www.gate.com/ | 2 |
+| https://exchange-docs.crypto.com/ | 1 |
+| https://www.bitstamp.net/ | 1 |
+
+## Endpoints
+
+- **Total:** 3428
+
+| Exchange | Section | Protocol | Count |
+|---|---|---|---:|
+| binance | copy_trading | http | 2 |
+| binance | futures_coinm | http | 130 |
+| binance | futures_usdm | http | 192 |
+| binance | margin_trading | http | 59 |
+| binance | options | http | 46 |
+| binance | portfolio_margin | http | 225 |
+| binance | portfolio_margin_pro | http | 21 |
+| binance | spot | http | 703 |
+| binance | wallet | http | 47 |
+| bitfinex | v2 | http | 81 |
+| bitget | broker | http | 14 |
+| bitget | copy_trading | http | 45 |
+| bitget | earn | http | 27 |
+| bitget | margin | http | 45 |
+| bitget | v2 | http | 102 |
+| bithumb | rest | http | 36 |
+| bitstamp | rest | http | 82 |
+| bybit | v5 | http | 129 |
+| coinone | rest | http | 22 |
+| crypto_com | exchange | http | 63 |
+| dydx | docs | http | 34 |
+| gateio | v4 | http | 363 |
+| htx | coin_margined_swap | http | 72 |
+| htx | dm | http | 82 |
+| htx | spot | http | 87 |
+| htx | usdt_swap | http | 131 |
+| hyperliquid | api | http | 75 |
+| korbit | rest | http | 32 |
+| kucoin | futures | http | 54 |
+| kucoin | spot | http | 70 |
+| okx | rest | http | 313 |
+| upbit | rest_en | http | 44 |
+
+## Review Queue
+
+Review queue is empty.
+

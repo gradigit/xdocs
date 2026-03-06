@@ -1,0 +1,65 @@
+{
+  "exchange": "hyperliquid",
+  "section": "api",
+  "protocol": "http",
+  "endpoint_id": "8e07c0356ff534e96085a19f5e8dbc9e9f34030bba23092350156888be3f440d",
+  "http": {
+    "method": "POST",
+    "path": "/exchange/SendtoEVMwithdata",
+    "base_url": "https://api.hyperliquid.xyz"
+  },
+  "description": "Send to EVM with data: Specialized action for Core to EVM transfer that includes an additional data payload. See [HyperCore <> HyperEVM transfers](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/</hyperliquid-docs/for-developers/hyperevm/hypercore-less-than-greater-than-hyperevm-transfers>) for more d",
+  "field_status": {
+    "http.method": "documented",
+    "http.path": "documented",
+    "http.base_url": "documented",
+    "description": "documented",
+    "request_schema": "undocumented",
+    "response_schema": "undocumented",
+    "required_permissions": "undocumented",
+    "rate_limit": "undocumented",
+    "error_codes": "undocumented"
+  },
+  "sources": [
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.method",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 20939,
+      "excerpt_end": 20984
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.path",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 20939,
+      "excerpt_end": 20984
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "http.base_url",
+      "excerpt": "`POST` `https://api.hyperliquid.xyz/exchange`",
+      "excerpt_start": 20939,
+      "excerpt_end": 20984
+    },
+    {
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint",
+      "crawled_at": "2026-02-10T17:42:32+00:00",
+      "content_hash": "2552a9d8cef99655388ae6262a1dff4d0f179273acb34aa57ccba11eaa916b57",
+      "path_hash": "6f52f31b23e77745fe48b93c4e7604262131b4b7c856fc05cdcdd37bfeda2e21",
+      "field_name": "description",
+      "excerpt": "Send to EVM with data",
+      "excerpt_start": 20916,
+      "excerpt_end": 20937
+    }
+  ]
+}

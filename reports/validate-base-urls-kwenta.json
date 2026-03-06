@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "result": {
+    "checked_at": "2026-02-26T18:01:04+00:00",
+    "cmd": "validate-base-urls",
+    "counts": {
+      "errors": 0,
+      "ok": 1,
+      "total": 1
+    },
+    "filters": {
+      "exchange": "kwenta",
+      "section": null
+    },
+    "registry_path": "/Users/aaaaa/Projects/cex-api-docs/data/exchanges.yaml",
+    "results": [
+      {
+        "base_url": "https://docs.kwenta.io",
+        "checked_at": "2026-02-26T18:01:04+00:00",
+        "content_type": "text/html; charset=utf-8",
+        "exchange_id": "kwenta",
+        "host": "docs.kwenta.io",
+        "http_status": 200,
+        "ok": true,
+        "port": 443,
+        "scheme": "https",
+        "section_id": "docs",
+        "skipped": false
+      }
+    ]
+  },
+  "schema_version": "v1"
+}
