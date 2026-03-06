@@ -103,16 +103,15 @@ Follow the template in `docs/crawl-targets-bible.md` Section 8. Summary:
 7. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
 8. Update exchange counts in CLAUDE.md and the bible
 
-### Multi-Method Crawl Cascade
+### Multi-Method Crawl Cascade (Reliability-First)
 
-No single crawl method works for all sites. Use this cascade:
+`requests` fails on ~40% of exchanges (SPAs, Cloudflare, WAF). Start with the most reliable tool:
 
-1. **`requests`** (fastest) — static HTML, GitHub Markdown
-2. **`cloudscraper`** — Cloudflare-protected sites (BitMart, Bitstamp)
-3. **Playwright** (`--render auto`) — JS-rendered SPAs (OKX, Gate.io, HTX)
-4. **`crawl4ai`** — best all-around for anti-bot sites (1.58MB from Gate.io vs 403 from others)
-5. **Headed browser** (Playwright/crawl4ai with `headless=False`) — CAPTCHA, headless detection
-6. **Agent Browser** — login-gated, infinite scroll, complex interaction
+1. **`crawl4ai`** (default) — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot
+2. **`requests`** (fast path) — ONLY for known-static sites: GitHub Markdown, Docusaurus, raw spec files
+3. **`cloudscraper`** (fallback) — when crawl4ai is unavailable or rate-limited
+4. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
+5. **Agent Browser** — login-gated, infinite scroll, complex interaction
 
 ```bash
 # Quick test with cloudscraper
@@ -202,8 +201,8 @@ cex-api-docs validate-base-urls
 
 If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift:
 
-1. Try `cloudscraper` (handles Cloudflare challenges)
-2. Try `crawl4ai` with headless browser (handles JS rendering + anti-bot)
+1. Try `crawl4ai` (default — handles JS rendering, anti-bot, returns clean markdown)
+2. Try `cloudscraper` if crawl4ai is unavailable (handles Cloudflare challenges)
 3. Try headed browser (`headless=False`) for CAPTCHA or headless detection
 4. Use Agent Browser for login-gated or interactive sites
 5. See `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`

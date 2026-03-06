@@ -36,13 +36,14 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 3. **Specs drift from reality.** OpenAPI, Postman, AsyncAPI, and llms.txt files are maintained on separate release cycles from official API docs pages. They may be ahead (documenting unreleased endpoints) or behind (missing recent additions). **Official API docs pages are the closest thing to ground truth.** Specs are supplementary — import them, but always cross-reference against crawled doc pages.
 
-4. **Multi-method crawling with fallbacks.** No single crawl method works for all sites. The maintainer workflow must chain methods and validate:
-   - **Method 1**: Plain HTTP (`requests`) — fastest, works for static HTML and GitHub Markdown
-   - **Method 2**: `cloudscraper` — bypasses Cloudflare challenges (works for BitMart, Bitstamp; fails Gate.io)
-   - **Method 3**: Playwright (`--render auto`) — handles JS-rendered SPAs (OKX, Gate.io, HTX, Bithumb EN)
-   - **Method 4**: `crawl4ai` — full browser automation with LLM-optimized markdown output (1.58MB from Gate.io vs 403 from cloudscraper)
-   - **Method 5**: Headed browser (Playwright/crawl4ai with `headless=False`) — visible browser for debugging, CAPTCHA solving, and sites that detect headless mode
-   - **Method 6**: Agent Browser — interactive crawling for sites requiring login, scrolling, or complex navigation
+4. **Reliability-first crawling.** No single crawl method works for all sites. The default should be the most reliable tool, with lighter tools as optimizations for known-safe sites. `requests` fails on ~40% of our exchanges (SPAs, Cloudflare, WAF). `cloudscraper` fails on Gate.io and all JS SPAs. Starting with unreliable tools means re-crawling nearly half the registry — no time saved.
+
+   **Default cascade (reliability-first):**
+   - **Default**: `crawl4ai` — works on ~95% of sites, returns LLM-ready markdown directly, handles JS + anti-bot (1.58MB from Gate.io vs 403 from requests/cloudscraper)
+   - **Fast path**: `requests` — use ONLY for known-static sites (GitHub Markdown, Docusaurus static HTML, raw API specs). ~60% success rate overall, but near-100% for static content.
+   - **Fallback 1**: `cloudscraper` — when crawl4ai is unavailable or rate-limited. Adds Cloudflare bypass over requests. ~70% success rate.
+   - **Fallback 2**: Headed browser (Playwright/crawl4ai with `headless=False`) — for CAPTCHA solving, headless detection bypass, debugging
+   - **Fallback 3**: Agent Browser — interactive crawling for login-gated, infinite scroll, complex navigation
 
 5. **Cross-validate everything.** Just because one crawl method succeeds doesn't mean the content is complete. Spot-check a sample of pages with a different method. Compare endpoint counts from specs vs page extraction vs CCXT. Flag discrepancies for manual review.
 
@@ -57,13 +58,19 @@ This document catalogs ALL known crawlable API documentation sources for every e
 | Headed browser | Playwright/crawl4ai `headless=False` | OK (visible) | OK (visible) | OK (visible) | CAPTCHA solving, headless detection bypass, debugging |
 | Agent Browser | Interactive | OK (manual) | OK (manual) | OK (manual) | Login-gated, infinite scroll |
 
-**Recommended crawl cascade**:
-1. Try `requests` first (fastest, cheapest)
-2. On 403/challenge → try `cloudscraper`
-3. On thin HTML / JS-required → try Playwright or `crawl4ai` (headless)
-4. On headless detection / CAPTCHA → try headed browser (`headless=False`)
+**Recommended crawl cascade (reliability-first)**:
+1. Use `crawl4ai` as default (works on ~95% of sites, best output quality, ~8-16s/page)
+2. For known-static sites (GitHub, Docusaurus, raw specs) → use `requests` as fast path (~0.1s/page)
+3. If crawl4ai unavailable or rate-limited → fall back to `cloudscraper`
+4. On CAPTCHA / headless detection → try headed browser (`headless=False`)
 5. On complex interaction (login, scroll, multi-step) → use Agent Browser
-6. Always spot-check 5% of pages with `crawl4ai` to validate `requests` output
+6. Spot-check 5% of `requests`-crawled pages with `crawl4ai` to validate content completeness
+
+**Known-static sites (safe for `requests` fast path)**:
+GitHub Markdown (bitbank, grvt, ccxt), Docusaurus with static export (bybit, kraken, bitmex, whitebit), raw spec files (openapi.json/yaml), RSS/Atom feeds
+
+**Must use `crawl4ai` or browser** (requests/cloudscraper produce bad data):
+OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBitcoin
 
 ### 1c. Known Crawl Failure Modes
 
@@ -1125,15 +1132,18 @@ After any sync, the maintainer workflow should:
 
 ### 10d. Crawl Tool Selection Matrix
 
-| Site Characteristic | Recommended Primary | Fallback |
-|--------------------|--------------------|---------|
-| Static HTML (GitHub Pages, Docusaurus) | `requests` | `cloudscraper` |
-| Cloudflare-protected | `cloudscraper` | `crawl4ai` |
-| JS-rendered SPA | Playwright (`--render auto`) | `crawl4ai` |
-| WAF-blocked | `cloudscraper` | `crawl4ai` |
+| Site Characteristic | Recommended Primary | Fast-Path Alternative |
+|--------------------|--------------------|----------------------|
+| **Any unknown/new site** | `crawl4ai` | — |
+| Known-static HTML (GitHub, Docusaurus) | `crawl4ai` (or `requests` fast path) | `requests` (~100x faster) |
+| JS-rendered SPA | `crawl4ai` | Playwright (`--render auto`) |
+| Cloudflare-protected | `crawl4ai` | `cloudscraper` (if crawl4ai unavailable) |
+| WAF-blocked | `crawl4ai` | `cloudscraper` |
 | Heavy anti-bot (403 from all) | `crawl4ai` | Headed browser, then Agent Browser |
 | Headless detection / CAPTCHA | Headed browser (`headless=False`) | Agent Browser (manual solve) |
 | Login-gated / infinite scroll | Agent Browser | Headed browser with manual steps |
+| Bulk re-crawl (8,000+ pages) | `crawl4ai` with concurrency limits | `requests` for static subset, `crawl4ai` for rest |
+| Raw spec files (JSON/YAML) | `requests` | `cloudscraper` |
 | Rate-limited after sync | `crawl4ai` (with delays) | wait + retry |
 
 ### 10e. Installed Crawl Tools
