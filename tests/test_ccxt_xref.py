@@ -222,9 +222,10 @@ class TestExchangeMap(unittest.TestCase):
         """Verify all expected CEX IDs are in the mapping."""
         expected = {
             "binance", "okx", "bybit", "bitget", "gateio", "kucoin",
-            "htx", "cryptocom", "bitstamp", "bitfinex", "upbit",
-            "bithumb", "coinone", "korbit", "kraken", "coinbase",
-            "bitmex", "bitmart", "whitebit", "bitbank", "mercadobitcoin",
+            "htx", "cryptocom", "bitstamp", "bitfinex", "dydx",
+            "hyperliquid", "upbit", "bithumb", "coinone", "korbit",
+            "kraken", "coinbase", "bitmex", "bitmart", "whitebit",
+            "bitbank", "mercadobitcoin",
         }
         self.assertEqual(set(CCXT_EXCHANGE_MAP.keys()), expected)
 

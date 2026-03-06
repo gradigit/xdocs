@@ -331,6 +331,7 @@ exchanges:
 
   - exchange_id: perp
     display_name: Perpetual Protocol
+    status: defunct  # DNS dead (NXDOMAIN), token delisted, protocol abandoned
     allowed_domains:
       - docs.perp.com
     sections:

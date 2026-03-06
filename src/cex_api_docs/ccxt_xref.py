@@ -34,6 +34,8 @@ CCXT_EXCHANGE_MAP: dict[str, str | None] = {
     "cryptocom": "cryptocom",
     "bitstamp": "bitstamp",
     "bitfinex": "bitfinex",
+    "dydx": "dydx",
+    "hyperliquid": "hyperliquid",
     "upbit": "upbit",
     "bithumb": "bithumb",
     "coinone": "coinone",
@@ -104,25 +106,29 @@ def _extract_ccxt_endpoints(exchange_obj: Any) -> list[dict[str, str]]:
     """Extract endpoint list from a CCXT exchange's ``describe()`` output.
 
     Returns list of ``{"method": "GET", "path": "/api/v3/ticker"}``.
+
+    Handles two CCXT API tree formats:
+    - List-based: ``{"get": ["ticker", "orderbook"]}``
+    - Dict-with-costs: ``{"get": {"ticker": 1, "orderbook": 0.5}}``
     """
     desc = exchange_obj.describe()
     api = desc.get("api", {})
     urls = desc.get("urls", {})
 
-    # Base URL for path resolution.
-    api_url = ""
+    # Build per-section base path map from urls.api.
+    section_base_paths: dict[str, str] = {}
+    default_base_path = ""
     if isinstance(urls, dict):
         api_val = urls.get("api", "")
         if isinstance(api_val, str):
-            api_url = api_val
+            default_base_path = urlsplit(api_val).path.rstrip("/")
         elif isinstance(api_val, dict):
-            # Some exchanges have {"public": "...", "private": "..."}.
-            for v in api_val.values():
-                if isinstance(v, str) and v.startswith("http"):
-                    api_url = v
-                    break
-
-    base_path = urlsplit(api_url).path.rstrip("/") if api_url else ""
+            for section_name, url in api_val.items():
+                if isinstance(url, str) and url.startswith("http"):
+                    section_base_paths[section_name] = urlsplit(url).path.rstrip("/")
+            # Use first URL as default fallback.
+            if not default_base_path and section_base_paths:
+                default_base_path = next(iter(section_base_paths.values()))
 
     endpoints: list[dict[str, str]] = []
 
@@ -132,6 +138,10 @@ def _extract_ccxt_endpoints(exchange_obj: Any) -> list[dict[str, str]]:
                 upper = key.upper()
                 if upper in ("GET", "POST", "PUT", "DELETE", "PATCH"):
                     _walk_api(val, upper, prefix)
+                elif isinstance(val, (int, float)):
+                    # Dict-with-costs format: {path_string: numeric_cost}.
+                    full_path = f"{prefix}/{key}" if key else prefix
+                    endpoints.append({"method": method, "path": full_path})
                 else:
                     _walk_api(val, method, f"{prefix}/{key}")
         elif isinstance(node, list):
@@ -149,6 +159,8 @@ def _extract_ccxt_endpoints(exchange_obj: Any) -> list[dict[str, str]]:
     for api_type, methods in api.items():
         if not isinstance(methods, dict):
             continue
+        # Resolve per-section base path.
+        base_path = section_base_paths.get(api_type, default_base_path)
         for method_or_group, paths in methods.items():
             upper = method_or_group.upper()
             if upper in ("GET", "POST", "PUT", "DELETE", "PATCH"):
@@ -160,11 +172,20 @@ def _extract_ccxt_endpoints(exchange_obj: Any) -> list[dict[str, str]]:
     return endpoints
 
 
+# Exchange ID aliases: registry ID → DB endpoint exchange value.
+# Needed when exchanges.yaml uses a different ID than what endpoint imports stored.
+_EXCHANGE_ID_ALIASES: dict[str, list[str]] = {
+    "cryptocom": ["cryptocom", "crypto_com"],
+}
+
+
 def _our_endpoints(conn: Any, exchange: str) -> list[dict[str, Any]]:
     """Fetch our endpoint records for an exchange."""
+    ids = _EXCHANGE_ID_ALIASES.get(exchange, [exchange])
+    placeholders = ",".join("?" for _ in ids)
     cur = conn.execute(
-        "SELECT endpoint_id, method, path, base_url, section FROM endpoints WHERE exchange = ?;",
-        (exchange,),
+        f"SELECT endpoint_id, method, path, base_url, section FROM endpoints WHERE exchange IN ({placeholders});",
+        ids,
     )
     return [dict(r) for r in cur.fetchall()]
 

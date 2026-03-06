@@ -1,43 +1,38 @@
 ---
-milestone: 4
+milestone: 5
 phase: complete
-updated: 2026-03-06T14:30:00Z
+updated: 2026-03-06T18:30:00Z
 ---
 ## Current State
-All 4 milestones COMPLETE. Bible document and registry updates produced.
+M5: Verified Bible Refinement — COMPLETE
 
 ## Milestones
 - [x] Milestone 1: Audit Existing Coverage & Gap Analysis — COMPLETE
-- [x] Milestone 2: Deep Discovery — CEX Exchanges — COMPLETE (23 exchange files)
-- [x] Milestone 3: Deep Discovery — DEX Protocols + CCXT — COMPLETE (16 exchange/protocol files)
+- [x] Milestone 2: Deep Discovery — CEX Exchanges — COMPLETE
+- [x] Milestone 3: Deep Discovery — DEX Protocols + CCXT — COMPLETE
 - [x] Milestone 4: Compile Bible Document + Registry Updates — COMPLETE
+- [x] Milestone 5: Verified Bible Refinement — COMPLETE
 
-## Deliverables
+## M5 Deliverables
+- `docs/crawl-targets-bible.md` — 802 lines, all numbers from live DB, all URLs verified
+- `src/cex_api_docs/ccxt_xref.py` — dict-of-dicts bug fixed, dydx+hyperliquid added, crypto_com alias
+- `data/exchanges.yaml` — Perpetual Protocol marked defunct
+- `tests/test_ccxt_xref.py` — updated for new map entries
 
-### M1
-- architect/research/coverage-audit.md — 35 exchanges, 61 sections, 4-tier coverage classification
-- architect/research/ccxt-xref-gaps.md — 5/20 exchanges with meaningful xref data, dict-of-dicts bug in 15/20
-- architect/research/importable-specs.md — 3 confirmed specs (233 endpoints), 2 community specs (90 endpoints)
+## Code Fixes Applied
+- CCXT _walk_api() handles numeric leaf values (dict-with-costs format)
+- CCXT per-section base URL resolution from urls.api
+- dydx + hyperliquid added to CCXT_EXCHANGE_MAP
+- _EXCHANGE_ID_ALIASES for crypto_com/cryptocom mismatch
+- Perpetual Protocol status: defunct in exchanges.yaml
 
-### M2 + M3
-- architect/research/exchanges/*.md — 39 per-exchange/protocol research files
+## Key Verified Findings
+- Orderly OpenAPI: raw.githubusercontent.com/OrderlyNetwork/documentation-public/main/evm.openapi.yaml (461KB, 192 paths)
+- GRVT spec: src/codegen/apispec.json — CUSTOM FORMAT, not OpenAPI
+- KuCoin: 9 spec files at openapi-*.json (2.9MB total), all need --base-url
+- Pacifica upgraded from DEFER to RECOMMEND ADD (97 API doc URLs, active changelog)
+- Nado docs at docs.nado.xyz (not docs.nado.trade)
+- HTX status at htx.statuspage.io (not status.huobigroup.com — DNS dead)
+- Korbit status page DNS dead
 
-### M4
-- docs/crawl-targets-bible.md — comprehensive Bible document (all 35 exchanges + CCXT + 4 recommendations)
-- architect/research/registry-updates.md — concrete registry change recommendations (660+ new endpoints from spec imports)
-
-## Key Findings
-- 7 importable OpenAPI/Postman specs not yet imported → ~660+ new endpoints
-- 4 community specs worth evaluating → ~220 potential endpoints
-- 3 new exchanges recommended for addition (Orderly, Bluefin, Nado)
-- 1 exchange defunct (Perpetual Protocol — DNS dead)
-- 10 RSS/Atom feeds available for changelog monitoring
-- 10 status pages available for health monitoring
-- KuCoin universal-sdk has 23 granular OpenAPI spec files (MAJOR FIND)
-- ccxt_xref.py dict-of-dicts bug blocks 15/20 exchange cross-references
-
-## Human Steering Hashes
-- HUMAN-INPUT.md: initial
-- MISSION-CONTROL.md: initial
-
-## Last Update: 2026-03-06T14:30:00Z
+## Last Update: 2026-03-06T18:30:00Z

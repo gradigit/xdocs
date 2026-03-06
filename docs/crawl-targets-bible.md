@@ -1,10 +1,12 @@
 # Crawl Targets Bible
 
-**Generated**: 2026-03-06
+**Generated**: 2026-03-06 (verified refresh)
 **Coverage**: 35 exchanges (21 CEX, 13 DEX, 1 reference) + 4 recommended additions
-**Store snapshot**: 5,716 pages, 7.7M words, 3,603 structured endpoints
+**Store snapshot** (live DB): 8,673 pages, 14.85M words, 3,603 structured endpoints
 
 This document catalogs ALL known crawlable API documentation sources for every exchange in the registry. It is the authoritative reference for maintaining `data/exchanges.yaml` entries, onboarding new exchanges, and planning endpoint extraction campaigns.
+
+**Verification status**: All URLs, spec sizes, and coverage numbers verified against live DB and web sources on 2026-03-06. Stale data from prior M1-M4 research corrected.
 
 ---
 
@@ -23,125 +25,167 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 ## 1. Cross-Exchange Summary Tables
 
-### 1a. Documentation Platforms
+### 1a. Live DB Coverage (verified 2026-03-06)
+
+| exchange | type | sections | pages | words | endpoints | ccxt_eps |
+|---|---|---:|---:|---:|---:|---:|
+| binance | CEX | 9 | 1,860 | 1,565,114 | 1,425 | 794 |
+| okx | CEX | 3 | 3 | 346,183 | 313 | 345 |
+| bybit | CEX | 1 | 312 | 294,514 | 129 | 309 |
+| bitget | CEX | 5 | 179 | 155,625 | 233 | 565 |
+| gateio | CEX | 1 | 2 | 314,594 | 363 | 280 |
+| kucoin | CEX | 2 | 433 | 1,053,797 | 124 | 220 |
+| htx | CEX | 4 | 4 | 410,801 | 454 | 544 |
+| cryptocom | CEX | 1 | 1 | 58,832 | 63 | 119 |
+| bitstamp | CEX | 1 | 1 | 37,256 | 82 | 255 |
+| bitfinex | CEX | 1 | 118 | 55,700 | 81 | 136 |
+| upbit | CEX | 2 | 355 | 217,525 | 44 | 51 |
+| bithumb | CEX | 1 | 153 | 36,735 | 36 | 28 |
+| coinone | CEX | 1 | 91 | 62,489 | 22 | 63 |
+| korbit | CEX | 1 | 2 | 25,230 | 32 | — |
+| kraken | CEX | 2 | 65 | 32,228 | 0 | 54 |
+| coinbase | CEX | 4 | 383 | 310,207 | 49 | 90 |
+| bitmex | CEX | 1 | 142 | 53,731 | 95 | 93 |
+| bitmart | CEX | 2 | 2 | 73,289 | 0 | 113 |
+| whitebit | CEX | 1 | 161 | 98,291 | 0 | 110 |
+| bitbank | CEX | 1 | 175 | 270,858 | 0 | 28 |
+| mercadobitcoin | CEX | 1 | 1 | 0 | 31 | 21 |
+| dydx | DEX-REST | 1 | 283 | 133,753 | 34 | — |
+| hyperliquid | DEX-REST | 1 | 32 | 26,109 | 75 | 8 |
+| aevo | DEX-REST | 1 | 144 | 79,208 | 0 | — |
+| paradex | DEX-REST | 1 | 624 | 342,258 | 0 | — |
+| lighter | DEX-REST | 1 | 49 | 24,758 | 0 | — |
+| aster | DEX-REST | 1 | 147 | 119,948 | 0 | — |
+| apex | DEX-REST | 1 | 5 | 133,667 | 0 | — |
+| grvt | DEX-REST | 1 | 205 | 305,233 | 0 | — |
+| drift | DEX-SDK | 1 | 133 | 220,576 | 0 | — |
+| gmx | DEX-CONTRACT | 1 | 142 | 171,393 | 0 | — |
+| gains | DEX-CONTRACT | 1 | 187 | 130,670 | 0 | — |
+| kwenta | DEX-CONTRACT | 1 | 83 | 41,183 | 0 | — |
+| perp | DEFUNCT | 1 | 1 | 121 | 0 | — |
+| ccxt | REF | 1 | 2,037 | 6,925,008 | 0 | — |
+| **TOTAL** | | **59** | **8,515** | **14,126,884** | **3,603** | |
+
+Notes:
+- `ccxt_eps` = CCXT `describe().api` endpoint count (post dict-of-dicts fix). Gap between `endpoints` and `ccxt_eps` indicates extraction opportunities.
+- `DEX-REST` = DEX with documented REST API endpoints. `DEX-CONTRACT` = smart-contract-only, no REST API. `DEX-SDK` = SDK-based access only.
+- 158 orphaned pages exist in DB without scope ownership (mostly from pre-scope-system imports).
+- `htx/dm` has 82 endpoints and `crypto_com/exchange` has 63 endpoints stored under variant IDs (accounted for in totals).
+
+### 1b. Documentation Platforms
 
 | Platform | Exchanges |
 |----------|-----------|
-| Custom SPA | Binance, OKX, Bitget, Gate.io, KuCoin, HTX (new portal), Crypto.com, Korbit, BitMart, Aster |
-| ReadMe.io | Bitfinex, Upbit, Bithumb, Coinone, Aevo, ApeX, Bluefin* |
+| Custom SPA | Binance, OKX, Bitget, Gate.io, KuCoin, Crypto.com, Korbit, BitMart, Aster |
+| ReadMe.io | Bitfinex, Upbit, Bithumb, Coinone, Aevo, ApeX |
 | Docusaurus | Bybit, Kraken, BitMEX, WhiteBIT |
-| GitHub Pages | HTX (legacy), Gate.io (legacy) |
-| GitBook | Hyperliquid, dYdX, GMX, Drift, Gains, Kwenta, GRVT, Paradex, Lighter, OKX* |
+| GitBook | Hyperliquid, dYdX, Paradex, Lighter, Drift, GMX, Gains, Kwenta |
+| GitHub Pages | HTX (legacy) |
 | Swagger/Redoc | Bitstamp (Redoc), MercadoBitcoin (Swagger UI) |
-| GitHub Markdown | Bitbank, CCXT |
+| GitHub Markdown | Bitbank, CCXT, GRVT |
 | Custom (CDP) | Coinbase |
 
-### 1b. OpenAPI / Swagger Spec Availability
+### 1c. OpenAPI / Swagger Spec Availability (verified live 2026-03-06)
 
-| Status | Exchange | Spec Location | Size |
-|--------|----------|--------------|------|
-| **Live URL** | BitMEX | bitmex.com/api/explorer/swagger.json | 183KB |
-| **Live URL** | Coinbase Prime | api.prime.coinbase.com/v1/openapi.yaml | ~150KB |
-| **Live URL** | Paradex | api.prod.paradex.trade/swagger/doc.json | 307KB |
-| **Live URL** | MercadoBitcoin | api.mercadobitcoin.net/api/v4/docs/swagger.yaml | 76KB |
-| **GitHub** | Binance | binance/binance-api-swagger (spot only) | 999KB |
-| **GitHub** | BitMEX | BitMEX/api-connectors/swagger.json | 272KB |
-| **GitHub** | KuCoin | Kucoin/kucoin-universal-sdk/spec/rest/api/ | 23 files |
-| **GitHub** | GRVT | gravity-technologies/api-spec/apispec.json | 460KB |
-| **GitHub** | Lighter | elliottech/lighter-python/openapi.json | 225KB |
-| **GitHub** | dYdX | dydxprotocol/v4-chain/.../swagger.json | 115KB |
-| **GitHub** | Orderly* | OrderlyNetwork (evm.openapi.yaml) | 461KB |
-| **Inline** | Bitstamp | Embedded in bitstamp.net/api/ (WAF-blocked download) | ~100KB |
-| **Community** | Upbit | ujhin/upbit-client/swagger.yaml | 92KB |
-| **Community** | Kraken Futures | kanekoshoyu/exchange-collection | 148KB |
-| **Community** | Coinbase Exchange | metalocal/coinbase-exchange-api | ~50KB |
-| **Community** | Hyperliquid | bowen31337/hyperliquid-openapi | 38KB |
-| **Community** | Bybit | bybit-exchange/api-connectors (V3 era, possibly outdated) | 304KB |
-| **Planned** | Kraken | krakenfx/api-specs (repo exists, empty) | TBD |
-| **None** | OKX, Bitget, Gate.io, HTX, Crypto.com, Bitfinex, WhiteBIT, Bitbank, Coinone, Korbit, Bithumb | — | — |
+| Status | Exchange | Spec URL | Size | Imported? |
+|--------|----------|----------|------|-----------|
+| **Live** | BitMEX | `bitmex.com/api/explorer/swagger.json` | 183KB | YES |
+| **Live** | Coinbase Prime | `api.prime.coinbase.com/v1/openapi.yaml` | 351KB | NO |
+| **Live** | Paradex | `api.prod.paradex.trade/swagger/doc.json` | 380KB | NO |
+| **Live** | MercadoBitcoin | `api.mercadobitcoin.net/api/v4/docs/swagger.yaml` | 76KB | YES |
+| **Live** | Lighter | `raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json` | 225KB | NO |
+| **Live** | dYdX | `raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json` | 115KB | NO |
+| **GitHub** | Binance | `binance/binance-api-swagger/spot_api.yaml` | 850KB | Already have 703 eps via Postman |
+| **GitHub** | KuCoin | `Kucoin/kucoin-universal-sdk/spec/rest/entry/openapi-*.json` (9 files) | 2.9MB total | NO — HIGH PRIORITY |
+| **GitHub** | GRVT | `gravity-technologies/api-spec/src/codegen/apispec.json` | ~460KB | NO (custom format, not OpenAPI) |
+| **Inline** | Bitstamp | Embedded in bitstamp.net/api/ (WAF-blocked download) | ~100KB | Already have 82 eps |
+| **Community** | Coinbase Exchange | `metalocal/coinbase-exchange-api/api.oas3.json` | 157KB | NO |
+| **Community** | Kraken Futures | `kanekoshoyu/exchange-collection` | 148KB | NO |
+| **Community** | Upbit | `ujhin/upbit-client/swagger.yaml` | 92KB | NO |
+| **Community** | Hyperliquid | `bowen31337/hyperliquid-openapi` | 38KB | NO |
+| **Planned** | Kraken | `krakenfx/api-specs` (repo exists, empty) | TBD | — |
+| **None** | OKX, Bitget, Gate.io, HTX, Crypto.com, Bitfinex, WhiteBIT, Bitbank, Coinone, Korbit, Bithumb | — | — | — |
 
-### 1c. Postman Collection Availability
+### 1d. Postman Collection Availability
 
-| Exchange | Source | Coverage |
-|----------|--------|----------|
-| Binance | binance/binance-api-postman (official, 25 collections) | Spot, Futures, Options, Portfolio, Margin, Wallet, Copy Trading, Pay, Convert |
-| Bybit | bybit-exchange/QuickStartWithPostman (official) | V5 + Tax V3 |
-| BitMart | bitmartexchange/bitmart-postman-api (official) | Spot (45KB) + Futures (49KB) |
-| KuCoin | postman.com/kucoin-api/ (official workspace) | Comprehensive |
-| Bitfinex | postman.com/antoanpopoff (community) | Partial |
-| Coinbase | postman.com/api-evangelist (community) | Partial |
+| Exchange | Source | Coverage | Imported? |
+|----------|--------|----------|-----------|
+| Binance | `binance/binance-api-postman` (official, 25 collections) | All sections | YES |
+| Bybit | `bybit-exchange/QuickStartWithPostman` (official) | V5 | YES |
+| BitMart | `bitmartexchange/bitmart-postman-api` (official) | Spot (45KB) + Futures (49KB) | NO |
+| KuCoin | `postman.com/kucoin-api/` (official workspace) | Comprehensive | NO |
+| Bitfinex | `postman.com/antoanpopoff` (community) | Partial | NO |
 
-### 1d. Changelog / RSS Feed Availability
+### 1e. Changelog / RSS Feed Availability (verified live)
 
-| Exchange | Changelog URL | RSS/Atom Feed | Frequency |
-|----------|--------------|---------------|-----------|
-| Binance | developers.binance.com/docs/.../CHANGELOG | dev.binance.vision/latest.rss (forum) | 2-4/month |
-| OKX | okx.com/docs-v5/log_en/ | None | 5+/month |
-| Bybit | bybit-exchange.github.io/docs/changelog/v5 | None | Multiple/month |
-| Bitget | bitget.com/api-doc/common/changelog | None (403 on auto-fetch) | Monthly |
-| Gate.io | Embedded in docs + gate.com/announcements/apiupdates | None | Multiple/week |
-| KuCoin | kucoin.com/docs-new/change-log | None | Multiple/month |
-| HTX | htx.com/en-us/opend/ (Updates) | None | Active |
-| Bitfinex | docs.bitfinex.com/docs/changelog | [DEAD] /changelog.rss (404) | Very sparse (8 entries, 7 years) |
-| Crypto.com | Embedded in exchange-docs page | None | Active |
-| Bitstamp | Inline in API docs | None | Low |
-| Kraken | docs.kraken.com/api/docs/change-log/ | None | Very active (100+ entries) |
-| Coinbase | 6 separate changelogs per product | None | Active |
-| BitMEX | bitmex.com/app/apiChangelog | bitmex.com/api_announcement/feed (RSS) | Moderate |
-| Upbit (EN) | global-docs.upbit.com/changelog | global-docs.upbit.com/changelog.rss (57 items) | Monthly |
-| Upbit (KR) | docs.upbit.com/ko/changelog | docs.upbit.com/kr/changelog.rss (79 items) | Monthly |
-| Bithumb | apidocs.bithumb.com/changelog | apidocs.bithumb.com/changelog.rss (26 items) | Periodic |
-| Coinone | docs.coinone.co.kr/changelog | docs.coinone.co.kr/changelog.rss (13 items) | Periodic |
-| WhiteBIT | docs.whitebit.com/changelog/ | changelog.json in GitHub repo | Monthly |
-| Bitbank | github.com/bitbankinc/bitbank-api-docs/CHANGELOG.md | /commits/master.atom | Monthly-bimonthly |
-| dYdX | Via GitHub releases | github.com/dydxprotocol/v4-chain/releases.atom | Very active |
-| BitMEX status | status.bitmex.com | /history.atom, /history.rss | Active |
+| Exchange | Changelog URL | RSS/Atom Feed | Verified |
+|----------|--------------|---------------|----------|
+| Binance | `developers.binance.com/docs/.../CHANGELOG` | `dev.binance.vision/latest.rss` (forum) | — |
+| OKX | `okx.com/docs-v5/log_en/` | None | — |
+| Bybit | `bybit-exchange.github.io/docs/changelog/v5` | None | — |
+| Bitget | `bitget.com/api-doc/common/changelog` | None | — |
+| Gate.io | Embedded in docs + `gate.com/announcements/apiupdates` | None | — |
+| KuCoin | `kucoin.com/docs-new/change-log` | None | — |
+| HTX | `htx.com/en-us/opend/` | None | — |
+| Bitfinex | `docs.bitfinex.com/docs/changelog` | None (RSS 404) | YES |
+| Crypto.com | Embedded in exchange-docs | None | — |
+| Kraken | `docs.kraken.com/api/docs/change-log/` | None | YES |
+| Coinbase | 6 separate changelogs per product | None | — |
+| BitMEX | `bitmex.com/app/apiChangelog` | `bitmex.com/api_announcement/feed` | YES |
+| Upbit EN | `global-docs.upbit.com/changelog` | `global-docs.upbit.com/changelog.rss` | YES |
+| Upbit KR | `docs.upbit.com/ko/changelog` | `docs.upbit.com/kr/changelog.rss` | YES |
+| Bithumb | `apidocs.bithumb.com/changelog` | `apidocs.bithumb.com/changelog.rss` | YES |
+| Coinone | `docs.coinone.co.kr/changelog` | `docs.coinone.co.kr/changelog.rss` | YES |
+| WhiteBIT | `docs.whitebit.com/changelog/` | `changelog.json` in GitHub repo | YES |
+| Bitbank | GitHub CHANGELOG.md | `/commits/master.atom` | — |
+| dYdX | GitHub releases | `dydxprotocol/v4-chain/releases.atom` | — |
+| CCXT | GitHub releases | `ccxt/ccxt/releases.atom` | — |
 
-### 1e. Status Page Availability
+### 1f. Status Page Availability (verified live)
 
-| Exchange | Status URL | Platform | JSON API |
-|----------|-----------|----------|----------|
-| Bitfinex | bitfinex.statuspage.io | Statuspage.io | /api/v2/status.json |
-| Kraken | status.kraken.com | Statuspage.io | /api/v2/status.json |
-| Coinbase | status.coinbase.com, cdpstatus.coinbase.com, status.exchange.coinbase.com | Statuspage.io | Standard APIs |
-| BitMEX | status.bitmex.com | Statuspage.io | /api/v2/status.json + Atom/RSS |
-| Crypto.com | status.crypto.com | Statuspage.io | Standard APIs |
-| HTX | status.huobigroup.com | Statuspage.io | /api/v2/summary.json |
-| dYdX | status.dydx.trade (v4), status.dydx.exchange (v3) | Statuspage.io | Standard APIs |
-| Korbit | status.korbit.co.kr | Statuspage.io | Standard APIs |
-| WhiteBIT | status.whitebit.com | OpenStatus | Unknown |
-| MercadoBitcoin | status.mercadobitcoin.com.br | Custom | /summary.json |
-| Binance | None (only /sapi/v1/system/status API) | — | API only |
-| OKX | okx.com/status (deposit/withdrawal) | Custom | /api/v5/system/status |
-| Bybit | NONE (bybit.statuspage.io is FRAUDULENT) | — | /v5/system-status API |
-| Bitget | None | — | — |
-| Gate.io | None | — | — |
-| KuCoin | None | — | /api/v1/status API |
-| Bitstamp | None | — | — |
-| Upbit | None | — | /v1/status/wallet API |
+| Exchange | Status URL | Verified |
+|----------|-----------|----------|
+| Bitfinex | `bitfinex.statuspage.io` | YES |
+| Kraken | `status.kraken.com` | YES |
+| BitMEX | `status.bitmex.com` | YES |
+| HTX | `htx.statuspage.io` | YES (not `status.huobigroup.com` — DNS dead) |
+| Crypto.com | `status.crypto.com` | YES |
+| Coinbase | `status.coinbase.com` | YES |
+| dYdX | `status.dydx.trade` | YES |
+| WhiteBIT | `status.whitebit.com` | YES |
+| MercadoBitcoin | `status.mercadobitcoin.com.br` | YES |
+| Korbit | — | DEAD (`status.korbit.co.kr` DNS fails) |
 
-### 1f. GitHub Organization Summary
+### 1g. GitHub Organization Summary
 
-| Exchange | Org/User | Repos | Notable |
-|----------|----------|------:|---------|
-| Binance | github.com/binance | 45+ | 25 Postman collections, spot OpenAPI, FIX connector |
-| OKX | github.com/okx + github.com/okxapi | 30+ | Two orgs (infra vs API SDKs) |
-| Bybit | github.com/bybit-exchange | 15 | Docusaurus source, legacy Slate docs |
-| Bitget | github.com/BitgetLimited | 7 | Legacy GitHub Pages, V3 SDK |
-| Gate.io | github.com/gateio | 15 | 7 auto-generated SDKs (OpenAPI-first) |
-| KuCoin | github.com/Kucoin | 28 | 23 OpenAPI spec files in universal-sdk |
-| HTX | github.com/huobiapi (user) + github.com/HuobiRDCenter (org) | 20+ | Dual account setup |
-| Bitfinex | github.com/bitfinexcom | 10+ | FIX gateway repo |
-| Coinbase | github.com/coinbase | 50+ | coinbase-advanced-py SDK |
-| BitMEX | github.com/BitMEX | 9 | Live + GitHub swagger.json |
-| Upbit | github.com/upbit-exchange | 5 | Community OpenAPI exists separately |
-| Bithumb | github.com/bithumb-pro | ? | Possibly defunct (Bithumb Global) |
-| WhiteBIT | github.com/whitebit-exchange | 13 | Docusaurus source, changelog.json |
-| Bitbank | github.com/bitbankinc | 13 | MCP server, dual-language docs |
-| GRVT | github.com/gravity-technologies | 5+ | 460KB API spec |
-| Paradex | github.com/tradeparadex | 5+ | OpenAPI + AsyncAPI |
-| dYdX | github.com/dydxprotocol | 20+ | Indexer swagger.json, v4-documentation |
-| CCXT | github.com/ccxt | 5+ | 33K+ stars, exchange implementations |
+| Exchange | Org/User | Notable |
+|----------|----------|---------|
+| Binance | `github.com/binance` | 25 Postman collections, spot OpenAPI, FIX connector |
+| OKX | `github.com/okx` + `github.com/okxapi` | Two orgs (infra vs API SDKs) |
+| Bybit | `github.com/bybit-exchange` | Docusaurus source |
+| Bitget | `github.com/BitgetLimited` | Legacy GitHub Pages |
+| Gate.io | `github.com/gateio` | 7 auto-generated SDKs |
+| KuCoin | `github.com/Kucoin` | 9 OpenAPI spec files in universal-sdk (2.9MB) |
+| HTX | `github.com/huobiapi` + `github.com/HuobiRDCenter` | Dual account |
+| Bitfinex | `github.com/bitfinexcom` | FIX gateway repo |
+| Coinbase | `github.com/coinbase` | coinbase-advanced-py SDK |
+| BitMEX | `github.com/BitMEX` | Live + GitHub swagger.json |
+| Upbit | `github.com/upbit-exchange` | Community OpenAPI exists separately |
+| WhiteBIT | `github.com/whitebit-exchange` | Docusaurus source, changelog.json |
+| Bitbank | `github.com/bitbankinc` | MCP server, dual-language docs |
+| GRVT | `github.com/gravity-technologies` | API spec at `src/codegen/apispec.json` |
+| Paradex | `github.com/tradeparadex` | OpenAPI + AsyncAPI |
+| dYdX | `github.com/dydxprotocol` | Indexer swagger.json |
+| CCXT | `github.com/ccxt` | 33K+ stars, exchange implementations |
+
+### 1h. DEX Classification
+
+| Classification | Exchanges | Has REST API? | Endpoint Value |
+|----------------|-----------|---------------|----------------|
+| **DEX-REST** | dYdX, Hyperliquid, Aevo, Paradex, Lighter, Aster, ApeX, GRVT | YES | High — importable specs available for Paradex, Lighter, dYdX, GRVT |
+| **DEX-SDK** | Drift | SDK only | Low — no HTTP endpoint docs |
+| **DEX-CONTRACT** | GMX, Gains Network, Kwenta | NO (smart contracts only) | None — docs describe Solidity interfaces, not REST APIs |
+| **DEFUNCT** | Perpetual Protocol | DNS dead | None — remove from active sync |
 
 ---
 
@@ -152,451 +196,381 @@ This document catalogs ALL known crawlable API documentation sources for every e
 | Field | Value |
 |-------|-------|
 | **Docs URL** | https://developers.binance.com/docs/binance-spot-api-docs/ |
-| **Platform** | Custom (React/Docusaurus-like) |
+| **Platform** | Custom SPA |
 | **Sections** | 9 (spot, futures_usdm, futures_coinm, portfolio_margin, options, margin_trading, wallet, copy_trading, portfolio_margin_pro) |
-| **Pages/Words/Endpoints** | 1,802 / 1.56M / 1,425 |
-| **API version** | v3 (REST), v1 (WS), FIX 4.4 |
-| **OpenAPI** | spot_api.yaml on GitHub (spot only, 999KB) |
-| **Postman** | 25 collections in binance-api-postman |
-| **Changelog** | developers.binance.com/docs/.../CHANGELOG (spot); /derivatives/change-log |
+| **Pages/Words/Endpoints** | 1,860 / 1.57M / 1,425 |
+| **CCXT endpoints** | 794 |
+| **OpenAPI** | spot_api.yaml on GitHub (spot only, 850KB) |
+| **Postman** | 25 collections in binance-api-postman (ALL imported) |
+| **Changelog** | Per-section changelogs at developers.binance.com |
 | **RSS** | dev.binance.vision/latest.rss (forum, not API changelog) |
 | **GitHub** | github.com/binance (45+ repos) |
 | **Status** | No dedicated page; /sapi/v1/system/status API |
-| **FIX docs** | developers.binance.com/docs/binance-spot-api-docs/fix-api (FIX 4.4) |
-| **Telegram** | @binance_api_announcements (6.39K subscribers) |
+| **FIX docs** | developers.binance.com/docs/binance-spot-api-docs/fix-api (FIX 4.4, NOT currently crawled) |
 | **Discovery** | robots.txt 404, sitemap.xml 404 (link-follow fallback) |
 
 ### OKX
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://www.okx.com/docs-v5/en/ (single-page SPA, 224K words) |
+| **Docs URL** | https://www.okx.com/docs-v5/en/ (single-page SPA, 225K words) |
 | **Platform** | Custom SPA |
-| **Sections** | 4 (rest, websocket, broker, changelog) |
+| **Sections** | 3 (rest, broker, changelog) + websocket (0 pages) |
 | **Pages/Words/Endpoints** | 3 / 346K / 313 |
-| **API version** | V5 |
+| **CCXT endpoints** | 345 |
 | **OpenAPI** | None |
 | **Changelog** | okx.com/docs-v5/log_en/ (5+/month) |
-| **GitHub** | github.com/okx + github.com/okxapi |
-| **Status** | okx.com/status (custom); /api/v5/system/status |
-| **llms.txt** | okx.com/llms.txt |
-| **Discovery** | 7 sitemaps in robots.txt; text-docs-index for doc URLs |
 
 ### Bybit
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://bybit-exchange.github.io/docs/ (Docusaurus) |
-| **Platform** | Docusaurus (source on GitHub) |
-| **Sections** | 2 (v5, websocket) |
-| **Pages/Words/Endpoints** | 308 / 292K / 129 |
-| **API version** | V5 (unified) |
-| **OpenAPI** | swagger.json in api-connectors (possibly V3-era, outdated) |
-| **Postman** | QuickStartWithPostman repo (V5 + Tax V3) |
-| **Changelog** | bybit-exchange.github.io/docs/changelog/v5 |
-| **GitHub** | github.com/bybit-exchange (15 repos) |
-| **Status** | NONE (bybit.statuspage.io is FRAUDULENT); /v5/system-status API |
-| **Telegram** | @bybit_api_announcements |
+| **Docs URL** | https://bybit-exchange.github.io/docs/v5/intro |
+| **Platform** | Docusaurus |
+| **Sections** | 1 (v5) + websocket (0 pages) |
+| **Pages/Words/Endpoints** | 312 / 295K / 129 |
+| **CCXT endpoints** | 309 (gap: 180 missing from us) |
+| **Postman** | bybit-exchange/QuickStartWithPostman (imported) |
+| **Sitemap** | bybit-exchange.github.io/docs/sitemap.xml |
 
 ### Bitget
 
 | Field | Value |
 |-------|-------|
 | **Docs URL** | https://www.bitget.com/api-doc/common/intro |
-| **Platform** | Custom |
+| **Platform** | Custom SPA |
 | **Sections** | 5 (v2, copy_trading, margin, earn, broker) |
-| **Pages/Words/Endpoints** | 180 / 157K / 233 |
-| **API version** | V2 |
-| **OpenAPI** | None |
-| **Changelog** | bitget.com/api-doc/common/changelog (403 on auto-fetch) |
-| **GitHub** | github.com/BitgetLimited (7 repos) |
-| **Status** | None |
-| **Legacy** | bitgetlimited.github.io/apidoc/en/spot/ (V1 era) |
-
-### KuCoin
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://www.kucoin.com/docs-new/introduction |
-| **Platform** | Custom (opaque URL IDs) |
-| **Sections** | 1 (spot — merged from spot+futures) |
-| **Pages/Words/Endpoints** | 429 / 1.04M / 70 |
-| **API version** | V1 (REST), V2 (broker), UTA (Sep 2025) |
-| **OpenAPI** | 23 granular JSON specs in kucoin-universal-sdk/spec/rest/api/ |
-| **Postman** | Official workspace at postman.com/kucoin-api/ |
-| **Changelog** | kucoin.com/docs-new/change-log |
-| **GitHub** | github.com/Kucoin (28 repos) |
-| **Status** | /api/v1/status API |
-| **Telegram** | t.me/KuCoin_API |
+| **Pages/Words/Endpoints** | 179 / 156K / 233 |
+| **CCXT endpoints** | 565 (gap: 332 missing) |
+| **OpenAPI** | v2 imported via OpenAPI |
+| **Sitemap** | bitget.com/sitemap.xml |
 
 ### Gate.io
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://www.gate.com/docs/developers/apiv4/ (single-page, 256K words) |
-| **Platform** | Custom (Swagger UI-based, OpenAPI-generated) |
+| **Docs URL** | https://www.gate.com/docs/developers/apiv4/ (single-page, 315K words) |
+| **Platform** | Custom SPA |
 | **Sections** | 1 (v4) |
-| **Pages/Words/Endpoints** | 1 / 182K / 363 |
-| **API version** | APIv4 (v4.106.32) |
-| **OpenAPI** | Architecture is OpenAPI-first, but raw spec NOT publicly downloadable |
-| **Changelog** | Embedded + gate.com/announcements/apiupdates (multiple releases/week) |
-| **GitHub** | github.com/gateio (15 repos, 7 auto-generated SDKs) |
-| **Status** | None |
-| **Legacy** | gate.com/api2 (APIv2 still live) |
-| **Gotcha** | Aggressive rate-limiting (403 after sync) |
+| **Pages/Words/Endpoints** | 2 / 315K / 363 |
+| **CCXT endpoints** | 280 |
+| **Note** | Rate-limits aggressively; re-sync may need --render auto |
 
-### HTX (ex-Huobi)
+### KuCoin
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | Legacy: huobiapi.github.io/docs/spot/v1/en/ / New: htx.com/en-us/opend/newApiPages/ |
-| **Platform** | GitHub Pages (legacy) + Custom portal (new) |
-| **Sections** | 4 (spot, derivatives, coin_margined_swap, usdt_swap) |
-| **Pages/Words/Endpoints** | 4 / 411K / 290 |
-| **API version** | v1 |
-| **OpenAPI** | None |
-| **Changelog** | New portal Updates section |
-| **GitHub** | github.com/huobiapi (user) + github.com/HuobiRDCenter (org) |
-| **Status** | status.huobigroup.com (Statuspage.io with JSON API) |
-| **Note** | Dual-system docs; base URLs still reference huobi.pro and hbdm.com |
+| **Docs URL** | https://www.kucoin.com/docs/rest/spot-trading/ |
+| **Platform** | Custom SPA (opaque URL IDs) |
+| **Sections** | 2 (spot, futures — merged URL tree) |
+| **Pages/Words/Endpoints** | 433 / 1.05M / 124 |
+| **CCXT endpoints** | 220 (gap: 96 missing) |
+| **OpenAPI** | 9 files in `Kucoin/kucoin-universal-sdk/spec/rest/entry/` (2.9MB total) — NOT YET IMPORTED |
+| **Spec files** | openapi-spot.json (849KB), openapi-futures.json (694KB), openapi-account.json (536KB), openapi-margin.json (386KB), openapi-broker.json (211KB), openapi-earn.json (154KB), openapi-copytrading.json (98KB), openapi-viplending.json (23KB), openapi-affiliate.json (12KB) |
+| **Import note** | All specs lack `servers[]` — must pass `--base-url`. Futures/copytrading use `https://api-futures.kucoin.com`, rest use `https://api.kucoin.com` |
+
+### HTX
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://huobiapi.github.io/docs/spot/v1/en/ |
+| **Platform** | GitHub Pages (single-page per section) |
+| **Sections** | 4 (spot, derivatives, coin_margined_swap, usdt_swap) + dm (82 eps, variant ID) |
+| **Pages/Words/Endpoints** | 4 / 411K / 454 |
+| **CCXT endpoints** | 544 (gap: 90 missing) |
+| **Status** | `htx.statuspage.io` (NOT status.huobigroup.com — DNS dead) |
 
 ### Crypto.com
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html |
-| **Platform** | Custom (single-page HTML) |
-| **Sections** | 1 (exchange) |
+| **Docs URL** | https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html (single-page, 59K words) |
+| **Platform** | Custom SPA |
 | **Pages/Words/Endpoints** | 1 / 59K / 63 |
-| **API version** | Exchange API v1 |
-| **OpenAPI** | None (probes return 403/400) |
-| **Changelog** | Embedded in main doc page (through 2025-12-17) |
-| **GitHub** | github.com/crypto-com (stub repo only) |
-| **Status** | status.crypto.com (Statuspage.io) |
-| **CCXT ID** | `cryptocom` (NOT `crypto_com`) |
-| **Hidden** | OTC 2.0 at /index_OTC2.html; Derivatives at /derivatives/index.html |
+| **CCXT endpoints** | 119 (gap: 56 missing) |
+| **Status** | status.crypto.com |
+| **Note** | DB stores endpoints as `crypto_com` (alias configured in ccxt_xref.py) |
 
 ### Bitstamp
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://www.bitstamp.net/api/ (Redoc, inline OpenAPI 3.0.3) |
-| **Platform** | Redoc |
-| **Sections** | 1 (rest) |
+| **Docs URL** | https://www.bitstamp.net/api/ (single-page, 37K words) |
+| **Platform** | Swagger/Redoc |
 | **Pages/Words/Endpoints** | 1 / 37K / 82 |
-| **API version** | v2 |
-| **OpenAPI** | Inline in page source (OpenAPI 3.0.3); download button exists but WAF blocks direct URL |
-| **WebSocket** | bitstamp.net/websocket/v2/ |
-| **FIX** | bitstamp.net/fix/v2/ |
-| **PSD2** | bitstamp.net/api-psd2/ (Open Banking) |
-| **Status** | None |
-| **sitemap** | bitstamp.net/sitemap.xml (200) |
+| **CCXT endpoints** | 255 (gap: 173 missing — CCXT tracks many v1 legacy paths) |
+| **OpenAPI** | Inline in page (WAF blocks direct download) |
+| **FIX docs** | bitstamp.net/fix/v2/ (NOT currently crawled) |
+| **WebSocket docs** | bitstamp.net/websocket/v2/ (NOT currently crawled) |
 
 ### Bitfinex
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.bitfinex.com/ (ReadMe.io) |
+| **Docs URL** | https://docs.bitfinex.com/reference/rest-public-platform-status |
 | **Platform** | ReadMe.io |
-| **Sections** | 1 (v2) |
 | **Pages/Words/Endpoints** | 118 / 56K / 81 |
-| **API version** | v2 (v1 still accessible at /v1/ prefix) |
-| **OpenAPI** | None |
-| **Changelog** | docs.bitfinex.com/docs/changelog (sparse: 8 entries, 2017–2024) |
-| **RSS** | [DEAD] /changelog.rss returns 404 |
-| **GitHub** | github.com/bitfinexcom (SDKs: Python, Node, Go, Ruby; FIX gateway) |
+| **CCXT endpoints** | 136 (gap: 55 missing) |
+| **Changelog** | docs.bitfinex.com/docs/changelog |
 | **Status** | bitfinex.statuspage.io |
-
-### Kraken
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://docs.kraken.com/ (Docusaurus) |
-| **Platform** | Docusaurus |
-| **Sections** | 2 (spot, futures) |
-| **Pages/Words/Endpoints** | 65 / 36K / 0 |
-| **API version** | Spot REST (unversioned), WS v2, FIX (spot + futures) |
-| **OpenAPI** | None (krakenfx/api-specs repo exists but EMPTY) |
-| **Changelog** | docs.kraken.com/api/docs/change-log/ (100+ entries, 2018–2026) |
-| **GitHub** | github.com/krakenfx |
-| **Status** | status.kraken.com (Statuspage.io with JSON API) |
-| **Community spec** | kanekoshoyu/exchange-collection (Futures, 148KB) |
-| **Embed API** | docs.kraken.com/api/docs/guides/embed-rest/ (B2B, new Feb 2026) |
-
-### Coinbase
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://docs.cdp.coinbase.com/ (Custom CDP) |
-| **Platform** | Custom (Coinbase Developer Platform) |
-| **Sections** | 4 (advanced_trade, exchange, intx, prime) |
-| **Pages/Words/Endpoints** | 78 / 106K / 49 |
-| **API version** | Multiple products (AT, Exchange, INTX, Prime) |
-| **OpenAPI** | Prime: api.prime.coinbase.com/v1/openapi.yaml (LIVE, 98 ops); INTX: imported previously |
-| **Changelogs** | 6 separate changelogs per product |
-| **FIX** | Exchange FIX 5 (replaced FIX 4.2, deprecated June 2025); INTX FIX |
-| **GitHub** | github.com/coinbase |
-| **Status** | 3 pages: status.coinbase.com, cdpstatus.coinbase.com, status.exchange.coinbase.com |
-| **Shared sitemap** | docs.cdp.coinbase.com/sitemap.xml (scope_prefixes dedup) |
-
-### dYdX
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://docs.dydx.xyz/ (GitBook) |
-| **Platform** | GitBook + GitHub (MDX) |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 271 / 134K / 34 |
-| **API version** | v4 (Chain + Indexer API v1.0.0) |
-| **OpenAPI** | Indexer swagger.json in dydxprotocol/v4-chain (115KB, Swagger 2.0) |
-| **Changelog** | Via v4-chain GitHub releases |
-| **RSS** | github.com/dydxprotocol/v4-chain/releases.atom |
-| **GitHub** | github.com/dydxprotocol (20+ repos) |
-| **Status** | status.dydx.trade (v4), status.dydx.exchange (v3, inactive) |
-| **Legacy** | v3 sunset Oct 28, 2024 |
 
 ### Upbit
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | EN: global-docs.upbit.com / KR: docs.upbit.com |
+| **Docs URL** | global-docs.upbit.com (EN), docs.upbit.com/ko/ (KR) |
 | **Platform** | ReadMe.io |
 | **Sections** | 2 (rest_en, rest_ko) |
-| **Pages/Words/Endpoints** | 304 / 306K / 44 |
-| **API version** | v1 |
-| **OpenAPI** | Community: ujhin/upbit-client/swagger.yaml (92KB) |
-| **Changelog RSS** | EN: global-docs.upbit.com/changelog.rss (57 items); KR: docs.upbit.com/kr/changelog.rss (79 items) |
-| **GitHub** | github.com/upbit-exchange (5 repos) |
-| **Status** | None (API: /v1/status/wallet) |
-| **llms.txt** | global-docs.upbit.com/llms.txt |
-| **Note** | Korean docs are 3 minor versions ahead of English |
+| **Pages/Words/Endpoints** | 355 / 218K / 44 |
+| **CCXT endpoints** | 51 |
+| **RSS** | global-docs.upbit.com/changelog.rss, docs.upbit.com/kr/changelog.rss |
+| **Note** | Korean docs are authoritative; English lags by ~3 minor versions. rest_ko uses scope_priority: 50 |
 
 ### Bithumb
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://apidocs.bithumb.com/ (ReadMe.io) |
+| **Docs URL** | https://apidocs.bithumb.com/ |
 | **Platform** | ReadMe.io |
-| **Sections** | 2 (rest, rest_en) |
-| **Pages/Words/Endpoints** | 150 / 74K / 36 |
-| **Changelog RSS** | apidocs.bithumb.com/changelog.rss (26 items) |
-| **Note** | English section requires Playwright (Localize.js client-side translation) |
-| **Futures docs** | bithumbfutures.github.io (separate, may be Bithumb Global) |
+| **Sections** | 1 (rest) + rest_en (requires Playwright, 0 pages) |
+| **Pages/Words/Endpoints** | 153 / 37K / 36 |
+| **RSS** | apidocs.bithumb.com/changelog.rss |
 
 ### Coinone
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.coinone.co.kr/ (ReadMe.io) |
-| **Platform** | ReadMe.io |
-| **Sections** | 1 (rest) |
-| **Pages/Words/Endpoints** | 91 / 67K / 22 |
-| **Changelog RSS** | docs.coinone.co.kr/changelog.rss (13 items) |
-| **Note** | Korean-only. No English version. Endpoint paths/params are in English (FTS5 searchable). |
+| **Docs URL** | https://docs.coinone.co.kr/ |
+| **Platform** | ReadMe.io (Korean only) |
+| **Pages/Words/Endpoints** | 91 / 62K / 22 |
+| **CCXT endpoints** | 63 (gap: 41 missing — CCXT tracks v1 API, we have v2) |
+| **RSS** | docs.coinone.co.kr/changelog.rss |
 
 ### Korbit
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.korbit.co.kr/ |
+| **Docs URL** | https://docs.korbit.co.kr/ (single-page, 25K words, English) |
 | **Platform** | Custom |
-| **Sections** | 1 (rest) |
 | **Pages/Words/Endpoints** | 2 / 25K / 32 |
-| **Status** | status.korbit.co.kr (Statuspage.io) |
-| **CCXT** | No CCXT class in main library (CCXT.NET only) |
-| **English** | docs.korbit.co.kr/index_en.html |
+| **CCXT** | No CCXT class |
+| **Status** | DEAD (status.korbit.co.kr DNS fails) |
+
+### Kraken
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://docs.kraken.com/api/ |
+| **Platform** | Docusaurus |
+| **Sections** | 2 (spot, futures) |
+| **Pages/Words/Endpoints** | 65 / 32K / 0 (NO endpoints extracted) |
+| **CCXT endpoints** | 54 |
+| **Changelog** | docs.kraken.com/api/docs/change-log/ |
+| **Sitemap** | docs.kraken.com/sitemap.xml |
+| **Status** | status.kraken.com |
+| **OpenAPI** | krakenfx/api-specs repo exists but is EMPTY. Community spec in kanekoshoyu/exchange-collection |
+
+### Coinbase
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://docs.cdp.coinbase.com/api-reference/ |
+| **Platform** | Custom (CDP) |
+| **Sections** | 4 (advanced_trade, exchange, intx, prime) |
+| **Pages/Words/Endpoints** | 383 / 310K / 49 (only intx imported) |
+| **CCXT endpoints** | 90 |
+| **Sitemap** | docs.cdp.coinbase.com/sitemap.xml (559 entries, shared across 4 sections with scope_priority) |
+| **OpenAPI** | Prime: api.prime.coinbase.com/v1/openapi.yaml (351KB) — NOT IMPORTED |
+| **Community spec** | Exchange: metalocal/coinbase-exchange-api/api.oas3.json (157KB) |
+| **Status** | status.coinbase.com |
+| **Note** | Docs migrated to /api-reference/ paths in 2026-03. scope_prefixes updated. |
 
 ### BitMEX
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.bitmex.com/ (Docusaurus) |
+| **Docs URL** | https://docs.bitmex.com/ |
 | **Platform** | Docusaurus |
-| **Sections** | 1 (rest) |
 | **Pages/Words/Endpoints** | 142 / 54K / 95 |
-| **API version** | v1 (spec version 1.2.0) |
-| **OpenAPI** | LIVE: bitmex.com/api/explorer/swagger.json (183KB); GitHub: api-connectors/swagger.json (272KB) |
-| **Changelog** | bitmex.com/app/apiChangelog |
+| **CCXT endpoints** | 93 |
+| **OpenAPI** | bitmex.com/api/explorer/swagger.json (imported) |
+| **Sitemap** | docs.bitmex.com/sitemap.xml |
 | **RSS** | bitmex.com/api_announcement/feed |
-| **Status** | status.bitmex.com (Statuspage.io + Atom/RSS) |
-| **Maintenance** | Regular: Tue + Thu 06:00–09:00 UTC |
+| **Status** | status.bitmex.com |
 
 ### BitMart
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://developer-pro.bitmart.com/ (Custom SPA) |
-| **Platform** | Custom SPA |
-| **Sections** | 2 (spot, futures) |
-| **Pages/Words/Endpoints** | 2 / 73K / 0 |
-| **Postman** | Official: Spot (45KB) + Futures (49KB) at bitmartexchange/bitmart-postman-api |
-| **Changelog** | Inline at developer-pro.bitmart.com/en/spot/#changelog |
-| **GitHub** | github.com/bitmartexchange (5 SDK repos) |
-| **Status** | None (has /system/service API) |
-| **Note** | 73K words, 0 endpoints — MOST URGENT extraction target |
+| **Docs URL** | https://developer-pro.bitmart.com/en/spot/ |
+| **Platform** | Custom SPA (single-page per section) |
+| **Sections** | 2 (spot: 39K words, futures: 35K words) |
+| **Pages/Words/Endpoints** | 2 / 73K / 0 (NO endpoints) |
+| **CCXT endpoints** | 113 |
+| **Postman** | bitmartexchange/bitmart-postman-api — Spot + Futures collections — NOT IMPORTED |
 
 ### WhiteBIT
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.whitebit.com/ (Docusaurus/Next.js) |
+| **Docs URL** | https://docs.whitebit.com/ |
 | **Platform** | Docusaurus |
-| **Sections** | 1 (v4) |
-| **Pages/Words/Endpoints** | 161 / 95K / 0 |
-| **OpenAPI** | None |
-| **Changelog** | docs.whitebit.com/changelog/ + changelog.json in GitHub repo |
-| **GitHub** | github.com/whitebit-exchange (13 repos, Docusaurus source) |
-| **Status** | status.whitebit.com (OpenStatus) |
-| **CCXT gap** | 110 CCXT endpoints, 0 in DB — largest gap |
+| **Pages/Words/Endpoints** | 161 / 98K / 0 (NO endpoints) |
+| **CCXT endpoints** | 110 |
+| **Sitemap** | docs.whitebit.com/sitemap.xml |
+| **Changelog** | docs.whitebit.com/changelog/ |
+| **Status** | status.whitebit.com |
 
 ### Bitbank
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://github.com/bitbankinc/bitbank-api-docs (GitHub Markdown) |
+| **Docs URL** | https://github.com/bitbankinc/bitbank-api-docs |
 | **Platform** | GitHub Markdown |
-| **Sections** | 1 (rest) |
-| **Pages/Words/Endpoints** | 154 / 212K / 0 |
-| **Changelog** | CHANGELOG.md (latest 2026-02-18) |
-| **Commit feed** | github.com/bitbankinc/bitbank-api-docs/commits/master.atom |
-| **GitHub** | github.com/bitbankinc (13 repos, including MCP server) |
-| **Note** | Dual-language (EN + JP). Japanese is primary. PubNub for private streaming. |
+| **Pages/Words/Endpoints** | 175 / 271K / 0 (NO endpoints) |
+| **CCXT endpoints** | 28 |
+| **Changelog** | GitHub CHANGELOG.md |
 
 ### MercadoBitcoin
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://api.mercadobitcoin.net/api/v4/docs (Swagger UI) |
-| **Platform** | Swagger UI |
-| **Sections** | 1 (v4) |
-| **Pages/Words/Endpoints** | 1 / 16K / 31 |
-| **API version** | v4 (REST), v0 (WebSocket) |
-| **OpenAPI** | api.mercadobitcoin.net/api/v4/docs/swagger.yaml (76KB, LIVE) |
-| **WebSocket** | ws.mercadobitcoin.net/docs/v0/ (Docsify, JS-rendered) |
-| **Status** | status.mercadobitcoin.com.br (JSON API at /summary.json) |
-| **CCXT ID** | `mercado` (remapped from `mercadobitcoin`) |
-
-### Hyperliquid
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://hyperliquid.gitbook.io/hyperliquid-docs/ (GitBook) |
-| **Platform** | GitBook |
-| **Sections** | 1 (api) |
-| **Pages/Words/Endpoints** | 32 / 26K / 75 |
-| **OpenAPI** | Community: bowen31337/hyperliquid-openapi (38KB OpenAPI 3.1.0 + 22KB AsyncAPI 3.0.0) |
-| **GitHub** | github.com/hyperliquid-dex (11 repos: Python SDK, Rust SDK, ts-examples) |
-| **CCXT** | Module exists but NOT in project's CCXT_EXCHANGE_MAP |
-| **Note** | Technically a DEX (on-chain CLOB). Classification contested (few validators). |
+| **Docs URL** | https://api.mercadobitcoin.net/api/v4/docs |
+| **Platform** | Swagger UI (single-page) |
+| **Pages/Words/Endpoints** | 1 / 0* / 31 |
+| **OpenAPI** | swagger.yaml at docs URL (76KB, imported) |
+| **Status** | status.mercadobitcoin.com.br |
+| **Note** | *Word count 0 due to Swagger UI JS rendering; endpoints imported from spec |
 
 ---
 
 ## 3. DEX Protocols
 
-### GRVT
+### DEX-REST (have HTTP API endpoints)
+
+#### dYdX
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.grvt.io/ |
-| **Sections** | 1 (api) |
-| **Pages/Words/Endpoints** | 235 / 254K / 0 |
-| **OpenAPI** | gravity-technologies/api-spec/apispec.json (460KB) — IMPORTABLE |
-| **GitHub** | github.com/gravity-technologies |
+| **Docs URL** | https://docs.dydx.xyz/ |
+| **Platform** | GitBook |
+| **Pages/Words/Endpoints** | 283 / 134K / 34 |
+| **OpenAPI** | dydxprotocol/v4-chain/indexer/services/comlink/public/swagger.json (115KB) — NOT IMPORTED |
+| **Status** | status.dydx.trade |
 
-### Paradex
+#### Hyperliquid
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://hyperliquid.gitbook.io/hyperliquid-docs/ |
+| **Platform** | GitBook |
+| **Pages/Words/Endpoints** | 32 / 26K / 75 |
+| **Sitemap** | hyperliquid.gitbook.io/hyperliquid-docs/sitemap.xml |
+
+#### Aevo
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://api-docs.aevo.xyz/ |
+| **Platform** | ReadMe.io |
+| **Pages/Words/Endpoints** | 144 / 79K / 0 |
+
+#### Paradex
 
 | Field | Value |
 |-------|-------|
 | **Docs URL** | https://docs.paradex.trade/ |
-| **Sections** | 1 (api) |
-| **Pages/Words/Endpoints** | 410 / 237K / 0 |
-| **OpenAPI** | api.prod.paradex.trade/swagger/doc.json (307KB, 78 paths) — IMPORTABLE |
-| **AsyncAPI** | WebSocket spec in tradeparadex docs repo |
-| **GitHub** | github.com/tradeparadex |
+| **Platform** | GitBook |
+| **Pages/Words/Endpoints** | 624 / 342K / 0 |
+| **OpenAPI** | api.prod.paradex.trade/swagger/doc.json (380KB) — NOT IMPORTED |
+| **AsyncAPI** | WebSocket spec in tradeparadex repo |
 
-### Lighter
+#### Lighter
 
 | Field | Value |
 |-------|-------|
 | **Docs URL** | https://docs.lighter.xyz/ |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 19 / 10K / 0 |
-| **OpenAPI** | elliottech/lighter-python/openapi.json (225KB, 57 paths) — IMPORTABLE |
-| **GitHub** | github.com/elliottech |
+| **Platform** | GitBook |
+| **Pages/Words/Endpoints** | 49 / 25K / 0 |
+| **OpenAPI** | elliottech/lighter-python/openapi.json (225KB) — NOT IMPORTED |
 
-### ApeX Protocol
+#### Aster
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://api-docs.pro.apex.exchange/ (GitBook) |
-| **Sections** | 1 (api) |
+| **Docs URL** | https://docs.asterdex.com/ |
+| **Platform** | GitBook |
+| **Pages/Words/Endpoints** | 147 / 120K / 0 |
+
+#### ApeX Pro
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://api-docs.pro.apex.exchange/ |
+| **Platform** | ReadMe.io |
 | **Pages/Words/Endpoints** | 5 / 134K / 0 |
-| **v1 docs** | api-docs.apex.exchange/ (StarkEx, deprecated) |
-| **GitHub** | github.com/ApeX-Protocol |
 
-### Aster (ex-ApolloX)
+#### GRVT
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://developers.aster.trade/ |
-| **Sections** | 1 (api) |
-| **Pages/Words/Endpoints** | 2 / 15K / 0 |
-| **Note** | Rebrand of ApolloX (NOT edgeX). Thin documentation. |
+| **Docs URL** | https://github.com/gravity-technologies/api-spec |
+| **Platform** | GitHub Markdown |
+| **Pages/Words/Endpoints** | 205 / 305K / 0 |
+| **Spec** | gravity-technologies/api-spec/src/codegen/apispec.json (~460KB) — **CUSTOM FORMAT** (not OpenAPI). Defines ~60+ operations across MarketData and Trading gateways. May need custom parser. |
+| **Schema docs** | 304 schema markdown files in `artifacts/apidocs/schemas/` |
+| **API docs site** | api-docs.grvt.io (returns 403 to automated fetches) |
+| **Note** | Original research claimed path `apispec.json` at root (404). Correct path is `src/codegen/apispec.json` |
 
-### Aevo
+### DEX-CONTRACT (smart contracts only — no REST endpoints possible)
 
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://docs.aevo.xyz/ + https://api-docs.aevo.xyz/ |
-| **Sections** | 1 (api) |
-| **Pages/Words/Endpoints** | 144 / 79K / 0 |
-| **GitHub** | github.com/aevoxyz |
-| **CCXT** | `aevo` |
-
-### GMX
+#### GMX
 
 | Field | Value |
 |-------|-------|
-| **Docs URL** | https://docs.gmx.io/ (GitBook) |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 64 / 78K / 0 |
-| **GitHub** | github.com/gmx-io |
-| **Note** | No REST API — smart contract + subgraph only |
+| **Docs URL** | https://docs.gmx.io/ |
+| **Platform** | Docusaurus/GitBook |
+| **Pages/Words** | 142 / 171K |
+| **REST API** | **NONE** — smart contract protocol, docs describe Solidity interfaces |
+| **Value for our DB** | Low — no HTTP endpoints to extract. Pages may be useful for contract ABI reference only. |
 
-### Drift
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://docs.drift.trade/ + drift-labs.github.io/v2-teacher/ |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 132 / 218K / 0 |
-| **GitHub** | github.com/drift-labs |
-| **Note** | Solana-based, SDK-driven |
-
-### Perpetual Protocol — DEFUNCT
+#### Gains Network
 
 | Field | Value |
 |-------|-------|
-| **Status** | DEFUNCT — docs.perp.com DNS dead (NXDOMAIN), token delisted |
-| **Recommendation** | Remove from registry or mark as defunct |
+| **Docs URL** | https://docs.gains.trade/ |
+| **Platform** | GitBook |
+| **Pages/Words** | 187 / 131K |
+| **REST API** | **NONE** — smart contract protocol |
 
-### Gains Network (gTrade)
-
-| Field | Value |
-|-------|-------|
-| **Docs URL** | https://gains-network.gitbook.io/docs-home/ |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 114 / 78K / 0 |
-| **Note** | No REST API — smart contracts + oracle price feeds |
-
-### Kwenta
+#### Kwenta
 
 | Field | Value |
 |-------|-------|
 | **Docs URL** | https://docs.kwenta.io/ |
-| **Sections** | 1 (docs) |
-| **Pages/Words/Endpoints** | 20 / 9K / 0 |
-| **Note** | No REST API — built on Synthetix V3 perps |
+| **Platform** | GitBook |
+| **Pages/Words** | 83 / 41K |
+| **REST API** | **NONE** — Synthetix-based, smart contract only |
+
+### DEX-SDK (SDK-based, no direct REST docs)
+
+#### Drift
+
+| Field | Value |
+|-------|-------|
+| **Docs URL** | https://docs.drift.trade/ |
+| **Platform** | GitBook |
+| **Pages/Words** | 133 / 221K |
+| **REST API** | SDK-based access; may have internal REST gateway but no public REST endpoint docs |
+
+### DEFUNCT
+
+#### Perpetual Protocol
+
+| Field | Value |
+|-------|-------|
+| **Status** | **DEFUNCT** — docs.perp.com DNS dead (NXDOMAIN), token delisted |
+| **Action** | Marked `status: defunct` in exchanges.yaml. Do not sync. |
 
 ---
 
@@ -606,49 +580,61 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 | Field | Value |
 |-------|-------|
-| **Main docs** | https://docs.ccxt.com/ |
-| **ReadTheDocs** | https://ccxt.readthedocs.io/ (additional, possibly stale) |
-| **Wiki** | github.com/ccxt/ccxt/wiki (source: /blob/master/wiki/) |
-| **Sections** | 1 (manual) |
-| **Pages/Words** | 189 / 768K |
-| **GitHub** | github.com/ccxt (33K+ stars) |
-| **Releases RSS** | github.com/ccxt/ccxt/releases.atom (near-daily) |
-| **Key files** | exchanges.json (master registry), ts/src/{exchange}.ts (describe() methods), ts/src/abstract/{exchange}.ts (auto-generated API surface) |
-| **Bug** | ccxt_xref.py `_extract_ccxt_endpoints()` only handles list-based API trees, not dict-of-dicts (affects 15/20 exchanges) |
+| **Wiki** | github.com/ccxt/ccxt/wiki (2,037 pages, 6.93M words) |
+| **ReadTheDocs** | ccxt.readthedocs.io (may be stale) |
+| **Releases RSS** | github.com/ccxt/ccxt/releases.atom |
+| **Key files** | exchanges.json, ts/src/{exchange}.ts |
+| **CCXT cross-ref** | dict-of-dicts bug FIXED — now extracts endpoints for all 20 mapped exchanges |
+| **Mapped exchanges** | 22 (20 CEX + dydx + hyperliquid). korbit has no CCXT class. |
 
 ---
 
 ## 5. Recommended Additions
 
-### Orderly Network — RECOMMEND ADD
+### Orderly Network — RECOMMEND ADD (HIGH PRIORITY)
 
 - **Type**: DEX infrastructure (powers WOOFi Pro, LogX, etc.)
-- **Docs**: docs.orderly.network
-- **OpenAPI**: evm.openapi.yaml (461KB) — large importable spec, likely 100+ endpoints
+- **Docs**: orderly.network/docs/ (redirects from docs.orderly.network)
+- **Platform**: Mintlify
+- **Sitemap**: orderly.network/docs/sitemap.xml (694 URLs)
+- **OpenAPI**: `https://raw.githubusercontent.com/OrderlyNetwork/documentation-public/main/evm.openapi.yaml` (461KB, OpenAPI 3.0.1, 192 paths) — VERIFIED LIVE
+- **Second spec**: sv.openapi.yaml (33KB, Strategy Vault API) in same repo
+- **Changelogs**: orderly.network/docs/changelog/evm, orderly.network/docs/changelog/sdk
+- **RSS**: None (404 on /rss.xml, /feed.xml)
 - **SDKs**: orderly-sdk-js, orderly-sdk-py
-- **Rationale**: Active protocol, large spec, immediate endpoint value
-
-### Nado — RECOMMEND ADD
-
-- **Type**: DEX perpetual futures
-- **Docs**: docs.nado.trade
-- **SDKs**: 3 languages (Python, TypeScript, Go)
-- **Changelog**: Active
-- **Rationale**: Active development, multiple SDK languages, growing protocol
+- **GitHub**: OrderlyNetwork/documentation-public (759 files)
+- **Rationale**: 192-path OpenAPI spec, 694-URL sitemap, active changelogs, immediate endpoint value
 
 ### Bluefin — RECOMMEND ADD
 
 - **Type**: DEX perpetual futures (Sui)
 - **Docs**: bluefin-exchange.readme.io (ReadMe.io)
-- **Endpoints**: ~22 REST endpoints
-- **GitHub**: github.com/fireflyprotocol (was Firefly)
+- **API version**: 3.0.2 ("Bluefin Pro"); v2.0.1 deprecated
+- **Sections**: Exchange, Account, Trade, Auth, WebSocket Streams
+- **Sitemap**: None (404)
+- **Changelog**: bluefin-exchange.readme.io/changelog (sparse — 3 entries, Aug 2023–Jan 2024)
+- **GitHub**: github.com/fireflyprotocol (branded "Bluewater", 17 repos)
 - **Rationale**: ReadMe.io platform (easy to crawl), active protocol
 
-### Pacifica — RECOMMEND DEFER
+### Nado — RECOMMEND ADD (LOWER PRIORITY)
 
-- **Type**: DEX (emerging)
-- **Status**: Insufficient documentation for crawling
-- **Rationale**: Re-evaluate in next discovery cycle
+- **Type**: DEX perpetual futures
+- **Docs**: docs.nado.xyz (NOT docs.nado.trade)
+- **Platform**: GitBook
+- **SDKs**: 3 languages (Python, TypeScript, Go)
+- **Changelog**: Active
+- **Rationale**: Active development, growing protocol
+
+### Pacifica — RECOMMEND ADD
+
+- **Type**: DEX perpetual futures
+- **Docs**: docs.pacifica.fi (redirects to pacifica.gitbook.io/docs/)
+- **Platform**: GitBook
+- **Sitemap**: docs.pacifica.fi/sitemap-pages.xml (155 URLs, 97 API docs)
+- **Base URL**: api.pacifica.fi/api/v1
+- **Changelog**: docs.pacifica.fi/api-documentation/changelog (active, Oct 2025–Feb 2026)
+- **GitHub**: github.com/pacifica-fi (2 repos: python-sdk, pacifica-mcp)
+- **Rationale**: 97 API doc URLs, active changelog, REST + WebSocket coverage — upgraded from DEFER
 
 ---
 
@@ -666,21 +652,17 @@ Use this checklist when adding a new exchange to the registry.
 - [ ] API reference URL: ___
 - [ ] WebSocket docs URL: ___
 - [ ] FIX protocol docs URL (if applicable): ___
-- [ ] Developer portal / blog: ___
-- [ ] Documentation platform: (ReadMe.io / Docusaurus / GitBook / Stoplight / Swagger / Custom)
+- [ ] Documentation platform: (ReadMe.io / Docusaurus / GitBook / Swagger / Custom)
 - [ ] Rendering required: (static HTML / JS-rendered / SPA)
 
 ### Versioned APIs
 - [ ] Current API version: ___
 - [ ] Legacy versions still documented: ___
-- [ ] Deprecation / migration notices URL: ___
 
 ### Changelogs & Updates
 - [ ] API changelog URL: ___
-- [ ] Changelog format: (RSS / Atom / HTML / Markdown / JSON / ReadMe.io)
 - [ ] RSS/Atom feed URL (if exists): ___
 - [ ] Update frequency: ___
-- [ ] Telegram channel (if exists): ___
 ```
 
 ### Phase 2: Deep Discovery
@@ -688,28 +670,20 @@ Use this checklist when adding a new exchange to the registry.
 ```
 ### GitHub
 - [ ] GitHub org URL: ___
-- [ ] API docs repo: ___
 - [ ] OpenAPI/Swagger spec file: ___
 - [ ] Postman collection: ___
 - [ ] Official SDK repos: ___
-- [ ] GitHub Pages docs URL (if exists): ___
 - [ ] Commit Atom feed URLs: ___
 
 ### Specs & Collections
 - [ ] OpenAPI/Swagger JSON/YAML URL: ___
 - [ ] Postman collection URL: ___
 - [ ] AsyncAPI spec (WebSocket): ___
-- [ ] GraphQL schema (if applicable): ___
 
 ### Discovery Files
 - [ ] robots.txt findings: ___
 - [ ] sitemap.xml findings: ___
 - [ ] llms.txt (if exists): ___
-- [ ] Hidden documentation paths: ___
-
-### CCXT
-- [ ] CCXT exchange ID: ___
-- [ ] Added to CCXT_EXCHANGE_MAP in ccxt_xref.py: ___
 ```
 
 ### Phase 3: Registration
@@ -717,7 +691,10 @@ Use this checklist when adding a new exchange to the registry.
 ```
 ### Status & Incidents
 - [ ] API status page URL: ___
-- [ ] Status page API/feed URL: ___
+
+### CCXT
+- [ ] CCXT exchange ID: ___
+- [ ] Added to CCXT_EXCHANGE_MAP: ___
 
 ### Registry Entry
 - [ ] Added to data/exchanges.yaml
@@ -727,15 +704,12 @@ Use this checklist when adding a new exchange to the registry.
 - [ ] scope_prefixes (if sharing sitemap)
 - [ ] render_mode (auto if JS-rendered)
 - [ ] doc_sources with import URLs
-- [ ] Inventory generated (cex-api-docs fetch-inventory)
-- [ ] Pages synced (cex-api-docs sync)
-- [ ] OpenAPI/Postman imported (if available)
+- [ ] Synced and verified
 ```
 
-### Probing Checklist
+### URL Probing Checklist
 
 ```
-### URL Probing
 - [ ] {domain}/robots.txt
 - [ ] {domain}/sitemap.xml
 - [ ] {domain}/llms.txt
@@ -745,7 +719,6 @@ Use this checklist when adding a new exchange to the registry.
 - [ ] api.{domain}/
 - [ ] GitHub: site:github.com "{exchange}" openapi OR swagger
 - [ ] Postman: site:postman.com "{exchange}" API
-- [ ] ReadMe.io: {exchange}.readme.io
 ```
 
 ---
@@ -754,75 +727,76 @@ Use this checklist when adding a new exchange to the registry.
 
 ### Priority 1: Import Available Specs (immediate endpoint value)
 
-| Exchange | Spec | Est. Endpoints | Command |
-|----------|------|---------------:|---------|
-| KuCoin | 23 OpenAPI files in universal-sdk | 200+ | Import each spec from GitHub raw URLs |
-| GRVT | apispec.json (460KB) | 100+ | `import-openapi --exchange grvt --section api` |
-| Coinbase Prime | openapi.yaml (live URL) | 98 | `import-openapi --exchange coinbase --section prime` |
-| Paradex | swagger/doc.json (live URL) | 78 | `import-openapi --exchange paradex --section api` |
-| Lighter | openapi.json (GitHub) | 57 | `import-openapi --exchange lighter --section docs` |
-| dYdX | swagger.json (GitHub) | 50+ | `import-openapi --exchange dydx --section docs` |
-| BitMart | Postman Spot + Futures (official) | 80+ | `import-postman --exchange bitmart --section spot/futures` |
+| Exchange | Spec | Size | Est. Endpoints | Import Command |
+|----------|------|------|---------------:|----------------|
+| KuCoin | 9 OpenAPI files | 2.9MB | 300+ | `import-openapi` per file with `--base-url` |
+| Coinbase Prime | openapi.yaml | 351KB | 98 | `import-openapi --exchange coinbase --section prime --url https://api.prime.coinbase.com/v1/openapi.yaml` |
+| Paradex | swagger/doc.json | 380KB | 78 | `import-openapi --exchange paradex --section api --url https://api.prod.paradex.trade/swagger/doc.json` |
+| Lighter | openapi.json | 225KB | 57 | `import-openapi --exchange lighter --section docs --url https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json` |
+| dYdX | swagger.json | 115KB | 50+ | `import-openapi --exchange dydx --section docs --url https://raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json` |
+| BitMart | Postman Spot+Futures | 94KB | 80+ | `import-postman --exchange bitmart --section spot/futures` |
+| GRVT | apispec.json | ~460KB | ~60+ | **CUSTOM FORMAT** — not standard OpenAPI. May need custom parser or manual extraction. URL: `https://raw.githubusercontent.com/gravity-technologies/api-spec/main/src/codegen/apispec.json` |
 
-**Total: ~660+ new endpoints from existing specs**
+**Total: ~760+ new endpoints from verified specs**
 
-### Priority 2: Community Specs (verify first)
+### Priority 2: Community Specs (verify before import)
 
 | Exchange | Spec | Est. Endpoints |
 |----------|------|---------------:|
-| Coinbase Exchange | metalocal/coinbase-exchange-api | 39 |
+| Coinbase Exchange | metalocal/coinbase-exchange-api (157KB) | 39 |
 | Kraken Futures | kanekoshoyu/exchange-collection | 51 |
 | Upbit | ujhin/upbit-client/swagger.yaml | 92 |
 | Hyperliquid | bowen31337/hyperliquid-openapi | 38 |
 
 ### Priority 3: New Exchange Registration
 
-| Exchange | Rationale |
-|----------|-----------|
-| Orderly Network | 461KB OpenAPI spec, active protocol |
-| Bluefin | ReadMe.io (easy crawl), ~22 endpoints |
-| Nado | Active changelog, 3 SDKs |
+| Exchange | Rationale | Effort |
+|----------|-----------|--------|
+| Orderly Network | 192-path OpenAPI, 694-URL sitemap, Mintlify | Medium |
+| Pacifica | 97 API doc URLs in sitemap, active changelog | Low |
+| Bluefin | ReadMe.io (easy crawl), ~22 endpoints | Low |
+| Nado | Active changelog, 3 SDKs | Low |
 
-### Priority 4: Changelog Monitoring Setup
+### Priority 4: New Sections for Existing Exchanges
 
-| Exchange | Feed Type | URL |
-|----------|-----------|-----|
-| Upbit (EN) | RSS | global-docs.upbit.com/changelog.rss |
-| Upbit (KR) | RSS | docs.upbit.com/kr/changelog.rss |
-| Bithumb | RSS | apidocs.bithumb.com/changelog.rss |
-| Coinone | RSS | docs.coinone.co.kr/changelog.rss |
-| BitMEX | RSS | bitmex.com/api_announcement/feed |
-| BitMEX status | Atom/RSS | status.bitmex.com/history.atom |
-| dYdX releases | Atom | github.com/dydxprotocol/v4-chain/releases.atom |
-| CCXT releases | Atom | github.com/ccxt/ccxt/releases.atom |
-| Bitbank commits | Atom | github.com/bitbankinc/bitbank-api-docs/commits/master.atom |
-| Binance forum | RSS | dev.binance.vision/latest.rss |
+| Section | Rationale |
+|---------|-----------|
+| Binance FIX API | FIX 4.4 docs at /docs/binance-spot-api-docs/fix-api |
+| Bitstamp FIX v2 | FIX v2 docs at /fix/v2/ |
+| Bitstamp WebSocket v2 | WS docs at /websocket/v2/ |
 
-### Priority 5: Registry Cleanup
+### Priority 5: Changelog Monitoring Setup
 
-- Remove Perpetual Protocol (DEFUNCT — DNS dead)
-- Add Hyperliquid to CCXT_EXCHANGE_MAP
-- Add dYdX to CCXT_EXCHANGE_MAP
-- Fix ccxt_xref.py dict-of-dicts extraction bug (affects 15/20 exchanges)
+| Feed | URL | Verified |
+|------|-----|----------|
+| Upbit EN RSS | global-docs.upbit.com/changelog.rss | YES |
+| Upbit KR RSS | docs.upbit.com/kr/changelog.rss | YES |
+| Bithumb RSS | apidocs.bithumb.com/changelog.rss | YES |
+| Coinone RSS | docs.coinone.co.kr/changelog.rss | YES |
+| BitMEX RSS | bitmex.com/api_announcement/feed | YES |
+| dYdX releases | dydxprotocol/v4-chain/releases.atom | — |
+| CCXT releases | ccxt/ccxt/releases.atom | — |
+| Bitbank commits | bitbankinc/bitbank-api-docs/commits/master.atom | — |
 
 ---
 
 ## 8. Confirmed Non-Existent Sources
 
-These were systematically searched for and confirmed to NOT exist, saving future time:
+These were systematically searched for and confirmed to NOT exist:
 
 | What | Exchanges Checked | Result |
 |------|-------------------|--------|
-| Official OpenAPI/Swagger specs | OKX, Bitget, Gate.io, HTX, Crypto.com, Bitfinex, WhiteBIT, Bitbank, Coinone, Korbit, Bithumb | None found |
-| Public RSS/Atom for API changelogs | Binance, OKX, Bybit, Bitget, Gate.io, KuCoin, HTX, Crypto.com, Bitstamp, Kraken, Coinbase | None (only forum/status/commit feeds) |
-| Dedicated developer forums | All 35 | Dead or nonexistent (Discord/Telegram replaced them) |
-| Newsletter archives | All 35 | None exist |
-| Bitfinex changelog RSS | Bitfinex | 404 (ReadMe.io may have changed paths) |
-| Bybit status page | Bybit | bybit.statuspage.io is FRAUDULENT (phishing) |
-| Binance sitemap | Binance | 404 (documented gotcha) |
-| Binance robots.txt | Binance | 404 |
-| Gate.io raw OpenAPI spec | Gate.io | Not publicly downloadable despite OpenAPI-first architecture |
-| Kraken official OpenAPI | Kraken | krakenfx/api-specs repo exists but is EMPTY |
-| Coinbase Advanced Trade spec | Coinbase | Not published |
-| INTX OpenAPI at live URL | Coinbase | api.international.coinbase.com/v1/openapi.yaml returns 404 |
-| Bitstamp direct OpenAPI download | Bitstamp | /openapi.json blocked by Incapsula WAF |
+| Official OpenAPI specs | OKX, Bitget, Gate.io, HTX, Crypto.com, Bitfinex, WhiteBIT, Bitbank, Coinone, Korbit, Bithumb | None found |
+| Public RSS for API changelogs | Binance, OKX, Bybit, Bitget, Gate.io, KuCoin, HTX, Crypto.com, Bitstamp, Kraken, Coinbase | None (only forum/status/commit feeds) |
+| Developer forums | All 35 | Dead or nonexistent |
+| HTX status at old domain | status.huobigroup.com | DNS dead (use htx.statuspage.io) |
+| Korbit status page | status.korbit.co.kr | DNS dead |
+| Binance sitemap | developers.binance.com/sitemap.xml | 404 |
+| Binance robots.txt | developers.binance.com/robots.txt | 404 |
+| GRVT spec at root | gravity-technologies/api-spec/apispec.json | 404 (correct path: src/codegen/apispec.json) |
+| KuCoin spec without prefix | Kucoin/kucoin-universal-sdk/spec/rest/entry/spot.json | 404 (correct: openapi-spot.json) |
+| Gate.io downloadable OpenAPI | gate.com | Not publicly downloadable |
+| Kraken official OpenAPI | krakenfx/api-specs | Repo exists but is EMPTY |
+| Coinbase Advanced Trade spec | docs.cdp.coinbase.com | Not published |
+| Bitstamp direct OpenAPI download | bitstamp.net/openapi.json | Blocked by WAF |
+| Bitfinex changelog RSS | docs.bitfinex.com/changelog.rss | 404 |
