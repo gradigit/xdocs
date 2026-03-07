@@ -10,14 +10,55 @@ import logging
 
 from .classify import classify_input
 from .db import open_db
-from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms
+from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms, rrf_fuse, normalize_bm25_score, should_skip_vector_search
 from .registry import load_registry
+from .resolve_docs_urls import _is_spec_url
 
 logger = logging.getLogger(__name__)
 
 
 def _normalize_question(q: str) -> str:
     return re.sub(r"\s+", " ", q.strip()).lower()
+
+
+# -- Binance section keyword detection --
+
+_BINANCE_SECTION_KEYWORDS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bportfolio\s+margin\b"), "portfolio_margin"),
+    (re.compile(r"\bcopy\s+trading\b"), "copy_trading"),
+    (re.compile(r"\bmargin\s+trading\b"), "margin_trading"),
+    (re.compile(r"\bcoin[\-\s]?m\b|\bfutures\s+coinm\b"), "futures_coinm"),
+    (re.compile(r"\busd[\-\s]?m\b|\busds\b|\bfutures\s+usdm\b"), "futures_usdm"),
+    (re.compile(r"\bfutures\b"), "futures_usdm"),
+    (re.compile(r"\boptions?\b"), "options"),
+    (re.compile(r"\bmargin\b"), "margin_trading"),
+    (re.compile(r"\bwebsocket\b|\bws\b|\bstream\b"), "websocket"),
+    (re.compile(r"\bwallet\b"), "wallet"),
+    (re.compile(r"\bspot\b"), "spot"),
+    (re.compile(r"\bcopy\b"), "copy_trading"),
+]
+
+
+def _detect_binance_section(norm: str) -> str | None:
+    """Map query keywords to a Binance section ID."""
+    for pattern, section_id in _BINANCE_SECTION_KEYWORDS:
+        if pattern.search(norm):
+            return section_id
+    return None
+
+
+def _detect_section_keywords(norm: str, exchange) -> str | None:
+    """Detect section from keywords for any multi-section exchange."""
+    section_ids = [sec.section_id for sec in exchange.sections]
+    if len(section_ids) <= 1:
+        return None
+    for sid in section_ids:
+        if re.search(r"\b" + re.escape(sid) + r"\b", norm):
+            return sid
+        spaced = sid.replace("_", " ")
+        if spaced != sid and re.search(r"\b" + re.escape(spaced) + r"\b", norm):
+            return sid
+    return None
 
 
 def _sections_present(conn, *, exchange_id: str, seed_prefixes: dict[str, str]) -> list[dict[str, str]]:
@@ -175,7 +216,8 @@ def _search_pages(conn, *, query: str, url_prefix: str, limit: int = 5) -> list[
     cur = conn.execute(
         """
 SELECT
-  p.canonical_url, p.crawled_at, p.content_hash, p.path_hash, p.markdown_path
+  p.canonical_url, p.crawled_at, p.content_hash, p.path_hash, p.markdown_path,
+  pages_fts.rank AS fts_rank
 FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
@@ -184,7 +226,13 @@ LIMIT ?;
 """,
         (sanitize_fts_query(query), url_prefix + "%", int(limit)),
     )
-    return [dict(r) for r in cur.fetchall()]
+    results = []
+    for r in cur.fetchall():
+        d = dict(r)
+        # Normalize BM25 score (FTS5 rank is negative, more negative = better).
+        d["bm25_score"] = normalize_bm25_score(d.pop("fts_rank", 0.0))
+        results.append(d)
+    return results
 
 
 def _search_pages_with_semantic(
@@ -195,12 +243,26 @@ def _search_pages_with_semantic(
     limit: int = 5,
     docs_dir: str | None = None,
     exchange: str | None = None,
+    query_type_hint: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Search pages via FTS5 and semantic search (co-primary), interleaving results."""
-    # FTS5 search.
-    fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit)
+    """Search pages via FTS5 + semantic vector search, fused with RRF.
 
-    # Semantic search (if available).
+    Uses query_type="vector" for LanceDB (not "hybrid") to avoid double-RRF:
+    LanceDB hybrid search already applies RRF k=60 internally. Our outer RRF
+    fuses SQLite FTS5 BM25 ranks with LanceDB vector-only ranks.
+
+    Strong-signal BM25 shortcut: skips vector search when FTS5 produces a
+    clear high-confidence match (only for ``question`` query type).
+    """
+    # FTS5 search — fetch extra candidates for RRF.
+    fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit * 2)
+
+    # Strong-signal shortcut: skip vector search if BM25 is confident enough.
+    # Only applies for 'question' type — endpoint_path/error_message use direct routing.
+    if query_type_hint == "question" and should_skip_vector_search(fts_results):
+        return fts_results[:limit]
+
+    # Semantic vector search (if available).
     sem_results_raw: list[dict[str, Any]] = []
     if docs_dir is not None:
         try:
@@ -209,15 +271,14 @@ def _search_pages_with_semantic(
                 docs_dir=docs_dir,
                 query=query,
                 exchange=exchange,
-                limit=limit,
-                query_type="hybrid",
+                limit=limit * 2,
+                query_type="vector",  # NOT "hybrid" — avoids double-RRF
                 rerank="auto",
             )
             for sr in sem_hits:
                 url = sr.get("url", "")
                 if url_prefix and not url.startswith(url_prefix):
                     continue
-                # Convert semantic result to the format _search_pages returns.
                 row = conn.execute(
                     "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path FROM pages WHERE canonical_url = ?;",
                     (url,),
@@ -225,7 +286,6 @@ def _search_pages_with_semantic(
                 if row:
                     sem_results_raw.append(dict(row))
         except ImportError:
-            # Semantic search extras not installed — expected in minimal installs.
             pass
         except Exception:
             logger.warning("Semantic search failed (non-fatal)", exc_info=True)
@@ -235,43 +295,9 @@ def _search_pages_with_semantic(
     if not fts_results:
         return sem_results_raw[:limit]
 
-    # Interleaved merge: alternate FTS and semantic results, dedup by URL.
-    merged: list[dict[str, Any]] = []
-    seen_urls: set[str] = set()
-    fts_iter = iter(fts_results)
-    sem_iter = iter(sem_results_raw)
-    fts_done = False
-    sem_done = False
-
-    while len(merged) < limit:
-        # Take from FTS.
-        if not fts_done:
-            try:
-                item = next(fts_iter)
-                url = item.get("canonical_url", "")
-                if url not in seen_urls:
-                    seen_urls.add(url)
-                    merged.append(item)
-                    if len(merged) >= limit:
-                        break
-            except StopIteration:
-                fts_done = True
-
-        # Take from semantic.
-        if not sem_done:
-            try:
-                item = next(sem_iter)
-                url = item.get("canonical_url", "")
-                if url not in seen_urls:
-                    seen_urls.add(url)
-                    merged.append(item)
-            except StopIteration:
-                sem_done = True
-
-        if fts_done and sem_done:
-            break
-
-    return merged[:limit]
+    # RRF fusion: merge FTS5 and vector rankings.
+    fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url")
+    return fused[:limit]
 
 
 def _search_endpoints_for_answer(
@@ -372,11 +398,13 @@ def _resolve_endpoint_citation_url(
         except Exception:
             pass
 
-    # Last resort: spec URL from sources[].
+    # Last resort: spec URL from sources[] (suppress raw spec URLs).
     record = ep.get("record", {})
     sources = record.get("sources") or []
     if sources and isinstance(sources[0], dict):
-        return sources[0].get("url")
+        url = sources[0].get("url", "")
+        if url and not _is_spec_url(url):
+            return url
 
     return None
 
@@ -419,6 +447,9 @@ def _generic_search_answer(
     terms = extract_search_terms(norm, extra_stopwords={exchange.exchange_id.lower()})
     fts_query = build_fts_query(terms) if terms else sanitize_fts_query(norm)
 
+    # Detect section from keywords for multi-section exchanges.
+    detected_section = _detect_section_keywords(norm, exchange)
+
     # Search endpoints for relevant results.
     endpoint_results = _search_endpoints_for_answer(conn, query=fts_query, exchange=exchange.exchange_id, limit=3)
     for ep in endpoint_results:
@@ -447,10 +478,17 @@ def _generic_search_answer(
         c += 1
 
     # Search each section using directory prefix, collect top results.
-    for section_id, prefix in seed_prefixes.items():
+    # Prioritize detected section: search it first with a higher limit.
+    ordered_sections = list(seed_prefixes.items())
+    if detected_section and detected_section in seed_prefixes:
+        ordered_sections = [(detected_section, seed_prefixes[detected_section])] + [
+            (sid, pfx) for sid, pfx in ordered_sections if sid != detected_section
+        ]
+    for section_id, prefix in ordered_sections:
         if c > max_claims:
             break
-        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=3, docs_dir=docs_dir, exchange=exchange.exchange_id)
+        section_limit = 5 if (detected_section and section_id == detected_section) else 3
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=section_limit, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
         for cand in candidates:
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
             if not md_path or not md_path.exists():
@@ -478,7 +516,7 @@ def _generic_search_answer(
     for dp in domain_prefixes:
         if c > max_claims:
             break
-        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id)
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
         for cand in candidates:
             if cand["canonical_url"] in seen_urls:
                 continue
@@ -529,7 +567,7 @@ def _infer_rate_limit_from_pages(
     """Try to infer rate limit from page markdown near the endpoint path."""
     if not path:
         return None
-    seed_prefixes = {sec.section_id: sec.seed_urls[0] for sec in exchange.sections if sec.seed_urls}
+    seed_prefixes = {sec.section_id: _directory_prefix(sec.seed_urls[0]) for sec in exchange.sections if sec.seed_urls}
     path_tail = path.rstrip("/").rsplit("/", 1)[-1] if "/" in path else path
 
     for _section_id, prefix in seed_prefixes.items():
@@ -555,7 +593,10 @@ def _binance_answer(
 ) -> dict[str, Any]:
     """Binance-specific answer logic with rate-limit comparison and permissions heuristics."""
     binance = reg.get_exchange("binance")
-    seed_prefixes = {sec.section_id: sec.seed_urls[0] for sec in binance.sections if sec.seed_urls}
+    seed_prefixes = {sec.section_id: _directory_prefix(sec.seed_urls[0]) for sec in binance.sections if sec.seed_urls}
+
+    # Detect section from keywords to prioritize relevant results.
+    detected_section = _detect_binance_section(norm)
 
     # Clarification: "unified trading" is ambiguous.
     if "unified trading" in norm and not clarification:
@@ -617,7 +658,7 @@ def _binance_answer(
             if not prefix:
                 notes.append(f"No registry seed URL for binance section '{section_id}'.")
                 continue
-            candidates = _search_pages_with_semantic(conn, query=query, url_prefix=prefix, limit=5, docs_dir=docs_dir, exchange="binance")
+            candidates = _search_pages_with_semantic(conn, query=query, url_prefix=prefix, limit=5, docs_dir=docs_dir, exchange="binance", query_type_hint="question")
             if not candidates:
                 notes.append(f"No crawled pages found for query '{query}' under {prefix}.")
                 continue
@@ -698,6 +739,7 @@ def _binance_answer(
                 limit=10,
                 docs_dir=docs_dir,
                 exchange="binance",
+                query_type_hint="question",
             )
             for cand in candidates:
                 md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
@@ -760,6 +802,107 @@ def _binance_answer(
         "claims": claims,
         "notes": notes,
         "missing": missing,
+    }
+
+
+def _direct_route(
+    conn: sqlite3.Connection,
+    *,
+    classification,
+    exchange,
+    docs_dir: str,
+    question: str,
+    norm: str,
+) -> dict[str, Any] | None:
+    """Direct routing for high-confidence typed queries.
+
+    For endpoint_path and error_message with confidence >= 0.7, skip the
+    expensive FTS+vector search and go straight to the targeted lookup.
+    Returns None if the direct route produces no results (falls through
+    to generic search).
+    """
+    claims: list[dict[str, Any]] = []
+    notes: list[str] = []
+    c = 1
+
+    if classification.input_type == "endpoint_path":
+        path = classification.signals.get("path", "")
+        method = classification.signals.get("method")
+        if path:
+            try:
+                from .lookup import lookup_endpoint_by_path
+                path_results = lookup_endpoint_by_path(
+                    docs_dir=docs_dir,
+                    path=path,
+                    method=method,
+                    exchange=exchange.exchange_id,
+                )
+                for record in path_results[:5]:
+                    http = record.get("http", {})
+                    docs_url = record.get("docs_url", "")
+                    # Suppress spec URLs.
+                    if docs_url and _is_spec_url(docs_url):
+                        docs_url = ""
+                    claims.append({
+                        "id": f"c{c}",
+                        "kind": "ENDPOINT",
+                        "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
+                        "citations": [{"url": docs_url}] if docs_url else [],
+                        "endpoint_id": record.get("endpoint_id", ""),
+                    })
+                    c += 1
+            except Exception:
+                logger.debug("Direct endpoint_path route failed for %s", path, exc_info=True)
+
+    elif classification.input_type == "error_message":
+        error_codes = classification.signals.get("error_codes", [])
+        for ec_info in error_codes[:3]:
+            code = ec_info.get("code", "")
+            if not code:
+                continue
+            try:
+                from .lookup import search_error_code
+                error_results = search_error_code(
+                    docs_dir=docs_dir,
+                    error_code=code,
+                    exchange=exchange.exchange_id,
+                    limit=5,
+                )
+                for er in error_results:
+                    if er.get("source_type") == "page":
+                        url = er.get("canonical_url", "")
+                        claims.append({
+                            "id": f"c{c}",
+                            "kind": "SOURCE",
+                            "text": f"[{exchange.exchange_id}:error] {er.get('snippet', '')}",
+                            "citations": [{"url": url}] if url else [],
+                        })
+                        c += 1
+                    elif er.get("source_type") == "endpoint":
+                        claims.append({
+                            "id": f"c{c}",
+                            "kind": "ENDPOINT",
+                            "text": f"[{exchange.exchange_id}:{er.get('section', '')}] {er.get('method', '')} {er.get('path', '')} — {er.get('snippet', '')}",
+                            "citations": [],
+                            "endpoint_id": er.get("endpoint_id", ""),
+                        })
+                        c += 1
+            except Exception:
+                logger.debug("Direct error_message route failed for %s", code, exc_info=True)
+
+    if not claims:
+        return None  # Fall through to generic search.
+
+    return {
+        "ok": True,
+        "schema_version": "v1",
+        "status": "ok",
+        "question": question,
+        "normalized_question": norm,
+        "clarification": None,
+        "claims": claims,
+        "notes": notes,
+        "routing": "direct",
     }
 
 
@@ -853,11 +996,14 @@ def _augment_with_classification(
                         continue
                     existing_ids.add(ep_id)
                     http = record.get("http", {})
+                    docs_url = record.get("docs_url", "")
+                    if docs_url and _is_spec_url(docs_url):
+                        docs_url = ""
                     augmented_claims.append({
                         "id": f"c{c_start}",
                         "kind": "ENDPOINT",
                         "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
-                        "citations": [{"url": record.get("docs_url", "")}] if record.get("docs_url") else [],
+                        "citations": [{"url": docs_url}] if docs_url else [],
                         "endpoint_id": ep_id,
                     })
                     c_start += 1
@@ -965,6 +1111,13 @@ def answer_question(
     try:
         # Classify input to augment search (F4: augment, don't replace).
         classification = classify_input(question)
+
+        # Direct routing: high-confidence endpoint_path or error_message
+        # skips the expensive FTS+vector search entirely.
+        if classification.confidence >= 0.7 and classification.input_type in ("endpoint_path", "error_message"):
+            direct = _direct_route(conn, classification=classification, exchange=exchange, docs_dir=docs_dir, question=question, norm=norm)
+            if direct is not None:
+                return direct
 
         # Binance: use richer Binance-specific logic.
         if exchange.exchange_id == "binance":

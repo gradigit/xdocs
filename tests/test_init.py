@@ -24,12 +24,12 @@ class TestInit(unittest.TestCase):
             schema_path = REPO_ROOT / "schema" / "schema.sql"
 
             r1 = init_store(docs_dir=str(docs_dir), schema_sql_path=schema_path, lock_timeout_s=1.0)
-            self.assertEqual(r1["db"]["schema_user_version"], 5)
+            self.assertEqual(r1["db"]["schema_user_version"], 6)
             self.assertTrue(Path(r1["db"]["path"]).exists())
 
             # Idempotent second run.
             r2 = init_store(docs_dir=str(docs_dir), schema_sql_path=schema_path, lock_timeout_s=1.0)
-            self.assertEqual(r2["db"]["schema_user_version"], 5)
+            self.assertEqual(r2["db"]["schema_user_version"], 6)
 
             conn = sqlite3.connect(docs_dir / "db" / "docs.db")
             try:
@@ -132,7 +132,7 @@ CREATE TABLE inventory_entries (
             mig = ensure_store_schema(docs_dir=str(docs_dir), lock_timeout_s=1.0)
             self.assertTrue(mig["upgraded"])
             self.assertEqual(mig["schema_user_version_before"], 1)
-            self.assertEqual(mig["schema_user_version_after"], 5)
+            self.assertEqual(mig["schema_user_version_after"], 6)
 
             conn2 = sqlite3.connect(db_path)
             try:
@@ -154,7 +154,7 @@ CREATE TABLE inventory_entries (
 
                 uv = conn2.execute("PRAGMA user_version;").fetchone()
                 assert uv is not None
-                self.assertEqual(int(uv[0]), 5)
+                self.assertEqual(int(uv[0]), 6)
             finally:
                 conn2.close()
 
@@ -204,11 +204,11 @@ CREATE TABLE inventory_entries (
 
             applied = migrate_store_schema(docs_dir=str(docs_dir), lock_timeout_s=1.0, dry_run=False)
             self.assertTrue(applied["upgraded"])
-            self.assertEqual(int(applied["schema_user_version_after"]), 5)
+            self.assertEqual(int(applied["schema_user_version_after"]), 6)
 
             dry2 = migrate_store_schema(docs_dir=str(docs_dir), lock_timeout_s=1.0, dry_run=True)
             self.assertFalse(dry2["upgrade_required"])
-            self.assertEqual(int(dry2["schema_user_version"]), 5)
+            self.assertEqual(int(dry2["schema_user_version"]), 6)
 
 
 if __name__ == "__main__":

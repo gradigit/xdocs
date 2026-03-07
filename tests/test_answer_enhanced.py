@@ -165,5 +165,188 @@ class TestAnswerRateLimitInferred(unittest.TestCase):
             self.assertGreater(len(result["claims"]), 0)
 
 
+class TestDetectBinanceSection(unittest.TestCase):
+    """Test _detect_binance_section keyword-to-section mapping."""
+
+    def test_spot(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("binance spot trading api"), "spot")
+
+    def test_futures_usdm(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("usd-m futures rate limit"), "futures_usdm")
+
+    def test_futures_coinm(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("coin-m delivery endpoint"), "futures_coinm")
+
+    def test_portfolio_margin(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("portfolio margin account info"), "portfolio_margin")
+
+    def test_websocket(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("ws stream connection"), "websocket")
+
+    def test_no_match(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertIsNone(_detect_binance_section("what is the api key format"))
+
+    def test_generic_futures(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("futures order endpoint"), "futures_usdm")
+
+    def test_options(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("european options pricing"), "options")
+
+    def test_wallet(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("wallet deposit address"), "wallet")
+
+    def test_copy_trading(self) -> None:
+        from cex_api_docs.answer import _detect_binance_section
+        self.assertEqual(_detect_binance_section("copy trading lead trader"), "copy_trading")
+
+
+class TestDetectSectionKeywords(unittest.TestCase):
+    """Test _detect_section_keywords for generic multi-section exchanges."""
+
+    def _make_exchange(self, section_ids: list[str]):
+        """Create a minimal exchange-like object with sections."""
+        from types import SimpleNamespace
+        sections = [SimpleNamespace(section_id=sid) for sid in section_ids]
+        return SimpleNamespace(sections=sections)
+
+    def test_exact_section_match(self) -> None:
+        from cex_api_docs.answer import _detect_section_keywords
+        ex = self._make_exchange(["spot", "futures", "websocket"])
+        self.assertEqual(_detect_section_keywords("spot order book depth", ex), "spot")
+
+    def test_underscore_to_space_match(self) -> None:
+        from cex_api_docs.answer import _detect_section_keywords
+        ex = self._make_exchange(["rest", "copy_trading", "options"])
+        self.assertEqual(_detect_section_keywords("how does copy trading work", ex), "copy_trading")
+
+    def test_single_section_returns_none(self) -> None:
+        from cex_api_docs.answer import _detect_section_keywords
+        ex = self._make_exchange(["rest"])
+        self.assertIsNone(_detect_section_keywords("rest endpoint info", ex))
+
+    def test_no_match(self) -> None:
+        from cex_api_docs.answer import _detect_section_keywords
+        ex = self._make_exchange(["spot", "futures"])
+        self.assertIsNone(_detect_section_keywords("api key permissions", ex))
+
+
+class TestSanitizeExchangeFilter(unittest.TestCase):
+    """Test _sanitize_exchange_filter prevents injection."""
+
+    def test_valid_name(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        self.assertEqual(_sanitize_exchange_filter("binance"), "binance")
+
+    def test_valid_with_underscores(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        self.assertEqual(_sanitize_exchange_filter("crypto_com"), "crypto_com")
+
+    def test_valid_with_digits(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        self.assertEqual(_sanitize_exchange_filter("gate_io2"), "gate_io2")
+
+    def test_rejects_sql_injection(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        with self.assertRaises(ValueError):
+            _sanitize_exchange_filter("binance' OR 1=1 --")
+
+    def test_rejects_special_chars(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        with self.assertRaises(ValueError):
+            _sanitize_exchange_filter("bin;DROP TABLE")
+
+    def test_rejects_uppercase(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        with self.assertRaises(ValueError):
+            _sanitize_exchange_filter("Binance")
+
+    def test_rejects_empty(self) -> None:
+        from cex_api_docs.semantic import _sanitize_exchange_filter
+        with self.assertRaises(ValueError):
+            _sanitize_exchange_filter("")
+
+
+class TestSpecUrlSuppression(unittest.TestCase):
+    """Test that _is_spec_url correctly identifies spec URLs."""
+
+    def test_openapi_url(self) -> None:
+        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        self.assertTrue(_is_spec_url("https://example.com/openapi/v3/spec.json"))
+
+    def test_swagger_url(self) -> None:
+        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        self.assertTrue(_is_spec_url("https://example.com/swagger.json"))
+
+    def test_normal_doc_url(self) -> None:
+        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        self.assertFalse(_is_spec_url("https://docs.example.com/api/v5/order"))
+
+    def test_postman_url(self) -> None:
+        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        self.assertTrue(_is_spec_url("https://www.postman.com/collections/12345"))
+
+
+class TestSchemaVersion6Migration(unittest.TestCase):
+    """Test v5→v6 migration (changelog FTS porter stemming)."""
+
+    def test_fresh_db_gets_version_6(self) -> None:
+        import sqlite3
+        from cex_api_docs.db import init_db
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "test.db"
+            result = init_db(db_path, REPO_ROOT / "schema" / "schema.sql")
+            self.assertEqual(result.schema_user_version, 6)
+
+    def test_v5_migrates_to_v6(self) -> None:
+        import sqlite3
+        from cex_api_docs.db import apply_schema, open_db, _get_user_version
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "test.db"
+            conn = open_db(db_path)
+            try:
+                # Set up a v5 DB with the old-style changelog FTS.
+                schema_path = REPO_ROOT / "schema" / "schema.sql"
+                conn.executescript(schema_path.read_text(encoding="utf-8"))
+                # Simulate v5: drop new FTS table, recreate without porter.
+                conn.execute("DROP TABLE IF EXISTS changelog_entries_fts;")
+                conn.execute("""
+CREATE VIRTUAL TABLE changelog_entries_fts USING fts5(
+  exchange_id, section_id, entry_date, entry_text,
+  content=changelog_entries, content_rowid=id
+);
+""")
+                conn.execute("PRAGMA user_version = 5;")
+                conn.commit()
+
+                # Now apply schema — should migrate 5→6.
+                version = apply_schema(conn, schema_path, expected_user_version=6)
+                self.assertEqual(version, 6)
+
+                # Verify FTS table was recreated (by inserting a test row).
+                conn.execute("""
+INSERT INTO changelog_entries (exchange_id, section_id, source_url, entry_text, content_hash, extracted_at)
+VALUES ('test', 'rest', 'https://example.com', 'API changed', 'abc123', '2026-01-01');
+""")
+                conn.commit()
+                # Rebuild FTS content.
+                conn.execute("INSERT INTO changelog_entries_fts(changelog_entries_fts) VALUES('rebuild');")
+                # Porter stemming should match "changing" to "changed".
+                rows = conn.execute(
+                    "SELECT * FROM changelog_entries_fts WHERE changelog_entries_fts MATCH 'changing';"
+                ).fetchall()
+                self.assertEqual(len(rows), 1)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

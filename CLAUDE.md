@@ -218,7 +218,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
 - `src/cex_api_docs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
 - `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
-- `src/cex_api_docs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, endpoint search text, BM25 normalization)
+- `src/cex_api_docs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, BM25 normalization, RRF fusion, position-aware blend, strong-signal shortcut)
 - `src/cex_api_docs/reranker.py` Cross-encoder reranking (FlashRank, ms-marco-MiniLM-L-12-v2, ONNX CPU)
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
 - `src/cex_api_docs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
@@ -280,15 +280,20 @@ Latest:
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 - **Verification fixes** — Semantic FTS cold-start (14.1s → 1.0s via deferred embedder loading), render cascade validation (`_find_node_pw_module()` at selection time), LanceDB compaction (3,568 → 9 fragments, 2.4GB → 908MB via `table.optimize()`).
-- **Query pipeline overhaul (M2)** — 18 quality issues fixed across 4 phases: shared `fts_util.py` (FTS5 sanitization, hyphen/colon quoting, AND/OR query logic), values-only `search_text` (no JSON key pollution), porter stemming + BM25 column weights on FTS5 tables (schema v4→v5), classification augmentation in answer pipeline, pages-first error code search with URL boost, directory prefix matching, FlashRank reranker (ms-marco-MiniLM-L-12-v2, 302ms/20 docs on CPU), BM25 score normalization, excerpt boundary snapping, word-boundary exchange detection. 367 tests (346 existing + 21 new).
+- **Query pipeline overhaul (M2)** — 18 quality issues fixed across 4 phases: shared `fts_util.py` (FTS5 sanitization, hyphen/colon quoting, AND/OR query logic), values-only `search_text` (no JSON key pollution), porter stemming + BM25 column weights on FTS5 tables (schema v4→v5), classification augmentation in answer pipeline, pages-first error code search with URL boost, directory prefix matching, FlashRank reranker (ms-marco-MiniLM-L-12-v2, 302ms/20 docs on CPU), BM25 score normalization, excerpt boundary snapping, word-boundary exchange detection.
+- **Score fusion & routing (M5)** — RRF k=60 fusion (replaces interleaved merge), query_type="vector" to avoid double-RRF with LanceDB, strong-signal BM25 shortcut, position-aware reranker blending (max-normalized RRF + sigmoid reranker, 75/25→60/40→40/60), direct routing for high-confidence endpoint_path/error_message (>= 0.7), Binance section keyword detection, multi-section routing, LanceDB SQL injection prevention, spec URL suppression, schema v5→v6 (changelog FTS porter stemming). 415 tests.
+- **Production benchmark suite (M6)** — 175-query golden QA (88 question, 28 endpoint_path, 30 error_message, 14 code_snippet, 15 request_payload), graded relevance (TREC 0-3), 17 negative test cases, CI-fast canary tests, nDCG@5/MRR/per-path eval, pre/post comparison with regression alerts.
 
-Research completed (docs/research/):
+Research completed (docs/research/ and architect/research/):
 
 - LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
 - LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
 - CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
 - CCXT as cross-reference: Built `ccxt_xref.py` — 33 exchanges mapped (korbit/orderly/bluefin/nado have no CCXT class, mercadobitcoin remaps to `mercado`, dydx/backpack removed in ccxt 4.x).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
+- Reranker survey: FlashRank ms-marco-MiniLM-L-12-v2 optimal (34MB ONNX, CPU-only, 80ms/20 docs). Jina Reranker v3 MLX too heavy for CPU-only constraint.
+- Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches.
+- Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 
 Next: Periodic CCXT docs refresh. Changelog drift detection. Import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime). Pacifica re-evaluation when docs mature.
 

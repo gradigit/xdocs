@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,15 @@ _RERANK_POLICY_NEVER = "never"
 _AUTO_RERANK_MIN_CANDIDATES = int(os.getenv("CEX_RERANK_AUTO_MIN_CANDIDATES", "12"))
 _AUTO_RERANK_TOP_DELTA = float(os.getenv("CEX_RERANK_AUTO_TOP_DELTA", "0.006"))
 _AUTO_RERANK_TOPK_SPREAD = float(os.getenv("CEX_RERANK_AUTO_TOPK_SPREAD", "0.02"))
+
+_EXCHANGE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
+
+
+def _sanitize_exchange_filter(exchange: str) -> str:
+    """Validate exchange name to prevent filter injection in LanceDB WHERE clauses."""
+    if not _EXCHANGE_NAME_RE.match(exchange):
+        raise ValueError(f"Invalid exchange name: {exchange!r}")
+    return exchange
 
 
 def _require_lancedb():
@@ -474,7 +484,8 @@ def semantic_search(
 
     def _with_exchange_filter(search_obj):
         if exchange and not _hybrid_post_filter:
-            return search_obj.where(f"exchange = '{exchange}'")
+            safe = _sanitize_exchange_filter(exchange)
+            return search_obj.where(f"exchange = '{safe}'")
         return search_obj
 
     if _hybrid_post_filter:

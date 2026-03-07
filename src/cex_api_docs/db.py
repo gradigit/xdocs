@@ -12,7 +12,7 @@ from .errors import CexApiDocsError
 logger = logging.getLogger(__name__)
 
 
-SCHEMA_USER_VERSION = 5
+SCHEMA_USER_VERSION = 6
 
 
 def _migrate_4_to_5(conn: sqlite3.Connection) -> None:
@@ -48,6 +48,22 @@ CREATE VIRTUAL TABLE endpoints_fts USING fts5(
 """)
 
     _configure_fts_rank_weights(conn)
+
+
+def _migrate_5_to_6(conn: sqlite3.Connection) -> None:
+    """Add porter stemming to changelog_entries_fts."""
+    conn.execute("DROP TABLE IF EXISTS changelog_entries_fts;")
+    conn.execute("""
+CREATE VIRTUAL TABLE changelog_entries_fts USING fts5(
+  exchange_id UNINDEXED,
+  section_id UNINDEXED,
+  entry_date UNINDEXED,
+  entry_text,
+  content=changelog_entries,
+  content_rowid=id,
+  tokenize = 'porter unicode61'
+);
+""")
 
 
 def _migrate_2_to_3(conn: sqlite3.Connection) -> None:
@@ -116,6 +132,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
 """,
     ],
     (4, 5): [_migrate_4_to_5],
+    (5, 6): [_migrate_5_to_6],
 }
 
 
@@ -239,6 +256,11 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
                 logger.warning(
                     "Migrated FTS5 tables to porter stemming (v4→v5). "
                     "Run 'cex-api-docs fts-rebuild' to repopulate search indexes."
+                )
+            if key == (5, 6):
+                logger.warning(
+                    "Migrated changelog_entries_fts to porter stemming (v5→v6). "
+                    "Run 'cex-api-docs fts-rebuild' to repopulate changelog search index."
                 )
 
     return _get_user_version(conn)

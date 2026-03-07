@@ -139,5 +139,130 @@ class TestNormalizeBm25Score(unittest.TestCase):
         self.assertLess(s2, s3)
 
 
+class TestRrfFuse(unittest.TestCase):
+    """Test Reciprocal Rank Fusion."""
+
+    def test_single_list(self) -> None:
+        from cex_api_docs.fts_util import rrf_fuse
+        items = [{"canonical_url": "a"}, {"canonical_url": "b"}]
+        result = rrf_fuse(items)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["canonical_url"], "a")
+        self.assertGreater(result[0]["rrf_score"], result[1]["rrf_score"])
+
+    def test_two_lists_overlap(self) -> None:
+        from cex_api_docs.fts_util import rrf_fuse
+        list1 = [{"canonical_url": "a"}, {"canonical_url": "b"}]
+        list2 = [{"canonical_url": "b"}, {"canonical_url": "c"}]
+        result = rrf_fuse(list1, list2)
+        # "b" appears in both lists so should have highest RRF score.
+        self.assertEqual(result[0]["canonical_url"], "b")
+        self.assertEqual(len(result), 3)
+
+    def test_disjoint_lists(self) -> None:
+        from cex_api_docs.fts_util import rrf_fuse
+        list1 = [{"canonical_url": "a"}]
+        list2 = [{"canonical_url": "b"}]
+        result = rrf_fuse(list1, list2)
+        self.assertEqual(len(result), 2)
+        # Same rank in different lists — equal scores.
+        self.assertAlmostEqual(result[0]["rrf_score"], result[1]["rrf_score"])
+
+    def test_empty_lists(self) -> None:
+        from cex_api_docs.fts_util import rrf_fuse
+        result = rrf_fuse([], [])
+        self.assertEqual(result, [])
+
+    def test_k_parameter(self) -> None:
+        from cex_api_docs.fts_util import rrf_fuse
+        items = [{"canonical_url": "a"}]
+        r60 = rrf_fuse(items, k=60)
+        r10 = rrf_fuse(items, k=10)
+        # Lower k gives higher score (1/(k+1)).
+        self.assertGreater(r10[0]["rrf_score"], r60[0]["rrf_score"])
+
+
+class TestPositionAwareBlend(unittest.TestCase):
+    """Test position-aware reranker blending."""
+
+    def test_no_rerank_scores(self) -> None:
+        from cex_api_docs.fts_util import position_aware_blend
+        items = [{"rrf_score": 0.5}, {"rrf_score": 0.3}]
+        result = position_aware_blend(items)
+        # Max-normalized: 0.5/0.5 = 1.0, 0.3/0.5 = 0.6
+        self.assertAlmostEqual(result[0]["blended_score"], 1.0)
+        self.assertAlmostEqual(result[1]["blended_score"], 0.6)
+
+    def test_with_rerank_scores(self) -> None:
+        from cex_api_docs.fts_util import position_aware_blend
+        items = [
+            {"rrf_score": 0.5, "rerank_score": 2.0},
+            {"rrf_score": 0.3, "rerank_score": -1.0},
+        ]
+        result = position_aware_blend(items)
+        # First item: 75% * 0.5 + 25% * sigmoid(2.0).
+        self.assertGreater(result[0]["blended_score"], result[1]["blended_score"])
+
+    def test_reranker_can_reorder(self) -> None:
+        from cex_api_docs.fts_util import position_aware_blend
+        # Second item has much higher reranker score.
+        items = [
+            {"rrf_score": 0.5, "rerank_score": -5.0},
+            {"rrf_score": 0.3, "rerank_score": 10.0},
+        ]
+        result = position_aware_blend(items)
+        # Reranker score for item 2 is very high, should be reordered to top.
+        self.assertEqual(len(result), 2)
+
+
+class TestShouldSkipVectorSearch(unittest.TestCase):
+    """Test strong-signal BM25 shortcut."""
+
+    def test_strong_signal(self) -> None:
+        from cex_api_docs.fts_util import should_skip_vector_search
+        results = [{"bm25_score": 0.9}, {"bm25_score": 0.2}]
+        self.assertTrue(should_skip_vector_search(results))
+
+    def test_weak_signal(self) -> None:
+        from cex_api_docs.fts_util import should_skip_vector_search
+        results = [{"bm25_score": 0.4}, {"bm25_score": 0.3}]
+        self.assertFalse(should_skip_vector_search(results))
+
+    def test_close_scores(self) -> None:
+        from cex_api_docs.fts_util import should_skip_vector_search
+        results = [{"bm25_score": 0.8}, {"bm25_score": 0.7}]
+        self.assertFalse(should_skip_vector_search(results))
+
+    def test_single_result(self) -> None:
+        from cex_api_docs.fts_util import should_skip_vector_search
+        results = [{"bm25_score": 0.8}]
+        self.assertTrue(should_skip_vector_search(results))
+
+    def test_empty_results(self) -> None:
+        from cex_api_docs.fts_util import should_skip_vector_search
+        self.assertFalse(should_skip_vector_search([]))
+
+
+class TestSigmoid(unittest.TestCase):
+    """Test sigmoid normalization."""
+
+    def test_zero(self) -> None:
+        from cex_api_docs.fts_util import sigmoid
+        self.assertAlmostEqual(sigmoid(0.0), 0.5)
+
+    def test_large_positive(self) -> None:
+        from cex_api_docs.fts_util import sigmoid
+        self.assertGreater(sigmoid(10.0), 0.99)
+
+    def test_large_negative(self) -> None:
+        from cex_api_docs.fts_util import sigmoid
+        self.assertLess(sigmoid(-10.0), 0.01)
+
+    def test_monotonic(self) -> None:
+        from cex_api_docs.fts_util import sigmoid
+        self.assertLess(sigmoid(-1.0), sigmoid(0.0))
+        self.assertLess(sigmoid(0.0), sigmoid(1.0))
+
+
 if __name__ == "__main__":
     unittest.main()

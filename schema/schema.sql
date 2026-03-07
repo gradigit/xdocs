@@ -198,4 +198,12 @@ CREATE INDEX IF NOT EXISTS changelog_entries_date_idx
   ON changelog_entries(entry_date);
 
 CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
-  USING fts5(exchange_id, section_id, entry_date, entry_text, content=changelog_entries, content_rowid=id);
+  USING fts5(
+    exchange_id UNINDEXED,
+    section_id UNINDEXED,
+    entry_date UNINDEXED,
+    entry_text,
+    content=changelog_entries,
+    content_rowid=id,
+    tokenize = 'porter unicode61'
+  );
