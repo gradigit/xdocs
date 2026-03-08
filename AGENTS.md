@@ -122,9 +122,9 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Context (from latest handoff)
 
-- Crawl validation pipeline implemented (10 phases, 25+ modules, 337 tests).
+- Crawl validation pipeline implemented (10 phases, 25+ modules, 421 tests).
 - Semantic index: jina-embeddings-v5-text-small (1024 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
-- 10,718 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.72M words, 4,872 endpoints, 78 sections.
+- 10,724 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.73M words, 4,872 endpoints, 78 sections.
 - Crawl targets bible v3 (`docs/crawl-targets-bible.md`) — 46 registered exchanges, all 8 missing exchanges now registered.
 - 11 new exchanges: MEXC (114ep), BingX, Deribit (173ep), Backpack (22ep), CoinEx, WOO X, Phemex, Gemini, Orderly (203ep), Bluefin, Nado.
 - CCXT cross-reference: 33 exchanges mapped (korbit/orderly/bluefin/nado = None).
@@ -144,9 +144,9 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,718 pages, 16.72M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,724 pages, 16.73M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
 
-Next: Periodic CCXT docs refresh, changelog drift detection, import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime).
+Next: Periodic CCXT docs refresh, changelog drift detection. Domain synonym/acronym expansion for query improvement.
 
 ## Non-Goals / Safety
 

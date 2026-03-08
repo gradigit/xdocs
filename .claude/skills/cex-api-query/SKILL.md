@@ -257,7 +257,7 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 
 ## What's In The Store
 
-SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints. **10,718 pages, 16.72M words, 4,872 structured endpoints** across 46 exchanges.
+SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints. **10,724 pages, 16.73M words, 4,872 structured endpoints** across 46 exchanges.
 
 ```bash
 source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs

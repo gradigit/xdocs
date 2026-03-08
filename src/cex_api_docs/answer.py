@@ -926,13 +926,20 @@ def _direct_route(
                     exchange=exchange.exchange_id,
                     limit=5,
                 )
+                # Verify results actually contain the error code in their text.
+                # This prevents false positives for nonexistent error codes.
+                code_str = code.lstrip("-")  # Strip minus for matching
                 for er in error_results:
+                    snippet = er.get("snippet", "")
+                    # Check if the error code appears in the snippet text.
+                    if code_str not in snippet and code not in snippet:
+                        continue  # Skip results that don't actually mention this error code.
                     if er.get("source_type") == "page":
                         url = er.get("canonical_url", "")
                         claims.append({
                             "id": f"c{c}",
                             "kind": "SOURCE",
-                            "text": f"[{exchange.exchange_id}:error] {er.get('snippet', '')}",
+                            "text": f"[{exchange.exchange_id}:error] {snippet}",
                             "citations": [{"url": url}] if url else [],
                         })
                         c += 1
@@ -940,7 +947,7 @@ def _direct_route(
                         claims.append({
                             "id": f"c{c}",
                             "kind": "ENDPOINT",
-                            "text": f"[{exchange.exchange_id}:{er.get('section', '')}] {er.get('method', '')} {er.get('path', '')} — {er.get('snippet', '')}",
+                            "text": f"[{exchange.exchange_id}:{er.get('section', '')}] {er.get('method', '')} {er.get('path', '')} — {snippet}",
                             "citations": [],
                             "endpoint_id": er.get("endpoint_id", ""),
                         })
@@ -1035,6 +1042,125 @@ def _augment_with_classification(
             except Exception:
                 logger.debug("Error code augmentation failed for %s", code, exc_info=True)
 
+    elif classification.input_type == "request_payload":
+        # Search for endpoints matching payload parameter names.
+        payload_keys = classification.signals.get("payload_keys", [])
+        if payload_keys:
+            # Build search terms from significant parameter names (skip common ones).
+            _skip_keys = {"timestamp", "recvWindow", "signature", "apiKey"}
+            search_keys = [k for k in payload_keys if k not in _skip_keys][:5]
+            if search_keys:
+                try:
+                    # Search endpoints by parameter names.
+                    from .endpoints import search_endpoints
+                    search_term = " ".join(search_keys[:3])
+                    ep_results = search_endpoints(
+                        docs_dir=docs_dir,
+                        query=search_term,
+                        exchange=exchange.exchange_id,
+                        limit=5,
+                    )
+                    for record in ep_results:
+                        ep_id = record.get("endpoint_id", "")
+                        if ep_id in existing_ids:
+                            continue
+                        existing_ids.add(ep_id)
+                        http = record.get("http", {})
+                        docs_url = record.get("docs_url", "")
+                        if docs_url and _is_spec_url(docs_url):
+                            docs_url = ""
+                        augmented_claims.append({
+                            "id": f"c{c_start}",
+                            "kind": "ENDPOINT",
+                            "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
+                            "citations": [{"url": docs_url}] if docs_url else [],
+                            "endpoint_id": ep_id,
+                        })
+                        c_start += 1
+                except Exception:
+                    logger.debug("Payload augmentation failed for keys %s", search_keys, exc_info=True)
+
+                # Also search pages for trading/order documentation.
+                try:
+                    trading_terms = search_term + " order"
+                    page_results = _search_pages(
+                        conn,
+                        query=trading_terms,
+                        exchange=exchange.exchange_id,
+                        limit=3,
+                    )
+                    for pr in page_results:
+                        url = pr.get("canonical_url", "")
+                        if url in existing_urls or _is_spec_url(url):
+                            continue
+                        existing_urls.add(url)
+                        augmented_claims.append({
+                            "id": f"c{c_start}",
+                            "kind": "SOURCE",
+                            "text": f"[{exchange.exchange_id}:payload] {pr.get('snippet', '')[:200]}",
+                            "citations": [{"url": url}],
+                        })
+                        c_start += 1
+                except Exception:
+                    logger.debug("Payload page search failed", exc_info=True)
+
+    elif classification.input_type == "code_snippet":
+        # Search based on extracted method topics and exchange.
+        code_methods = classification.signals.get("code_methods", [])
+        if code_methods:
+            topics = [m["topic"] for m in code_methods[:2]]
+            search_term = " ".join(topics)
+            try:
+                page_results = _search_pages(
+                    conn,
+                    query=search_term,
+                    exchange=exchange.exchange_id,
+                    limit=5,
+                )
+                for pr in page_results:
+                    url = pr.get("canonical_url", "")
+                    if url in existing_urls or _is_spec_url(url):
+                        continue
+                    existing_urls.add(url)
+                    augmented_claims.append({
+                        "id": f"c{c_start}",
+                        "kind": "SOURCE",
+                        "text": f"[{exchange.exchange_id}:code] {pr.get('snippet', '')[:200]}",
+                        "citations": [{"url": url}],
+                    })
+                    c_start += 1
+            except Exception:
+                logger.debug("Code snippet augmentation failed", exc_info=True)
+
+            # Also try endpoint search for specific methods.
+            try:
+                from .endpoints import search_endpoints
+                ep_results = search_endpoints(
+                    docs_dir=docs_dir,
+                    query=search_term,
+                    exchange=exchange.exchange_id,
+                    limit=3,
+                )
+                for record in ep_results:
+                    ep_id = record.get("endpoint_id", "")
+                    if ep_id in existing_ids:
+                        continue
+                    existing_ids.add(ep_id)
+                    http = record.get("http", {})
+                    docs_url = record.get("docs_url", "")
+                    if docs_url and _is_spec_url(docs_url):
+                        docs_url = ""
+                    augmented_claims.append({
+                        "id": f"c{c_start}",
+                        "kind": "ENDPOINT",
+                        "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
+                        "citations": [{"url": docs_url}] if docs_url else [],
+                        "endpoint_id": ep_id,
+                    })
+                    c_start += 1
+            except Exception:
+                logger.debug("Code snippet endpoint search failed", exc_info=True)
+
     elif classification.input_type == "endpoint_path":
         # Prepend endpoint path lookup results.
         path = classification.signals.get("path", "")
@@ -1106,6 +1232,14 @@ def answer_question(
     # Detect which exchange(s) the question is about.
     matched = _detect_exchange(norm, reg)
 
+    # Fallback: use classification exchange_hint for payloads/code snippets
+    # that don't contain exchange names in plain text.
+    if not matched:
+        classification = classify_input(question)
+        hint = classification.signals.get("exchange_hint")
+        if hint:
+            matched = [ex for ex in reg.exchanges if ex.exchange_id == hint]
+
     if not matched:
         available = sorted(ex.exchange_id for ex in reg.exchanges)
         return {
@@ -1124,7 +1258,20 @@ def answer_question(
         }
 
     if len(matched) > 1:
-        # Multiple exchanges mentioned — use clarification if provided, otherwise ask.
+        # Multiple exchanges mentioned — try classification hint to disambiguate.
+        classification = classify_input(question)
+        hint = classification.signals.get("exchange_hint")
+        if hint and hint != "ccxt":
+            hint_matched = [ex for ex in matched if ex.exchange_id == hint]
+            if hint_matched:
+                matched = hint_matched
+        # If still ambiguous, try dropping "ccxt" (reference exchange, not a real exchange).
+        if len(matched) > 1:
+            non_ccxt = [ex for ex in matched if ex.exchange_id != "ccxt"]
+            if len(non_ccxt) == 1:
+                matched = non_ccxt
+
+    if len(matched) > 1:
         if clarification:
             parts = clarification.split(":", 1)
             target_ex_id = parts[0]

@@ -289,3 +289,97 @@ Dependency: M10 benchmarks established. MUST pass before any index rebuild or mo
 4. ✅ DB spot-checks confirm data accuracy and completeness
 5. ✅ Build plan documented with memory estimates and rollback strategy (architect/review-findings/m11-pre-rebuild-audit.md)
 6. ✅ All 421 tests pass, no regressions
+
+---
+
+### M12: Query Quality — Classification Routing & Negative Filtering
+Dependency: M11 complete. Addresses 3 critical gaps found in 180-query eval.
+
+**Current metrics**: MRR=0.543, pfx=61.96%, domain=86.50%, nDCG@5=1.218, OK=82.78%, Neg FP=41.18%
+
+**Problem 1: request_payload scores 0% across all metrics (n=15)**
+- Classification works (type=request_payload, conf=0.70, payload_keys extracted)
+- No routing path: `_augment_with_classification` only handles endpoint_path and error_message
+- Pipeline returns `unknown` for all JSON payloads
+
+**Problem 2: code_snippet scores 50% ok, 14% URL hit (n=14)**
+- Classification confidence too low (0.45) — misses exchange detection
+- No special routing for code snippets
+- Exchange names in code (ccxt.binance, ccxt.bybit) not extracted
+
+**Problem 3: Negative FP rate 41.18% (7/17 negatives return "ok")**
+- Cross-exchange path confusion: OKX path + "Binance" → returns Binance results
+- Nonexistent endpoints: `/api/v3/nonexistent/endpoint` returns 10 claims
+- Fake error codes: `-9999`, `99999` return unrelated pages
+
+**Phase 1: request_payload routing** ✓
+- [x] 12.1a. Add exchange-specific parameter detection to classify.py:
+  - instId/tdMode → OKX, clientOid → KuCoin, marginCoin → Bitget,
+  - currency_pair → Gate.io, pair+ordertype → Kraken, orderQty+ordType → BitMEX,
+  - category → Bybit, symbol+timeInForce → Binance (default)
+- [x] 12.1b. Add payload routing in answer.py: extract parameter names,
+  search endpoints by field names, route to trading/order pages
+- [x] 12.1c. Wire into `_augment_with_classification` for request_payload type
+- [x] 12.1d. Add exchange detection fallback from classification exchange_hint
+
+**Phase 2: code_snippet routing** ✓
+- [x] 12.2a. Improve classify.py code_snippet detection: extract exchange name
+  from ccxt.XXX(), import statements, API base URLs, WebSocket patterns
+- [x] 12.2b. Extract method mapping: fetch_balance→account, fetch_ticker→market,
+  create_order→trading, fetch_ohlcv→klines (20 methods mapped)
+- [x] 12.2c. Add code_snippet routing: use extracted exchange + method to search
+- [x] 12.2d. Fix CCXT multi-exchange disambiguation (drop "ccxt" reference exchange)
+
+**Phase 3: Negative query filtering** (partial)
+- [ ] 12.3a. Cross-exchange path validation — deferred (complex, risk of false negatives)
+- [x] 12.3b. Error code snippet verification: filter results where error code
+  doesn't appear in snippet text
+- [ ] 12.3c. Nonexistent endpoint detection — deferred
+
+**Phase 4: Eval & validation** ✓
+- [x] 12.4a. Run 180-query eval: MRR 0.543→0.580, OK 82.78%→92.78%, domain 86.50%→96.93%
+- [x] 12.4b. request_payload: 0%→73% ok, 0%→40% URL hit ✓ (exceeded target)
+- [x] 12.4c. code_snippet: 50%→100% ok, 14%→29% URL hit (ok exceeded, URL improved)
+- [ ] 12.4d. Negative FP rate: 41.18% → 41.18% (unchanged — remaining FPs are edge cases)
+
+**Acceptance criteria** (4/5 met):
+1. ✅ request_payload MRR > 0: MRR=0.306 (was 0.000)
+2. ✅ code_snippet URL hit rate improved: 29% (was 14%), ok=100% (was 50%)
+3. ✗ Negative FP rate: 41.18% (unchanged — remaining FPs are cross-exchange confusion and
+   incidental number matches, not routing failures)
+4. ✅ Overall MRR: 0.580 (was 0.543, +6.8%)
+5. ✅ All 421 tests pass, no regressions
+
+### M13: Content Verification Spot Checks
+Dependency: None (parallel with M12).
+
+- [ ] 13a. Run 10 random queries across diverse exchanges
+- [ ] 13b. For each top result, compare stored markdown against live site
+  (use crawl4ai or cloudscraper, depending on site requirements)
+- [ ] 13c. Verify: key API details (endpoints, params, descriptions) match
+- [ ] 13d. Flag any pages with >20% content drift for re-crawl
+- [ ] 13e. Check 5 recently-added exchanges (Deribit, MEXC, Backpack, CoinEx, Orderly)
+  for scraping accuracy
+- [ ] 13f. Document findings in architect/review-findings/m13-content-verification.md
+
+**Acceptance criteria**:
+1. ≥10 pages verified against live sites
+2. ≤2 pages with significant content drift
+3. All flagged pages have re-crawl plan
+
+### M14: Pre-Push Readiness & Documentation Sync
+Dependency: M12 complete.
+
+- [ ] 14a. Run full test suite: pytest tests/ -x -q
+- [ ] 14b. Sync CLAUDE.md: Current Phase stats, semantic model info, pipeline metrics
+- [ ] 14c. Check AGENTS.md if exists
+- [ ] 14d. Verify .git/info/exclude has all forge artifacts
+- [ ] 14e. Review all uncommitted changes — stage only project code
+- [ ] 14f. Create commit with all accumulated improvements
+- [ ] 14g. Final store-report for updated numbers
+
+**Acceptance criteria**:
+1. All tests pass
+2. All documentation files reflect current state
+3. No forge artifacts staged for commit
+4. Clean commit with meaningful message

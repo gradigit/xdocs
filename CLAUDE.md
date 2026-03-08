@@ -285,6 +285,7 @@ Latest:
 - **Production benchmark suite (M6)** — 180-query golden QA (88 question, 28 endpoint_path, 30 error_message, 14 code_snippet, 15 request_payload, 5 cross-section), graded relevance (TREC 0-3), 17 negative test cases, CI-fast canary tests, nDCG@5/MRR/per-path eval, pre/post comparison with regression alerts.
 - **Model benchmarks (M9-M10)** — Reranker: Jina v3 winner (MRR=0.556, +15.6% over MiniLM, p=0.0014). Auto cascade: jina-v3 → cross-encoder → flashrank (Linux), jina-v3-mlx first (macOS). Embedding: v5-small +12.5% Hit@5 over v5-nano. Benchmark harnesses: `scripts/benchmark_embeddings.py`, `scripts/benchmark_rerankers.py`, `scripts/benchmark_mlx.py`. Bootstrap BCa CI + paired permutation tests.
 - **Pre-rebuild confidence (M11)** — 4 bugs fixed (embeddings defaults, _DOMAIN_MAP, incremental build scope, vector memory), benchmark metrics corrected (negative dilution), golden QA URLs fixed (90% match rate), schema v6 migrated.
+- **Classification routing (M12)** — request_payload routing (0%→73% ok, 40% URL hit), code_snippet routing (50%→100% ok, 29% URL hit), exchange detection from payload parameter signatures and ccxt code patterns, multi-exchange disambiguation (CCXT reference exchange auto-dropped). Pipeline eval: MRR 0.543→0.580 (+6.8%), OK rate 82.78%→92.78% (+10pp), domain hit 86.50%→96.93% (+10.4pp), nDCG@5 1.218→1.358 (+11.5%).
 
 Research completed (docs/research/ and architect/research/):
 
@@ -298,7 +299,7 @@ Research completed (docs/research/ and architect/research/):
 - Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches.
 - Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 
-Next: Periodic CCXT docs refresh. Changelog drift detection. Import remaining specs (KuCoin 9 files, WhiteBIT 7 OpenAPI, Coinbase Prime). Pacifica re-evaluation when docs mature.
+Next: Periodic CCXT docs refresh. Changelog drift detection. Domain synonym/acronym expansion for query improvement. Pacifica re-evaluation when docs mature.
 
 ## Compact Instructions
 

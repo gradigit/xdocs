@@ -2,7 +2,7 @@
 
 **Generated**: 2026-03-06 (v3 — 11 new exchanges registered)
 **Coverage**: 46 registered (29 CEX, 16 DEX, 1 reference)
-**Store snapshot** (live DB): 10,718 pages, 16.72M words, 4,872 structured endpoints (78 sections)
+**Store snapshot** (live DB): 10,724 pages, 16.73M words, 4,872 structured endpoints (78 sections)
 
 This document catalogs ALL known crawlable API documentation sources for every exchange in the registry, plus verified candidates for addition. It is the authoritative reference for maintaining `data/exchanges.yaml` entries, onboarding new exchanges, and planning endpoint extraction campaigns.
 
@@ -160,7 +160,7 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 | nado | DEX-REST | 1 | 192 | 138,138 | 0 | — |
 | **TOTAL (owned)** | | **78** | **10,558** | **16,000,820** | **4,872** | |
 | *+ orphaned pages* | | | *160* | *723,166* | | |
-| **GRAND TOTAL** | | **78** | **10,718** | **16,723,986** | **4,872** | |
+| **GRAND TOTAL** | | **78** | **10,724** | **16,729,366** | **4,872** | |
 
 Notes:
 - `ccxt_eps` = CCXT `describe().api` endpoint count (post dict-of-dicts fix). Gap between `endpoints` and `ccxt_eps` indicates extraction opportunities.

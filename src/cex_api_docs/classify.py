@@ -95,7 +95,114 @@ _CODE_INDICATORS: list[re.Pattern[str]] = [
     re.compile(r"^\s*var\s+\w+\s*=", re.MULTILINE),
     re.compile(r"^\s*def\s+\w+", re.MULTILINE),
     re.compile(r"^\s*async\s+def\s+\w+", re.MULTILINE),
+    re.compile(r"\bwebsocket\.WebSocket", re.IGNORECASE),
+    re.compile(r"\bWebSocketApp\b"),
+    re.compile(r"\bnew\s+\w+Client\b"),
 ]
+
+
+# Exchange-specific payload parameter signatures.
+# Key fields that uniquely identify which exchange a request payload belongs to.
+_PAYLOAD_EXCHANGE_SIGNATURES: dict[str, list[set[str]]] = {
+    "okx": [{"instId"}, {"tdMode"}, {"instType"}],
+    "bybit": [{"category", "symbol"}, {"category", "orderType"}],
+    "kucoin": [{"clientOid"}, {"tradeType"}],
+    "bitget": [{"marginCoin"}, {"productType"}],
+    "gateio": [{"currency_pair"}, {"settle"}],
+    "kraken": [{"pair", "ordertype"}],
+    "bitmex": [{"orderQty", "ordType"}, {"orderQty", "symbol"}],
+    "bitstamp": [{"currency_pair", "type"}],
+}
+
+# Method name to documentation topic mapping for code snippets.
+_CODE_METHOD_TOPICS: dict[str, str] = {
+    "fetch_balance": "account balance",
+    "fetch_ticker": "ticker market data",
+    "fetch_tickers": "tickers market data",
+    "fetch_order_book": "orderbook",
+    "fetch_ohlcv": "klines candlestick",
+    "create_order": "place order trading",
+    "cancel_order": "cancel order",
+    "fetch_orders": "orders list",
+    "fetch_open_orders": "open orders",
+    "fetch_my_trades": "trades history",
+    "fetch_positions": "positions",
+    "fetch_deposits": "deposit history",
+    "fetch_withdrawals": "withdrawal history",
+    "withdraw": "withdraw",
+    "load_markets": "exchange info symbols",
+    "getOrderbook": "orderbook",
+    "getWalletBalance": "wallet balance",
+    "submitOrder": "place order",
+    "getTickers": "tickers",
+    "getKline": "klines candlestick",
+}
+
+
+def _detect_exchange_from_payload(payload: dict) -> str | None:
+    """Detect exchange from JSON payload parameter names."""
+    keys = set(payload.keys())
+    for exchange, signatures in _PAYLOAD_EXCHANGE_SIGNATURES.items():
+        for sig in signatures:
+            if sig.issubset(keys):
+                return exchange
+    # Default: if has "symbol" + common trading fields, likely Binance
+    if "symbol" in keys and keys & {"timeInForce", "recvWindow", "timestamp"}:
+        return "binance"
+    return None
+
+
+def _extract_code_context(text: str) -> dict[str, Any]:
+    """Extract exchange name and method from code snippets."""
+    context: dict[str, Any] = {}
+
+    # Extract exchange from ccxt.XXX() pattern
+    m = re.search(r"\bccxt\.(\w+)\s*\(", text)
+    if m:
+        context["exchange_hint"] = m.group(1).lower()
+        context["code_source"] = "ccxt"
+
+    # Extract exchange from import/require patterns
+    if "exchange_hint" not in context:
+        for pat, exch in [
+            (r"\bokx\.\w+", "okx"),
+            (r"\bbybit[-_]api\b", "bybit"),
+            (r"\bbinance[-_]connector\b", "binance"),
+            (r"RestClientV5", "bybit"),
+            (r"KuCoinClient", "kucoin"),
+            (r"new\s+Binance\b", "binance"),
+        ]:
+            if re.search(pat, text, re.IGNORECASE):
+                context["exchange_hint"] = exch
+                context["code_source"] = "library"
+                break
+
+    # Extract exchange from API base URLs
+    if "exchange_hint" not in context:
+        for pat, exch in [
+            (r"api\.binance\.com", "binance"),
+            (r"stream\.binance\.com", "binance"),
+            (r"api\.bybit\.com", "bybit"),
+            (r"api\.kucoin\.com", "kucoin"),
+            (r"api\.gate\.io|api\.gateio\.ws", "gateio"),
+            (r"api\.kraken\.com", "kraken"),
+            (r"api\.bitfinex\.com", "bitfinex"),
+            (r"www\.okx\.com", "okx"),
+        ]:
+            if re.search(pat, text, re.IGNORECASE):
+                context["exchange_hint"] = exch
+                context["code_source"] = "url"
+                break
+
+    # Extract method names for topic mapping
+    methods_found = []
+    for method_name, topic in _CODE_METHOD_TOPICS.items():
+        if method_name in text:
+            methods_found.append({"method": method_name, "topic": topic})
+    if methods_found:
+        context["code_methods"] = methods_found
+
+    return context
 
 
 def classify_input(text: str) -> InputClassification:
@@ -124,6 +231,11 @@ def classify_input(text: str) -> InputClassification:
             signals["payload_format"] = "json"
             signals["payload_keys"] = list(parsed.keys())[:10]
             scores["request_payload"] += 0.7
+            # Detect exchange from payload parameter names.
+            payload_exchange = _detect_exchange_from_payload(parsed)
+            if payload_exchange:
+                signals["exchange_hint"] = payload_exchange
+                signals["payload_exchange_source"] = "parameter_names"
     except (json.JSONDecodeError, ValueError):
         pass
 
@@ -175,21 +287,29 @@ def classify_input(text: str) -> InputClassification:
             code_hits += 1
     if code_hits > 0:
         scores["code_snippet"] += min(0.3 + code_hits * 0.15, 0.9)
+        # Extract structured context from code snippets.
+        code_ctx = _extract_code_context(text)
+        if code_ctx.get("exchange_hint"):
+            signals["exchange_hint"] = code_ctx["exchange_hint"]
+            signals["code_source"] = code_ctx.get("code_source", "")
+        if code_ctx.get("code_methods"):
+            signals["code_methods"] = code_ctx["code_methods"]
 
-    # --- Exchange hint detection ---
-    exchange_names = _get_exchange_names()
-    for name in exchange_names:
-        if re.search(re.escape(name), text, re.IGNORECASE):
-            hint = name.lower()
-            # Normalize aliases to canonical exchange_id.
-            alias_to_id = {
-                "gate.io": "gateio", "huobi": "htx",
-                "crypto.com": "cryptocom",
-                "mercado bitcoin": "mercadobitcoin",
-                "perpetual protocol": "perp", "gains network": "gains",
-            }
-            signals["exchange_hint"] = alias_to_id.get(hint, hint)
-            break
+    # --- Exchange hint detection (skip if already set by payload/code detection) ---
+    if "exchange_hint" not in signals:
+        exchange_names = _get_exchange_names()
+        for name in exchange_names:
+            if re.search(re.escape(name), text, re.IGNORECASE):
+                hint = name.lower()
+                # Normalize aliases to canonical exchange_id.
+                alias_to_id = {
+                    "gate.io": "gateio", "huobi": "htx",
+                    "crypto.com": "cryptocom",
+                    "mercado bitcoin": "mercadobitcoin",
+                    "perpetual protocol": "perp", "gains network": "gains",
+                }
+                signals["exchange_hint"] = alias_to_id.get(hint, hint)
+                break
 
     # --- Question detection ---
     if text.rstrip().endswith("?") or re.match(r"^(what|how|when|where|why|which|can|does|is|are)\b", text, re.IGNORECASE):
