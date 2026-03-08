@@ -8,6 +8,7 @@ from cex_api_docs.fts_util import (
     sanitize_fts_query,
     build_fts_query,
     extract_search_terms,
+    expand_synonyms,
     endpoint_search_text,
     normalize_bm25_score,
 )
@@ -51,8 +52,12 @@ class TestBuildFtsQuery(unittest.TestCase):
     def test_single_term(self) -> None:
         self.assertEqual(build_fts_query(["hello"]), "hello")
 
-    def test_two_terms_or(self) -> None:
+    def test_two_terms_and(self) -> None:
         result = build_fts_query(["rate", "limit"])
+        self.assertEqual(result, "rate AND limit")
+
+    def test_two_terms_or_explicit(self) -> None:
+        result = build_fts_query(["rate", "limit"], operator="or")
         self.assertEqual(result, "rate OR limit")
 
     def test_three_plus_terms_and(self) -> None:
@@ -61,7 +66,7 @@ class TestBuildFtsQuery(unittest.TestCase):
 
     def test_filters_fts_keywords(self) -> None:
         result = build_fts_query(["hello", "OR", "world"])
-        self.assertEqual(result, "hello OR world")
+        self.assertEqual(result, "hello AND world")
 
     def test_empty_input(self) -> None:
         self.assertEqual(build_fts_query([]), "")
@@ -90,6 +95,37 @@ class TestExtractSearchTerms(unittest.TestCase):
         # All words <= 2 chars should be filtered
         for t in terms:
             self.assertGreater(len(t), 2)
+
+    def test_synonym_expansion(self) -> None:
+        terms = extract_search_terms("auth ohlc depth")
+        self.assertIn("auth", terms)
+        self.assertIn("authentication", terms)  # synonym for auth
+        self.assertIn("ohlc", terms)
+
+    def test_no_synonyms_flag(self) -> None:
+        terms = extract_search_terms("auth ohlc", synonyms=False)
+        self.assertIn("auth", terms)
+        self.assertNotIn("authentication", terms)
+
+
+class TestExpandSynonyms(unittest.TestCase):
+    def test_basic_expansion(self) -> None:
+        result = expand_synonyms(["ws"])
+        self.assertIn("ws", result)
+        self.assertIn("websocket", result)
+
+    def test_no_duplicates(self) -> None:
+        result = expand_synonyms(["websocket", "ws"])
+        self.assertEqual(len(set(result)), len(result))
+
+    def test_max_expansions(self) -> None:
+        result = expand_synonyms(["ohlc"], max_expansions=1)
+        # ohlc + at most 1 expansion
+        self.assertLessEqual(len(result), 2)
+
+    def test_unknown_term(self) -> None:
+        result = expand_synonyms(["foobar"])
+        self.assertEqual(result, ["foobar"])
 
 
 class TestEndpointSearchText(unittest.TestCase):

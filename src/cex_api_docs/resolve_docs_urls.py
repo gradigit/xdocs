@@ -28,6 +28,19 @@ _SPEC_INDICATORS = (
 
 _SPEC_EXTENSIONS = (".yaml", ".yml")
 
+# URL substrings indicating a changelog/release-note page (mentions all endpoints
+# but is never the right citation target for a specific endpoint).
+_CHANGELOG_INDICATORS = (
+    "change-log", "changelog", "release-note", "release_note",
+    "migration-guide", "migration_guide", "CHANGELOG",
+)
+
+# URL substrings indicating generic/overview pages (deprioritized, not excluded).
+_DEPRIORITIZE_INDICATORS = (
+    "/zh-cn/", "/zh-CN/", "/ja/", "/ko/", "/demo", "/quickstart",
+    "/quick-start", "/overview/", "/testnet/", "/sandbox/",
+)
+
 
 def _is_spec_url(url: str) -> bool:
     """Return True if *url* looks like a raw spec rather than an official docs page."""
@@ -77,50 +90,87 @@ def resolve_docs_url(
     if not segments:
         return None
 
-    # Use last 2 segments for FTS query (most distinctive).
-    query_parts = segments[-2:] if len(segments) >= 2 else segments
-    fts_query = sanitize_fts_query(" ".join(query_parts))
-    if not fts_query.strip():
-        return None
-
     # Build domain filter.
     domains = [d for d in allowed_domains if d]
     if not domains:
         return None
 
-    for domain in domains:
-        domain_like = f"%{domain}%"
-        try:
-            rows = conn.execute(
-                """
-                SELECT p.canonical_url, p.markdown_path
-                FROM pages_fts
-                JOIN pages p ON pages_fts.rowid = p.id
-                WHERE pages_fts MATCH ?
-                  AND p.canonical_url LIKE ?
-                ORDER BY rank
-                LIMIT 10;
-                """,
-                (fts_query, domain_like),
-            ).fetchall()
-        except sqlite3.OperationalError:
+    # Build multiple FTS queries to try, in order of specificity.
+    fts_queries: list[str] = []
+    # 1. Full path as a quoted phrase (most specific).
+    path_tail = clean.lstrip("/")
+    if path_tail:
+        fts_queries.append(f'"{sanitize_fts_query(path_tail).strip(chr(34))}"')
+    # 2. Last 2 meaningful segments.
+    query_parts = segments[-2:] if len(segments) >= 2 else segments
+    seg_query = sanitize_fts_query(" ".join(query_parts))
+    if seg_query.strip() and seg_query not in fts_queries:
+        fts_queries.append(seg_query)
+
+    # Collect all verified candidates across queries and domains, then pick best.
+    candidates: list[tuple[int, str]] = []  # (score, url)
+
+    for fts_query in fts_queries:
+        if not fts_query.strip():
             continue
-
-        for row in rows:
-            url = row["canonical_url"]
-            if _is_spec_url(url):
-                continue
-            md_path = Path(row["markdown_path"]) if row["markdown_path"] else None
-            if not md_path or not md_path.exists():
-                continue
+        for domain in domains:
+            domain_like = f"%{domain}%"
             try:
-                md = md_path.read_text(encoding="utf-8")
-            except OSError:
+                rows = conn.execute(
+                    """
+                    SELECT p.canonical_url, p.markdown_path
+                    FROM pages_fts
+                    JOIN pages p ON pages_fts.rowid = p.id
+                    WHERE pages_fts MATCH ?
+                      AND p.canonical_url LIKE ?
+                    ORDER BY rank
+                    LIMIT 10;
+                    """,
+                    (fts_query, domain_like),
+                ).fetchall()
+            except sqlite3.OperationalError:
                 continue
-            if clean in md:
-                return url
 
-    return None
+            for row in rows:
+                url = row["canonical_url"]
+                if _is_spec_url(url):
+                    continue
+                url_lower = url.lower()
+                is_changelog = any(ind in url_lower for ind in _CHANGELOG_INDICATORS)
+                if is_changelog:
+                    continue
+                md_path = Path(row["markdown_path"]) if row["markdown_path"] else None
+                if not md_path or not md_path.exists():
+                    continue
+                try:
+                    md = md_path.read_text(encoding="utf-8")
+                except OSError:
+                    continue
+                if clean not in md:
+                    continue
+
+                # Score the candidate: higher is better.
+                score = 0
+                # Strong signal: the endpoint path appears in the URL itself.
+                if clean in url or clean.lstrip("/") in url:
+                    score += 50
+                # Prefer URLs that contain the endpoint's path segments.
+                for seg in segments:
+                    if seg.lower() in url_lower:
+                        score += 10
+                # Deprioritize non-English, demo, testnet pages.
+                if any(ind in url_lower for ind in _DEPRIORITIZE_INDICATORS):
+                    score -= 20
+                # Prefer more specific URLs (more path segments = more specific).
+                score += url.count("/")
+
+                candidates.append((score, url))
+
+    if not candidates:
+        return None
+    # Return best-scoring candidate.
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
 
 
 def link_endpoints_bulk(

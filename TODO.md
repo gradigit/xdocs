@@ -393,3 +393,48 @@ Dependency: M12 complete.
 2. ✅ All documentation files reflect current state
 3. ✅ No forge artifacts staged for commit
 4. ✅ Clean commit with meaningful message
+
+---
+
+### M15: Query Quality — Retrieval Gap Closure
+Dependency: M12 complete. Targets the ~24 prefix-level retrieval failures on positive queries.
+
+**Current metrics** (post-M12): MRR=0.580, pfx≈85% on positive, domain≈99.4% on positive, negative FP=41%
+
+**Problem**: ~24 positive queries find the right exchange but wrong page. Root causes identified by deep research:
+1. No query expansion (synonym/acronym mismatch)
+2. FTS5 2-term OR loses precision for conjunctive queries like "wallet balance"
+3. `position_aware_blend` implemented but never called (dead code)
+4. `_search_endpoints_for_answer` uses raw terms without stopword cleaning
+5. `fts5_search` CLI doesn't sanitize queries (crash on hyphens)
+6. Strong-signal BM25 shortcut only applies to `question` type
+
+**Phase 1: Quick wins (low risk, high confidence)**
+- [ ] 15.1a. Wire `position_aware_blend` into semantic.py reranker output
+- [ ] 15.1b. Fix `fts5_search` missing `sanitize_fts_query` call (1-line fix)
+- [ ] 15.1c. Fix `_search_endpoints_for_answer` term extraction — use `extract_search_terms` with exchange stopword
+- [ ] 15.1d. Extend BM25 shortcut to `code_snippet` and `error_message` types
+
+**Phase 2: Query expansion (medium effort, high impact)**
+- [ ] 15.2a. Build domain synonym/acronym map in fts_util.py:
+  ws↔websocket, auth↔authentication, perps↔perpetual, OHLC↔candlestick/kline,
+  orderbook↔"order book"↔depth, sub account↔subaccount, REST↔"HTTP API"
+- [ ] 15.2b. Integrate into `extract_search_terms` — expand synonyms before building FTS query
+- [ ] 15.2c. Expand synonyms in semantic search query too (for vector similarity)
+
+**Phase 3: FTS precision (low effort, medium impact)**
+- [ ] 15.3a. Change `build_fts_query` 2-term logic: AND first, OR fallback if <3 results
+- [ ] 15.3b. Add NEAR(term1 term2, 10) option for 2-term proximity search
+
+**Phase 4: Eval & validation**
+- [ ] 15.4a. Run 180-query eval: target MRR ≥ 0.65, prefix ≥ 90% on positive queries
+- [ ] 15.4b. Run canary tests
+- [ ] 15.4c. Verify no regressions on any classification path
+- [ ] 15.4d. Check negative FP rate (ideally < 30%)
+
+**Acceptance criteria**:
+1. MRR ≥ 0.65 (from 0.580)
+2. Prefix hit ≥ 90% on positive queries (from ~85%)
+3. No classification path regresses
+4. All tests pass
+5. `position_aware_blend` actively used in pipeline

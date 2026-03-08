@@ -19,6 +19,38 @@ STOPWORDS = frozenset({
     "are", "can", "api", "is", "it", "of", "to", "in", "on", "by", "an", "a",
 })
 
+# Domain synonym/acronym map for query expansion.
+# Each key maps to a list of synonyms that should also be searched.
+# Applied AFTER stopword removal but BEFORE building the FTS query.
+_SYNONYM_MAP: dict[str, list[str]] = {
+    "ws": ["websocket"],
+    "websocket": ["ws", "wss"],
+    "wss": ["websocket", "ws"],
+    "auth": ["authentication", "authorization"],
+    "authentication": ["auth"],
+    "authorization": ["auth"],
+    "perps": ["perpetual", "perpetuals"],
+    "perpetual": ["perps"],
+    "ohlc": ["candlestick", "kline", "candle"],
+    "candlestick": ["ohlc", "kline"],
+    "kline": ["ohlc", "candlestick"],
+    "candle": ["ohlc", "candlestick", "kline"],
+    "orderbook": ["order-book", "depth"],
+    "order-book": ["orderbook", "depth"],
+    "depth": ["orderbook", "order-book"],
+    "subaccount": ["sub-account"],
+    "sub-account": ["subaccount"],
+    "rest": ["http"],
+    "withdraw": ["withdrawal"],
+    "withdrawal": ["withdraw"],
+    "deposit": ["deposits"],
+    "balance": ["balances"],
+    "ticker": ["tickers"],
+    "symbol": ["symbols"],
+    "trade": ["trades", "trading"],
+    "trading": ["trade", "trades"],
+}
+
 
 def sanitize_fts_query(query: str) -> str:
     """Quote FTS5 query terms that contain special characters.
@@ -46,12 +78,12 @@ def build_fts_query(
     terms: list[str],
     *,
     max_terms: int = 8,
+    operator: str = "auto",
 ) -> str:
     """Build an FTS5 MATCH query from a list of search terms.
 
-    - 1 term: no operator (implicit match)
-    - 2 terms: OR (avoid over-restriction per review finding F5)
-    - 3+ terms: AND (precision over recall)
+    Default ``operator="auto"`` uses AND for 2+ terms and bare match for 1 term.
+    Pass ``operator="or"`` to force OR logic (used by fallback paths).
 
     All terms are sanitized for FTS5 special characters.
     """
@@ -64,22 +96,50 @@ def build_fts_query(
 
     if len(sanitized) == 1:
         return sanitized[0]
-    elif len(sanitized) == 2:
+
+    if operator == "or":
         return " OR ".join(sanitized)
-    else:
-        return " AND ".join(sanitized)
+
+    # Default: AND for 2+ terms (precision over recall).
+    return " AND ".join(sanitized)
 
 
-def extract_search_terms(text: str, *, extra_stopwords: set[str] | None = None) -> list[str]:
+def expand_synonyms(terms: list[str], *, max_expansions: int = 3) -> list[str]:
+    """Expand terms with domain synonyms/acronyms.
+
+    Returns the original terms plus up to ``max_expansions`` synonym terms,
+    deduplicating and preserving order.
+    """
+    seen = set(terms)
+    expanded = list(terms)
+    added = 0
+    for t in terms:
+        for syn in _SYNONYM_MAP.get(t, []):
+            if syn not in seen and added < max_expansions:
+                expanded.append(syn)
+                seen.add(syn)
+                added += 1
+    return expanded
+
+
+def extract_search_terms(
+    text: str,
+    *,
+    extra_stopwords: set[str] | None = None,
+    synonyms: bool = True,
+) -> list[str]:
     """Extract meaningful search terms from a question/query string.
 
     Strips punctuation (preserving hyphens within words), removes stopwords,
-    and filters short tokens.
+    filters short tokens, and optionally expands domain synonyms.
     """
     # Preserve hyphens within words but strip other punctuation.
     norm = re.sub(r"[^\w\s\-]", " ", text.lower())
     stops = STOPWORDS | (extra_stopwords or set())
-    return [w for w in norm.split() if len(w) > 2 and w not in stops]
+    terms = [w for w in norm.split() if len(w) > 2 and w not in stops]
+    if synonyms and terms:
+        terms = expand_synonyms(terms)
+    return terms
 
 
 def normalize_bm25_score(raw_score: float) -> float:

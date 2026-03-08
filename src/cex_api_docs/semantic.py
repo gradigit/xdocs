@@ -604,9 +604,17 @@ def semantic_search(
     elif should_rerank and raw_results and not has_text:
         rerank_reason = "text_not_available"
 
+    # Position-aware blending: when reranker was applied and results have both
+    # RRF and reranker scores, blend them with position-aware weights so that
+    # top retrieval positions retain more of the original ranking signal.
+    if rerank_applied and raw_results:
+        try:
+            from .fts_util import position_aware_blend
+            raw_results = position_aware_blend(raw_results)
+        except Exception:
+            pass  # non-critical; fall through to default ordering
+
     # De-duplicate by page_id: keep the highest-scoring chunk per page.
-    # Higher _relevance_score = better, lower _distance = better.
-    # Use the score as-is since results are already ordered by relevance.
     seen_pages: dict[int, dict[str, Any]] = {}
     for r in raw_results:
         pid = r["page_id"]
@@ -657,7 +665,9 @@ FROM pages_fts
 JOIN pages p ON pages_fts.rowid = p.id
 WHERE pages_fts MATCH ?
 """
-        params: list[Any] = [query]
+        from .fts_util import sanitize_fts_query
+        fts_query = sanitize_fts_query(query)
+        params: list[Any] = [fts_query]
         if exchange:
             sql += " AND p.domain LIKE ?"
             params.append(f"%{exchange}%")

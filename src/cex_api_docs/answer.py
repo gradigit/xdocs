@@ -253,8 +253,11 @@ def _looks_like_permissions_requirement(text: str) -> bool:
 def _search_pages(conn, *, query: str, url_prefix: str, limit: int = 5) -> list[dict[str, Any]]:
     # Fetch extra to compensate for testnet filtering.
     fetch_limit = int(limit) * 2 if "testnet" not in query.lower() else int(limit)
-    cur = conn.execute(
-        """
+    suppress_testnet = "testnet" not in query.lower()
+
+    def _run_fts(fts_q: str) -> list[dict[str, Any]]:
+        cur = conn.execute(
+            """
 SELECT
   p.canonical_url, p.crawled_at, p.content_hash, p.path_hash, p.markdown_path,
   pages_fts.rank AS fts_rank
@@ -264,17 +267,25 @@ WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
 ORDER BY rank
 LIMIT ?;
 """,
-        (sanitize_fts_query(query), url_prefix + "%", fetch_limit),
-    )
-    suppress_testnet = "testnet" not in query.lower()
-    results = []
-    for r in cur.fetchall():
-        d = dict(r)
-        if suppress_testnet and _is_testnet_url(d.get("canonical_url", "")):
-            continue
-        # Normalize BM25 score (FTS5 rank is negative, more negative = better).
-        d["bm25_score"] = normalize_bm25_score(d.pop("fts_rank", 0.0))
-        results.append(d)
+            (fts_q, url_prefix + "%", fetch_limit),
+        )
+        out = []
+        for r in cur.fetchall():
+            d = dict(r)
+            if suppress_testnet and _is_testnet_url(d.get("canonical_url", "")):
+                continue
+            d["bm25_score"] = normalize_bm25_score(d.pop("fts_rank", 0.0))
+            out.append(d)
+        return out
+
+    sanitized = sanitize_fts_query(query)
+    results = _run_fts(sanitized)
+
+    # OR fallback: if AND query returns nothing and query has AND, try OR.
+    if not results and " AND " in sanitized:
+        or_query = sanitized.replace(" AND ", " OR ")
+        results = _run_fts(or_query)
+
     return results
 
 
@@ -301,8 +312,9 @@ def _search_pages_with_semantic(
     fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit * 2)
 
     # Strong-signal shortcut: skip vector search if BM25 is confident enough.
-    # Only applies for 'question' type — endpoint_path/error_message use direct routing.
-    if query_type_hint == "question" and should_skip_vector_search(fts_results):
+    # Applies to question, code_snippet, and error_message types.
+    # endpoint_path uses direct routing; request_payload benefits from vector search.
+    if query_type_hint in ("question", "code_snippet", "error_message") and should_skip_vector_search(fts_results):
         return fts_results[:limit]
 
     # Semantic vector search (if available).
@@ -363,7 +375,9 @@ def _search_endpoints_for_answer(
     limit: int = 5,
 ) -> list[dict[str, Any]]:
     """Search endpoint records and return relevant fields for answer composition."""
-    terms = [t for t in re.findall(r"[A-Za-z0-9_]+", query) if len(t) > 1]
+    terms = extract_search_terms(query, extra_stopwords={exchange.lower()})
+    if not terms:
+        terms = [t for t in re.findall(r"[A-Za-z0-9_]+", query) if len(t) > 1]
     fts_query = build_fts_query(terms) if terms else sanitize_fts_query(query)
     if not fts_query.strip():
         return []
@@ -483,6 +497,7 @@ def _directory_prefix(url: str) -> str:
 
 def _generic_search_answer(
     conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
+    detected_section_override: str | None = None,
 ) -> dict[str, Any]:
     """Generic cite-only answer for any exchange: FTS search across all sections."""
     # Use directory prefixes (not exact seed URLs) for broader matching.
@@ -503,7 +518,13 @@ def _generic_search_answer(
     fts_query = build_fts_query(terms) if terms else sanitize_fts_query(norm)
 
     # Detect section from keywords for multi-section exchanges.
-    detected_section = _detect_section_keywords(norm, exchange)
+    # Use Binance-specific detection for Binance, generic for others.
+    detected_section = detected_section_override
+    if not detected_section:
+        if exchange.exchange_id == "binance":
+            detected_section = _detect_binance_section(norm)
+        else:
+            detected_section = _detect_section_keywords(norm, exchange)
 
     # Search endpoints for relevant results.
     endpoint_results = _search_endpoints_for_answer(conn, query=fts_query, exchange=exchange.exchange_id, limit=3)
@@ -840,7 +861,7 @@ def _binance_answer(
 
     # If no specialized logic triggered, fall through to generic search.
     if not claims and not unified_section:
-        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm, docs_dir=docs_dir)
+        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm, docs_dir=docs_dir, detected_section_override=detected_section)
 
     # Status policy: only "ok" when every requested part is cite-backed.
     if wants_rate and unified_section and "rate_limit_comparison" in missing:
@@ -898,9 +919,24 @@ def _direct_route(
                 for record in path_results[:5]:
                     http = record.get("http", {})
                     docs_url = record.get("docs_url", "")
-                    # Suppress spec URLs.
+                    # Suppress spec and changelog URLs.
                     if docs_url and _is_spec_url(docs_url):
                         docs_url = ""
+                    if docs_url:
+                        url_lower = docs_url.lower()
+                        if any(ind in url_lower for ind in ("change-log", "changelog", "release-note")):
+                            docs_url = ""
+                    # Fallback: resolve docs_url at query time if missing.
+                    if not docs_url:
+                        ep_data = {
+                            "endpoint_id": record.get("endpoint_id", ""),
+                            "exchange": exchange.exchange_id,
+                            "path": http.get("path", ""),
+                            "record": record,
+                        }
+                        resolved = _resolve_endpoint_citation_url(conn, ep=ep_data, exchange=exchange)
+                        if resolved:
+                            docs_url = resolved
                     claims.append({
                         "id": f"c{c}",
                         "kind": "ENDPOINT",
