@@ -96,23 +96,27 @@ def rrf_fuse(
     *ranked_lists: list[dict],
     k: int = 60,
     key: str = "canonical_url",
+    weights: list[float] | None = None,
 ) -> list[dict]:
     """Reciprocal Rank Fusion across multiple ranked result lists.
 
-    RRF_score(d) = SUM over all lists L: 1 / (k + rank(d, L))
+    RRF_score(d) = SUM over all lists L: weight_L / (k + rank(d, L))
 
+    If ``weights`` is None, all lists have equal weight (1.0).
     Documents are identified by ``key`` field. Returns fused results
     sorted by descending RRF score, each augmented with ``rrf_score``.
     """
+    list_weights = weights or [1.0] * len(ranked_lists)
     scores: dict[str, float] = {}
     items: dict[str, dict] = {}
 
-    for ranked in ranked_lists:
+    for list_idx, ranked in enumerate(ranked_lists):
+        w = list_weights[list_idx] if list_idx < len(list_weights) else 1.0
         for rank_0, item in enumerate(ranked):
             doc_key = item.get(key, "")
             if not doc_key:
                 continue
-            scores[doc_key] = scores.get(doc_key, 0.0) + 1.0 / (k + rank_0 + 1)
+            scores[doc_key] = scores.get(doc_key, 0.0) + w / (k + rank_0 + 1)
             if doc_key not in items:
                 items[doc_key] = item
 

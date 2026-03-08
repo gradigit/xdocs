@@ -262,14 +262,17 @@ def evaluate_answer_pipeline(
             mean_ndcg5=pc["ndcg5"] / pt,
         )
 
+    # Use positive_n for retrieval quality metrics (MRR, nDCG, Hit rates).
+    # Negatives have no expected URLs and always score 0, so dividing by
+    # total n artificially depresses these metrics by ~9.4% (17/180 negatives).
     return AnswerEvalSummary(
         total=len(results),
         ok_rate=total_ok / n,
-        url_hit_rate=total_url_hit / n,
-        prefix_hit_rate=total_prefix_hit / n,
-        domain_hit_rate=total_domain_hit / n,
-        mean_mrr=total_mrr / n,
-        mean_ndcg5=total_ndcg5 / n,
+        url_hit_rate=total_url_hit / positive_n,
+        prefix_hit_rate=total_prefix_hit / positive_n,
+        domain_hit_rate=total_domain_hit / positive_n,
+        mean_mrr=total_mrr / positive_n,
+        mean_ndcg5=total_ndcg5 / positive_n,
         mean_claims=total_claims / n,
         mean_latency_s=total_latency / n,
         negative_fp_rate=negative_fp / max(negative_count, 1),

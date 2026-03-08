@@ -14,6 +14,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from .fts_util import sanitize_fts_query
+
 logger = logging.getLogger(__name__)
 
 # Substrings that indicate a URL is a raw spec, not an official docs page.
@@ -66,8 +68,10 @@ def resolve_docs_url(
     if not path:
         return None
 
-    # Strip Postman {{url}} prefix.
-    clean = re.sub(r"^\{\{url\}\}", "", path)
+    # Strip Postman variable prefixes ({{url}}, {{host}}, {{api_url}}, etc.).
+    clean = re.sub(r"^\{\{\w+\}\}", "", path)
+    # Strip query strings — docs pages don't contain specific param values.
+    clean = clean.split("?", 1)[0]
 
     segments = _path_segments(clean)
     if not segments:
@@ -75,7 +79,7 @@ def resolve_docs_url(
 
     # Use last 2 segments for FTS query (most distinctive).
     query_parts = segments[-2:] if len(segments) >= 2 else segments
-    fts_query = " ".join(query_parts)
+    fts_query = sanitize_fts_query(" ".join(query_parts))
     if not fts_query.strip():
         return None
 

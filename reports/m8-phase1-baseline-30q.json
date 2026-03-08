@@ -1,0 +1,22 @@
+{
+  "total": 30,
+  "ok_rate": 1.0,
+  "url_hit_rate": 0.7333333333333333,
+  "prefix_hit_rate": 0.7333333333333333,
+  "domain_hit_rate": 1.0,
+  "mean_mrr": 0.6177777777777778,
+  "mean_ndcg5": 1.4374520277135407,
+  "mean_claims": 6.933333333333334,
+  "mean_latency_s": 2.581780195236206,
+  "negative_fp_rate": 0.0,
+  "by_path": {
+    "question": {
+      "total": 30,
+      "ok_rate": 1.0,
+      "url_hit_rate": 0.7333333333333333,
+      "prefix_hit_rate": 0.7333333333333333,
+      "mean_mrr": 0.6177777777777778,
+      "mean_ndcg5": 1.4374520277135407
+    }
+  }
+}

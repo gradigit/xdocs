@@ -219,7 +219,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
 - `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
 - `src/cex_api_docs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, BM25 normalization, RRF fusion, position-aware blend, strong-signal shortcut)
-- `src/cex_api_docs/reranker.py` Cross-encoder reranking (FlashRank, ms-marco-MiniLM-L-12-v2, ONNX CPU)
+- `src/cex_api_docs/reranker.py` Backend-agnostic reranking (auto | cross-encoder | qwen3 | jina-v3 | jina-v3-mlx | flashrank). OS auto-detection: macOS+MLX→jina-v3-mlx→jina-v3→cross-encoder→flashrank, Linux→jina-v3→cross-encoder→flashrank. M10 benchmark (163 queries): Jina v3 MRR=0.556 (+15.6% over MiniLM, p=0.0014), 218ms/query.
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
 - `src/cex_api_docs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
 - `src/cex_api_docs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
@@ -243,7 +243,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
 - **Playwright is optional**: install with `pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
-- **Semantic search model**: `jina-embeddings-v5-text-nano` (768 dims, last-token pooling, EuroBERT backbone). MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-nano-mlx`), not mlx-embeddings. Query-only install: `pip install -e ".[semantic-query]"` (Mac). Full install: `pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads ~495MB model from HuggingFace (cached after that). LanceDB index stored at `cex-docs/lancedb-index/`.
+- **Semantic search model**: `jina-embeddings-v5-text-small` (1024 dims, EuroBERT backbone). Upgraded from v5-text-nano (768 dims) — +12.5% Hit@5 on golden QA. MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-small-mlx`), not mlx-embeddings. Query-only install: `pip install -e ".[semantic-query]"` (Mac). Full install: `pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads model from HuggingFace (cached after that). LanceDB index stored at `cex-docs/lancedb-index/`. **Index rebuild required** after switching from v5-text-nano — dimension mismatch (768→1024) is auto-detected and forces full rebuild.
 - **LanceDB compaction**: Use `table.optimize(cleanup_older_than=timedelta(days=0))` not the deprecated `compact_files()` + `cleanup_old_versions()`. The CLI `compact-index` command wraps this. Run periodically after large index builds to reduce fragment count and disk usage.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.
@@ -291,7 +291,7 @@ Research completed (docs/research/ and architect/research/):
 - CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
 - CCXT as cross-reference: Built `ccxt_xref.py` — 33 exchanges mapped (korbit/orderly/bluefin/nado have no CCXT class, mercadobitcoin remaps to `mercado`, dydx/backpack removed in ccxt 4.x).
 - DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
-- Reranker survey: FlashRank ms-marco-MiniLM-L-12-v2 optimal (34MB ONNX, CPU-only, 80ms/20 docs). Jina Reranker v3 MLX too heavy for CPU-only constraint.
+- Reranker survey: CrossEncoder MiniLM-L12 primary (CUDA/CPU/MPS, +2.7% MRR over FlashRank). FlashRank fallback (34MB ONNX, CPU-only). Jina Reranker v3 MLX available on macOS (auto-detected). CEX_RERANKER_BACKEND env var selects backend.
 - Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches.
 - Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 

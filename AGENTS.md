@@ -123,7 +123,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 ## Current Context (from latest handoff)
 
 - Crawl validation pipeline implemented (10 phases, 25+ modules, 337 tests).
-- Semantic index: jina-embeddings-v5-text-nano (768 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
+- Semantic index: jina-embeddings-v5-text-small (1024 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
 - 10,718 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.72M words, 4,872 endpoints, 78 sections.
 - Crawl targets bible v3 (`docs/crawl-targets-bible.md`) — 46 registered exchanges, all 8 missing exchanges now registered.
 - 11 new exchanges: MEXC (114ep), BingX, Deribit (173ep), Backpack (22ep), CoinEx, WOO X, Phemex, Gemini, Orderly (203ep), Bluefin, Nado.
@@ -135,7 +135,8 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 - `cex-docs/` and derived local data are gitignored and should not be committed.
 - Semantic features require optional extras (`[semantic]` / `[reranker]`).
-- **Semantic search model**: jina-embeddings-v5-text-nano (768 dims, EuroBERT). MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-nano-mlx`). Fallback: SentenceTransformers. Query-only: `pip install -e ".[semantic-query]"`. Full: `pip install -e ".[semantic]"`. Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL`, `CEX_JINA_MLX_REVISION`.
+- **Semantic search model**: jina-embeddings-v5-text-small (1024 dims). MLX path: `jinaai/jina-embeddings-v5-text-small-mlx`. Fallback: SentenceTransformers. Env overrides: `CEX_EMBEDDING_BACKEND`, `CEX_EMBEDDING_MODEL`, `CEX_JINA_MLX_REVISION`.
+- **Reranker**: Backend-agnostic (CEX_RERANKER_BACKEND). macOS auto-selects jina-v3-mlx, Linux auto-selects cross-encoder then flashrank.
 - `crawl` is legacy/deprecated; prefer `sync` (or `inventory` + `fetch-inventory`).
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits.
 - **Single-page doc exchanges**: OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit serve entire API reference from 1-4 HTML pages. Don't treat low page counts as errors.

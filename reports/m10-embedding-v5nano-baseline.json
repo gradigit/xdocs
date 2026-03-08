@@ -1,0 +1,1371 @@
+{
+  "benchmark": "embedding",
+  "timestamp": "2026-03-07T17:25:35Z",
+  "config": {
+    "model": "jinaai/jina-embeddings-v5-text-nano",
+    "dims": 768,
+    "backend": "sentence-transformers",
+    "query_type": "vector",
+    "rerank": false,
+    "queries": 163,
+    "top_n": 5
+  },
+  "results": {
+    "mrr": {
+      "mean": 0.46543967280163595,
+      "ci_low": 0.394683026584867,
+      "ci_high": 0.5361963190184049
+    },
+    "ndcg5": {
+      "mean": 1.176236257493769,
+      "ci_low": 1.0993971162909582,
+      "ci_high": 1.2460080074078999
+    },
+    "hit5": {
+      "mean": 0.5766871165644172,
+      "ci_low": 0.4992290507812668,
+      "ci_high": 0.6503067484662577
+    },
+    "mean_latency_s": 0.047523306865542216,
+    "p50_latency_s": 0.04591487534344196,
+    "p95_latency_s": 0.06241896301507951,
+    "by_classification": {
+      "question": {
+        "total": 84,
+        "mrr": 0.5049603174603176,
+        "ndcg5": 1.1051769343953148,
+        "hit5": 0.6071428571428571
+      },
+      "endpoint_path": {
+        "total": 24,
+        "mrr": 0.3958333333333333,
+        "ndcg5": 1.1094374609308533,
+        "hit5": 0.4583333333333333
+      },
+      "error_message": {
+        "total": 28,
+        "mrr": 0.45833333333333337,
+        "ndcg5": 1.2373206628318771,
+        "hit5": 0.6071428571428571
+      },
+      "code_snippet": {
+        "total": 13,
+        "mrr": 0.3807692307692308,
+        "ndcg5": 1.4922448874614758,
+        "hit5": 0.5384615384615384
+      },
+      "request_payload": {
+        "total": 14,
+        "mrr": 0.4404761904761904,
+        "ndcg5": 1.3014990231175485,
+        "hit5": 0.5714285714285714
+      }
+    }
+  },
+  "per_query": [
+    {
+      "query": "How to check account balance on Binance",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.8538687705482836,
+      "hit5": 0.0,
+      "latency_s": 0.05554949585348368
+    },
+    {
+      "query": "Binance spot trading rate limits",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.5235472396517734,
+      "hit5": 0.0,
+      "latency_s": 0.047258888836950064
+    },
+    {
+      "query": "place a new order on Binance",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04864431405439973
+    },
+    {
+      "query": "Binance API key permissions",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 0.7740688636944711,
+      "hit5": 1.0,
+      "latency_s": 0.0990388453938067
+    },
+    {
+      "query": "Binance websocket stream endpoints",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.5264629574836166,
+      "hit5": 1.0,
+      "latency_s": 0.04615620383992791
+    },
+    {
+      "query": "Bybit get wallet balance",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.2744886062625884,
+      "hit5": 1.0,
+      "latency_s": 0.04725938895717263
+    },
+    {
+      "query": "Bybit place order API",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.4034395420074357,
+      "hit5": 1.0,
+      "latency_s": 0.04607683094218373
+    },
+    {
+      "query": "OKX funding rate API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.052476666867733
+    },
+    {
+      "query": "OKX order placement endpoint",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04407037002965808
+    },
+    {
+      "query": "KuCoin API authentication",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.045554330106824636
+    },
+    {
+      "query": "KuCoin get account balance",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04408589284867048
+    },
+    {
+      "query": "Bitget copy trading API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04207125958055258
+    },
+    {
+      "query": "Gate.io spot order endpoint",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.04570767097175121
+    },
+    {
+      "query": "Binance margin account endpoints",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.046245471108704805
+    },
+    {
+      "query": "HTX API rate limit rules",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.7808031558224253,
+      "hit5": 1.0,
+      "latency_s": 0.047173610888421535
+    },
+    {
+      "query": "Crypto.com exchange API overview",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.04362298874184489
+    },
+    {
+      "query": "dYdX perpetual trading API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 0.9264639325303283,
+      "hit5": 1.0,
+      "latency_s": 0.04216650826856494
+    },
+    {
+      "query": "Hyperliquid order types",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 0.9039197158623081,
+      "hit5": 1.0,
+      "latency_s": 0.042847609613090754
+    },
+    {
+      "query": "Bitstamp withdrawal endpoint",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.04256328567862511
+    },
+    {
+      "query": "Upbit market information API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04276397917419672
+    },
+    {
+      "query": "Kraken REST API authentication",
+      "classification": "question",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.316153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.048475409392267466
+    },
+    {
+      "query": "Kraken spot rate limits",
+      "classification": "question",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.0436432511904858,
+      "hit5": 1.0,
+      "latency_s": 0.04847444221377373
+    },
+    {
+      "query": "Kraken websocket introduction",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3769765845238193,
+      "hit5": 1.0,
+      "latency_s": 0.04567762091755867
+    },
+    {
+      "query": "Coinbase exchange API authentication",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04662783583626151
+    },
+    {
+      "query": "Coinbase REST API quickstart",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04409878375008702
+    },
+    {
+      "query": "BitMEX place new order",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.1532867981913646,
+      "hit5": 1.0,
+      "latency_s": 0.04277357319369912
+    },
+    {
+      "query": "BitMart spot trading API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04418062185868621
+    },
+    {
+      "query": "WhiteBIT API authentication",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04331284202635288
+    },
+    {
+      "query": "WhiteBIT withdrawal endpoint",
+      "classification": "question",
+      "mrr": 0.25,
+      "ndcg5": 1.2699374116753928,
+      "hit5": 1.0,
+      "latency_s": 0.04494241997599602
+    },
+    {
+      "query": "Bithumb authentication header",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.4039197158623082,
+      "hit5": 1.0,
+      "latency_s": 0.046735066920518875
+    },
+    {
+      "query": "Coinone error codes",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.045438298024237156
+    },
+    {
+      "query": "Coinone cancel order API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.85979629081695,
+      "hit5": 1.0,
+      "latency_s": 0.04798410180956125
+    },
+    {
+      "query": "Korbit API documentation",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.045031949412077665
+    },
+    {
+      "query": "ApeX exchange trading API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.5654648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04341404978185892
+    },
+    {
+      "query": "Aster DEX API documentation",
+      "classification": "question",
+      "mrr": 0.25,
+      "ndcg5": 1.1263785589842616,
+      "hit5": 1.0,
+      "latency_s": 0.042826926335692406
+    },
+    {
+      "query": "Paradex API quickstart",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0113779390851778,
+      "hit5": 1.0,
+      "latency_s": 0.04249755712226033
+    },
+    {
+      "query": "Paradex rate limits",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.049669925342174,
+      "hit5": 1.0,
+      "latency_s": 0.04807173600420356
+    },
+    {
+      "query": "dYdX order types",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04176471196115017
+    },
+    {
+      "query": "Hyperliquid info endpoint",
+      "classification": "question",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.316153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.04116350784897804
+    },
+    {
+      "query": "Binance USDM futures order endpoints",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.316153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.04352199099957943
+    },
+    {
+      "query": "Bybit position information",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.7808031558224253,
+      "hit5": 1.0,
+      "latency_s": 0.04324054578319192
+    },
+    {
+      "query": "What is the Binance error code -1002",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.044922118075191975
+    },
+    {
+      "query": "Bitget broker API error codes",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.04202913725748658
+    },
+    {
+      "query": "KuCoin futures place order",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.7784373087046446,
+      "hit5": 1.0,
+      "latency_s": 0.040849111042916775
+    },
+    {
+      "query": "Bybit API rate limiting",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 2.298972745919595,
+      "hit5": 1.0,
+      "latency_s": 0.04142891522496939
+    },
+    {
+      "query": "BitMart futures trading API",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.04146611411124468
+    },
+    {
+      "query": "Binance options trading API",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.8220805598951306,
+      "hit5": 1.0,
+      "latency_s": 0.04180115507915616
+    },
+    {
+      "query": "Binance portfolio margin endpoints",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.755329494729109,
+      "hit5": 1.0,
+      "latency_s": 0.0414905846118927
+    },
+    {
+      "query": "How to create an API key on Aster",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.816153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.041949080768972635
+    },
+    {
+      "query": "Hyperliquid spot API",
+      "classification": "question",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.2930452256509284,
+      "hit5": 1.0,
+      "latency_s": 0.04953319672495127
+    },
+    {
+      "query": "Deribit options API documentation",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04176159994676709
+    },
+    {
+      "query": "CoinEx market data API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.039802960585802794
+    },
+    {
+      "query": "Gemini API sandbox environment",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.03993131127208471
+    },
+    {
+      "query": "MEXC spot API trading",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.03786918707191944
+    },
+    {
+      "query": "Orderly Network API authentication",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04957298981025815
+    },
+    {
+      "query": "Phemex contract trading API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.03835479402914643
+    },
+    {
+      "query": "Backpack exchange API overview",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.03920914186164737
+    },
+    {
+      "query": "Bluefin exchange API documentation",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04183932673186064
+    },
+    {
+      "query": "WOO X trading API overview",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.040319917257875204
+    },
+    {
+      "query": "Nado exchange API documentation",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04208787111565471
+    },
+    {
+      "query": "Bitbank API ticker endpoint",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04231266072019935
+    },
+    {
+      "query": "Lighter DEX order placement",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.044063647743314505
+    },
+    {
+      "query": "Bitfinex API funding offers",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04185295198112726
+    },
+    {
+      "query": "Binance copy trading endpoints",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.85979629081695,
+      "hit5": 1.0,
+      "latency_s": 0.04266229923814535
+    },
+    {
+      "query": "KuCoin margin trading API",
+      "classification": "question",
+      "mrr": 0.25,
+      "ndcg5": 1.2808031558224253,
+      "hit5": 1.0,
+      "latency_s": 0.0421519810333848
+    },
+    {
+      "query": "Binance wallet deposit address",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.1931296241502831,
+      "hit5": 1.0,
+      "latency_s": 0.04687529895454645
+    },
+    {
+      "query": "Bybit convert coin endpoint",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.057032212149351835
+    },
+    {
+      "query": "Bitget spot market data API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.0698038307018578
+    },
+    {
+      "query": "Gate.io futures API documentation",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04716881783679128
+    },
+    {
+      "query": "Coinbase Advanced Trade API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.0447948700748384
+    },
+    {
+      "query": "Kraken futures API overview",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.05068970797583461
+    },
+    {
+      "query": "Binance Coin-M futures rate limits",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.06702908594161272
+    },
+    {
+      "query": "What permissions does a Bybit API key need for trading",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.2808031558224253,
+      "hit5": 0.0,
+      "latency_s": 0.06260438682511449
+    },
+    {
+      "query": "OKX websocket subscription format",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.0548750851303339
+    },
+    {
+      "query": "How many requests per minute does Bitget allow",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.045971924904733896
+    },
+    {
+      "query": "POST /sapi/v1/margin/order Binance",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04808904929086566
+    },
+    {
+      "query": "GET /api/v5/account/balance OKX",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.05084280390292406
+    },
+    {
+      "query": "POST /v5/order/create Bybit",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.04549236409366131
+    },
+    {
+      "query": "GET /api/v1/market/orderbook/level2_20 KuCoin",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.05142488330602646
+    },
+    {
+      "query": "POST /api/v2/spot/trade/place-order Bitget",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.05492424592375755
+    },
+    {
+      "query": "GET /api/v4/spot/tickers Gate.io",
+      "classification": "endpoint_path",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.05075644701719284
+    },
+    {
+      "query": "GET /v2/reference/time Bitstamp",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.0457589328289032
+    },
+    {
+      "query": "POST /fapi/v1/order Binance",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.05252312496304512
+    },
+    {
+      "query": "GET /api/v3/ticker/24hr Binance",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.051640605088323355
+    },
+    {
+      "query": "DELETE /v5/order/cancel Bybit",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.04908557003363967
+    },
+    {
+      "query": "GET /api/v5/market/ticker OKX",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04436607891693711
+    },
+    {
+      "query": "POST /api/spot/v3/order/create MEXC",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.060381568036973476
+    },
+    {
+      "query": "GET /0/public/Ticker Kraken",
+      "classification": "endpoint_path",
+      "mrr": 0.5,
+      "ndcg5": 1.4034395420074357,
+      "hit5": 1.0,
+      "latency_s": 0.0458432137966156
+    },
+    {
+      "query": "POST /0/private/AddOrder Kraken",
+      "classification": "endpoint_path",
+      "mrr": 0.5,
+      "ndcg5": 1.4034395420074357,
+      "hit5": 1.0,
+      "latency_s": 0.04909546906128526
+    },
+    {
+      "query": "GET /api/v3/account Binance",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.052013753447681665
+    },
+    {
+      "query": "POST /api/v1/bullet-public KuCoin",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04687807383015752
+    },
+    {
+      "query": "GET /v5/market/recent-trade Bybit",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.046530017629265785
+    },
+    {
+      "query": "GET /api/v2/mix/market/tickers Bitget",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.048421022947877645
+    },
+    {
+      "query": "POST /dapi/v1/order Binance",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.052292895037680864
+    },
+    {
+      "query": "GET /v1/orderbook Deribit",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.046420409344136715
+    },
+    {
+      "query": "GET /api/v1/accounts KuCoin",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.046444494277238846
+    },
+    {
+      "query": "POST /exchange/v1/order/create Crypto.com",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.07241853512823582
+    },
+    {
+      "query": "GET /api/v5/account/positions OKX",
+      "classification": "endpoint_path",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.07052856590598822
+    },
+    {
+      "query": "POST /v1/order Backpack",
+      "classification": "endpoint_path",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.06690801400691271
+    },
+    {
+      "query": "Binance error -1002 unauthorized",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04526693280786276
+    },
+    {
+      "query": "Binance error -2015 invalid API key",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.046911516692489386
+    },
+    {
+      "query": "Binance error -1121 invalid symbol",
+      "classification": "error_message",
+      "mrr": 0.5,
+      "ndcg5": 1.4034395420074357,
+      "hit5": 1.0,
+      "latency_s": 0.04581868415698409
+    },
+    {
+      "query": "Binance error -1003 too many requests",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04511419776827097
+    },
+    {
+      "query": "OKX error 50004 endpoint request timeout",
+      "classification": "error_message",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.043129328172653913
+    },
+    {
+      "query": "OKX error 58237 withdrawal address not whitelisted",
+      "classification": "error_message",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.048790157306939363
+    },
+    {
+      "query": "Bybit error 10001 parameter error",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.04613918298855424
+    },
+    {
+      "query": "Bybit retCode 10002 invalid request",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.04698437312617898
+    },
+    {
+      "query": "KuCoin error 400100 invalid parameter",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.04596206825226545
+    },
+    {
+      "query": "Bitget error code 40018",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04577901400625706
+    },
+    {
+      "query": "Gate.io error INVALID_KEY",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.046515146270394325
+    },
+    {
+      "query": "Kraken error EOrder:Insufficient funds",
+      "classification": "error_message",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.7242295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.04870526771992445
+    },
+    {
+      "query": "Coinbase error invalid_request",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.044443342834711075
+    },
+    {
+      "query": "Binance error -1015 too many new orders",
+      "classification": "error_message",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.316153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.04581946600228548
+    },
+    {
+      "query": "Binance error -2010 insufficient balance",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04311980493366718
+    },
+    {
+      "query": "Binance error -1102 mandatory parameter was not sent",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04870079504325986
+    },
+    {
+      "query": "Bybit error 110001 order not exists",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.5205354372149502,
+      "hit5": 1.0,
+      "latency_s": 0.04569475166499615
+    },
+    {
+      "query": "KuCoin error 200004 balance insufficient",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.044898383785039186
+    },
+    {
+      "query": "Bitget error 43011 insufficient margin",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.045661370269954205
+    },
+    {
+      "query": "WhiteBIT error 422 validation failed",
+      "classification": "error_message",
+      "mrr": 0.5,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.060750148724764585
+    },
+    {
+      "query": "HTX error order-limitorder-price-error",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04778525000438094
+    },
+    {
+      "query": "Coinone error 4009 invalid api key",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.048475002869963646
+    },
+    {
+      "query": "Kraken error EAPI:Invalid key",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 1.2808031558224253,
+      "hit5": 0.0,
+      "latency_s": 0.04636414768174291
+    },
+    {
+      "query": "Deribit error 10001 authorization required",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 0.0,
+      "hit5": 0.0,
+      "latency_s": 0.04330984503030777
+    },
+    {
+      "query": "Binance error -1013 filter failure",
+      "classification": "error_message",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 0.8069955414966916,
+      "hit5": 1.0,
+      "latency_s": 0.044723786879330873
+    },
+    {
+      "query": "import ccxt\nexchange = ccxt.binance()\nbalance = exchange.fetch_balance()\nprint(balance['total'])",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.046372377779334784
+    },
+    {
+      "query": "const { RestClientV5 } = require('bybit-api');\nconst client = new RestClientV5({ key: 'xxx', secret: 'yyy' });\nclient.getWalletBalance({ accountType: 'UNIFIED' });",
+      "classification": "code_snippet",
+      "mrr": 1.0,
+      "ndcg5": 1.5654648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.08020862843841314
+    },
+    {
+      "query": "import okx.Account as Account\naccountAPI = Account.AccountAPI(api_key, api_secret_key, passphrase, False)\nresult = accountAPI.get_account_balance()",
+      "classification": "code_snippet",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04377988399937749
+    },
+    {
+      "query": "const client = new KuCoinClient({ key, secret, passphrase });\nawait client.getAccountsList();",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.05213448777794838
+    },
+    {
+      "query": "exchange = ccxt.bybit({'apiKey': key, 'secret': secret})\norder = exchange.create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)",
+      "classification": "code_snippet",
+      "mrr": 1.0,
+      "ndcg5": 1.9742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.045909744687378407
+    },
+    {
+      "query": "const binance = new Binance({ APIKEY: key, APISECRET: secret });\nbinance.prices('BTCUSDT', (error, ticker) => { console.log(ticker); });",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04207495599985123
+    },
+    {
+      "query": "exchange = ccxt.kraken()\nticker = exchange.fetch_ticker('BTC/USD')\nprint(ticker['last'])",
+      "classification": "code_snippet",
+      "mrr": 0.25,
+      "ndcg5": 1.6895678384763926,
+      "hit5": 1.0,
+      "latency_s": 0.04303541174158454
+    },
+    {
+      "query": "import hmac, hashlib, time, requests\ntimestamp = str(int(time.time() * 1000))\nsignature = hmac.new(secret.encode(), (timestamp + 'GET' + '/api/v3/account').encode(), hashlib.sha256).hexdigest()\nheaders = {'X-MBX-APIKEY': api_key}\nresponse = requests.get('https://api.binance.com/api/v3/account', headers=headers, params={'timestamp': timestamp, 'signature': signature})",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 0.9039197158623081,
+      "hit5": 0.0,
+      "latency_s": 0.04417364811524749
+    },
+    {
+      "query": "exchange = ccxt.gateio({'apiKey': key, 'secret': secret})\norder = exchange.create_limit_buy_order('BTC/USDT', 0.001, 30000)",
+      "classification": "code_snippet",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.04189518094062805
+    },
+    {
+      "query": "exchange = ccxt.bitget()\nmarkets = exchange.load_markets()\nprint(exchange.symbols)",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04138821875676513
+    },
+    {
+      "query": "ws = websocket.WebSocketApp('wss://stream.binance.com:9443/ws/btcusdt@trade')",
+      "classification": "code_snippet",
+      "mrr": 0.2,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.05186812486499548
+    },
+    {
+      "query": "exchange = ccxt.kucoin({'password': passphrase})\nohlcv = exchange.fetch_ohlcv('BTC/USDT', '1h')",
+      "classification": "code_snippet",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.042415198404341936
+    },
+    {
+      "query": "{\"symbol\": \"BTCUSDT\", \"side\": \"BUY\", \"type\": \"LIMIT\", \"timeInForce\": \"GTC\", \"quantity\": \"0.001\", \"price\": \"30000\"}",
+      "classification": "request_payload",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.047760839108377695
+    },
+    {
+      "query": "{\"category\": \"linear\", \"symbol\": \"BTCUSDT\", \"orderType\": \"Limit\", \"side\": \"Buy\", \"qty\": \"0.001\", \"price\": \"30000\", \"timeInForce\": \"GTC\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04624456958845258
+    },
+    {
+      "query": "{\"instId\": \"BTC-USDT\", \"tdMode\": \"cash\", \"side\": \"buy\", \"ordType\": \"limit\", \"px\": \"30000\", \"sz\": \"0.001\"}",
+      "classification": "request_payload",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.046650268603116274
+    },
+    {
+      "query": "{\"clientOid\": \"abc123\", \"side\": \"buy\", \"symbol\": \"BTC-USDT\", \"type\": \"limit\", \"price\": \"30000\", \"size\": \"0.001\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.05195220606401563
+    },
+    {
+      "query": "{\"symbol\": \"BTCUSDT\", \"side\": \"buy\", \"orderType\": \"limit\", \"force\": \"gtc\", \"price\": \"30000\", \"size\": \"0.001\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04998859763145447
+    },
+    {
+      "query": "{\"currency_pair\": \"BTC_USDT\", \"type\": \"limit\", \"side\": \"buy\", \"amount\": \"0.001\", \"price\": \"30000\"}",
+      "classification": "request_payload",
+      "mrr": 1.0,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04535992722958326
+    },
+    {
+      "query": "{\"pair\": \"BTC/USD\", \"type\": \"buy\", \"ordertype\": \"limit\", \"price\": \"30000\", \"volume\": \"0.001\"}",
+      "classification": "request_payload",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.0654648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.044236497953534126
+    },
+    {
+      "query": "{\"type\": \"buy\", \"amount\": \"0.001\", \"price\": \"30000\", \"currency_pair\": \"btc_usd\"}",
+      "classification": "request_payload",
+      "mrr": 1.0,
+      "ndcg5": 1.0,
+      "hit5": 1.0,
+      "latency_s": 0.04368484625592828
+    },
+    {
+      "query": "{\"symbol\": \"BTCUSDT\", \"side\": \"Buy\", \"orderQty\": 100, \"price\": 30000, \"ordType\": \"Limit\"}",
+      "classification": "request_payload",
+      "mrr": 1.0,
+      "ndcg5": 1.5654648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04591487534344196
+    },
+    {
+      "query": "{\"recvWindow\": 5000, \"timestamp\": 1625000000000, \"symbol\": \"BTCUSDT\", \"side\": \"BUY\", \"type\": \"MARKET\", \"quoteOrderQty\": 100}",
+      "classification": "request_payload",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.316153039626464,
+      "hit5": 1.0,
+      "latency_s": 0.04576830519363284
+    },
+    {
+      "query": "{\"asset\": \"BTC\", \"address\": \"1A1zP1...\", \"amount\": \"0.5\", \"network\": \"BTC\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.04630860313773155
+    },
+    {
+      "query": "{\"coin\": \"USDT\", \"chain\": \"ETH\", \"address\": \"0xabc...\", \"amount\": \"100\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.048590193036943674
+    },
+    {
+      "query": "{\"leverage\": \"10\", \"symbol\": \"BTCUSDT\", \"marginCoin\": \"USDT\"}",
+      "classification": "request_payload",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.045374734327197075
+    },
+    {
+      "query": "Binance error -1111 precision is over",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.6494863729597975,
+      "hit5": 1.0,
+      "latency_s": 0.04731554165482521
+    },
+    {
+      "query": "import requests\nresp = requests.get('https://api.bybit.com/v5/market/tickers', params={'category': 'spot', 'symbol': 'BTCUSDT'})\nprint(resp.json())",
+      "classification": "code_snippet",
+      "mrr": 1.0,
+      "ndcg5": 1.9742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.04457234498113394
+    },
+    {
+      "query": "{\"type\": \"subscribe\", \"channel\": \"trades\", \"instId\": \"BTC-USDT\"}",
+      "classification": "request_payload",
+      "mrr": 0.5,
+      "ndcg5": 1.1309297535714575,
+      "hit5": 1.0,
+      "latency_s": 0.046224428340792656
+    },
+    {
+      "query": "Coinbase error insufficient_funds",
+      "classification": "error_message",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04495090711861849
+    },
+    {
+      "query": "BitMEX error overloaded system overloaded",
+      "classification": "error_message",
+      "mrr": 1.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 1.0,
+      "latency_s": 0.047148038167506456
+    },
+    {
+      "query": "Binance convert API endpoint",
+      "classification": "question",
+      "mrr": 0.5,
+      "ndcg5": 1.4510314956399777,
+      "hit5": 1.0,
+      "latency_s": 0.05095888627693057
+    },
+    {
+      "query": "How to set leverage on Bybit",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.3769765845238193,
+      "hit5": 1.0,
+      "latency_s": 0.055166961159557104
+    },
+    {
+      "query": "Binance savings API endpoints",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04650558810681105
+    },
+    {
+      "query": "OKX API IP whitelist configuration",
+      "classification": "question",
+      "mrr": 0.3333333333333333,
+      "ndcg5": 1.3154648767857289,
+      "hit5": 1.0,
+      "latency_s": 0.04883010219782591
+    },
+    {
+      "query": "How to transfer between spot and futures on Binance",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0994006466093746,
+      "hit5": 1.0,
+      "latency_s": 0.04651681939139962
+    },
+    {
+      "query": "Binance margin transfer API",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.6026131439082054,
+      "hit5": 0.0,
+      "latency_s": 0.04734905483201146
+    },
+    {
+      "query": "Binance portfolio margin BNB transfer",
+      "classification": "question",
+      "mrr": 1.0,
+      "ndcg5": 1.0113779390851778,
+      "hit5": 1.0,
+      "latency_s": 0.045585168059915304
+    },
+    {
+      "query": "Binance wallet deposit and withdrawal endpoints",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 1.4742295594396961,
+      "hit5": 0.0,
+      "latency_s": 0.04634004784747958
+    },
+    {
+      "query": "Binance universal transfer between accounts",
+      "classification": "question",
+      "mrr": 0.0,
+      "ndcg5": 0.9828197062931308,
+      "hit5": 0.0,
+      "latency_s": 0.0641078264452517
+    }
+  ]
+}

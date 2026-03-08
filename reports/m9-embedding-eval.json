@@ -1,0 +1,17 @@
+{
+  "eval_date": "2026-03-08",
+  "test_setup": "40 queries, 147 docs (47 expected + 100 distractors), CUDA",
+  "results": [
+    {"model": "jinaai/jina-embeddings-v5-text-nano", "dims": 768, "hit_at_5": 0.800, "hit_at_10": 0.850, "mrr": 0.737, "embed_time_s": 1.5},
+    {"model": "jinaai/jina-embeddings-v5-text-small", "dims": 1024, "hit_at_5": 0.900, "hit_at_10": 0.925, "mrr": 0.736, "embed_time_s": 5.6}
+  ],
+  "colbert_assessment": {
+    "estimated_storage_gb": 17.5,
+    "estimated_quantized_gb": 4.4,
+    "threshold_gb": 10,
+    "verdict": "not_justified — v5-small already achieves 90% Hit@5"
+  },
+  "winner": "jinaai/jina-embeddings-v5-text-small",
+  "improvement": "+12.5% Hit@5 (80% -> 90%)",
+  "upgrade_requires": "full index rebuild (768 -> 1024 dims)"
+}

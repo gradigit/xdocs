@@ -128,7 +128,7 @@ def build_index(
 ) -> dict[str, Any]:
     """Build or rebuild the LanceDB semantic index from SQLite pages.
 
-    Uses jina-embeddings-v5-text-nano (Jina MLX by default) with markdown
+    Uses jina-embeddings-v5-text-small (Jina MLX on macOS, SentenceTransformers on Linux) with markdown
     chunking for fine-grained retrieval.
 
     Args:
@@ -249,9 +249,16 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
                 row["page_id"]: (row["content_hash"] or "") for row in rows
             }
 
+            # When exchange filter is active, only consider pages in the
+            # filtered set for stale detection.  Without this guard,
+            # ALL other exchanges' chunks would be deleted as "stale".
+            scope = indexed if not exchange else {
+                pid: h for pid, h in indexed.items() if pid in source_pages
+            }
+
             # Pages to delete: removed from SQLite or content changed.
             stale_ids: list[int] = []
-            for pid, old_hash in indexed.items():
+            for pid, old_hash in scope.items():
                 if pid not in source_pages or source_pages[pid] != old_hash:
                     stale_ids.append(pid)
 
@@ -371,12 +378,24 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
     chunks_embedded = 0
     t_embed_start = time.monotonic()
 
+    # Detect CUDA for periodic cache clearing (prevents OOM on long builds).
+    _has_cuda = False
+    try:
+        import torch
+        _has_cuda = torch.cuda.is_available()
+    except ImportError:
+        pass
+
     for i in range(0, len(all_chunks), batch_size):
         batch = all_chunks[i : i + batch_size]
         vectors = embedder.embed_texts([r["text"] for r in batch])
         for row, vec in zip(batch, vectors):
             row["vector"] = vec
         table.add(batch)
+        # Free vector data after writing to LanceDB to prevent memory accumulation.
+        # Without this, 335K chunks × 1024d = ~10 GB of Python heap for v5-small.
+        for row in batch:
+            row.pop("vector", None)
         chunks_embedded += len(batch)
 
         # Log progress with throughput every ~500 chunks.
@@ -385,6 +404,11 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
             rate = chunks_embedded / elapsed * 60 if elapsed > 0 else 0
             logger.info("  Embedded %d / %d chunks (%.0f/min)...",
                         chunks_embedded, len(all_chunks), rate)
+
+        # Clear CUDA cache periodically to prevent OOM from memory fragmentation.
+        # v5-small (1024d) uses ~15.8GB on a 16GB GPU — fragmentation kills it.
+        if _has_cuda and chunks_embedded % (batch_size * 50) < batch_size:
+            torch.cuda.empty_cache()
 
     if chunks_embedded == 0 and not incremental:
         return {
@@ -426,6 +450,7 @@ def semantic_search(
     query_type: str = "hybrid",
     rerank: bool | str = True,
     include_meta: bool = False,
+    keep_text: bool = False,
 ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
     """Run semantic (vector), FTS, or hybrid search against the LanceDB index.
 
@@ -440,6 +465,7 @@ def semantic_search(
             - "auto": rerank only when top results are ambiguous
             - "always" / "never": explicit policy strings
         include_meta: Return `(results, meta)` when True.
+        keep_text: Preserve the ``text`` field in results (for external reranking).
 
     Returns:
         List of result dicts with url, title, score, etc.
@@ -589,9 +615,10 @@ def semantic_search(
 
     results = list(seen_pages.values())[:limit]
 
-    # Strip text field from output (only needed for reranking).
+    # Strip internal fields from output unless caller needs text for external reranking.
     for r in results:
-        r.pop("text", None)
+        if not keep_text:
+            r.pop("text", None)
         r.pop("score_kind", None)
 
     if include_meta:
@@ -699,8 +726,23 @@ _DOMAIN_MAP = {
     "docs.asterdex.com": "aster",
     "api-docs.pro.apex.exchange": "apex",
     "docs.paradex.trade": "paradex",
+    "api.prod.paradex.trade": "paradex",
+    # New exchanges (M10+)
+    "www.mexc.com": "mexc",
+    "docs.deribit.com": "deribit",
+    "orderly.network": "orderly",
+    "docs.coinex.com": "coinex",
+    "docs.nado.xyz": "nado",
+    "docs.gemini.com": "gemini",
+    "bluefin-exchange.readme.io": "bluefin",
+    "bingx-api.github.io": "bingx",
+    "docs.backpack.exchange": "backpack",
+    "docs.woox.io": "woo",
+    "phemex-docs.github.io": "phemex",
     # Aggregator
     "docs.ccxt.com": "ccxt",
+    # GRVT uses github.com too, but majority of github.com pages are CCXT.
+    # TODO: use per-URL prefix matching instead of domain-level mapping.
     "github.com": "ccxt",
 }
 

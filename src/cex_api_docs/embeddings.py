@@ -1,12 +1,18 @@
 """Embedding backend selection for semantic search.
 
-Default path (speed-first on Apple Silicon):
-- Jina MLX loader for ``jina-embeddings-v5-text-nano`` (768 dims, last-token pooling).
+Default model: ``jina-embeddings-v5-text-nano`` (768 dims, EuroBERT backbone).
+Upgrade to v5-text-small (1024 dims, +12.5% Hit@5) pending index rebuild validation.
 
-Fallback path:
-- SentenceTransformers with ``jina-embeddings-v5-text-nano`` (requires trust_remote_code + peft).
+Backend auto-detection:
+- macOS Apple Silicon: Jina MLX loader (``jina-embeddings-v5-text-nano-mlx``).
+- Linux/CUDA: SentenceTransformers with CUDA acceleration.
+- Other: SentenceTransformers on CPU.
 
-Both backends produce identical vectors (same model weights, same prompts, same pooling).
+Override via env vars:
+- CEX_EMBEDDING_BACKEND: auto | jina-mlx | sentence-transformers
+- CEX_EMBEDDING_MODEL: MLX repo ID (macOS path)
+- CEX_EMBEDDING_FALLBACK_MODEL: SentenceTransformers model name (Linux path)
+- CEX_JINA_MLX_REVISION: Pin HuggingFace revision for MLX model
 """
 
 from __future__ import annotations
@@ -174,7 +180,12 @@ _embedder_singleton: Embedder | None = None
 
 
 def get_embedder() -> Embedder:
-    """Return configured embedder with speed-first Jina MLX default and safe fallback."""
+    """Return configured embedder with OS-aware backend selection.
+
+    Auto-detection:
+    - macOS + MLX available: Jina MLX loader (native Apple Silicon, fastest)
+    - Linux + CUDA / other: SentenceTransformers (PyTorch, CUDA/CPU)
+    """
     global _embedder_singleton
     if _embedder_singleton is not None:
         return _embedder_singleton

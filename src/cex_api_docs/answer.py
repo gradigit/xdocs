@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import logging
+import os
 
 from .classify import classify_input
 from .db import open_db
@@ -15,6 +16,19 @@ from .registry import load_registry
 from .resolve_docs_urls import _is_spec_url
 
 logger = logging.getLogger(__name__)
+
+# Feature flag: section-metadata post-fusion boost (default off until validated).
+_SECTION_BOOST_ENABLED = os.environ.get("CEX_SECTION_BOOST", "0") == "1"
+_SECTION_BOOST_FACTOR = 1.3
+
+# Testnet/sandbox URL patterns to suppress from search results.
+_TESTNET_PATTERNS = ("/testnet/", "/sandbox/")
+
+
+def _is_testnet_url(url: str) -> bool:
+    """Return True if URL points to a testnet/sandbox page."""
+    lower = url.lower()
+    return any(p in lower for p in _TESTNET_PATTERNS)
 
 
 def _normalize_question(q: str) -> str:
@@ -59,6 +73,30 @@ def _detect_section_keywords(norm: str, exchange) -> str | None:
         if spaced != sid and re.search(r"\b" + re.escape(spaced) + r"\b", norm):
             return sid
     return None
+
+
+def _apply_section_boost(
+    results: list[dict], *, section_prefix: str | None,
+) -> list[dict]:
+    """Boost results whose URL matches the detected section prefix.
+
+    Only applied when CEX_SECTION_BOOST=1 and a section was detected.
+    Multiplies rrf_score by _SECTION_BOOST_FACTOR for matching URLs,
+    then re-sorts.
+    """
+    if not _SECTION_BOOST_ENABLED or not section_prefix or not results:
+        return results
+    boosted = []
+    for item in results:
+        entry = dict(item)
+        url = entry.get("canonical_url", "")
+        if url.startswith(section_prefix):
+            rrf = entry.get("rrf_score", 0.0)
+            entry["rrf_score"] = rrf * _SECTION_BOOST_FACTOR
+            entry["section_boosted"] = True
+        boosted.append(entry)
+    boosted.sort(key=lambda x: x.get("rrf_score", 0.0), reverse=True)
+    return boosted
 
 
 def _sections_present(conn, *, exchange_id: str, seed_prefixes: dict[str, str]) -> list[dict[str, str]]:
@@ -213,6 +251,8 @@ def _looks_like_permissions_requirement(text: str) -> bool:
 
 
 def _search_pages(conn, *, query: str, url_prefix: str, limit: int = 5) -> list[dict[str, Any]]:
+    # Fetch extra to compensate for testnet filtering.
+    fetch_limit = int(limit) * 2 if "testnet" not in query.lower() else int(limit)
     cur = conn.execute(
         """
 SELECT
@@ -224,11 +264,14 @@ WHERE pages_fts MATCH ? AND p.canonical_url LIKE ?
 ORDER BY rank
 LIMIT ?;
 """,
-        (sanitize_fts_query(query), url_prefix + "%", int(limit)),
+        (sanitize_fts_query(query), url_prefix + "%", fetch_limit),
     )
+    suppress_testnet = "testnet" not in query.lower()
     results = []
     for r in cur.fetchall():
         d = dict(r)
+        if suppress_testnet and _is_testnet_url(d.get("canonical_url", "")):
+            continue
         # Normalize BM25 score (FTS5 rank is negative, more negative = better).
         d["bm25_score"] = normalize_bm25_score(d.pop("fts_rank", 0.0))
         results.append(d)
@@ -275,9 +318,12 @@ def _search_pages_with_semantic(
                 query_type="vector",  # NOT "hybrid" — avoids double-RRF
                 rerank="auto",
             )
+            suppress_testnet = "testnet" not in query.lower()
             for sr in sem_hits:
                 url = sr.get("url", "")
                 if url_prefix and not url.startswith(url_prefix):
+                    continue
+                if suppress_testnet and _is_testnet_url(url):
                     continue
                 row = conn.execute(
                     "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path FROM pages WHERE canonical_url = ?;",
@@ -295,8 +341,17 @@ def _search_pages_with_semantic(
     if not fts_results:
         return sem_results_raw[:limit]
 
-    # RRF fusion: merge FTS5 and vector rankings.
-    fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url")
+    # RRF fusion: merge FTS5 and vector rankings with query-type-dependent weights.
+    # [fts_weight, vector_weight] — tuned via golden QA eval.
+    _RRF_WEIGHTS: dict[str | None, list[float]] = {
+        "question": [0.7, 1.3],          # vector-favoring — validated via weight sweep on 79 queries
+        "endpoint_path": [1.5, 0.5],     # favor keyword match
+        "error_message": [1.3, 0.7],     # favor keyword with some semantic
+        "code_snippet": [0.7, 1.3],      # favor semantic
+        "request_payload": [1.0, 1.0],   # balanced
+    }
+    rrf_weights = _RRF_WEIGHTS.get(query_type_hint, [1.0, 1.0])
+    fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url", weights=rrf_weights)
     return fused[:limit]
 
 
@@ -517,6 +572,9 @@ def _generic_search_answer(
         if c > max_claims:
             break
         candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
+        # Apply section boost if a section was detected (feature-flagged).
+        boost_prefix = seed_prefixes.get(detected_section) if detected_section else None
+        candidates = _apply_section_boost(candidates, section_prefix=boost_prefix)
         for cand in candidates:
             if cand["canonical_url"] in seen_urls:
                 continue
