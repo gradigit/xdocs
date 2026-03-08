@@ -1,10 +1,11 @@
 """Embedding backend selection for semantic search.
 
-Default model: ``jina-embeddings-v5-text-nano`` (768 dims, EuroBERT backbone).
-Upgrade to v5-text-small (1024 dims, +12.5% Hit@5) pending index rebuild validation.
+Default model: ``jina-embeddings-v5-text-small`` (1024 dims, EuroBERT backbone).
+Upgraded from v5-text-nano (768d) after M11 pre-rebuild validation confirmed
++12.5% Hit@5 improvement with safe memory/VRAM usage.
 
 Backend auto-detection:
-- macOS Apple Silicon: Jina MLX loader (``jina-embeddings-v5-text-nano-mlx``).
+- macOS Apple Silicon: Jina MLX loader (``jina-embeddings-v5-text-small-mlx``).
 - Linux/CUDA: SentenceTransformers with CUDA acceleration.
 - Other: SentenceTransformers on CPU.
 
@@ -24,11 +25,11 @@ from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_JINA_MLX_REPO = "jinaai/jina-embeddings-v5-text-nano-mlx"
-DEFAULT_ST_MODEL = "jinaai/jina-embeddings-v5-text-nano"
+DEFAULT_JINA_MLX_REPO = "jinaai/jina-embeddings-v5-text-small-mlx"
+DEFAULT_ST_MODEL = "jinaai/jina-embeddings-v5-text-small"
 DEFAULT_BACKEND = "auto"  # auto | jina-mlx | sentence-transformers
 
-# Pinned revision of jinaai/jina-embeddings-v5-text-nano-mlx.
+# Pinned revision of jinaai/jina-embeddings-v5-text-small-mlx.
 # Update deliberately after testing new versions.
 _JINA_MLX_REVISION = os.getenv("CEX_JINA_MLX_REVISION", "main")
 

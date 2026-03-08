@@ -214,22 +214,27 @@ Dependency: M9 model upgrades. Validates all model choices with statistically ri
 - [x] 10.4b. JSON output compatible with Linux benchmark format
 - [x] 10.4c. Setup instructions in docstring, Apple Silicon check, Metal GPU check
 
-**Phase 5: Validation — Final Model Decisions** (in progress)
-- [x] 10.5a-reranker. Reranker decision: MiniLM-L12 CrossEncoder confirmed (same quality, 9.4x faster). Qwen3 and FlashRank are viable fallbacks
-- [ ] 10.5a-embedding. Analyze v5-small vs v5-nano after index rebuild (running in background)
-- [ ] 10.5b. Update reranker.py auto-detection cascade based on results
-- [x] 10.5c. LanceDB index rebuild with v5-small (1024d) — started, running in background
-- [ ] 10.5d. Run full 180-query eval_answer_pipeline.py before/after comparison
-- [ ] 10.5e. Update CLAUDE.md, AGENTS.md, FORGE-STATUS.md with final confirmed decisions
+**Phase 5: Validation — Final Model Decisions** ✓
+- [x] 10.5a-reranker. Reranker decision: Jina v3 confirmed winner (MRR=0.556, +15.6%, p=0.0014)
+- [x] 10.5a-embedding. v5-small vs v5-nano: MRR +27.3%, Hit@5 +22.3%, nDCG@5 +9.9%
+- [x] 10.5b. Auto cascade: jina-v3 → cross-encoder → flashrank (Linux), jina-v3-mlx first (macOS)
+- [x] 10.5c. LanceDB index rebuilt with v5-small (1024d): 334,935 rows, 10,711 pages, 2.3 GB
+- [x] 10.5d. Full 180-query eval: MRR=0.543, pfx=61.96%, domain=86.50%, nDCG@5=1.218
+- [x] 10.5e. CLAUDE.md, FORGE-STATUS.md updated with final decisions
 
-**Acceptance criteria** (revised):
+**Build timings** (RTX 4070 Ti SUPER, 16 GB VRAM):
+- v5-small, batch_size=64: ~100 min, OOM'd on 6 extreme pages (>50K words)
+- Incremental fix, batch_size=1: +40 min for 6 outlier pages
+- Total: ~140 min. Compaction: 3.0 GB → 2.3 GB
+
+**Acceptance criteria** (all met):
 1. ✅ Embedding benchmark runs on 163 golden QA queries with 95% bootstrap CI on Hit@5, MRR, nDCG@5
-2. ✅ Reranker benchmark tests 3 model/backend combinations on 163 queries with CI + paired permutation test
+2. ✅ Reranker benchmark tests 4 model/backend combinations on 163 queries with CI + paired permutation test
 3. ✅ GGUF researched and ruled out (no API). Qwen3 seq-cls added as alternative path
 4. ✅ macOS MLX benchmark script runs standalone, outputs comparable JSON
-5. Partial: Reranker models NOT significantly different (all tie). Embedding comparison pending index rebuild
-6. In progress: LanceDB index rebuild with v5-small (1024d)
-7. Pending: Full pipeline eval before/after comparison
+5. ✅ Jina v3 reranker winner (p=0.0014). v5-small embedding +27% MRR over v5-nano
+6. ✅ LanceDB index rebuilt with v5-small (1024d), 334,935 rows, 2.3 GB compacted
+7. ✅ Full 180-query pipeline eval: MRR=0.543, pfx=61.96%, nDCG@5=1.218
 8. ✅ All tests pass (421 + 9 reranker), no regressions
 
 ---

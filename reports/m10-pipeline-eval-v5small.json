@@ -1,0 +1,54 @@
+{
+  "total": 180,
+  "ok_rate": 0.8277777777777777,
+  "url_hit_rate": 0.5030674846625767,
+  "prefix_hit_rate": 0.6196319018404908,
+  "domain_hit_rate": 0.8650306748466258,
+  "mean_mrr": 0.5433537832310839,
+  "mean_ndcg5": 1.2178711523993895,
+  "mean_claims": 4.877777777777778,
+  "mean_latency_s": 0.9331057442559136,
+  "negative_fp_rate": 0.4117647058823529,
+  "by_path": {
+    "question": {
+      "total": 93,
+      "ok_rate": 0.9032258064516129,
+      "url_hit_rate": 0.5483870967741935,
+      "prefix_hit_rate": 0.6666666666666666,
+      "mean_mrr": 0.5948028673835125,
+      "mean_ndcg5": 1.3368328705343655
+    },
+    "endpoint_path": {
+      "total": 28,
+      "ok_rate": 1.0,
+      "url_hit_rate": 0.42857142857142855,
+      "prefix_hit_rate": 0.5357142857142857,
+      "mean_mrr": 0.48214285714285715,
+      "mean_ndcg5": 1.0251672643068954
+    },
+    "error_message": {
+      "total": 30,
+      "ok_rate": 1.0,
+      "url_hit_rate": 0.5666666666666667,
+      "prefix_hit_rate": 0.7333333333333333,
+      "mean_mrr": 0.5916666666666667,
+      "mean_ndcg5": 1.2248172059078735
+    },
+    "code_snippet": {
+      "total": 14,
+      "ok_rate": 0.5,
+      "url_hit_rate": 0.14285714285714285,
+      "prefix_hit_rate": 0.14285714285714285,
+      "mean_mrr": 0.14285714285714285,
+      "mean_ndcg5": 0.6241672359696627
+    },
+    "request_payload": {
+      "total": 15,
+      "ok_rate": 0.0,
+      "url_hit_rate": 0.0,
+      "prefix_hit_rate": 0.0,
+      "mean_mrr": 0.0,
+      "mean_ndcg5": 0.0
+    }
+  }
+}
