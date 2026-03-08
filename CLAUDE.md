@@ -286,7 +286,7 @@ Latest:
 - **Model benchmarks (M9-M10)** — Reranker: Jina v3 winner (MRR=0.556, +15.6% over MiniLM, p=0.0014). Auto cascade: jina-v3 → cross-encoder → flashrank (Linux), jina-v3-mlx first (macOS). Embedding: v5-small +12.5% Hit@5 over v5-nano. Benchmark harnesses: `scripts/benchmark_embeddings.py`, `scripts/benchmark_rerankers.py`, `scripts/benchmark_mlx.py`. Bootstrap BCa CI + paired permutation tests.
 - **Pre-rebuild confidence (M11)** — 4 bugs fixed (embeddings defaults, _DOMAIN_MAP, incremental build scope, vector memory), benchmark metrics corrected (negative dilution), golden QA URLs fixed (90% match rate), schema v6 migrated.
 - **Classification routing (M12)** — request_payload routing (0%→73% ok, 40% URL hit), code_snippet routing (50%→100% ok, 29% URL hit), exchange detection from payload parameter signatures and ccxt code patterns, multi-exchange disambiguation (CCXT reference exchange auto-dropped). Pipeline eval: MRR 0.543→0.580 (+6.8%), OK rate 82.78%→92.78% (+10pp), domain hit 86.50%→96.93% (+10.4pp), nDCG@5 1.218→1.358 (+11.5%).
-- **Query quality refinement (M15)** — Domain synonym expansion (30+ terms, ws→websocket, auth→authentication, ohlc→candlestick etc.), FTS5 AND-first with OR fallback, Binance section routing pass-through to generic search, docs_url resolver overhaul (changelog filtering, path-in-URL scoring, language deprioritization, 4,358 endpoints resolved), direct route fallback for empty docs_url, position-aware blend wired into semantic.py. Pipeline eval: MRR 0.611 (+5.3%), code_snippet url 21%→36%, endpoint_path url 50%→61%, request_payload url 40%→47%. 428 tests.
+- **Query quality refinement (M15)** — Domain synonym expansion (30+ terms, ws→websocket, auth→authentication, ohlc→candlestick etc.), FTS5 AND-first with OR fallback, Binance section routing pass-through to generic search, multi-exchange section keywords (8 exchanges), docs_url resolver overhaul (changelog filtering, path-in-URL scoring, language deprioritization, 4,358 endpoints resolved), undocumented gate for nonexistent endpoint_path/error_message queries (segment-level DB validation), position-aware blend wired into semantic.py. Pipeline eval: MRR 0.599 (+3.3% from M12), nDCG@5 1.329, negative FP 29.41% (was 41.18%). 428 tests.
 
 Research completed (docs/research/ and architect/research/):
 
@@ -300,7 +300,7 @@ Research completed (docs/research/ and architect/research/):
 - Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches.
 - Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 
-Next: Periodic CCXT docs refresh. Changelog drift detection. Remaining query quality gaps: code_snippet (36% url hit) and request_payload (47% url hit) need parameter-combination matching. Pacifica re-evaluation when docs mature.
+Next: Periodic CCXT docs refresh. Changelog drift detection. Remaining query quality gaps: overview page underranking for broad queries (rate limits, auth, permissions), code_snippet (36% url hit) and request_payload (47% url hit) need parameter-combination matching. Negative FP remaining 5/17 mostly question-type (defunct/DeFi exchanges need exchange recognition). Pacifica re-evaluation when docs mature.
 
 ## Compact Instructions
 
