@@ -1410,6 +1410,74 @@ def answer_question(
             direct = _direct_route(conn, classification=classification, exchange=exchange, docs_dir=docs_dir, question=question, norm=norm)
             if direct is not None:
                 return direct
+            # High confidence but no direct match → check if the path/error
+            # genuinely doesn't exist before falling through to generic search.
+            if classification.confidence >= 0.7:
+                should_gate = False
+                if classification.input_type == "endpoint_path":
+                    # Check if ANY endpoint with a similar path exists in the exchange.
+                    # Only gate if the exchange has indexed endpoints (otherwise pages may help).
+                    path = classification.signals.get("path", "")
+                    if path:
+                        ep_count = conn.execute(
+                            "SELECT COUNT(*) FROM endpoints WHERE exchange = ?;",
+                            (exchange.exchange_id,),
+                        ).fetchone()[0]
+                        if ep_count > 0:
+                            clean_path = re.sub(r"^\{\{\w+\}\}", "", path).split("?", 1)[0]
+                            # Use last 2 meaningful path segments for matching.
+                            # Gate only when ALL segments are missing from the endpoint DB
+                            # (i.e., completely nonexistent path, not just a version mismatch).
+                            skip = {"api", "v1", "v2", "v3", "v4", "v5", "rest", "ws"}
+                            segments = [s for s in clean_path.split("/") if s and s.lower() not in skip and len(s) > 1]
+                            search_segments = segments[-2:] if len(segments) >= 2 else segments
+                            if search_segments:
+                                all_missing = True
+                                for seg in search_segments:
+                                    row = conn.execute(
+                                        "SELECT 1 FROM endpoints WHERE exchange = ? AND path LIKE ? LIMIT 1;",
+                                        (exchange.exchange_id, f"%{seg}%"),
+                                    ).fetchone()
+                                    if row is not None:
+                                        all_missing = False
+                                        break
+                                if all_missing:
+                                    should_gate = True
+                elif classification.input_type == "error_message":
+                    # Check if any error code from the signals actually exists in pages/endpoints.
+                    codes = [ec.get("code", "") for ec in classification.signals.get("error_codes", []) if ec.get("code")]
+                    if codes:
+                        found_any = False
+                        for code in codes:
+                            row = conn.execute(
+                                "SELECT 1 FROM pages_fts WHERE pages_fts MATCH ? LIMIT 1;",
+                                (sanitize_fts_query(code),),
+                            ).fetchone()
+                            if row:
+                                found_any = True
+                                break
+                        if not found_any:
+                            should_gate = True
+
+                if should_gate:
+                    path_or_code = (
+                        classification.signals.get("path", "")
+                        or ", ".join(ec.get("code", "") for ec in classification.signals.get("error_codes", []))
+                    )
+                    return {
+                        "ok": True,
+                        "schema_version": "v1",
+                        "status": "undocumented",
+                        "question": question,
+                        "normalized_question": norm,
+                        "clarification": None,
+                        "claims": [],
+                        "notes": [
+                            f"No {classification.input_type} match found for '{path_or_code}' "
+                            f"in {exchange.exchange_id} docs. The endpoint or error code may "
+                            f"not exist, or its documentation has not been indexed."
+                        ],
+                    }
 
         # Binance: use richer Binance-specific logic.
         if exchange.exchange_id == "binance":
