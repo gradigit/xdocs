@@ -61,11 +61,62 @@ def _detect_binance_section(norm: str) -> str | None:
     return None
 
 
+_EXCHANGE_SECTION_KEYWORDS: dict[str, list[tuple[re.Pattern[str], str]]] = {
+    "kucoin": [
+        (re.compile(r"\bfutures?\b|\bperps?\b|\bperpetual\b"), "futures"),
+        (re.compile(r"\bmargin\b"), "margin"),
+        (re.compile(r"\bspot\b|\bmarket\s+data\b"), "spot"),
+    ],
+    "kraken": [
+        (re.compile(r"\bfutures?\b|\bperps?\b|\bperpetual\b"), "futures"),
+        (re.compile(r"\bspot\b"), "spot"),
+    ],
+    "coinbase": [
+        (re.compile(r"\bprime\b"), "prime"),
+        (re.compile(r"\bexchange\b"), "exchange"),
+        (re.compile(r"\badvanced\s+trade\b"), "advanced_trade"),
+        (re.compile(r"\bintx?\b|\binternational\b"), "intx"),
+    ],
+    "bitget": [
+        (re.compile(r"\bcopy\s*trad\b"), "copy_trading"),
+        (re.compile(r"\bmargin\b"), "margin"),
+        (re.compile(r"\bearn\b|\bstaking\b"), "earn"),
+    ],
+    "htx": [
+        (re.compile(r"\bcoin[\-\s]?margined?\b|\bcoin[\-\s]?m\b"), "coin_margined_swap"),
+        (re.compile(r"\busdt?\s+swap\b|\blinear\b"), "usdt_swap"),
+        (re.compile(r"\bfutures?\b|\bderivatives?\b|\bswap\b"), "derivatives"),
+        (re.compile(r"\bspot\b"), "spot"),
+    ],
+    "mexc": [
+        (re.compile(r"\bfutures?\b|\bcontract\b|\bperps?\b"), "futures"),
+        (re.compile(r"\bspot\b"), "spot"),
+    ],
+    "bitmart": [
+        (re.compile(r"\bfutures?\b|\bcontract\b|\bperps?\b"), "futures"),
+        (re.compile(r"\bspot\b"), "spot"),
+    ],
+    "okx": [
+        (re.compile(r"\bwebsocket\b|\bws\b|\bstream\b"), "websocket"),
+        (re.compile(r"\brest\b|\bhttp\b|\bapi\b"), "rest"),
+    ],
+}
+
+
 def _detect_section_keywords(norm: str, exchange) -> str | None:
     """Detect section from keywords for any multi-section exchange."""
     section_ids = [sec.section_id for sec in exchange.sections]
     if len(section_ids) <= 1:
         return None
+
+    # Exchange-specific keyword maps (more accurate than generic matching).
+    ex_id = getattr(exchange, "exchange_id", None)
+    if ex_id and ex_id in _EXCHANGE_SECTION_KEYWORDS:
+        for pattern, section_id in _EXCHANGE_SECTION_KEYWORDS[ex_id]:
+            if section_id in section_ids and pattern.search(norm):
+                return section_id
+
+    # Generic fallback: match section_id as a word in the query.
     for sid in section_ids:
         if re.search(r"\b" + re.escape(sid) + r"\b", norm):
             return sid
