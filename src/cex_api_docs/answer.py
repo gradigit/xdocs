@@ -18,7 +18,7 @@ from .resolve_docs_urls import _is_spec_url
 logger = logging.getLogger(__name__)
 
 # Feature flag: section-metadata post-fusion boost (default off until validated).
-_SECTION_BOOST_ENABLED = os.environ.get("CEX_SECTION_BOOST", "0") == "1"
+_SECTION_BOOST_ENABLED = os.environ.get("CEX_SECTION_BOOST", "1") == "1"
 _SECTION_BOOST_FACTOR = 1.3
 
 # Testnet/sandbox URL patterns to suppress from search results.
@@ -181,16 +181,51 @@ LIMIT 1;
     return dict(row)
 
 
+def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
+    """Return True if *pos* falls in a navigation / table-of-contents region.
+
+    Heuristic: in a *window*-char neighbourhood, if >55 % of non-empty lines
+    are bullet items or link-only lines we treat the area as navigation.
+    Large single-page sites (OKX 225 K words, Gate.io 192 K, HTX 130 K) put a
+    dense ToC at the top — the first regex match of a query term lands in that
+    ToC rather than in the substantive content below it.
+    """
+    start = max(0, pos - window // 2)
+    end = min(len(md), pos + window // 2)
+    region = md[start:end]
+    lines = [ln for ln in region.split("\n") if ln.strip()]
+    if len(lines) < 4:
+        return False
+    nav = 0
+    for ln in lines:
+        s = ln.strip()
+        # Bullet list items (ToC entries are usually short)
+        if (s.startswith("*") or s.startswith("-") or s.startswith("+")) and len(s) < 140:
+            nav += 1
+        # Link-only lines: [text](url)
+        elif s.startswith("[") and s.endswith(")") and "](" in s:
+            nav += 1
+    return nav / len(lines) > 0.55
+
+
 def _make_excerpt(md: str, *, needle_re: re.Pattern[str], target_len: int = 400, hard_max: int = 600) -> tuple[str, int, int]:
-    m = needle_re.search(md)
-    if not m:
+    # Find all matches and prefer those outside navigation regions.
+    best_match = None
+    for m in needle_re.finditer(md):
+        if not _is_nav_region(md, m.start()):
+            best_match = m
+            break
+        if best_match is None:
+            best_match = m  # keep first match as fallback
+
+    if not best_match:
         # Fallback: first N chars, snapped to boundary.
         end = min(len(md), target_len)
         end = _snap_end_forward(md, end)
         excerpt = _clean_excerpt(md[:end])
         return excerpt, 0, end
 
-    idx = m.start()
+    idx = best_match.start()
     start = max(0, idx - target_len // 2)
     end = min(len(md), start + target_len)
     if end - start > hard_max:

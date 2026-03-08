@@ -348,5 +348,66 @@ VALUES ('test', 'rest', 'https://example.com', 'API changed', 'abc123', '2026-01
                 conn.close()
 
 
+class TestNavRegionDetection(unittest.TestCase):
+    """Test that excerpt extraction skips navigation/TOC regions."""
+
+    def test_is_nav_region_bullet_list(self):
+        from cex_api_docs.answer import _is_nav_region
+
+        nav_md = "\n".join([
+            "NAV",
+            "* [API Overview](https://example.com/api)",
+            "* [Authentication](https://example.com/auth)",
+            "* Rate Limits",
+            "  * Trading-related APIs",
+            "  * Sub-account rate limit",
+            "* Market Maker Program",
+            "* [WebSocket](https://example.com/ws)",
+            "* [REST API](https://example.com/rest)",
+            "* [Change Log](https://example.com/log)",
+        ])
+        self.assertTrue(_is_nav_region(nav_md, 50))
+
+    def test_is_nav_region_content(self):
+        from cex_api_docs.answer import _is_nav_region
+
+        content_md = "\n".join([
+            "## Rate Limits",
+            "",
+            "Our REST and WebSocket APIs use rate limits to protect against abuse.",
+            "When a request is rejected due to rate limits, error code 50011 is returned.",
+            "The rate limit is different for each endpoint.",
+            "",
+            "| Endpoint | Rate Limit | Weight |",
+            "| --- | --- | --- |",
+            "| GET /api/v5/account/balance | 10 req/s | 1 |",
+        ])
+        self.assertFalse(_is_nav_region(content_md, 50))
+
+    def test_make_excerpt_skips_nav(self):
+        import re
+        from cex_api_docs.answer import _make_excerpt
+
+        # Build a large enough nav section so it's clearly separated from content
+        nav_lines = [f"* [{f'Section {i}'}](https://example.com/s{i})" for i in range(40)]
+        nav_lines.insert(5, "* Rate Limits")
+        nav_lines.insert(6, "  * Trading rate limits")
+        nav_lines.insert(7, "  * Sub-account rate limit")
+        nav = "\n".join(nav_lines)
+        # Add filler paragraphs between nav and content (simulating real pages)
+        filler = "\n\n" + ("Lorem ipsum dolor sit amet. " * 20 + "\n\n") * 3
+        content = "\n".join([
+            "## Rate Limits",
+            "",
+            "Our REST and WebSocket APIs use rate limits to protect against abuse.",
+            "When a request is rejected the system returns error code 50011.",
+        ])
+        md = nav + filler + content
+        needle = re.compile(r"rate\s+limit", re.IGNORECASE)
+        excerpt, start, end = _make_excerpt(md, needle_re=needle)
+        # Excerpt should come from the content section, not the nav
+        self.assertIn("REST and WebSocket APIs", excerpt)
+
+
 if __name__ == "__main__":
     unittest.main()
