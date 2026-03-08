@@ -122,7 +122,16 @@ exchanges:
     sections:
       - section_id: v2
         base_urls: ["https://api.bitget.com"]
-        seed_urls: ["https://www.bitget.com/api-doc/common/intro"]
+        seed_urls:
+          - "https://www.bitget.com/api-doc/common/intro"
+          - "https://www.bitget.com/api-doc/spot/market/Get-Tickers"
+          - "https://www.bitget.com/api-doc/contract/market/Get-All-Symbol-Ticker"
+        inventory_policy:
+          mode: link_follow
+          render_mode: auto
+          max_pages: 500
+        scope_prefixes:
+          - "https://www.bitget.com/api-doc/"
         doc_sources:
           - kind: sitemap
             url: https://www.bitget.com/sitemap.xml
