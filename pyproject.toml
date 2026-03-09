@@ -29,6 +29,7 @@ semantic-query = [
   "lancedb>=0.20",
   "pylance>=0.20",
   "mlx>=0.20; sys_platform == 'darwin'",
+  "mlx-lm>=0.20; sys_platform == 'darwin'",
   "tokenizers>=0.20; sys_platform == 'darwin'",
   "huggingface-hub>=0.24",
   "mistune>=3.0",
