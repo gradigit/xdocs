@@ -285,7 +285,7 @@ source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
 - **Unresolved **`$ref`**:** OpenAPI-imported request/response schemas may contain `$ref` pointers. If you need the referenced definition, search for the component name in the source page.
 - **Negative error codes:** Use `--` before negative numbers in CLI args: `search-error -- -1002`
 - **Semantic search requires **`[semantic]`** extra:** If `semantic-search` fails with ImportError, fall back to FTS5.
-- **Reranker requires **`[reranker]`** extra:** if reranker import fails, continue with semantic results and mark `rerank_applied: no` + `rerank_reason: reranker_unavailable`.
+- **Reranker is bundled** with `[semantic-query]` and `[semantic]` extras. If reranker import still fails, continue with semantic results and mark `rerank_applied: no` + `rerank_reason: reranker_unavailable`.
 
 ## Self-Evolution
 
