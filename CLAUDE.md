@@ -305,10 +305,11 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,917 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,963 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 
+- **OpenAPI $ref resolution** — Recursive resolver for internal JSON Pointer refs (`#/components/schemas/...` and `#/definitions/...`). Re-imported all 25 remote OpenAPI/Swagger specs. 2,213 → 236 unresolved $refs (89% resolved). Endpoint schemas now contain full type definitions, enums, constraints instead of raw $ref pointers. 4,963 total endpoints (+46 from re-import).
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
 - **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).
 - **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → `cloudscraper` → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, cloudscraper 1.2.71, Playwright 1.58.0.

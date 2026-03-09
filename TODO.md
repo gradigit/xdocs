@@ -808,18 +808,16 @@ Each item below was identified via deep online research + codebase analysis (M17
 Test: `test-scripts/test_skill_coverage.py` — compares CLI output against Binance spot skill (binance-skills-hub v1.0.1).
 Baseline: 0 FULL / 5 PARTIAL / 0 EMPTY. Target: 3+ FULL.
 
-#### COVERAGE-1: Re-import Binance OpenAPI Specs with $ref Resolution ✓→pending
+#### COVERAGE-1: Re-import All OpenAPI Specs with $ref Resolution ✓
 **Severity**: High (unblocks Q1, Q2, Q3 improvements)
 **Depends on**: DATA-1 ✓
 
-Now that `_resolve_refs()` is implemented, re-import all Binance spot OpenAPI specs to replace the 162 $ref-only endpoint records with fully resolved schemas (types, enums, required flags, constraints).
-
-```bash
-# Re-import all 9 Binance spot spec URLs (from exchanges.yaml doc_sources)
-cex-api-docs import-openapi --exchange binance --section spot --url <each-spec-url> --docs-dir ./cex-docs --continue-on-error
-```
-
-After re-import, run the coverage test to measure improvement on Q1 (params) and Q2 (enums).
+All 25 remote OpenAPI/Swagger specs re-imported with recursive $ref resolver.
+- Swagger 2.0 gate fix (`definitions/` support) applied
+- Results: 2,213 → 236 unresolved $refs (89% resolved)
+- 4,963 total endpoints (+46 from re-import)
+- Pipeline eval: MRR 0.623 (stable), nDCG@5 1.325 (+0.2%), no regression
+- Remaining 236 unresolved: 82 bitstamp (localhost spec), ~154 deep nested refs
 
 #### COVERAGE-2: Endpoint `search_text` Enrichment with Parameter Names
 **Severity**: Medium
