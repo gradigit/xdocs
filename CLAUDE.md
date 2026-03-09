@@ -4,6 +4,47 @@
 
 A local-only, cite-only CEX API documentation knowledge base (library + CLI + agent skill) that crawls official exchange docs, stores and indexes them via SQLite FTS5, and enables agents to answer endpoint, rate limit, and permission questions with strict provenance.
 
+## Two-Repo Architecture
+
+This project uses two repositories. **Every push to the maintainer repo must be followed by a runtime repo sync + push.**
+
+### Maintainer Repo (this repo)
+
+- **Path**: `/home/lechat/Projects/cex-api-docs`
+- **Remote**: `github.com/henryaxis/cex-api-docs`
+- **Platform**: Linux (CUDA for index builds, full dev tooling)
+- **Install**: `uv pip install -e ".[dev,semantic]"`
+- **Purpose**: Crawling, syncing, indexing, spec imports, validation, benchmarks, all development
+- **Contains**: Full source, tests, scripts, schemas, skills, research artifacts
+
+### Runtime Repo (team-facing)
+
+- **Path**: `/home/lechat/Projects/cex-api-docs-runtime`
+- **Remote**: `github.com/henryaxis/cex-api-docs-runtime`
+- **Platform**: macOS (MacBook, MLX for embeddings/reranking)
+- **Install**: `uv pip install -e ".[semantic-query]"`
+- **Purpose**: Query-only CLI + prebuilt `cex-docs/` snapshot (SQLite + LanceDB index via Git LFS)
+- **Contains**: Query modules only, no crawl/sync/import code, no tests
+
+### Sync Protocol
+
+After any code change or data update in the maintainer repo:
+
+```bash
+# From maintainer repo root:
+source /home/lechat/Projects/.venv/bin/activate
+python scripts/sync_runtime_repo.py \
+  --runtime-root /home/lechat/Projects/cex-api-docs-runtime \
+  --docs-dir ./cex-docs --strip-maintenance
+
+# Then commit and push the runtime repo:
+cd /home/lechat/Projects/cex-api-docs-runtime
+git add -A && git commit -m "sync: <description>" && git push
+cd /home/lechat/Projects/cex-api-docs
+```
+
+LanceDB index fragments are stored in Git LFS (max 1.9 GB per file, enforced by `compact_index(max_bytes_per_file=1_900_000_000)`).
+
 ## Build Commands
 
 Quick setup:
@@ -11,7 +52,7 @@ Quick setup:
 ```bash
 uv venv .venv
 source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv pip install -e ".[dev,semantic]"
 pytest
 pytest tests/test_endpoints.py -x    # single module, stop on first failure
 pytest -k "test_stale" -x            # run tests matching pattern
