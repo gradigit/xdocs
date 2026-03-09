@@ -168,15 +168,26 @@ def _load_jina_v3_mlx():
         model_dir = snapshot_download(repo)
 
     # Load custom model code from the repo
-    spec = ilu.spec_from_file_location(
-        "jina_reranker_v3_mlx", os.path.join(model_dir, "modeling.py")
-    )
+    # The MLX variant uses rerank.py with MLXReranker class
+    for modfile in ("rerank.py", "modeling.py"):
+        modpath = os.path.join(model_dir, modfile)
+        if os.path.exists(modpath):
+            break
+    else:
+        raise ImportError(f"Cannot find rerank.py or modeling.py in {model_dir}")
+
+    spec = ilu.spec_from_file_location("jina_reranker_v3_mlx", modpath)
     if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load modeling.py from {model_dir}")
+        raise ImportError(f"Cannot load {modpath}")
     mod = ilu.module_from_spec(spec)
     spec.loader.exec_module(mod)
 
-    _jina_v3_model = mod.JinaForRanking.from_pretrained(model_dir, trust_remote_code=True)
+    # MLXReranker (current) or JinaForRanking (legacy)
+    cls = getattr(mod, "MLXReranker", None) or getattr(mod, "JinaForRanking", None)
+    if cls is None:
+        raise ImportError(f"No MLXReranker or JinaForRanking class in {modpath}")
+
+    _jina_v3_model = cls() if modfile == "rerank.py" else cls.from_pretrained(model_dir, trust_remote_code=True)
     return _jina_v3_model
 
 
