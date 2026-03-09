@@ -159,8 +159,8 @@ class TestSemantic(unittest.TestCase):
             self.assertIn("jina-embeddings-v5", result["model"])
             self.assertGreater(result["ndims"], 0)
 
-            # Vector search.
-            results = semantic_search(docs_dir=str(docs_dir), query="check wallet balance", limit=3, query_type="vector")
+            # Vector search (rerank=never to isolate retrieval quality from reranker).
+            results = semantic_search(docs_dir=str(docs_dir), query="check wallet balance", limit=3, query_type="vector", rerank="never")
             self.assertGreater(len(results), 0)
             # The top result should be the account balance page (semantic match).
             self.assertEqual(results[0]["url"], "https://example.com/spot/account")
@@ -260,8 +260,8 @@ class TestSemantic(unittest.TestCase):
             urls = [r["url"] for r in results]
             self.assertIn("https://example.com/spot/withdraw", urls)
 
-            # Old pages should still be searchable.
-            results2 = semantic_search(docs_dir=str(docs_dir), query="check wallet balance", limit=3, query_type="vector")
+            # Old pages should still be searchable (rerank=never to isolate retrieval).
+            results2 = semantic_search(docs_dir=str(docs_dir), query="check wallet balance", limit=3, query_type="vector", rerank="never")
             self.assertGreater(len(results2), 0)
             self.assertEqual(results2[0]["url"], "https://example.com/spot/account")
 

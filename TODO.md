@@ -855,3 +855,34 @@ Improvements to the test itself:
 - Increase default timeout from 30s to 60s (reranker cold-start)
 - Add Q6: Rate limits (test whether `answer "What rate limits does Binance have?"` surfaces the weight system)
 - Add multi-exchange variant (OKX, Bybit, Bitget) to validate generalization
+
+---
+
+### M18: Runtime Repo Sync Workflow ✓
+- **Goal**: Research and fix the 5 friction points in `scripts/sync_runtime_repo.py` workflow
+- **Result**: All 5 friction points addressed. 3 bugs found in adversarial review and fixed (manifest comparison, CalVer sequence, empty query guard).
+- **Acceptance criteria**:
+  1. Automated smoke test: `_run_smoke_test()` + `runtime-query-smoke.sh` (7 checks) ✓
+  2. Diff check: `_compare_manifests()` + `_build_delta_summary()` with SHA256 comparison ✓ (+ no-hash fallback fix)
+  3. Push automation: `--push` flag with git-lfs check, divergence detection, never force-push ✓
+  4. Version tagging: `--tag` with CalVer `data-YYYY.MM.DD[.N]` ✓ (+ .1 suffix fix)
+  5. LFS optimization: WAL checkpoint + VACUUM on destination DB ✓
+- **Steps**:
+  - [x] 18.1 Research: sync workflow best practices, LFS delta strategies, smoke test patterns
+  - [x] 18.2 Plan: draft implementation approach
+  - [x] 18.3 Build: implement improvements to sync_runtime_repo.py (306→750+ lines)
+  - [x] 18.4 Review + improvement: 3 bugs found and fixed
+
+### M19: Binance Coverage Test Investigation ✓
+- **Goal**: Investigate why Binance coverage test shows 1 FULL / 4 PARTIAL
+- **Result**: NOT a regression. All 5 root causes are long-standing gaps. Q2 improved (PARTIAL→FULL) from $ref resolution. 2 code bugs fixed (FTS crash, Postman param extraction). 3 remaining gaps are upstream data issues.
+- **Acceptance criteria**:
+  1. Root cause identified: Q1 peg params not in spec, Q3/Q5 Postman empty params, Q4 FTS crash + narrow snippets ✓
+  2. Q1 params: 3 missing (peg*) not in upstream OpenAPI spec — known data gap ✓
+  3. Q4 auth: FTS crash on "X-MBX-APIKEY" fixed (sanitize_fts_query). Content exists but snippet window too narrow — known limitation ✓
+  4. Q3/Q5: Postman `_extract_request_schema()` added (10 tests). Specific endpoints have empty params in source — documented ✓
+- **Steps**:
+  - [x] 19.1-19.2 Research: detailed per-question root cause analysis (architect/research/m19-binance-coverage.md)
+  - [x] 19.3 Plan: identify fixable bugs vs upstream gaps
+  - [x] 19.4 Build: FTS sanitization in pages.py, Postman param extraction in postman_import.py
+  - [x] 19.5 Review + improvement: empty query guard added

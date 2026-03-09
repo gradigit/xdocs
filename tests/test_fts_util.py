@@ -300,5 +300,169 @@ class TestSigmoid(unittest.TestCase):
         self.assertLess(sigmoid(0.0), sigmoid(1.0))
 
 
+class TestPostmanExtractRequestSchema(unittest.TestCase):
+    """Test Postman parameter extraction from request objects."""
+
+    def test_urlencoded_body(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "body": {
+                "mode": "urlencoded",
+                "urlencoded": [
+                    {"key": "symbol", "value": "BTCUSDT"},
+                    {"key": "side", "value": "BUY"},
+                ],
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "symbol")
+        self.assertEqual(params[0]["in"], "body")
+        self.assertEqual(params[1]["name"], "side")
+        self.assertEqual(params[1]["in"], "body")
+
+    def test_url_query_params(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "url": {
+                "raw": "https://api.example.com/v1/order",
+                "query": [
+                    {"key": "symbol", "value": "BTCUSDT"},
+                    {"key": "limit", "value": "10"},
+                ],
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "symbol")
+        self.assertEqual(params[0]["in"], "query")
+        self.assertEqual(params[1]["name"], "limit")
+        self.assertEqual(params[1]["in"], "query")
+
+    def test_formdata_body(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "body": {
+                "mode": "formdata",
+                "formdata": [
+                    {"key": "file", "type": "file"},
+                    {"key": "description", "value": "test"},
+                ],
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "file")
+        self.assertEqual(params[0]["in"], "body")
+
+    def test_raw_json_body(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "body": {
+                "mode": "raw",
+                "raw": '{"symbol": "BTCUSDT", "side": "BUY", "type": "LIMIT"}',
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        names = {p["name"] for p in params}
+        self.assertIn("symbol", names)
+        self.assertIn("side", names)
+        self.assertIn("type", names)
+        for p in params:
+            self.assertEqual(p["in"], "body")
+
+    def test_mixed_query_and_body(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "url": {
+                "raw": "https://api.example.com/v1/order",
+                "query": [
+                    {"key": "recvWindow", "value": "5000"},
+                ],
+            },
+            "body": {
+                "mode": "urlencoded",
+                "urlencoded": [
+                    {"key": "symbol", "value": "BTCUSDT"},
+                ],
+            },
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 2)
+        query_params = [p for p in params if p["in"] == "query"]
+        body_params = [p for p in params if p["in"] == "body"]
+        self.assertEqual(len(query_params), 1)
+        self.assertEqual(query_params[0]["name"], "recvWindow")
+        self.assertEqual(len(body_params), 1)
+        self.assertEqual(body_params[0]["name"], "symbol")
+
+    def test_empty_request_returns_none(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        result = _extract_request_schema({})
+        self.assertIsNone(result)
+
+    def test_no_params_returns_none(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {"url": {"raw": "https://api.example.com/v1/time"}}
+        result = _extract_request_schema(req)
+        self.assertIsNone(result)
+
+    def test_raw_invalid_json_returns_none(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "body": {
+                "mode": "raw",
+                "raw": "not-json-content",
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNone(result)
+
+    def test_deduplicates_params(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "url": {
+                "raw": "https://api.example.com/v1/order",
+                "query": [
+                    {"key": "symbol", "value": "BTCUSDT"},
+                    {"key": "symbol", "value": "ETHUSDT"},
+                ],
+            },
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0]["name"], "symbol")
+
+    def test_empty_key_skipped(self) -> None:
+        from cex_api_docs.postman_import import _extract_request_schema
+        req = {
+            "body": {
+                "mode": "urlencoded",
+                "urlencoded": [
+                    {"key": "", "value": "test"},
+                    {"key": "  ", "value": "test"},
+                    {"key": "valid", "value": "test"},
+                ],
+            }
+        }
+        result = _extract_request_schema(req)
+        self.assertIsNotNone(result)
+        params = result["parameters"]
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0]["name"], "valid")
+
+
 if __name__ == "__main__":
     unittest.main()

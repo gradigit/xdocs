@@ -671,7 +671,7 @@ def semantic_search(
     if rerank_applied and raw_results:
         try:
             from .fts_util import position_aware_blend
-            raw_results = position_aware_blend(raw_results)
+            raw_results = position_aware_blend(raw_results, retrieval_score_key="score")
         except Exception:
             pass  # non-critical; fall through to default ordering
 

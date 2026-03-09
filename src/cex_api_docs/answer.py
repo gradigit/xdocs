@@ -463,15 +463,16 @@ def _search_pages_with_semantic(
     fuses SQLite FTS5 BM25 ranks with LanceDB vector-only ranks.
 
     Strong-signal BM25 shortcut: skips vector search when FTS5 produces a
-    clear high-confidence match (only for ``question`` query type).
+    clear high-confidence match (only for ``code_snippet`` and ``error_message``
+    types — ``question`` and ``request_payload`` benefit from vector search).
     """
     # FTS5 search — fetch extra candidates for RRF.
     fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit * 2)
 
     # Strong-signal shortcut: skip vector search if BM25 is confident enough.
-    # Applies to question, code_snippet, and error_message types.
-    # endpoint_path uses direct routing; request_payload benefits from vector search.
-    if query_type_hint in ("question", "code_snippet", "error_message") and should_skip_vector_search(fts_results):
+    # Applies to code_snippet and error_message types only.
+    # endpoint_path uses direct routing; request_payload and question benefit from vector search.
+    if query_type_hint in ("code_snippet", "error_message") and should_skip_vector_search(fts_results):
         return fts_results[:limit]
 
     # Semantic vector search (if available).
@@ -517,7 +518,7 @@ def _search_pages_with_semantic(
         "endpoint_path": [1.5, 0.5],     # favor keyword match
         "error_message": [1.3, 0.7],     # favor keyword with some semantic
         "code_snippet": [0.7, 1.3],      # favor semantic
-        "request_payload": [1.0, 1.0],   # balanced
+        "request_payload": [1.3, 0.7],   # keyword-favoring — exact param names match better in FTS5
     }
     rrf_weights = _RRF_WEIGHTS.get(query_type_hint, [1.0, 1.0])
     fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url", weights=rrf_weights)
@@ -655,6 +656,7 @@ def _directory_prefix(url: str) -> str:
 def _generic_search_answer(
     conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
     detected_section_override: str | None = None,
+    query_type_hint: str | None = None,
 ) -> dict[str, Any]:
     """Generic cite-only answer for any exchange: FTS search across all sections."""
     # Use directory prefixes (not exact seed URLs) for broader matching.
@@ -721,7 +723,7 @@ def _generic_search_answer(
     seen_section_urls: set[str] = set()  # deduplicate across overlapping section prefixes
     for section_id, prefix in ordered_sections:
         section_limit = 5 if (detected_section and section_id == detected_section) else 3
-        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=section_limit, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=section_limit, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint=query_type_hint)
         for cand in candidates:
             curl = cand.get("canonical_url", "")
             if curl in seen_section_urls:
@@ -768,7 +770,7 @@ def _generic_search_answer(
     for dp in domain_prefixes:
         if c > max_claims:
             break
-        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
+        candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint=query_type_hint)
         # Apply section boost and page-type boost for domain-level results.
         candidates = _apply_section_boost(candidates, section_prefix=boost_prefix)
         candidates = _apply_page_type_boost(candidates, norm=norm)
@@ -1295,10 +1297,11 @@ def _augment_with_classification(
                 # Also search pages for trading/order documentation.
                 try:
                     trading_terms = search_term + " order"
+                    _url_prefix = f"https://{exchange.allowed_domains[0]}" if exchange.allowed_domains else ""
                     page_results = _search_pages(
                         conn,
                         query=trading_terms,
-                        exchange=exchange.exchange_id,
+                        url_prefix=_url_prefix,
                         limit=3,
                     )
                     for pr in page_results:
@@ -1323,10 +1326,11 @@ def _augment_with_classification(
             topics = [m["topic"] for m in code_methods[:2]]
             search_term = " ".join(topics)
             try:
+                _url_prefix = f"https://{exchange.allowed_domains[0]}" if exchange.allowed_domains else ""
                 page_results = _search_pages(
                     conn,
                     query=search_term,
-                    exchange=exchange.exchange_id,
+                    url_prefix=_url_prefix,
                     limit=5,
                 )
                 for pr in page_results:
@@ -1609,7 +1613,7 @@ def answer_question(
             result = _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir)
         else:
             # All other exchanges: generic cite-only search.
-            result = _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir)
+            result = _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir, query_type_hint=classification.input_type)
 
         # Augment with classification-specific results.
         result = _augment_with_classification(

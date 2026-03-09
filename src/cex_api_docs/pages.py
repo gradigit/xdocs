@@ -6,16 +6,19 @@ from typing import Any
 
 from .db import open_db
 from .errors import CexApiDocsError
-from .fts_util import endpoint_search_text
+from .fts_util import endpoint_search_text, sanitize_fts_query
 from .lock import acquire_write_lock
 from .store import require_store_db
 from .urlcanon import canonicalize_url
 
 
 def search_pages(*, docs_dir: str, query: str, limit: int = 10) -> list[dict[str, Any]]:
+    if not query or not query.strip():
+        return []
     db_path = require_store_db(docs_dir)
     conn = open_db(db_path)
     try:
+        sanitized = sanitize_fts_query(query)
         cur = conn.execute(
             """
 SELECT
@@ -33,7 +36,7 @@ WHERE pages_fts MATCH ?
 ORDER BY rank
 LIMIT ?;
 """,
-            (query, int(limit)),
+            (sanitized, int(limit)),
         )
         out: list[dict[str, Any]] = []
         for row in cur.fetchall():

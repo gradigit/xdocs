@@ -211,5 +211,50 @@ CREATE TABLE inventory_entries (
             self.assertEqual(int(dry2["schema_user_version"]), 6)
 
 
+class TestSearchPagesSanitization(unittest.TestCase):
+    """Test that search_pages() sanitizes FTS5-hostile characters."""
+
+    def test_hyphenated_query_no_crash(self) -> None:
+        """Hyphens in queries (e.g. X-MBX-APIKEY) must not crash FTS5."""
+        from cex_api_docs.pages import search_pages
+
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            schema_path = REPO_ROOT / "schema" / "schema.sql"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=schema_path, lock_timeout_s=1.0)
+
+            # Should not raise -- hyphen is sanitized to a quoted term.
+            results = search_pages(docs_dir=str(docs_dir), query="X-MBX-APIKEY", limit=5)
+            self.assertIsInstance(results, list)
+
+    def test_colon_query_no_crash(self) -> None:
+        """Colons in queries (e.g. column:prefix) must not crash FTS5."""
+        from cex_api_docs.pages import search_pages
+
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            schema_path = REPO_ROOT / "schema" / "schema.sql"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=schema_path, lock_timeout_s=1.0)
+
+            results = search_pages(docs_dir=str(docs_dir), query="title:hello", limit=5)
+            self.assertIsInstance(results, list)
+
+    def test_special_chars_query_no_crash(self) -> None:
+        """Mixed special characters must not crash FTS5."""
+        from cex_api_docs.pages import search_pages
+
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            schema_path = REPO_ROOT / "schema" / "schema.sql"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=schema_path, lock_timeout_s=1.0)
+
+            results = search_pages(
+                docs_dir=str(docs_dir),
+                query="rate-limit /api/v1/order?symbol=BTC",
+                limit=5,
+            )
+            self.assertIsInstance(results, list)
+
+
 if __name__ == "__main__":
     unittest.main()

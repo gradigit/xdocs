@@ -70,6 +70,78 @@ def _iter_postman_items(obj: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def _extract_request_schema(req: dict[str, Any]) -> dict[str, Any] | None:
+    """Extract parameter names from a Postman request into OpenAPI-compatible format.
+
+    Parses URL query params, urlencoded body, formdata body, and raw JSON body.
+    Returns {"parameters": [...]} or None if no parameters found.
+    """
+    params: list[dict[str, str]] = []
+
+    # 1. URL query parameters.
+    url_obj = req.get("url")
+    if isinstance(url_obj, dict):
+        query_params = url_obj.get("query")
+        if isinstance(query_params, list):
+            for qp in query_params:
+                if isinstance(qp, dict):
+                    name = qp.get("key")
+                    if isinstance(name, str) and name.strip():
+                        params.append({"name": name.strip(), "in": "query"})
+
+    # 2. Body parameters.
+    body = req.get("body")
+    if isinstance(body, dict):
+        mode = body.get("mode")
+
+        # 2a. urlencoded body params.
+        if mode == "urlencoded":
+            urlencoded = body.get("urlencoded")
+            if isinstance(urlencoded, list):
+                for item in urlencoded:
+                    if isinstance(item, dict):
+                        name = item.get("key")
+                        if isinstance(name, str) and name.strip():
+                            params.append({"name": name.strip(), "in": "body"})
+
+        # 2b. formdata body params.
+        elif mode == "formdata":
+            formdata = body.get("formdata")
+            if isinstance(formdata, list):
+                for item in formdata:
+                    if isinstance(item, dict):
+                        name = item.get("key")
+                        if isinstance(name, str) and name.strip():
+                            params.append({"name": name.strip(), "in": "body"})
+
+        # 2c. raw JSON body — extract top-level keys.
+        elif mode == "raw":
+            raw = body.get("raw")
+            if isinstance(raw, str) and raw.strip():
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, dict):
+                        for key in parsed:
+                            if isinstance(key, str) and key.strip():
+                                params.append({"name": key.strip(), "in": "body"})
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
+    if not params:
+        return None
+
+    # Deduplicate by (name, in) while preserving order.
+    seen: set[tuple[str, str]] = set()
+    unique: list[dict[str, str]] = []
+    for p in params:
+        key = (p["name"], p["in"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(p)
+
+    return {"parameters": unique}
+
+
 def _extract_request_raw_url(req: dict[str, Any]) -> str | None:
     u = req.get("url")
     if isinstance(u, str):
@@ -213,13 +285,31 @@ def import_postman(
 
         http_obj = {"method": method, "path": path, "base_url": effective_base_url, "api_version": cfg.api_version}
 
+        # Extract request parameters from Postman request body and URL query.
+        req_schema = _extract_request_schema(req)
+        if req_schema is not None and ex is not None:
+            start, end, excerpt = ex
+            sources.append(
+                {
+                    "url": url,
+                    "crawled_at": stored["crawled_at"],
+                    "content_hash": stored["content_hash"],
+                    "path_hash": stored["path_hash"],
+                    "excerpt": excerpt,
+                    "excerpt_start": start,
+                    "excerpt_end": end,
+                    "field_name": "request_schema",
+                }
+            )
+            field_status["request_schema"] = "documented"
+
         record: dict[str, Any] = {
             "exchange": cfg.exchange,
             "section": cfg.section,
             "protocol": "http",
             "http": http_obj,
             "description": it.get("name") if isinstance(it.get("name"), str) else None,
-            "request_schema": None,
+            "request_schema": req_schema,
             "response_schema": None,
             "required_permissions": None,
             "rate_limit": None,
