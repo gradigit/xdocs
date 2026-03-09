@@ -296,7 +296,8 @@ def main(argv: list[str] | None = None) -> None:
     bi.add_argument("--batch-size", type=int, default=64, help="Embedding batch size (default: 64)")
     bi.add_argument("--incremental", action="store_true", help="Only embed new/changed pages (skip unchanged)")
 
-    sub.add_parser("compact-index", help="Compact LanceDB index: merge fragments + cleanup old versions (requires [semantic])", parents=[common])
+    ci = sub.add_parser("compact-index", help="Compact LanceDB index: merge fragments + cleanup old versions (requires [semantic])", parents=[common])
+    ci.add_argument("--max-bytes-per-file", type=int, default=None, help="Max bytes per .lance data file (e.g. 1900000000 for GitHub LFS)")
 
     ss = sub.add_parser("semantic-search", help="Semantic search via LanceDB vector index (requires [semantic])", parents=[common])
     ss.add_argument("query", help="Natural language search query")
@@ -819,7 +820,7 @@ def main(argv: list[str] | None = None) -> None:
 
         if args.cmd == "compact-index":
             from .semantic import compact_index
-            r = compact_index(docs_dir=args.docs_dir)
+            r = compact_index(docs_dir=args.docs_dir, max_bytes_per_file=getattr(args, "max_bytes_per_file", None))
             _print_json({"ok": True, "schema_version": "v1", "result": r})
             return
 

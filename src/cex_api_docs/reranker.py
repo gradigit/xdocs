@@ -350,5 +350,5 @@ def _auto_rerank(
             last_exc = exc
 
     raise ImportError(
-        "No reranker backend available. Install: pip install cex-api-docs[reranker]"
+        "No reranker backend available. Install: uv pip install -e '.[semantic-query]'"
     ) from last_exc

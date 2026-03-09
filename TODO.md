@@ -505,7 +505,81 @@ Dependency: M16 complete. Research-driven optimization targeting weak areas.
 - [x] 17.3c. Final test suite run + commit (67eb2a8)
 
 **Phase 4: Crawl Fixes**
-- [ ] 17.4a. Re-crawl Kraken with `--render auto` — 48 REST API pages have thin content (361-598 words) because response schemas are JS-rendered. Need Playwright fallback to capture full page content including response field tables.
+- [ ] 17.4a. Re-crawl Kraken with `--render auto` — 48 REST API pages have thin content (361-598 words) because response schemas are JS-rendered. NOTE: Playwright won't help — `docusaurus-plugin-openapi-docs` stores spec data as zlib+base64 JSON in Webpack chunks, skeleton `<div class="openapi-skeleton">` placeholders never hydrate for any crawler. The 45 imported endpoints compensate but thin pages remain. Path forward: extract specs from JS chunks (complex) or wait for `krakenfx/api-specs` publication.
+
+---
+
+### Bugs Found in Spot Checks
+
+#### BUG-1: Deribit Raw Spec URL Bypasses Suppression
+**Severity**: Medium
+**Found**: 2026-03-09, spot check "Deribit get instrument info"
+
+`_is_spec_url()` correctly returns True for `docs.deribit.com/specifications/deribit_openapi.json`, but this URL still appears at rank #1 in question-type query results. Some code path in `_search_pages_with_semantic()` or the generic search pipeline isn't applying the `_is_spec_url()` filter. The raw JSON spec has extremely high BM25 term frequency for words like "instrument", causing it to outscore the actual docs page (`public/get_instrument` ranks 4th).
+
+**Fix**: Trace the code path for question-type queries through `_generic_search_answer()` → `_search_pages_with_semantic()` and verify `_is_spec_url()` is applied to all candidate URLs before ranking. May also need to filter spec URLs from `pages_fts` results in `_search_pages()`.
+
+#### BUG-2: Binance POST /api/v3/order docs_url Points to FAQ Page
+**Severity**: Medium
+**Found**: 2026-03-09, spot check "POST /api/v3/order Binance"
+
+The docs_url resolver linked endpoint `POST /api/v3/order` (New Order) to `developers.binance.com/docs/binance-spot-api-docs/faqs/order_amend_keep_priority` — an FAQ about `PUT /api/v3/order/amend/keepPriority`. The resolver matched on the "order" keyword in the URL path. The endpoint data (method, path, params) is correct (from OpenAPI spec); only the citation URL is wrong.
+
+**Fix**: Improve `resolve_docs_urls.py` candidate scoring — path-in-URL matching should require more specific segment overlap, not just keyword presence. For `/api/v3/order`, a URL containing `/order/` generically should score lower than one containing the full path or endpoint description.
+
+#### BUG-3: Navigation Breadcrumb Artifacts in Stored Markdown Excerpts
+**Severity**: Low
+**Found**: 2026-03-09, spot checks on Bybit and Kraken
+
+Stored markdown for Bybit and Kraken pages contains malformed relative URLs from sidebar navigation elements. Example: `[Abandoned Endpoints](https://bybit-exchange.github.io/docs/v5/spread/trade/</docs/v5/abandon/asset-info>)`. The markdown converter appends relative nav links to the page URL instead of resolving them, creating broken link syntax that pollutes excerpts and wastes excerpt budget.
+
+**Fix**: Either (a) strip navigation sidebar elements during HTML→markdown conversion in `page_store.py` / `extract_page_markdown()`, or (b) add a post-processing step to clean malformed URL patterns (`</ ... >` inside markdown links) from stored markdown. Option (a) is more robust but requires identifying nav regions in HTML; option (b) is a regex cleanup.
+
+#### BUG-4: Orderly SDK Docs Outrank REST API Pages for Question Queries
+**Severity**: Low
+**Found**: 2026-03-09, spot check "Orderly Network create order"
+
+Question-type queries like "Orderly create order" return SDK type definition pages (`orderly_network_react`, `orderly_network_net.WS`, `orderly_network_types`) instead of the REST API endpoint page. The endpoint_path query `POST /v1/order Orderly` correctly routes to the cancel-order page which cites `POST /v1/order — Create Order`. Root cause: SDK type pages have higher BM25 scores because they contain many class/type definitions mentioning "order" and "create".
+
+**Fix**: This would be addressed by OPT-7 (contextual chunk enrichment) — enriching REST API page chunks with endpoint metadata would boost their vector scores. Alternatively, a page-type classification (SDK reference vs API docs) could deprioritize SDK pages for API-intent queries.
+
+#### BUG-5: Coinbase Rate Limiting Query Matches Nav Sidebar Text
+**Found**: 2026-03-09, spot check "how does coinbase rate limiting work"
+
+Query returns pages that mention "Rate Limits" only in navigation sidebar links, not substantive content. FTS5 matches nav text with equal weight to body content. The dedicated rate limits page should rank first.
+
+**Fix**: Nav text stripping in `_make_excerpt()` partially addresses this (the `_is_nav_region()` filter), but the FTS5 index itself contains nav text. A deeper fix: strip nav/sidebar regions before FTS indexing, or apply a content-region weight (body text > nav text).
+
+#### BUG-6: Gate.io Endpoint Display Formatting in Answer Output
+**Found**: 2026-03-09, spot check "import ccxt; exchange = ccxt.gateio(); exchange.fetch_balance()"
+
+3 Gate.io ENDPOINT claims rendered as `[gateio:v4] — ` with empty visible text in answer output. Investigation: all 363 gateio endpoints have non-empty method, path, and description. Root cause is likely the answer formatting path truncating or not rendering endpoint summaries for certain result shapes.
+
+**Fix**: Check `_format_endpoint_claim()` or equivalent in answer.py to ensure all endpoint fields are rendered.
+
+---
+
+### Data Gap Fixes (Prerequisites for OPT-1)
+
+#### DATA-1: Resolve OpenAPI `$ref` Parameters During Import
+**Severity**: High (blocks OPT-1)
+**Scope**: `openapi_import.py`
+
+162 Binance endpoints have `$ref`-only parameters (e.g., `{"$ref": "#/components/parameters/symbol"}`) that were never resolved to actual parameter names during import. The importer stores the raw `$ref` string instead of following the reference to extract `name`, `in`, `schema`. This means these endpoints have zero extractable parameter names for OPT-1 or OPT-3.
+
+**Fix**: During OpenAPI import, carry the full `components` context and resolve `$ref` pointers before storing `request_schema`. Use `jsonschema.RefResolver` or manual dict traversal. Affects `_extract_request_schema()` in `openapi_import.py`.
+
+**Scope**: 162 Binance endpoints (11.4% of Binance total), plus potentially other OpenAPI imports with `$ref` patterns.
+
+#### DATA-2: Extract Parameters from Postman Collection Request Bodies
+**Severity**: High (blocks OPT-1)
+**Scope**: `postman_import.py`
+
+Postman imports set `request_schema: None` (line 222) because Postman collections don't carry structured parameter definitions. This means Bybit (129 eps), MEXC (114 eps), BitMart (94 eps) — 337 endpoints total — have zero parameter data.
+
+**Fix**: Postman collections do contain `request.body.raw` with example JSON payloads. Parse these example bodies to extract parameter names (top-level keys). Store as `request_schema: {"parameters": [{"name": "symbol", "source": "postman_example"}, ...]}`. This gives approximate but useful parameter data.
+
+**Risk**: Example payloads may not cover all parameters. Mark source as `postman_example` to distinguish from authoritative OpenAPI schemas.
 
 ---
 
@@ -523,10 +597,11 @@ Each item below was identified via deep online research + codebase analysis (M17
 **What**: Build a SQLite table (`endpoint_params`) mapping parameter names to endpoint IDs, populated during OpenAPI/Postman import. At query time, compute Jaccard similarity or weighted set overlap between payload keys and each endpoint's parameter set. This transforms fuzzy text matching into precise structural matching. For the 15 golden QA request_payload queries, most have exchange-specific parameter combinations (`instId`+`tdMode` → OKX, `category`+`symbol` → Bybit) that would yield unique matches.
 
 **Pre-work needed**:
-- [ ] Research: How many of 4,872 endpoints have populated `request_schema`? What percentage of golden QA request_payload queries would benefit?
-- [ ] Codebase: Trace the full import path (openapi_import.py → postman_import.py → endpoints table) to confirm request_schema is being stored
-- [ ] Codebase: Check if parameter names can be reliably extracted from request_schema JSON blobs
+- [x] Research: 1,765/4,917 endpoints (35.9%) have extractable params in json blob's `request_schema.parameters`. 5,190 total param names, 773 unique. Deribit 90%, Orderly 79%, Coinbase 74%, KuCoin 63%, OKX 60%. Postman imports (Bybit 0/129, MEXC 0/114, BitMart 0/94) have zero params because `postman_import.py` sets `request_schema: None`.
+- [x] Codebase: Params stored in json blob, NOT separate column. Extract from `json["request_schema"]["parameters"][i]["name"]`. Binance has 162 unresolved `$ref` params.
+- [x] Codebase: Postman import (postman_import.py:222) stores `request_schema: None`. Fix needed to extract params from request body examples.
 - [ ] Design: Jaccard vs weighted overlap vs TF-IDF weighted matching
+- [ ] Prerequisite: Fix `$ref` resolution in openapi_import.py and param extraction in postman_import.py
 
 #### OPT-2: Code Snippet URL/Path Extraction for Direct Endpoint Routing
 **Priority**: 2
@@ -538,10 +613,10 @@ Each item below was identified via deep online research + codebase analysis (M17
 **What**: Add URL path extraction to `_extract_code_context()` in classify.py. Parse HTTP client calls (`requests.get/post`, `fetch()`, `curl`, `axios`) to extract API paths. Store in `signals["api_path"]`. In answer.py's code_snippet handling, attempt `lookup_endpoint_by_path()` with the extracted path before falling back to topic FTS.
 
 **Pre-work needed**:
-- [ ] Research: What fraction of golden QA code_snippet queries contain API URLs vs SDK wrappers?
-- [ ] Codebase: Verify `lookup_endpoint_by_path()` can handle partial paths (e.g., `/v5/market/tickers` without base URL)
-- [ ] Codebase: Check if `_extract_code_context()` already has URL parsing regexes that can be extended
-- [ ] Risk: SDK-wrapped calls (`ccxt.binance().fetch_balance()`) won't benefit — confirm existing topic mapping handles these
+- [x] Research: 3/14 golden QA code_snippet queries contain API URLs, 7 have SDK/ccxt patterns, 4 are other SDK patterns. URL extraction helps 21% of code queries.
+- [x] Codebase: `_extract_code_context()` (classify.py:182-195) detects exchange from API domains but never extracts URL path. Simple `urlparse` on matched URL would yield path.
+- [x] Codebase: answer.py code_snippet handler (lines 1319-1374) searches only by topic text, never by API path. Adding `lookup_endpoint()` with extracted path before topic fallback is ~10 LOC.
+- [x] Risk: SDK-wrapped calls (10/14 queries) already handled by `_CODE_METHOD_TOPICS` mapping (20 entries). This change is purely additive.
 
 #### OPT-3: Endpoint search_text Enrichment with Parameter Names
 **Priority**: 3
@@ -553,10 +628,11 @@ Each item below was identified via deep online research + codebase analysis (M17
 **What**: Extract parameter names from `request_schema` and append them to `search_text` during FTS index building. Complementary to OPT-1 (works within existing FTS pipeline, no new tables). Run `fts-rebuild` after change.
 
 **Pre-work needed**:
-- [ ] Research: Best practices for mixing structured field names into FTS content (risk of false positive inflation)
-- [ ] Codebase: Check `request_schema` format — is it consistent JSON? Dict with `properties`? List of names?
-- [ ] Codebase: Verify `fts-rebuild` correctly rebuilds `endpoints_fts` from `endpoint_search_text()`
-- [ ] Risk: Adding common parameter names (`symbol`, `type`, `side`) could inflate FTS matches for unrelated queries
+- [x] Research: AND-first query logic (fts_util.py:103) constrains multi-term searches. BM25 weights (path:5x, search_text:1x) deprioritize search_text vs path matches. Risk is manageable.
+- [x] Codebase: request_schema format is `{"parameters": [{"name": "...", ...}]}` from OpenAPI imports. 1,763 endpoints have extractable param names. 94.4% of current search_text entries are under 100 chars (just description).
+- [x] Codebase: `fts-rebuild` (pages.py:210-229) iterates all endpoints, calls `endpoint_search_text()`, rebuilds FTS index. No schema change needed.
+- [x] Risk: Common params (`symbol` 423 eps, `type` 130 eps) create noise, but AND logic + BM25 weighting mitigate. Before/after eval run will quantify.
+- **Recommendation**: Implement OPT-3 FIRST (fastest, safest, no prerequisites). ~15 LOC change + fts-rebuild.
 
 #### OPT-4: Convex Combination Fusion to Replace RRF
 **Priority**: 4
@@ -663,3 +739,69 @@ Each item below was identified via deep online research + codebase analysis (M17
 - [ ] Research: Jina v3 vs ColBERT v2 head-to-head benchmarks on MTEB/BEIR — does ColBERT v2 actually beat Jina v3?
 - [ ] Codebase: LanceDB `ColbertReranker()` API — does it work with existing LanceDB 0.29.2?
 - [ ] Risk: Added latency per query (ColBERT MaxSim is O(n×m) for n query tokens × m doc tokens)
+
+#### OPT-11: Pre-Search Query Reformulation for code_snippet and request_payload
+**Priority**: 1 (HIGHEST — addresses two weakest query types)
+**Target**: code_snippet MRR 0.224→~0.45, request_payload MRR 0.400→~0.55, overall MRR +0.03-0.05
+**Effort**: Medium (~50-80 LOC across answer.py + classify.py)
+
+**Why**: code_snippet and request_payload queries go through `_generic_search_answer` with raw code/JSON as FTS input, producing poor search terms. The classifier already extracts method topics (`_CODE_METHOD_TOPICS`) and exchange signatures (`_PAYLOAD_EXCHANGE_SIGNATURES`), but these are only used for post-hoc augmentation. Moving this reformulation to the primary search would dramatically improve first-pass results.
+
+**What**:
+- For code_snippet (confidence >= 0.5): Use extracted topics from `_CODE_METHOD_TOPICS` as primary FTS query instead of raw code text
+- For request_payload (confidence >= 0.5): Build a `_PAYLOAD_ACTION_MAP` that maps parameter key combinations to action topics (e.g., `{side, ordType, price}` → "place order trading"). Use action topic as primary FTS query
+- Keep current augmentation as secondary pass for fallback
+
+**Pre-work needed**:
+- [x] Research: Identified via deep codebase analysis (2026-03-09)
+- [x] Research: Root cause traced — `extract_search_terms` strips code syntax, leaving poor FTS terms
+- [ ] Build: Create `_PAYLOAD_ACTION_MAP` with 15-20 common parameter signatures
+- [ ] Build: Expand `_CODE_METHOD_TOPICS` from 20 to 40+ entries
+- [ ] Build: Insert query reformulation before `_generic_search_answer` call in `answer_question()`
+
+#### OPT-12: Expand Synonym Map with API-Domain Terms
+**Priority**: 2 (LOW effort, MEDIUM impact)
+**Target**: question prefix hit +2-3%, MRR +0.01-0.02
+**Effort**: Low (~20 LOC)
+
+**Why**: `_SYNONYM_MAP` in fts_util.py has 30+ entries but misses many API-domain terms. Golden QA analysis shows queries for "leverage", "pnl", "funding", "fee", "transfer" get no synonym expansion.
+
+**What**: Add 10-15 synonym groups:
+- `leverage` ↔ `margin`, `margin trading`
+- `pnl` ↔ `profit`, `profit loss`, `unrealized`
+- `funding` ↔ `funding rate`, `funding fee`
+- `transfer` ↔ `internal transfer`, `universal transfer`
+- `fee` ↔ `commission`, `trading fee`
+- `position` ↔ `positions`, `open position`
+- `market` ↔ `symbols`, `exchange info`
+- `listen key` ↔ `user data stream`
+- Increase `max_expansions` from 3 to 5
+
+#### OPT-13: Score-Aware Fusion Replacing RRF
+**Priority**: 3 (MEDIUM effort, MEDIUM impact)
+**Target**: nDCG@5 +3-5% across all query types
+**Effort**: Medium (~40 LOC)
+**Source**: TopK blog (BEIR benchmarks show +4.58% nDCG@10 over RRF)
+
+**Why**: RRF discards score magnitude — a rank-1 result with score 0.99 gets the same RRF contribution as rank-1 with score 0.51. Score-aware fusion preserves this signal.
+
+**What**: Add `score_fusion()` to fts_util.py: `alpha * sem_score + (1-alpha) * bm25_score` after max-normalization. Replace `rrf_fuse` call in `_search_pages_with_semantic`. Alpha per query type (like current RRF weights).
+
+**Pre-work needed**:
+- [ ] Build: Implement `score_fusion()` function with max-norm
+- [ ] A/B: Compare against RRF on 200-query golden QA before switching default
+- [ ] Risk: Score distributions vary per query; fixed alpha may be suboptimal
+
+#### OPT-14: GTE-Reranker-ModernBERT-Base as Reranker Upgrade
+**Priority**: 4 (LOW effort, LOW-MEDIUM impact)
+**Target**: +1.7% Hit@1 over Jina v3 (benchmark-estimated)
+**Effort**: Low (~30 LOC)
+**Source**: AI Multiple benchmark, HuggingFace model card
+
+**Why**: Alibaba GTE-reranker-modernbert-base (149M params) matches 1.2B-param nemotron at 83.0% Hit@1, vs Jina v3 at 81.33%. Standard `CrossEncoder` interface — zero custom loading code.
+
+**What**: Add `_load_gte_modernbert()` in reranker.py. Update auto-cascade: GTE-modernbert → Jina v3 → CrossEncoder → FlashRank. Run `scripts/benchmark_rerankers.py` to validate on CEX domain before switching.
+
+**Pre-work needed**:
+- [ ] Benchmark: Run GTE-modernbert on 163-query reranker benchmark
+- [ ] Check: 8192 token context — verify truncation handling for long API pages

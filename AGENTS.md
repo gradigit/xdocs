@@ -34,10 +34,10 @@ If this local file is missing, fall back to equivalent direct CLI workflow (`cla
 Quick setup:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate  # or: source .venv/bin/activate.fish
-pip install -e ".[dev,semantic]"
-uv run --extra dev python3 -m pytest
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e ".[dev,semantic]"
+pytest
 ```
 
 ## Core Commands

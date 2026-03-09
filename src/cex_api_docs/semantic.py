@@ -55,17 +55,78 @@ def _lance_dir(docs_dir: str) -> str:
     return str(Path(docs_dir) / "lancedb-index")
 
 
-def compact_index(*, docs_dir: str) -> dict[str, Any]:
-    """Compact LanceDB index: merge fragments + cleanup old versions."""
+def compact_index(
+    *, docs_dir: str, max_bytes_per_file: int | None = None
+) -> dict[str, Any]:
+    """Compact LanceDB index: merge fragments + cleanup old versions.
+
+    Args:
+        docs_dir: Path to the docs directory containing lancedb-index/.
+        max_bytes_per_file: Optional cap on .lance data file size in bytes.
+            Use to keep fragments under hosting limits (e.g. 1_900_000_000
+            for GitHub LFS 2 GB limit).  When set, the compacted index is
+            rewritten with ``lance.write_dataset(max_rows_per_file=...)``
+            so that no single data file exceeds the cap.  Note:
+            ``table.optimize()`` always re-merges into one fragment, so the
+            split must happen *after* the optimise call.
+    """
     from datetime import timedelta
+
+    import lance as _lance
 
     lancedb = _require_lancedb()
     lance_db = lancedb.connect(_lance_dir(docs_dir))
     table = lance_db.open_table(TABLE_NAME)
     pre = table.count_rows()
+
+    # Standard compaction: merge fragments + prune old versions
     table.optimize(cleanup_older_than=timedelta(days=0))
-    post = table.count_rows()
-    return {"rows": post, "pre_compact_rows": pre, "lance_dir": _lance_dir(docs_dir)}
+
+    lance_path = str(Path(docs_dir) / "lancedb-index" / f"{TABLE_NAME}.lance")
+
+    # If a size cap was requested, rewrite the (now single-fragment) dataset
+    # into multiple fragments that each stay under the limit.
+    if max_bytes_per_file:
+        ds = _lance.dataset(lance_path)
+        total_bytes = sum(
+            (Path(lance_path) / "data" / df.path()).stat().st_size
+            for frag in ds.get_fragments()
+            for df in frag.metadata.data_files()
+            if (Path(lance_path) / "data" / df.path()).exists()
+        )
+        if total_bytes > max_bytes_per_file:
+            rows = ds.count_rows()
+            bytes_per_row = total_bytes / rows if rows else 1
+            target_rows = int(max_bytes_per_file / bytes_per_row)
+            all_data = ds.to_table()
+            import shutil
+            tmp = lance_path + ".split_tmp"
+            if Path(tmp).exists():
+                shutil.rmtree(tmp)
+            _lance.write_dataset(all_data, tmp, max_rows_per_file=target_rows)
+            bak = lance_path + ".bak"
+            import os
+            os.rename(lance_path, bak)
+            os.rename(tmp, lance_path)
+            shutil.rmtree(bak)
+
+    post = table.count_rows() if not max_bytes_per_file else _lance.dataset(lance_path).count_rows()
+
+    # Report resulting fragment sizes
+    ds = _lance.dataset(lance_path)
+    fragments = []
+    data_dir = Path(lance_path) / "data"
+    for frag in ds.get_fragments():
+        for df in frag.metadata.data_files():
+            fp = data_dir / df.path()
+            if fp.exists():
+                fragments.append({"file": df.path(), "bytes": int(fp.stat().st_size)})
+    return {
+        "rows": post if not max_bytes_per_file else ds.count_rows(),
+        "pre_compact_rows": pre,
+        "lance_dir": _lance_dir(docs_dir),
+        "fragments": fragments,
+    }
 
 
 def _normalize_rerank_policy(rerank: bool | str) -> str:

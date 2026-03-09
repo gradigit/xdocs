@@ -73,22 +73,17 @@ With this project, the workflow is:
 Requires Python 3.11+.
 
 ```bash
-python3 -m venv .venv
+uv venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,semantic]"
+uv pip install -e ".[dev,semantic]"
 ```
 
 Lightweight query-only install (Mac, no PyTorch):
 
 ```bash
-pip install -e ".[semantic-query]"
+uv pip install -e ".[semantic-query]"
 ```
 
-Optional reranker support:
-
-```bash
-pip install -e ".[reranker]"
-```
 
 ### 2) Use an existing team snapshot (recommended)
 
@@ -340,10 +335,8 @@ Production rollout guide:
 ## Troubleshooting
 
 - If semantic commands fail, make sure semantic extras are installed:
-  - Full (Mac or PC/CUDA): `pip install -e ".[semantic]"`
-  - Query-only (Mac, no PyTorch): `pip install -e ".[semantic-query]"`
-- If reranker is unavailable:
-  - `pip install -e ".[reranker]"`
+  - Full (Mac or PC/CUDA): `uv pip install -e ".[semantic]"`
+  - Query-only (Mac, no PyTorch): `uv pip install -e ".[semantic-query]"`
 - If long-running sync was interrupted:
   - re-run with `--resume`.
 

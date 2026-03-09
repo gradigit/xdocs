@@ -15,7 +15,7 @@ echo "Docs dir: $DOCS_DIR"
 if [ ! -d "$REPO_ROOT/.venv" ]; then
     echo ""
     echo "--- Creating virtual environment ---"
-    python3 -m venv "$REPO_ROOT/.venv"
+    uv venv "$REPO_ROOT/.venv"
 fi
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"
@@ -24,13 +24,13 @@ source "$REPO_ROOT/.venv/bin/activate"
 echo ""
 echo "--- Installing dependencies ---"
 if [[ "$(uname)" == "Darwin" ]]; then
-    pip install -e "$REPO_ROOT[dev,semantic]"
+    uv pip install -e "$REPO_ROOT[dev,semantic]"
     # Playwright for JS-rendered exchanges (optional)
-    if pip install -e "$REPO_ROOT[playwright]" 2>/dev/null; then
+    if uv pip install -e "$REPO_ROOT[playwright]" 2>/dev/null; then
         playwright install chromium 2>/dev/null || true
     fi
 else
-    pip install -e "$REPO_ROOT[dev,semantic]"
+    uv pip install -e "$REPO_ROOT[dev,semantic]"
 fi
 
 # 3. Init store if not exists

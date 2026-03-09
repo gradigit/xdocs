@@ -6,12 +6,12 @@ A local-only, cite-only CEX API documentation knowledge base (library + CLI + ag
 
 ## Build Commands
 
-Quick setup (macOS):
+Quick setup:
 
 ```bash
-python3 -m venv .venv
+uv venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+uv pip install -e ".[dev]"
 pytest
 pytest tests/test_endpoints.py -x    # single module, stop on first failure
 pytest -k "test_stale" -x            # run tests matching pattern
@@ -73,7 +73,7 @@ cex-api-docs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs
 # Content quality check (empty/thin/tiny_html pages)
 cex-api-docs quality-check --docs-dir ./cex-docs
 
-# Build LanceDB semantic search index (requires pip install -e ".[semantic]")
+# Build LanceDB semantic search index (requires uv pip install -e ".[semantic]")
 cex-api-docs build-index --docs-dir ./cex-docs
 cex-api-docs build-index --exchange binance --limit 500 --docs-dir ./cex-docs
 
@@ -242,8 +242,8 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - CLI JSON is printed at the end of a command; if you redirect stdout to a file, it may stay empty until completion.
 - Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
-- **Playwright is optional**: install with `pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
-- **Semantic search model**: `jina-embeddings-v5-text-small` (1024 dims, EuroBERT backbone). Upgraded from v5-text-nano (768 dims) — +27.3% MRR, +22.3% Hit@5 on 163-query benchmark. MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-small-mlx`), not mlx-embeddings. Query-only install: `pip install -e ".[semantic-query]"` (Mac). Full install: `pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads model from HuggingFace (cached after that). LanceDB index: 334,935 rows, 1024d, 2.3 GB compacted, stored at `cex-docs/lancedb-index/`. Build: ~100 min at batch_size=64 on RTX 4070 Ti SUPER (CUDA). Extreme pages (>50K words) may OOM at batch_size=64 — use incremental batch_size=1 to add them. batch_size=16 is 15x slower — avoid.
+- **Playwright is optional**: install with `uv pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
+- **Semantic search model**: `jina-embeddings-v5-text-small` (1024 dims, EuroBERT backbone). Upgraded from v5-text-nano (768 dims) — +27.3% MRR, +22.3% Hit@5 on 163-query benchmark. MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-small-mlx`), not mlx-embeddings. Query-only install: `uv pip install -e ".[semantic-query]"` (Mac). Full install: `uv pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads model from HuggingFace (cached after that). LanceDB index: 334,935 rows, 1024d, 2.3 GB compacted, stored at `cex-docs/lancedb-index/`. Build: ~100 min at batch_size=64 on RTX 4070 Ti SUPER (CUDA). Extreme pages (>50K words) may OOM at batch_size=64 — use incremental batch_size=1 to add them. batch_size=16 is 15x slower — avoid.
 - **LanceDB compaction**: Use `table.optimize(cleanup_older_than=timedelta(days=0))` not the deprecated `compact_files()` + `cleanup_old_versions()`. The CLI `compact-index` command wraps this. Run periodically after large index builds to reduce fragment count and disk usage.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
 - **Python >=3.11 required** (per pyproject.toml). Uses `match/case`, `dataclass(slots=True)`, and `X | Y` union syntax.

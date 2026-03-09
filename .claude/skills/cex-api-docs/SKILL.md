@@ -404,9 +404,9 @@ Key rule: **crawl all sources, import all specs, then cross-reference**. Flag di
 ## Quickstart (Query Only)
 
 ```bash
-python3 -m venv .venv
+uv venv .venv
 source .venv/bin/activate
-pip install -e .
+uv pip install -e .
 
 cex-api-docs init --docs-dir ./cex-docs
 ```
@@ -464,9 +464,9 @@ If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drif
 
 | Tool | Install | Use Case |
 |------|---------|----------|
-| `cloudscraper` | `pip install cloudscraper` | Cloudflare bypass |
-| `crawl4ai` | `pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown, best all-around |
-| Playwright | `pip install playwright && playwright install chromium` | JS rendering |
+| `cloudscraper` | `uv pip install cloudscraper` | Cloudflare bypass |
+| `crawl4ai` | `uv pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown, best all-around |
+| Playwright | `uv pip install playwright && playwright install chromium` | JS rendering |
 | Agent Browser | `.claude/skills/agent-browser/` | Interactive crawling |
 
 ## Find Sources

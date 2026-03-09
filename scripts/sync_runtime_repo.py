@@ -130,12 +130,16 @@ def _copy_runtime_data(cfg: SyncConfig) -> list[str]:
     copied: list[str] = []
     dst_root = cfg.runtime_root / "cex-docs"
 
-    # Compact LanceDB index before copy (reduces fragment count + disk size).
+    # Compact LanceDB index before copy.  Use max_bytes_per_file to keep
+    # individual .lance data files under the GitHub LFS 2 GB per-file limit.
+    _LFS_MAX_BYTES = 1_900_000_000  # 1.9 GB — safe margin under 2 GB
     if cfg.include_lancedb:
         try:
             from cex_api_docs.semantic import compact_index
-            logger.info("Compacting LanceDB index before copy...")
-            compact_index(docs_dir=str(cfg.docs_dir))
+            logger.info("Compacting LanceDB index (max_bytes_per_file=%s)...", _LFS_MAX_BYTES)
+            result = compact_index(docs_dir=str(cfg.docs_dir), max_bytes_per_file=_LFS_MAX_BYTES)
+            for frag in result.get("fragments", []):
+                logger.info("  fragment %s: %.1f MB", frag["file"], frag["bytes"] / 1e6)
         except ImportError:
             logger.warning("lancedb not installed; skipping compaction")
         except Exception as e:

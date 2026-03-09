@@ -27,7 +27,7 @@ Every discoverable source must be found. If a source type exists for the exchang
 - Active Python venv with `cex-api-docs` installed
 - Web access for URL probing and search
 - `crawl4ai`, `cloudscraper`, Playwright installed for crawl testing
-- CCXT installed for cross-reference (`pip install ccxt`)
+- CCXT installed for cross-reference (`uv pip install ccxt`)
 - Read `docs/crawl-targets-bible.md` in full before starting — check if the exchange already has a bible entry or is listed in Section 6 (Missing Exchanges) or Section 11 (Confirmed Non-Existent Sources)
 
 ## Workflow
