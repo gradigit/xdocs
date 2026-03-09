@@ -130,20 +130,30 @@ def _copy_runtime_data(cfg: SyncConfig) -> list[str]:
     copied: list[str] = []
     dst_root = cfg.runtime_root / "cex-docs"
 
-    # Compact LanceDB index before copy.  Use max_bytes_per_file to keep
-    # individual .lance data files under the GitHub LFS 2 GB per-file limit.
+    # Only compact LanceDB if any fragment exceeds the LFS size limit.
+    # Avoids creating new transaction/manifest churn on every sync.
     _LFS_MAX_BYTES = 1_900_000_000  # 1.9 GB — safe margin under 2 GB
     if cfg.include_lancedb:
-        try:
-            from cex_api_docs.semantic import compact_index
-            logger.info("Compacting LanceDB index (max_bytes_per_file=%s)...", _LFS_MAX_BYTES)
-            result = compact_index(docs_dir=str(cfg.docs_dir), max_bytes_per_file=_LFS_MAX_BYTES)
-            for frag in result.get("fragments", []):
-                logger.info("  fragment %s: %.1f MB", frag["file"], frag["bytes"] / 1e6)
-        except ImportError:
-            logger.warning("lancedb not installed; skipping compaction")
-        except Exception as e:
-            logger.warning("Compaction failed (non-fatal): %s", e)
+        lance_data_dir = cfg.docs_dir / "lancedb-index" / "pages.lance" / "data"
+        needs_compact = False
+        if lance_data_dir.is_dir():
+            for f in lance_data_dir.iterdir():
+                if f.suffix == ".lance" and f.stat().st_size > _LFS_MAX_BYTES:
+                    needs_compact = True
+                    break
+        if needs_compact:
+            try:
+                from cex_api_docs.semantic import compact_index
+                logger.info("Fragment exceeds LFS limit — compacting (max_bytes_per_file=%s)...", _LFS_MAX_BYTES)
+                result = compact_index(docs_dir=str(cfg.docs_dir), max_bytes_per_file=_LFS_MAX_BYTES)
+                for frag in result.get("fragments", []):
+                    logger.info("  fragment %s: %.1f MB", frag["file"], frag["bytes"] / 1e6)
+            except ImportError:
+                logger.warning("lancedb not installed; skipping compaction")
+            except Exception as e:
+                logger.warning("Compaction failed (non-fatal): %s", e)
+        else:
+            logger.info("LanceDB fragments all under LFS limit — skipping compaction")
 
     required: list[tuple[Path, Path]] = [
         (cfg.docs_dir / "db" / "docs.db", dst_root / "db" / "docs.db"),
