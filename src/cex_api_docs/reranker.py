@@ -188,7 +188,8 @@ def _load_jina_v3_mlx():
         raise ImportError(f"No MLXReranker or JinaForRanking class in {modpath}")
 
     if modfile == "rerank.py":
-        _jina_v3_model = cls(model_path=model_dir)
+        projector = os.path.join(model_dir, "projector.safetensors")
+        _jina_v3_model = cls(model_path=model_dir, projector_path=projector)
     else:
         _jina_v3_model = cls.from_pretrained(model_dir, trust_remote_code=True)
     return _jina_v3_model
