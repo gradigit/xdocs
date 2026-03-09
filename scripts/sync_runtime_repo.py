@@ -229,8 +229,8 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
             "git_commit": _git_commit(repo_root),
         },
         "runtime_root": str(cfg.runtime_root),
-        "embedding_model": "jinaai/jina-embeddings-v5-text-nano",
-        "embedding_dims": 768,
+        "embedding_model": "jinaai/jina-embeddings-v5-text-small",
+        "embedding_dims": 1024,
         "components": components,
     }
     return manifest

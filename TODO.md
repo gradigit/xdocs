@@ -494,12 +494,172 @@ Dependency: M16 complete. Research-driven optimization targeting weak areas.
 - [x] 17.1c. Spot check 10 pages across 8 exchanges: 10/10 MATCH (Coinbase, WhiteBIT ×2, Bitget ×2, MEXC, Upbit, Backpack, OKX, HTX). Combined with M13: 20/20 across 18 exchanges
 - [x] 17.1d. URL dedup fix: deduplicate canonical_url across section prefixes in _generic_search_answer
 
-**Phase 2: Optimization** (pending research)
-- [ ] 17.2a. Apply findings from research phase
+**Phase 2: Optimization** (pending — each item needs online + codebase research before execution)
+- [ ] 17.2a. Apply findings from research phase (see M18 backlog below)
 - [ ] 17.2b. Target code_snippet MRR improvement (currently 0.224)
 - [ ] 17.2c. Target request_payload MRR improvement (currently 0.400)
 
 **Phase 3: Maintainer Workflow** ✓
 - [x] 17.3a. Review maintainer skill checklist for pre-commit/push readiness — 491 tests, quality-check OK, store report verified
 - [x] 17.3b. Sync all documentation (CLAUDE.md, AGENTS.md schema v4→v6, README.md schema v4→v6, test count 421→491)
-- [ ] 17.3c. Final test suite run + commit
+- [x] 17.3c. Final test suite run + commit (67eb2a8)
+
+**Phase 4: Crawl Fixes**
+- [ ] 17.4a. Re-crawl Kraken with `--render auto` — 48 REST API pages have thin content (361-598 words) because response schemas are JS-rendered. Need Playwright fallback to capture full page content including response field tables.
+
+---
+
+### M18 Backlog: Query Quality Optimization Opportunities
+
+Each item below was identified via deep online research + codebase analysis (M17 Phase 1). **Before implementing any item, conduct both (a) online research for latest best practices and (b) codebase-level analysis to understand exact integration points, data availability, and regression risks.** Run A/B benchmarks in isolation per the M16 methodology (one change at a time, env var toggling).
+
+#### OPT-1: Parameter Inverted Index for Request Payload Matching
+**Priority**: 1 (highest impact)
+**Target**: request_payload MRR 0.400 → 0.55-0.65
+**Effort**: Moderate (~200 LOC)
+
+**Why**: The current request_payload routing (answer.py:1233-1293) joins the first 3 parameter names with spaces and runs a generic FTS endpoint search (`"symbol side orderType"`). This loses set-matching semantics — any endpoint mentioning any of these common words matches. The endpoint schema already has a `request_schema` field (endpoint.schema.json:29) that stores structured parameter data from OpenAPI/Postman imports.
+
+**What**: Build a SQLite table (`endpoint_params`) mapping parameter names to endpoint IDs, populated during OpenAPI/Postman import. At query time, compute Jaccard similarity or weighted set overlap between payload keys and each endpoint's parameter set. This transforms fuzzy text matching into precise structural matching. For the 15 golden QA request_payload queries, most have exchange-specific parameter combinations (`instId`+`tdMode` → OKX, `category`+`symbol` → Bybit) that would yield unique matches.
+
+**Pre-work needed**:
+- [ ] Research: How many of 4,872 endpoints have populated `request_schema`? What percentage of golden QA request_payload queries would benefit?
+- [ ] Codebase: Trace the full import path (openapi_import.py → postman_import.py → endpoints table) to confirm request_schema is being stored
+- [ ] Codebase: Check if parameter names can be reliably extracted from request_schema JSON blobs
+- [ ] Design: Jaccard vs weighted overlap vs TF-IDF weighted matching
+
+#### OPT-2: Code Snippet URL/Path Extraction for Direct Endpoint Routing
+**Priority**: 2
+**Target**: code_snippet MRR 0.224 → 0.37-0.42
+**Effort**: Low (~50 LOC)
+
+**Why**: Code snippets frequently contain literal API URLs (e.g., `requests.get('https://api.bybit.com/v5/market/tickers', ...)`). The current classify.py extracts exchange hints from these URLs (lines 180-195) but does NOT extract the API path (`/v5/market/tickers`). If it did, it could use `lookup_endpoint_by_path()` for a direct match instead of relying on the topic-based FTS fallback which produced MRR=0.224.
+
+**What**: Add URL path extraction to `_extract_code_context()` in classify.py. Parse HTTP client calls (`requests.get/post`, `fetch()`, `curl`, `axios`) to extract API paths. Store in `signals["api_path"]`. In answer.py's code_snippet handling, attempt `lookup_endpoint_by_path()` with the extracted path before falling back to topic FTS.
+
+**Pre-work needed**:
+- [ ] Research: What fraction of golden QA code_snippet queries contain API URLs vs SDK wrappers?
+- [ ] Codebase: Verify `lookup_endpoint_by_path()` can handle partial paths (e.g., `/v5/market/tickers` without base URL)
+- [ ] Codebase: Check if `_extract_code_context()` already has URL parsing regexes that can be extended
+- [ ] Risk: SDK-wrapped calls (`ccxt.binance().fetch_balance()`) won't benefit — confirm existing topic mapping handles these
+
+#### OPT-3: Endpoint search_text Enrichment with Parameter Names
+**Priority**: 3
+**Target**: request_payload FTS recall +5-10%
+**Effort**: Very low (~15 LOC + FTS rebuild)
+
+**Why**: The `endpoint_search_text()` function (fts_util.py:274-322) builds FTS content from description, rate_limit, error_codes, and permissions — but NOT parameter names from `request_schema`. When a request_payload query searches for `"symbol side orderType"`, it matches descriptions coincidentally mentioning these words rather than endpoints that actually accept these parameters.
+
+**What**: Extract parameter names from `request_schema` and append them to `search_text` during FTS index building. Complementary to OPT-1 (works within existing FTS pipeline, no new tables). Run `fts-rebuild` after change.
+
+**Pre-work needed**:
+- [ ] Research: Best practices for mixing structured field names into FTS content (risk of false positive inflation)
+- [ ] Codebase: Check `request_schema` format — is it consistent JSON? Dict with `properties`? List of names?
+- [ ] Codebase: Verify `fts-rebuild` correctly rebuilds `endpoints_fts` from `endpoint_search_text()`
+- [ ] Risk: Adding common parameter names (`symbol`, `type`, `side`) could inflate FTS matches for unrelated queries
+
+#### OPT-4: Convex Combination Fusion to Replace RRF
+**Priority**: 4
+**Target**: All query types MRR +3-8%
+**Effort**: Low (~80 LOC)
+
+**Why**: The TOIS 2023 paper "An Analysis of Fusion Functions for Hybrid Retrieval" (200+ citations) demonstrates that Convex Combination (`score = α × dense_norm + (1-α) × sparse_norm`) outperforms RRF in both in-domain and out-of-domain settings. RRF discards score magnitude information and is sensitive to its k parameter. CC needs only a single α parameter per query type, tunable on a small training set.
+
+**What**: Implement CC in `fts_util.py` alongside existing `rrf_fuse()`. Normalize BM25 with existing `normalize_bm25_score()`, normalize vector scores with min-max. Tune per-query-type α values on the 200-query golden QA set. Feature-flag with `CEX_FUSION_MODE=cc|rrf` env var. A/B benchmark against current RRF k=60.
+
+**Pre-work needed**:
+- [ ] Research: Read the full TOIS paper (2210.11934), check if CC requires min-max or z-score normalization
+- [ ] Research: Elastic's adoption of linear scoring — any gotchas or failure modes reported?
+- [ ] Codebase: Trace how `rrf_fuse()` is called (answer.py + semantic.py) to understand all integration points
+- [ ] Codebase: Verify that raw BM25 and vector scores are available at the fusion point (not just ranks)
+- [ ] Design: Training/validation split strategy for the 200 golden QA queries (avoid overfitting α)
+
+#### OPT-5: Remove code_snippet from BM25 Strong-Signal Shortcut
+**Priority**: 5
+**Target**: code_snippet recall +2-5%
+**Effort**: Trivial (1-line change)
+
+**Why**: The BM25 shortcut (answer.py:448-450) skips vector search when a high BM25 score is detected. Code snippets contain programming tokens that can produce false high BM25 scores against documentation containing the same tokens in unrelated contexts. The RRF weights already favor semantic for code_snippet (0.7/1.3), but the shortcut bypasses vector search entirely.
+
+**What**: Remove `"code_snippet"` from the `should_skip_vector_search()` condition. The RRF weight vector [0.7, 1.3] already handles the balance when both FTS and vector results are available.
+
+**Pre-work needed**:
+- [ ] Codebase: Check how often the shortcut actually fires for code_snippet queries (add logging, run golden QA)
+- [ ] Codebase: Verify the shortcut threshold (BM25 > 0.7 with gap > 0.3) — is this realistic for code tokens?
+- [ ] Risk: If shortcut rarely fires for code_snippet, impact will be negligible
+
+#### OPT-6: Domain Synonym Expansion Additions
+**Priority**: 6
+**Target**: FTS recall +2-5% across all types
+**Effort**: Very low (dictionary additions only)
+
+**Why**: The current synonym map (fts_util.py:25-52, 30+ terms) covers common abbreviations but misses several API-domain expansions: order types (`limit`/`market`/`stop-limit`/`ioc`/`fok`/`gtc`), position terms (`position`/`leverage`), asset terms (`coin`/`token`/`asset`/`currency`), transfer terms (`transfer`/`convert`), account terms (`account`/`wallet`/`funding`), WS terms (`subscribe`/`channel`/`stream`).
+
+**What**: Add 15-20 new synonym groups to `_SYNONYMS` dict in fts_util.py. Respect existing `max_expansions=3` limit. Run golden QA to verify no precision loss.
+
+**Pre-work needed**:
+- [ ] Research: Analyze golden QA misses — which queries fail due to vocabulary mismatch?
+- [ ] Codebase: Verify `max_expansions=3` is sufficient to prevent query explosion with new groups
+- [ ] Risk: Over-expansion reduces FTS precision. Need to verify AND-first query logic mitigates this
+
+#### OPT-7: Contextual Chunk Enrichment with Endpoint Metadata
+**Priority**: 7
+**Target**: Vector search recall +10-20% for endpoint-specific queries
+**Effort**: Moderate (~100 LOC + full index rebuild ~100 min CUDA)
+
+**Why**: Anthropic's contextual retrieval research shows prepending chunk-specific context before embedding reduces top-20 retrieval failure rate by 35-49%. The current implementation prepends page title and heading (semantic.py:346-352) but misses critical domain-specific metadata: endpoint paths, HTTP methods, parameter names, exchange/section identity.
+
+**What**: During `build_index`, cross-reference each page's URL against the `endpoints` table (via `docs_url` column) to find endpoints documented on that page. Prepend structured endpoint metadata to chunk text before embedding: `[binance:spot | POST /api/v1/order | params: symbol, side, type, quantity | Place Order]`. No LLM calls needed — purely SQL joins.
+
+**Pre-work needed**:
+- [ ] Research: Optimal context prefix format for jina-embeddings-v5 (task instructions, delimiter tokens)
+- [ ] Codebase: Check `docs_url` coverage — how many of 4,358 linked endpoints have usable docs_url for joining?
+- [ ] Codebase: Verify `build_index` can access the endpoints table during chunk embedding
+- [ ] Design: How to handle pages with multiple endpoints (concatenate all? pick most relevant?)
+- [ ] Cost: Full index rebuild takes ~100 min on CUDA. Need rollback plan (keep old index as backup)
+
+#### OPT-8: BM25 Column Weight Tuning via Grid Search
+**Priority**: 8
+**Target**: All types MRR +1-3%
+**Effort**: Low (~50 LOC benchmark script)
+
+**Why**: Current FTS5 BM25 weights (pages_fts: title=10.0/markdown=1.0; endpoints_fts: path=5.0/search_text=1.0) were set intuitively. SQLite FTS5 supports per-column weights via `bm25(table, w0, w1, ...)` but does NOT expose k1/b parameters (hardcoded in C). Systematic tuning could identify better values.
+
+**What**: Build a benchmark script that sweeps weight ratios (title weight: 5-20 in steps of 5; path weight: 2-10 in steps of 2) and evaluates MRR/nDCG@5 on the 200-query golden QA set. Select weights that maximize MRR without regressing any classification path.
+
+**Pre-work needed**:
+- [ ] Research: Confirm SQLite FTS5 bm25() weight semantics (higher = more important? linear or multiplicative?)
+- [ ] Codebase: Identify all call sites that use `ORDER BY rank` or `bm25()` — how many would need updating?
+- [ ] Codebase: Can weights be changed at query time (per-query) or only at table creation?
+- [ ] Risk: Changes cascade across all queries. Must validate on full 200-query set, not a subset
+
+#### OPT-9: Pseudo-Relevance Feedback for Vocabulary Gap Bridging
+**Priority**: 9
+**Target**: code_snippet + request_payload recall +5-10%
+**Effort**: Moderate (~80 LOC)
+
+**Why**: PRF extracts expansion terms from top-ranked BM25 results for a second retrieval pass. Particularly relevant for code_snippet queries where code tokens differ from documentation vocabulary (e.g., `fetch_balance()` vs "Get Account Balance" in docs).
+
+**What**: Lightweight PRF without LLM: (1) run initial FTS5 search, (2) extract distinctive terms from top-3 results (TF-IDF weighted), (3) re-query with expanded terms. Add as an optional fallback when initial FTS returns low-confidence results.
+
+**Pre-work needed**:
+- [ ] Research: Read PRF with Deep Language Models (ACM TOIS 2023) for failure modes
+- [ ] Research: How to select expansion terms without introducing topic drift?
+- [ ] Codebase: Where to insert PRF in the pipeline — before or after vector search? Before or after reranker?
+- [ ] Risk: PRF creates chicken-and-egg problem — expansion quality depends on first-pass quality. For queries that already return poor results, PRF may amplify noise
+
+#### OPT-10: Late Interaction (ColBERT) as Reranker
+**Priority**: 10 (lowest — likely not worth it)
+**Target**: All types MRR +0-3%
+**Effort**: High (new dependency, latency cost)
+
+**Why**: ColBERT v2 could serve as a reranker via LanceDB's `ColbertReranker()` integration, computing query-document MaxSim scores at rerank time without pre-computed document embeddings. The Weaviate blog reports ~5% nDCG@10 improvement in cross-domain evaluations.
+
+**What**: Add ColBERT v2 as an optional reranker backend in reranker.py. Benchmark against current Jina v3 on the 200-query golden QA set.
+
+**Why it's probably not worth it**: Jina Reranker v3 already uses late interaction principles (its paper is titled "Last but Not Late Interaction for Document Reranking"). Adding ColBERT v2 on top would likely provide diminishing returns with additional latency and a new dependency. ColBERT as a first-stage retriever was already evaluated and deferred (17.5 GB storage, not justified per CLAUDE.md).
+
+**Pre-work needed**:
+- [ ] Research: Jina v3 vs ColBERT v2 head-to-head benchmarks on MTEB/BEIR — does ColBERT v2 actually beat Jina v3?
+- [ ] Codebase: LanceDB `ColbertReranker()` API — does it work with existing LanceDB 0.29.2?
+- [ ] Risk: Added latency per query (ColBERT MaxSim is O(n×m) for n query tokens × m doc tokens)
