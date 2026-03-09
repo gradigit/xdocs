@@ -464,5 +464,42 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[0]["name"], "valid")
 
 
+class TestCodeStopwords(unittest.TestCase):
+    """Tests for CODE_STOPWORDS used in code_snippet query cleaning."""
+
+    def test_code_stopwords_exist(self) -> None:
+        from cex_api_docs.fts_util import CODE_STOPWORDS
+        self.assertIn("import", CODE_STOPWORDS)
+        self.assertIn("ccxt", CODE_STOPWORDS)
+        self.assertIn("exchange", CODE_STOPWORDS)
+        self.assertIn("const", CODE_STOPWORDS)
+        self.assertIn("require", CODE_STOPWORDS)
+
+    def test_code_stopwords_strip_noise(self) -> None:
+        from cex_api_docs.fts_util import CODE_STOPWORDS
+        terms = extract_search_terms(
+            "import ccxt exchange ccxt binance balance fetch_balance",
+            extra_stopwords=CODE_STOPWORDS,
+        )
+        self.assertNotIn("import", terms)
+        self.assertNotIn("ccxt", terms)
+        self.assertNotIn("exchange", terms)
+        self.assertIn("binance", terms)
+        self.assertIn("balance", terms)
+
+    def test_code_stopwords_preserve_domain_terms(self) -> None:
+        from cex_api_docs.fts_util import CODE_STOPWORDS
+        terms = extract_search_terms(
+            "const client new kucoinclient passphrase getaccountslist",
+            extra_stopwords=CODE_STOPWORDS,
+        )
+        self.assertNotIn("const", terms)
+        self.assertNotIn("client", terms)
+        self.assertNotIn("new", terms)
+        self.assertIn("kucoinclient", terms)
+        self.assertIn("passphrase", terms)
+        self.assertIn("getaccountslist", terms)
+
+
 if __name__ == "__main__":
     unittest.main()

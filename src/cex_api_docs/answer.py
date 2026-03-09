@@ -11,7 +11,7 @@ import os
 
 from .classify import classify_input
 from .db import open_db
-from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms, rrf_fuse, normalize_bm25_score, should_skip_vector_search
+from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms, rrf_fuse, normalize_bm25_score, should_skip_vector_search, CODE_STOPWORDS
 from .registry import load_registry
 from .resolve_docs_urls import _is_spec_url
 
@@ -36,9 +36,11 @@ _OVERVIEW_URL_PATTERNS = re.compile(
 )
 # Broad question indicators: queries that want overview pages, not specific endpoints.
 _BROAD_QUESTION_PATTERNS = re.compile(
-    r"\bhow\s+(?:to|do|does|can)\b|\bwhat\s+(?:is|are|does)\b|"
+    r"\bhow\s+(?:to|do|does|can|many)\b|\bwhat\s+(?:is|are|does)\b|"
     r"\brate\s+limit|\bpermission|\bauthenticat|\bintro(?:duction)?\b|"
-    r"\boverview\b|\bquickstart\b|\bgetting\s+started\b",
+    r"\boverview\b|\bquickstart\b|\bgetting\s+started\b|"
+    r"\bendpoints?\b|\bbest\s+practice|\bsandbox\b|"
+    r"\bAPI\s+(?:docs?|documentation|reference)\b|\bAPI\s*$",
     re.IGNORECASE,
 )
 
@@ -48,6 +50,37 @@ _DEPRECATED_URL_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 _DEPRECATED_DEMOTION_FACTOR = 0.5  # Halve the score for deprecated URLs.
+
+# Operation-type inference: map parameter key combinations to action topics.
+# Used to generate meaningful FTS queries from request_payload JSON.
+# Each entry: (required_keys_set, topic_string).  Checked in order; first match wins.
+_PAYLOAD_ACTION_MAP: list[tuple[frozenset[str], str]] = [
+    # More specific patterns first (larger required sets) to avoid shadowing.
+    (frozenset({"asset", "address", "amount"}), "withdraw"),
+    (frozenset({"coin", "address", "amount"}), "withdraw"),
+    (frozenset({"side", "type", "quantity"}), "place order"),
+    (frozenset({"side", "type", "price"}), "place order"),
+    (frozenset({"side", "ordtype"}), "place order"),
+    (frozenset({"side", "ordertype"}), "place order"),
+    (frozenset({"ordtype", "orderqty"}), "place order"),
+    (frozenset({"side", "qty"}), "place order"),
+    (frozenset({"side", "size"}), "place order"),
+    (frozenset({"side", "volume"}), "place order"),
+    (frozenset({"side", "amount"}), "place order"),
+    (frozenset({"leverage", "symbol"}), "set leverage"),
+    (frozenset({"asset", "amount"}), "transfer"),
+    # Websocket last — {type, channel} is a weak signal, easily shadowed by order params.
+    (frozenset({"type", "channel"}), "websocket subscribe"),
+]
+
+
+def _infer_payload_action(payload_keys: list[str]) -> str | None:
+    """Infer the action/topic from request payload parameter names."""
+    key_set = frozenset(k.lower() for k in payload_keys)
+    for required, topic in _PAYLOAD_ACTION_MAP:
+        if required <= key_set:
+            return topic
+    return None
 
 
 def _is_testnet_url(url: str) -> bool:
@@ -476,6 +509,9 @@ def _search_pages_with_semantic(
         return fts_results[:limit]
 
     # Semantic vector search (if available).
+    # NOTE: FTS5 operators (AND/OR) in the query string are left as-is. A/B test
+    # (M22 Step 7) showed that removing them regressed question MRR -3.5% and
+    # error_message PFX -3.7%. The operators help the embedding focus on key terms.
     sem_results_raw: list[dict[str, Any]] = []
     if docs_dir is not None:
         try:
@@ -657,6 +693,7 @@ def _generic_search_answer(
     conn, *, exchange, question: str, norm: str, docs_dir: str | None = None,
     detected_section_override: str | None = None,
     query_type_hint: str | None = None,
+    payload_keys: list[str] | None = None,
 ) -> dict[str, Any]:
     """Generic cite-only answer for any exchange: FTS search across all sections."""
     # Use directory prefixes (not exact seed URLs) for broader matching.
@@ -673,7 +710,28 @@ def _generic_search_answer(
     max_claims = 10  # Reduced from 20 for precision.
 
     # Build FTS query from question terms (strip common words).
-    terms = extract_search_terms(norm, extra_stopwords={exchange.exchange_id.lower()})
+    # For code_snippet queries, also strip programming-language noise tokens.
+    # For request_payload queries, infer action from parameter names.
+    extra_stops: set[str] = {exchange.exchange_id.lower()}
+    if query_type_hint == "code_snippet":
+        extra_stops |= CODE_STOPWORDS
+    if query_type_hint == "request_payload" and payload_keys:
+        action = _infer_payload_action(payload_keys)
+        if action:
+            terms = extract_search_terms(action, extra_stopwords=extra_stops)
+        else:
+            # No action inferred — use the most distinctive parameter names.
+            _skip_keys = {"timestamp", "recvwindow", "signature", "apikey", "symbol", "type", "side"}
+            terms = [k for k in payload_keys if k.lower() not in _skip_keys][:4]
+            if not terms:
+                terms = payload_keys[:3]
+            terms = extract_search_terms(" ".join(terms), extra_stopwords=extra_stops)
+    else:
+        terms = extract_search_terms(norm, extra_stopwords=extra_stops)
+    # Fallback: if code stopwords stripped everything, keep the 2 longest original terms.
+    if not terms and query_type_hint == "code_snippet":
+        raw_terms = extract_search_terms(norm, extra_stopwords={exchange.exchange_id.lower()})
+        terms = sorted(raw_terms, key=len, reverse=True)[:2]
     fts_query = build_fts_query(terms) if terms else sanitize_fts_query(norm)
 
     # Detect section from keywords for multi-section exchanges.
@@ -742,6 +800,20 @@ def _generic_search_answer(
     # Apply page-type boost: promote overview/intro pages for broad questions.
     page_type_boosted = _apply_page_type_boost([cand for _, cand in all_section_candidates], norm=norm)
     all_section_candidates = [(url_to_section.get(cand.get("canonical_url"), ""), cand) for cand in page_type_boosted]
+
+    # Section-aware promotion: when a section is detected from query keywords,
+    # ensure at least 1 result from that section appears in the top-3.
+    # This addresses BUG-13 (section hint ignored in result ranking).
+    if detected_section:
+        top3_sections = {sid for sid, _ in all_section_candidates[:3]}
+        if detected_section not in top3_sections:
+            # Find the best result from the detected section.
+            for idx, (sid, cand) in enumerate(all_section_candidates):
+                if sid == detected_section and idx >= 3:
+                    # Promote it to position 2 (after current top-1).
+                    promoted = all_section_candidates.pop(idx)
+                    all_section_candidates.insert(min(2, len(all_section_candidates)), promoted)
+                    break
 
     for section_id, cand in all_section_candidates:
         if c > max_claims:
@@ -847,6 +919,8 @@ def _infer_rate_limit_from_pages(
 
 def _binance_answer(
     conn, *, reg, question: str, norm: str, clarification: str | None, docs_dir: str | None = None,
+    query_type_hint: str | None = None,
+    payload_keys: list[str] | None = None,
 ) -> dict[str, Any]:
     """Binance-specific answer logic with rate-limit comparison and permissions heuristics."""
     binance = reg.get_exchange("binance")
@@ -1039,7 +1113,7 @@ def _binance_answer(
 
     # If no specialized logic triggered, fall through to generic search.
     if not claims and not unified_section:
-        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm, docs_dir=docs_dir, detected_section_override=detected_section)
+        return _generic_search_answer(conn, exchange=binance, question=question, norm=norm, docs_dir=docs_dir, detected_section_override=detected_section, query_type_hint=query_type_hint, payload_keys=payload_keys)
 
     # Status policy: only "ok" when every requested part is cite-backed.
     if wants_rate and unified_section and "rate_limit_comparison" in missing:
@@ -1609,11 +1683,12 @@ def answer_question(
                     }
 
         # Binance: use richer Binance-specific logic.
+        _payload_keys = classification.signals.get("payload_keys") if classification.input_type == "request_payload" else None
         if exchange.exchange_id == "binance":
-            result = _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir)
+            result = _binance_answer(conn, reg=reg, question=question, norm=norm, clarification=clarification, docs_dir=docs_dir, query_type_hint=classification.input_type, payload_keys=_payload_keys)
         else:
             # All other exchanges: generic cite-only search.
-            result = _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir, query_type_hint=classification.input_type)
+            result = _generic_search_answer(conn, exchange=exchange, question=question, norm=norm, docs_dir=docs_dir, query_type_hint=classification.input_type, payload_keys=_payload_keys)
 
         # Augment with classification-specific results.
         result = _augment_with_classification(

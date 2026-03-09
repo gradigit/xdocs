@@ -1138,5 +1138,87 @@ class TestDeprecatedDemotion(unittest.TestCase):
         self.assertIsNone(_DEPRECATED_URL_PATTERNS.search("/docs/legacy"))  # not followed by /
 
 
+class TestPayloadActionInference(unittest.TestCase):
+    """Tests for _infer_payload_action and _PAYLOAD_ACTION_MAP."""
+
+    def test_place_order_binance(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["symbol", "side", "type", "quantity", "price"])
+        self.assertEqual(result, "place order")
+
+    def test_place_order_okx(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["instId", "tdMode", "side", "ordType", "px", "sz"])
+        self.assertEqual(result, "place order")
+
+    def test_place_order_bybit(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["category", "symbol", "orderType", "side", "qty"])
+        self.assertEqual(result, "place order")
+
+    def test_withdraw(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["asset", "address", "amount", "network"])
+        self.assertEqual(result, "withdraw")
+
+    def test_withdraw_coin(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["coin", "chain", "address", "amount"])
+        self.assertEqual(result, "withdraw")
+
+    def test_set_leverage(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["leverage", "symbol", "marginCoin"])
+        self.assertEqual(result, "set leverage")
+
+    def test_websocket_subscribe(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["type", "channel", "instId"])
+        self.assertEqual(result, "websocket subscribe")
+
+    def test_no_match(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action(["symbol", "invalid"])
+        self.assertIsNone(result)
+
+    def test_empty(self) -> None:
+        from cex_api_docs.answer import _infer_payload_action
+        result = _infer_payload_action([])
+        self.assertIsNone(result)
+
+
+class TestBroadQuestionPatterns(unittest.TestCase):
+    """Tests for broadened _BROAD_QUESTION_PATTERNS."""
+
+    def test_how_many(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("How many requests per minute does Bitget allow"))
+
+    def test_endpoints_suffix(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Binance margin account endpoints"))
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Binance USDM futures order endpoint"))
+
+    def test_api_suffix(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Bitget copy trading API"))
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Coinbase Advanced Trade API"))
+
+    def test_best_practice(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Upbit REST API best practice"))
+
+    def test_sandbox(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Gemini API sandbox environment"))
+
+    def test_original_patterns_preserved(self) -> None:
+        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("how to authenticate"))
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("what is the rate limit"))
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("authentication guide"))
+        self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("overview of the API"))
+
+
 if __name__ == "__main__":
     unittest.main()

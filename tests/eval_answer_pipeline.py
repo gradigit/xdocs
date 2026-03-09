@@ -282,9 +282,16 @@ def evaluate_answer_pipeline(
 
 
 def _compare_baselines(current: dict, baseline_path: str) -> list[str]:
-    """Compare current metrics against a baseline JSON file."""
+    """Compare current metrics against a baseline JSON file.
+
+    Checks both aggregate metrics AND per-classification-path metrics.
+    A change that improves overall MRR but regresses a specific type will
+    be flagged as a REGRESSION.
+    """
     baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
-    alerts = []
+    alerts: list[str] = []
+
+    # --- Aggregate metrics ---
     for key in ("url_hit_rate", "prefix_hit_rate", "mean_mrr", "mean_ndcg5"):
         cur_val = current.get(key, 0.0)
         base_val = baseline.get(key, 0.0)
@@ -296,6 +303,34 @@ def _compare_baselines(current: dict, baseline_path: str) -> list[str]:
                 alerts.append(f"WARNING: {key} dropped {pct_change:.1f}% ({base_val:.3f} -> {cur_val:.3f})")
             elif pct_change > 5:
                 alerts.append(f"IMPROVED: {key} +{pct_change:.1f}% ({base_val:.3f} -> {cur_val:.3f})")
+
+    # --- Per-classification-path regression detection ---
+    cur_by_path = current.get("by_path", {})
+    base_by_path = baseline.get("by_path", {})
+    for path_name in sorted(set(cur_by_path) | set(base_by_path)):
+        cur_pm = cur_by_path.get(path_name, {})
+        base_pm = base_by_path.get(path_name, {})
+        for metric in ("mean_mrr", "prefix_hit_rate"):
+            cur_val = cur_pm.get(metric, 0.0)
+            base_val = base_pm.get(metric, 0.0)
+            if base_val > 0:
+                pct_change = (cur_val - base_val) / base_val * 100
+                if pct_change < -10:
+                    alerts.append(
+                        f"REGRESSION: {path_name}.{metric} dropped {pct_change:.1f}% "
+                        f"({base_val:.3f} -> {cur_val:.3f})"
+                    )
+                elif pct_change < -3:
+                    alerts.append(
+                        f"REGRESS-WARN: {path_name}.{metric} dropped {pct_change:.1f}% "
+                        f"({base_val:.3f} -> {cur_val:.3f})"
+                    )
+                elif pct_change > 10:
+                    alerts.append(
+                        f"PATH-IMPROVED: {path_name}.{metric} +{pct_change:.1f}% "
+                        f"({base_val:.3f} -> {cur_val:.3f})"
+                    )
+
     return alerts
 
 
@@ -305,6 +340,7 @@ def main():
     parser.add_argument("--qa-file", default="tests/golden_qa.jsonl")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument("--save", type=str, default=None, help="Save metrics to JSON file")
     parser.add_argument("--compare", type=str, default=None, help="Baseline JSON file for comparison")
     args = parser.parse_args()
 
@@ -368,13 +404,17 @@ def main():
                 print(f"    Expected: {r.expected_urls[:2]}")
                 print(f"    Got URLs: {r.claim_urls[:3]}")
 
+    if args.save:
+        Path(args.save).write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+        print(f"\nMetrics saved to {args.save}")
+
     if args.compare:
         alerts = _compare_baselines(metrics, args.compare)
         if alerts:
             print("\n=== Comparison vs Baseline ===")
             for a in alerts:
                 print(f"  {a}")
-            if any("HARD FAIL" in a for a in alerts):
+            if any("HARD FAIL" in a or "REGRESSION:" in a for a in alerts):
                 sys.exit(1)
 
 

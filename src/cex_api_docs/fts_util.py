@@ -19,6 +19,22 @@ STOPWORDS = frozenset({
     "are", "can", "api", "is", "it", "of", "to", "in", "on", "by", "an", "a",
 })
 
+# Code-syntax stopwords: programming tokens stripped from code_snippet queries.
+# These pollute FTS queries with language-specific noise instead of domain terms.
+CODE_STOPWORDS = frozenset({
+    # Python
+    "import", "from", "print", "def", "class", "return", "self", "none", "true",
+    "false", "lambda", "pass", "break", "continue", "yield", "async", "await",
+    # JavaScript/TypeScript
+    "const", "let", "var", "function", "require", "module", "exports", "new",
+    "console", "log", "then", "catch", "finally", "undefined", "null",
+    # Common SDK/framework identifiers
+    "ccxt", "exchange", "client", "result", "response", "error", "data",
+    "params", "options", "config", "key", "secret", "apikey", "apisecret",
+    # Generic code patterns
+    "str", "int", "float", "dict", "list", "set", "type", "encode", "decode",
+})
+
 # Domain synonym/acronym map for query expansion.
 # Each key maps to a list of synonyms that should also be searched.
 # Applied AFTER stopword removal but BEFORE building the FTS query.
@@ -318,5 +334,9 @@ def endpoint_search_text(record: dict) -> str:
         parts.extend(str(p) for p in perms)
     elif isinstance(perms, str) and perms:
         parts.append(perms)
+
+    # NOTE: Request parameter names intentionally excluded from search_text.
+    # A/B test (M22 Step 6) showed that adding common param names (symbol, side,
+    # type) to FTS reduced BM25 discriminative power: request_payload MRR -12.6%.
 
     return "\n".join(parts)
