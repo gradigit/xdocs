@@ -1220,5 +1220,33 @@ class TestBroadQuestionPatterns(unittest.TestCase):
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("overview of the API"))
 
 
+class TestCodeIndicatorPatternsBug14(unittest.TestCase):
+    """BUG-14: Bare API signing code should be classified as code_snippet."""
+
+    def test_hmac_signing_code(self) -> None:
+        from cex_api_docs.classify import classify_input
+        text = 'headers = {"X-MBX-APIKEY": api_key}; signature = hmac.new(secret, query_string, hashlib.sha256).hexdigest()'
+        result = classify_input(text)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_base64_encoding(self) -> None:
+        from cex_api_docs.classify import classify_input
+        text = "sign = base64.b64encode(hmac.new(secret.encode(), message.encode(), hashlib.sha256).digest())"
+        result = classify_input(text)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_nodejs_crypto(self) -> None:
+        from cex_api_docs.classify import classify_input
+        text = "const signature = crypto.createHmac('sha256', secretKey).update(queryString).digest('hex')"
+        result = classify_input(text)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_plain_question_unchanged(self) -> None:
+        from cex_api_docs.classify import classify_input
+        text = "How do I authenticate with the Binance API?"
+        result = classify_input(text)
+        self.assertEqual(result.input_type, "question")
+
+
 if __name__ == "__main__":
     unittest.main()

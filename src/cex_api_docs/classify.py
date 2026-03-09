@@ -98,6 +98,13 @@ _CODE_INDICATORS: list[re.Pattern[str]] = [
     re.compile(r"\bwebsocket\.WebSocket", re.IGNORECASE),
     re.compile(r"\bWebSocketApp\b"),
     re.compile(r"\bnew\s+\w+Client\b"),
+    # Crypto signing / auth patterns (BUG-14: bare API code without imports).
+    re.compile(r"\bhmac\.\w+"),
+    re.compile(r"\bhashlib\.\w+"),
+    re.compile(r"\.hexdigest\(\)"),
+    re.compile(r"\bbase64\.\w+"),
+    re.compile(r"\burllib\.parse\b"),
+    re.compile(r"\bcrypto\.create\w+", re.IGNORECASE),  # Node.js crypto
 ]
 
 

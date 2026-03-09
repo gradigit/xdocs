@@ -11,7 +11,7 @@ import os
 
 from .classify import classify_input
 from .db import open_db
-from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms, rrf_fuse, normalize_bm25_score, should_skip_vector_search, CODE_STOPWORDS
+from .fts_util import sanitize_fts_query, build_fts_query, extract_search_terms, rrf_fuse, cc_fuse, normalize_bm25_score, should_skip_vector_search, CODE_STOPWORDS
 from .registry import load_registry
 from .resolve_docs_urls import _is_spec_url
 
@@ -536,7 +536,17 @@ def _search_pages_with_semantic(
                     (url,),
                 ).fetchone()
                 if row:
-                    sem_results_raw.append(dict(row))
+                    entry = dict(row)
+                    # Preserve semantic score for CC fusion (fixes BUG-8 score erasure).
+                    # Use blended_score (reranker-corrected, already [0,1]) when available.
+                    # Otherwise use raw LanceDB score: for query_type="vector" this is
+                    # _distance (lower=better), convert to similarity with 1/(1+d).
+                    if "blended_score" in sr:
+                        entry["semantic_score"] = sr["blended_score"]
+                    else:
+                        dist = sr.get("score", 0.0)
+                        entry["semantic_score"] = 1.0 / (1.0 + dist) if dist >= 0 else 0.0
+                    sem_results_raw.append(entry)
         except ImportError:
             pass
         except Exception:
@@ -547,17 +557,34 @@ def _search_pages_with_semantic(
     if not fts_results:
         return sem_results_raw[:limit]
 
-    # RRF fusion: merge FTS5 and vector rankings with query-type-dependent weights.
-    # [fts_weight, vector_weight] — tuned via golden QA eval.
-    _RRF_WEIGHTS: dict[str | None, list[float]] = {
-        "question": [0.7, 1.3],          # vector-favoring — validated via weight sweep on 79 queries
-        "endpoint_path": [0.7, 1.3],     # vector-favoring — A/B validated: +0.052 MRR over [1.5,0.5]
-        "error_message": [1.3, 0.7],     # favor keyword with some semantic
-        "code_snippet": [0.7, 1.3],      # favor semantic
-        "request_payload": [1.3, 0.7],   # keyword-favoring — exact param names match better in FTS5
-    }
-    rrf_weights = _RRF_WEIGHTS.get(query_type_hint, [1.0, 1.0])
-    fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url", weights=rrf_weights)
+    # Fusion mode: CC (score-aware convex combination) or RRF (rank-only).
+    # CC preserves score magnitudes (BM25 + semantic/reranker), fixing BUG-8
+    # where RRF discarded reranker corrections.
+    _FUSION_MODE = os.getenv("CEX_FUSION_MODE", "rrf")
+
+    if _FUSION_MODE == "cc":
+        # CC alpha = BM25 weight (1-alpha = semantic weight).
+        # Tuned per query type — mirrors prior RRF weight ratios.
+        _CC_ALPHA: dict[str | None, float] = {
+            "question": 0.35,          # vector-favoring (was RRF [0.7, 1.3])
+            "endpoint_path": 0.35,     # vector-favoring
+            "error_message": 0.65,     # BM25-favoring
+            "code_snippet": 0.35,      # vector-favoring
+            "request_payload": 0.65,   # BM25-favoring — exact param names
+        }
+        alpha = _CC_ALPHA.get(query_type_hint, 0.5)
+        fused = cc_fuse(fts_results, sem_results_raw, alpha=alpha, key="canonical_url")
+    else:
+        # Legacy RRF fusion (rank-only, no score magnitudes).
+        _RRF_WEIGHTS: dict[str | None, list[float]] = {
+            "question": [0.7, 1.3],
+            "endpoint_path": [0.7, 1.3],
+            "error_message": [1.3, 0.7],
+            "code_snippet": [0.7, 1.3],
+            "request_payload": [1.3, 0.7],
+        }
+        rrf_weights = _RRF_WEIGHTS.get(query_type_hint, [1.0, 1.0])
+        fused = rrf_fuse(fts_results, sem_results_raw, key="canonical_url", weights=rrf_weights)
     return fused[:limit]
 
 

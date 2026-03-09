@@ -205,6 +205,79 @@ def rrf_fuse(
     return result
 
 
+def cc_fuse(
+    fts_results: list[dict],
+    sem_results: list[dict],
+    *,
+    alpha: float = 0.5,
+    key: str = "canonical_url",
+    bm25_key: str = "bm25_score",
+    sem_key: str = "semantic_score",
+) -> list[dict]:
+    """Score-aware Convex Combination fusion.
+
+    ``final_score = alpha * minmax(bm25) + (1 - alpha) * minmax(semantic)``
+
+    Per-query MinMax normalization maps each score set to [0, 1] before
+    combining. Documents appearing in only one list get 0 for the missing
+    component. Returns fused results sorted by descending ``cc_score``.
+    """
+    # Gather raw scores keyed by document identifier.
+    bm25_scores: dict[str, float] = {}
+    sem_scores: dict[str, float] = {}
+    items: dict[str, dict] = {}
+
+    for item in fts_results:
+        doc_key = item.get(key, "")
+        if not doc_key:
+            continue
+        bm25_scores[doc_key] = item.get(bm25_key, 0.0)
+        if doc_key not in items:
+            items[doc_key] = item
+
+    for item in sem_results:
+        doc_key = item.get(key, "")
+        if not doc_key:
+            continue
+        sem_scores[doc_key] = item.get(sem_key, 0.0)
+        if doc_key not in items:
+            items[doc_key] = item
+
+    # Per-query MinMax normalization to [0, 1].
+    def _minmax(scores: dict[str, float]) -> dict[str, float]:
+        if not scores:
+            return {}
+        vals = scores.values()
+        lo, hi = min(vals), max(vals)
+        span = hi - lo
+        if span < 1e-9:
+            # All equal — normalize to 1.0 (single-result convention per OpenSearch).
+            return {k: 1.0 for k in scores}
+        return {k: (v - lo) / span for k, v in scores.items()}
+
+    bm25_norm = _minmax(bm25_scores)
+    sem_norm = _minmax(sem_scores)
+
+    all_keys = set(bm25_norm) | set(sem_norm)
+    fused: list[tuple[str, float, int]] = []
+    for doc_key in all_keys:
+        b = bm25_norm.get(doc_key, 0.0)
+        s = sem_norm.get(doc_key, 0.0)
+        cc_score = alpha * b + (1.0 - alpha) * s
+        # Tiebreaker: documents in both lists rank higher than single-list.
+        in_both = 1 if (doc_key in bm25_norm and doc_key in sem_norm) else 0
+        fused.append((doc_key, cc_score, in_both))
+
+    fused.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    result = []
+    for doc_key, score, _tiebreak in fused:
+        entry = dict(items[doc_key])
+        entry["cc_score"] = score
+        entry["rrf_score"] = score  # Alias for downstream boost functions that read rrf_score.
+        result.append(entry)
+    return result
+
+
 import math
 
 

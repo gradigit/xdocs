@@ -464,6 +464,92 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[0]["name"], "valid")
 
 
+class TestCcFuse(unittest.TestCase):
+    """Tests for cc_fuse (convex combination score-aware fusion)."""
+
+    def test_basic_fusion(self) -> None:
+        from cex_api_docs.fts_util import cc_fuse
+        fts = [
+            {"canonical_url": "a", "bm25_score": 0.9},
+            {"canonical_url": "b", "bm25_score": 0.5},
+        ]
+        sem = [
+            {"canonical_url": "b", "semantic_score": 0.9},
+            {"canonical_url": "c", "semantic_score": 0.7},
+        ]
+        result = cc_fuse(fts, sem, alpha=0.5)
+        urls = [r["canonical_url"] for r in result]
+        # b appears in both → highest combined score.
+        self.assertEqual(urls[0], "b")
+        self.assertIn("a", urls)
+        self.assertIn("c", urls)
+        # All have cc_score and rrf_score alias.
+        for r in result:
+            self.assertIn("cc_score", r)
+            self.assertIn("rrf_score", r)
+
+    def test_alpha_zero_semantic_only(self) -> None:
+        from cex_api_docs.fts_util import cc_fuse
+        fts = [{"canonical_url": "a", "bm25_score": 0.9}]
+        sem = [
+            {"canonical_url": "b", "semantic_score": 0.9},
+            {"canonical_url": "a", "semantic_score": 0.1},
+        ]
+        result = cc_fuse(fts, sem, alpha=0.0)
+        # With alpha=0, only semantic scores matter.
+        self.assertEqual(result[0]["canonical_url"], "b")
+
+    def test_alpha_one_bm25_only(self) -> None:
+        from cex_api_docs.fts_util import cc_fuse
+        fts = [
+            {"canonical_url": "a", "bm25_score": 0.9},
+            {"canonical_url": "b", "bm25_score": 0.3},
+        ]
+        sem = [{"canonical_url": "b", "semantic_score": 0.99}]
+        result = cc_fuse(fts, sem, alpha=1.0)
+        # With alpha=1, only BM25 scores matter.
+        self.assertEqual(result[0]["canonical_url"], "a")
+
+    def test_empty_inputs(self) -> None:
+        from cex_api_docs.fts_util import cc_fuse
+        self.assertEqual(cc_fuse([], []), [])
+        result = cc_fuse(
+            [{"canonical_url": "a", "bm25_score": 0.5}],
+            [],
+            alpha=0.5,
+        )
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["canonical_url"], "a")
+
+    def test_single_item_minmax(self) -> None:
+        from cex_api_docs.fts_util import cc_fuse
+        # Single item in each list → MinMax yields 1.0 (OpenSearch convention).
+        result = cc_fuse(
+            [{"canonical_url": "a", "bm25_score": 0.3}],
+            [{"canonical_url": "a", "semantic_score": 0.7}],
+            alpha=0.5,
+        )
+        # Both normalize to 1.0, so cc_score = 0.5 * 1.0 + 0.5 * 1.0 = 1.0.
+        self.assertAlmostEqual(result[0]["cc_score"], 1.0)
+
+    def test_reranker_correction_preserved(self) -> None:
+        """BUG-8 scenario: reranker should correct retrieval ranking."""
+        from cex_api_docs.fts_util import cc_fuse
+        # FTS: a > b (close scores).
+        fts = [
+            {"canonical_url": "a", "bm25_score": 0.65},
+            {"canonical_url": "b", "bm25_score": 0.60},
+        ]
+        # Semantic (reranker-corrected): b >> a.
+        sem = [
+            {"canonical_url": "b", "semantic_score": 0.9},
+            {"canonical_url": "a", "semantic_score": 0.3},
+        ]
+        result = cc_fuse(fts, sem, alpha=0.35)  # Vector-favoring
+        # b should win because semantic advantage outweighs BM25 advantage.
+        self.assertEqual(result[0]["canonical_url"], "b")
+
+
 class TestCodeStopwords(unittest.TestCase):
     """Tests for CODE_STOPWORDS used in code_snippet query cleaning."""
 
