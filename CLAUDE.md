@@ -106,7 +106,10 @@ cex-api-docs list-endpoints --exchange binance --section spot --limit 20 --docs-
 cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance --docs-dir ./cex-docs
 
 # Search error code across endpoints + pages
+# Use -- only for negative codes (dash would be parsed as a flag)
 cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+# Positive codes: no -- needed
+cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
 
 # Classify input text (error, endpoint, payload, code, question)
 cex-api-docs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs

@@ -1059,9 +1059,111 @@ Dependency: None (can run parallel).
 See "Bugs Found in Spot Checks" section above for BUG-1 through BUG-6.
 
 Priority order:
-1. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
-2. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
-3. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
-4. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
-5. BUG-3 (Breadcrumb artifacts) — low, cosmetic
-6. BUG-6 (Gate.io endpoint display) — low, cosmetic
+1. BUG-10 (Skill search-error `--` misuse) — medium, quick fix, agents fail on positive error codes
+2. BUG-11 (Skill no WebSocket routing) — medium, quick fix, skill-only change
+3. BUG-8 (Blend score overrides reranker) — medium, affects ranking quality across all exchanges
+4. BUG-9 (Chunk heading context lost) — medium, affects all single-page doc exchanges (9 exchanges)
+5. BUG-7 (Snippet depth too narrow) — medium, affects multi-detail queries
+6. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
+7. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
+8. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
+9. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
+10. BUG-3 (Breadcrumb artifacts) — low, cosmetic
+11. BUG-6 (Gate.io endpoint display) — low, cosmetic
+
+#### BUG-7: Semantic Search Snippet Window Too Narrow for Multi-Detail Queries
+**Severity**: Medium
+**Found**: 2026-03-09, Binance coverage test Q4 (authentication details)
+
+Semantic search finds the correct auth page but the returned snippet is too short to contain all key terms. For Binance auth, the page contains X-MBX-APIKEY, HMAC-SHA256, RSA, Ed25519, and recvWindow, but only 2 of 5 appear in the search snippet. An agent CAN work around this by reading the full page markdown, but a skill coverage test that checks only snippets will grade PARTIAL.
+
+**Root cause**: LanceDB chunks are heading-level splits (~500-2000 chars). Auth details span multiple headings on the page (header setup under one heading, signing algorithms under another, recvWindow under a third). The single best-matching chunk can't contain all terms.
+
+**Fix options** (pick one or combine):
+a) Return multiple chunk snippets per page (top 2-3 chunks, not just the best one) — most impactful
+b) Increase chunk overlap in `chunker.py` so adjacent heading content bleeds into each chunk
+c) Add page-level keyword highlights to search results (list of matched terms per page, separate from snippet)
+d) In the coverage test itself, read full page markdown when a relevant page is found (mirrors real agent behavior)
+
+**Key files**: `src/cex_api_docs/semantic.py` (search result formatting), `src/cex_api_docs/chunker.py` (chunk splitting), `test-scripts/test_skill_coverage.py` (coverage test Q4)
+
+#### BUG-8: Blended Score Overrides Reranker Correction at Top Ranks
+**Severity**: Medium
+**Found**: 2026-03-10, OKX WebSocket retrieval gap report
+
+When the reranker correctly scores a result higher than a competing result, the `position_aware_blend()` formula can override this correction because ranks 1-3 use 75% retrieval / 25% reranker weights. The reranker's signal is too weak to change the ranking at top positions.
+
+**Reproduction**: `semantic-search "OKX deposit-info withdrawal-info websocket channel business endpoint" --exchange okx --mode hybrid`
+- Result #0 (changelog, page 2286): rrf=high, rerank_score=0.367, blended=0.898
+- Result #1 (correct page 865): rrf=slightly lower, rerank_score=0.399, blended=0.882
+- The reranker correctly ranks #1 higher (0.399 > 0.367), but the 75/25 blend preserves the wrong order.
+
+**Root cause**: `position_aware_blend()` in `fts_util.py:200-247` uses a fixed weight schedule: ranks 1-3 get 75% retrieval / 25% reranker. When two results have similar retrieval scores but the reranker disagrees on their order, the reranker's correction is suppressed. This is especially problematic when the retrieval ranking is wrong (e.g., changelog pages outscoring actual docs content).
+
+**Fix options**:
+a) Reduce retrieval weight at top ranks: 60/40 or 50/50 instead of 75/25 — gives reranker more authority to reorder
+b) Adaptive weighting: when the reranker's top-2 scores are close (within 0.05), use 50/50 to let the reranker break ties
+c) Use rerank_score as primary sort key when reranking is triggered (ignoring retrieval score entirely) — most aggressive, matches what standalone rerankers do
+d) A/B benchmark all options on 200-query golden QA before switching
+
+**Key files**: `src/cex_api_docs/fts_util.py` (`position_aware_blend()` at line 200), `src/cex_api_docs/semantic.py` (caller)
+
+#### BUG-9: Chunk Heading Context Lost on Single-Page Docs (Parent Heading Not Preserved)
+**Severity**: Medium
+**Found**: 2026-03-10, OKX WebSocket retrieval gap report
+
+On large single-page docs (OKX 224K words, Gate.io 192K, HTX 130K), chunks inherit only their immediate preceding heading, not the parent heading hierarchy. A chunk from the "Deposit info channel" section (line 45577) that contains the "URL Path" sub-heading (line 45587) gets tagged with heading "URL Path" instead of "Deposit info channel > URL Path" or just "Deposit info channel".
+
+This means semantic search returns results with generic headings ("URL Path", "Response parameters", "Request example") that tell the agent nothing about which section the chunk belongs to. The agent can't determine relevance from the heading alone.
+
+**Root cause**: `chunker.py` splits on heading boundaries and assigns each chunk the heading that starts it. Sub-headings (####) within a section (###) create new chunks that lose the parent ### heading context.
+
+**Fix options**:
+a) Heading hierarchy preservation: prepend parent headings to each chunk's metadata. E.g., chunk heading = "Funding Account > WebSocket > Deposit info channel > URL Path"
+b) Virtual page splitting: pre-split large pages (>50K words) into virtual sub-pages at ### boundaries before indexing. Each virtual page is a focused section with its own heading as the title
+c) Chunk context enrichment: prepend the parent heading chain to chunk text before embedding (similar to Anthropic's contextual retrieval). E.g., "Section: Deposit info channel. URL Path: /ws/v5/business..."
+
+Option (a) is lowest effort — just track heading stack during chunking. Option (b) is most impactful but requires changes to the indexing pipeline. Option (c) improves both heading display AND vector search quality.
+
+**Affected exchanges**: OKX (1 page, 224K words), Gate.io (1 page, 192K words), HTX (4 pages, 130K total), Crypto.com (1 page, 35K), Phemex (1 page, 53K), Backpack (1 page, 31K), WOO X (1 page, 20K), Bitstamp (1 page, 22K), Korbit (1 page, 25K)
+
+**Key files**: `src/cex_api_docs/chunker.py` (heading-aware splitting), `src/cex_api_docs/semantic.py` (build_index, search result formatting)
+
+#### BUG-10: Skill `search-error` Example Causes Agent Misuse with Positive Error Codes
+**Severity**: Medium
+**Found**: 2026-03-10, OKX WebSocket retrieval gap report
+
+The cex-api-query skill (SKILL.md) and CLAUDE.md show `search-error -- -1002` as the example. The `--` is needed because `-1002` starts with a dash (argparse interprets it as a flag). But agents generalize this pattern to ALL error codes, including positive ones like OKX `60029`. Running `search-error -- 60029 --exchange okx --docs-dir ./cex-docs` fails because `--` causes argparse to treat `--exchange` and `--docs-dir` as extra positional arguments.
+
+The skill's gotchas section does say "Use `--` before negative numbers in CLI args", but the only example in the routing table and code blocks uses `--`, so agents cargo-cult the pattern.
+
+**Fix**: Update the skill and CLAUDE.md to show both patterns:
+```bash
+# Negative error codes need -- to prevent argparse flag interpretation
+cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+
+# Positive error codes do NOT use --
+cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
+```
+
+Also add an explicit warning in the routing table: "Only use `--` when the error code starts with a dash."
+
+**Key files**: `.claude/skills/cex-api-query/SKILL.md` (routing table + examples), `CLAUDE.md` (commands section), `AGENTS.md` (core commands)
+
+#### BUG-11: Skill Has No WebSocket Query Routing Guidance
+**Severity**: Medium
+**Found**: 2026-03-10, OKX WebSocket retrieval gap report
+
+The cex-api-query skill routing table covers: error_message, endpoint_path, request_payload, code_snippet, question. There is no guidance for WebSocket channel queries — channel names, WS-specific error codes, WS URL paths, subscription parameters. When an agent asks about "OKX fills channel", it gets classified as "question" → semantic-search, which works when chunking preserves headings but fails when it doesn't (see BUG-9).
+
+WebSocket channel data exists in the crawled page content for all major exchanges (OKX, Binance, Bybit, Bitget, Gate.io, HTX, KuCoin) but isn't surfaced through any structured query path.
+
+**Fix**: Add a "WebSocket Channel Queries" section to the skill with guidance:
+1. Try `semantic-search "<channel-name> websocket <exchange>" --mode hybrid` first
+2. If results have generic headings, fall back to `search-pages "<channel-name> <exchange>"` for FTS match
+3. When a relevant page is found but snippet is insufficient, read the full page markdown with line offset search (Grep for channel name, then Read with offset)
+4. For WS error codes (OKX 60xxx, Binance -xxxx), use `search-error <code> --exchange <exchange>`
+
+This doesn't require any new CLI commands — just skill-level routing guidance for agents.
+
+**Key files**: `.claude/skills/cex-api-query/SKILL.md` (routing table)

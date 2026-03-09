@@ -12,7 +12,7 @@ description: >
   Aster, ApeX, GRVT, or Paradex API documentation. Also activates when user pastes
   API errors, endpoint paths, request payloads, or code snippets related to exchange APIs.
 metadata:
-  version: "2.10.0"
+  version: "2.11.0"
 ---
 
 # CEX API Query v2
@@ -70,8 +70,12 @@ When `input_type == "error_message"`:
 3. Search for details:
 
 ```bash
-# Search across endpoints + pages
+# IMPORTANT: Only use -- before NEGATIVE error codes (codes starting with -)
+# Negative codes: -- is required to prevent argparse interpreting the dash as a flag
 cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+
+# Positive codes: do NOT use -- (it breaks --exchange and --docs-dir parsing)
+cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
 
 # If error code is in the patterns file, check common meaning first
 # e.g. Binance -1002 = "Unauthorized — API key missing or invalid"
@@ -85,10 +89,14 @@ cex-api-docs get-endpoint ENDPOINT_ID --docs-dir ./cex-docs
 
 5. Read the source page for full context (some errors require out-of-band steps like the Binance Convert API questionnaire).
 
-**Example:** User pastes "Error -1002: You are not authorized" from Binance Convert API:
-- `search-error -- -1002 --exchange binance` → finds Convert endpoint
+**Example 1:** User pastes "Error -1002: You are not authorized" from Binance Convert API:
+- `search-error -- -1002 --exchange binance` → finds Convert endpoint (note: `--` needed for negative code)
 - `get-endpoint <id>` → shows required permissions
 - Page markdown reveals: must complete Convert API questionnaire on binance.com before enabling API access
+
+**Example 2:** User gets OKX error 60029 subscribing to fills channel:
+- `search-error 60029 --exchange okx` → finds fills channel section (note: no `--` for positive code)
+- Snippet shows "VIP6 or above" restriction
 
 ## Step 3: Endpoint Path Routing
 
@@ -154,6 +162,47 @@ Then use the **Read tool** to read the markdown file at that path. Don't use `ca
 **For large single-page docs** (OKX, Gate.io, HTX, etc.), use Grep to find the relevant section within the file first, then Read with an offset.
 
 **Nav chrome:** Most stored pages start with navigation menus and sidebars. The actual content begins at the first `# Heading` that matches the topic. Skip everything before it.
+
+## Step 5b: WebSocket Channel Queries
+
+WebSocket channel data is stored in crawled page content (not in the endpoints table). When a user asks about WS channels, subscriptions, or WS-specific errors:
+
+1. **WS error codes** (OKX 60xxx, Binance negative codes, etc.):
+   ```bash
+   # Positive codes — no -- prefix
+   cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
+
+   # Negative codes — use -- prefix
+   cex-api-docs search-error -- -1102 --exchange binance --docs-dir ./cex-docs
+   ```
+
+2. **WS channel lookup** — try semantic search first:
+   ```bash
+   cex-api-docs semantic-search "fills channel websocket" --exchange okx --mode hybrid --limit 5 --docs-dir ./cex-docs
+   ```
+
+3. **If semantic results have generic headings** ("Response parameters", "URL Path", a date), the chunk lost its parent heading context. Fall back to FTS:
+   ```bash
+   cex-api-docs search-pages "deposit-info business websocket" --docs-dir ./cex-docs
+   ```
+
+4. **If still insufficient**, find the section directly in the stored markdown:
+   ```bash
+   # Grep for the channel name in the exchange's pages directory
+   Grep pattern="deposit-info channel|Deposit info channel" path="cex-docs/pages/www.okx.com" context=3
+
+   # Then Read with offset to get full context
+   Read file_path="<markdown_path>" offset=<line_number> limit=30
+   ```
+
+**Key WS URL paths by exchange:**
+- **OKX**: `/ws/v5/public`, `/ws/v5/private`, `/ws/v5/business` (deposit/withdrawal channels are on `/business`, not `/private`)
+- **Binance**: `/ws`, `/ws/<listenKey>` (user data streams)
+- **Bybit**: `/v5/public`, `/v5/private`, `/v5/trade`
+
+**Common WS errors:**
+- OKX 60018: "Wrong URL or channel doesn't exist" — usually means connecting to wrong WS path (e.g., `/private` instead of `/business`)
+- OKX 60029: "VIP6+ only" — channel has tier restriction (e.g., fills channel)
 
 ## Step 6: Synthesize Answer
 
@@ -283,7 +332,7 @@ source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
 - `{{url}}`** in paths:** Some Postman-imported endpoints have `{{url}}/sapi/v1/...` paths. `lookup-endpoint` handles this automatically.
 - **Korean exchanges:** Upbit, Bithumb, Coinone, Korbit docs are partially in Korean.
 - **Unresolved **`$ref`**:** OpenAPI-imported request/response schemas may contain `$ref` pointers. If you need the referenced definition, search for the component name in the source page.
-- **Negative error codes:** Use `--` before negative numbers in CLI args: `search-error -- -1002`
+- **Negative error codes:** Use `--` before negative numbers in CLI args: `search-error -- -1002`. Do NOT use `--` for positive codes like `search-error 60029` — it breaks flag parsing.
 - **Semantic search requires **`[semantic]`** extra:** If `semantic-search` fails with ImportError, fall back to FTS5.
 - **Reranker is bundled** with `[semantic-query]` and `[semantic]` extras. If reranker import still fails, continue with semantic results and mark `rerank_applied: no` + `rerank_reason: reranker_unavailable`.
 
