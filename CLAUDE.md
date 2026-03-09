@@ -264,7 +264,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,724 pages, 16.73M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,917 structured endpoints**. Store is at `cex-docs/`.
 
 Latest:
 
@@ -272,11 +272,11 @@ Latest:
 - **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).
 - **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → `cloudscraper` → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, cloudscraper 1.2.71, Playwright 1.58.0.
 - **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
-- **Kraken crawl gap** — 48 REST API pages in sitemap never fetched; seed URL only reached guide pages.
+- **Kraken endpoint gap closed** — 45 REST endpoints imported via community OpenAPI spec (`Roukii/kraken-go`, OpenAPI 3.0, v1.1.0). 36/45 docs_urls resolved. Crawled pages still thin (Docusaurus client-side rendering), but endpoint DB compensates. MRR +0.5%.
 - **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.
 - **llms.txt mapped** — 13 of 46 exchanges have it (ReadMe.io / GitBook auto-generate).
 - **11 new exchanges registered** — MEXC (21p, 114ep), BingX (1p), Deribit (530p, 173ep), Backpack (1p, 22ep), CoinEx (489p), WOO X (1p), Phemex (1p), Gemini (135p), Orderly (527p, 203ep), Bluefin (62p), Nado (192p). Pacifica deferred (insufficient docs).
-- **3 new OpenAPI spec imports** — Deribit (173 ops), Orderly (203 ops), Backpack (22 ops).
+- **4 new OpenAPI spec imports** — Deribit (173 ops), Orderly (203 ops), Backpack (22 ops), Kraken (45 ops, community spec).
 - **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
 - **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
 - **Verification fixes** — Semantic FTS cold-start (14.1s → 1.0s via deferred embedder loading), render cascade validation (`_find_node_pw_module()` at selection time), LanceDB compaction (3,568 → 9 fragments, 2.4GB → 908MB via `table.optimize()`).
@@ -301,7 +301,7 @@ Research completed (docs/research/ and architect/research/):
 - Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches.
 - Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 
-Next: Periodic CCXT docs refresh. Changelog drift detection. Remaining query quality gaps: code_snippet MRR=0.224 (14 queries, needs code-to-endpoint mapping), request_payload MRR=0.400 (15 queries, needs parameter-combination matching). Negative FP 29.41% (5/17, FPs for defunct/DeFi exchanges). Kraken needs re-crawl with `--render auto` (48 REST API pages missing JS-rendered response schemas). Pacifica re-evaluation when docs mature.
+Next: Periodic CCXT docs refresh. Changelog drift detection. Remaining query quality gaps: code_snippet MRR=0.224 (14 queries, needs code-to-endpoint mapping), request_payload MRR=0.400 (15 queries, needs parameter-combination matching). Negative FP 29.41% (5/17, FPs for defunct/DeFi exchanges). Kraken REST pages still thin (Docusaurus CSR), but 45 endpoints imported from community OpenAPI spec. KuCoin abandoned-endpoints ranking higher than current v3 — needs URL pattern demotion. M18 optimization backlog: convex combination fusion, parameter inverted index, deprecated URL demotion, code URL extraction, chunk enrichment, query expansion. Pacifica re-evaluation when docs mature.
 
 ## Compact Instructions
 
