@@ -561,15 +561,10 @@ Query returns pages that mention "Rate Limits" only in navigation sidebar links,
 
 ### Data Gap Fixes (Prerequisites for OPT-1)
 
-#### DATA-1: Resolve OpenAPI `$ref` Parameters During Import
+#### DATA-1: Resolve OpenAPI `$ref` Parameters During Import ✓
 **Severity**: High (blocks OPT-1)
 **Scope**: `openapi_import.py`
-
-162 Binance endpoints have `$ref`-only parameters (e.g., `{"$ref": "#/components/parameters/symbol"}`) that were never resolved to actual parameter names during import. The importer stores the raw `$ref` string instead of following the reference to extract `name`, `in`, `schema`. This means these endpoints have zero extractable parameter names for OPT-1 or OPT-3.
-
-**Fix**: During OpenAPI import, carry the full `components` context and resolve `$ref` pointers before storing `request_schema`. Use `jsonschema.RefResolver` or manual dict traversal. Affects `_extract_request_schema()` in `openapi_import.py`.
-
-**Scope**: 162 Binance endpoints (11.4% of Binance total), plus potentially other OpenAPI imports with `$ref` patterns.
+**Status**: DONE — `_resolve_refs()` added to openapi_import.py (recursive resolver, depth-limited, 19 new tests). Affects all future imports. Existing endpoints require re-import to resolve stored $refs. 2,213 endpoint files across binance, orderly, kraken, deribit, whitebit affected.
 
 #### DATA-2: Extract Parameters from Postman Collection Request Bodies
 **Severity**: High (blocks OPT-1)
@@ -805,3 +800,60 @@ Each item below was identified via deep online research + codebase analysis (M17
 **Pre-work needed**:
 - [ ] Benchmark: Run GTE-modernbert on 163-query reranker benchmark
 - [ ] Check: 8192 token context — verify truncation handling for long API pages
+
+---
+
+### Follow-Up: Coverage Gap Fixes (from Binance Skill Coverage Test)
+
+Test: `test-scripts/test_skill_coverage.py` — compares CLI output against Binance spot skill (binance-skills-hub v1.0.1).
+Baseline: 0 FULL / 5 PARTIAL / 0 EMPTY. Target: 3+ FULL.
+
+#### COVERAGE-1: Re-import Binance OpenAPI Specs with $ref Resolution ✓→pending
+**Severity**: High (unblocks Q1, Q2, Q3 improvements)
+**Depends on**: DATA-1 ✓
+
+Now that `_resolve_refs()` is implemented, re-import all Binance spot OpenAPI specs to replace the 162 $ref-only endpoint records with fully resolved schemas (types, enums, required flags, constraints).
+
+```bash
+# Re-import all 9 Binance spot spec URLs (from exchanges.yaml doc_sources)
+cex-api-docs import-openapi --exchange binance --section spot --url <each-spec-url> --docs-dir ./cex-docs --continue-on-error
+```
+
+After re-import, run the coverage test to measure improvement on Q1 (params) and Q2 (enums).
+
+#### COVERAGE-2: Endpoint `search_text` Enrichment with Parameter Names
+**Severity**: Medium
+**Same as**: OPT-3
+
+After COVERAGE-1 resolves $refs, parameter names will be available in `request_schema`. Add them to `endpoint_search_text()` in `fts_util.py` and rebuild FTS index. This lets queries like "symbol side orderType" match endpoints by their actual parameters, not just description text.
+
+```python
+# In fts_util.py endpoint_search_text():
+params = record.get("request_schema", {}).get("parameters", [])
+for p in params:
+    name = p.get("name")
+    if name:
+        parts.append(name)
+```
+
+Then `cex-api-docs fts-rebuild --docs-dir ./cex-docs`.
+
+#### COVERAGE-3: Postman Parameter Extraction from Request Body Examples
+**Severity**: Medium
+**Same as**: DATA-2
+
+5 newer Binance endpoints (OPO, OPOCO, amend, myFilters, amendments) plus 337 Bybit/MEXC/BitMart endpoints are Postman-only with zero parameter data. Parse `request.body.raw` example JSON payloads during Postman import to extract parameter names.
+
+Affects: Q3 (OPO, OPOCO), Q5 (amend, myFilters, amendments).
+
+#### COVERAGE-4: Add Coverage Test to Test Suite
+**Severity**: Low
+**Effort**: Low
+
+Move `test-scripts/test_skill_coverage.py` to `tests/test_skill_coverage.py`, add `@pytest.mark.slow` decorator, adjust paths for pytest discovery. Add to CI as a slow integration test.
+
+Improvements to the test itself:
+- Q4: Read full page markdown of top search result instead of checking truncated snippets (mirrors real agent behavior)
+- Increase default timeout from 30s to 60s (reranker cold-start)
+- Add Q6: Rate limits (test whether `answer "What rate limits does Binance have?"` surfaces the weight system)
+- Add multi-exchange variant (OKX, Bybit, Bitget) to validate generalization

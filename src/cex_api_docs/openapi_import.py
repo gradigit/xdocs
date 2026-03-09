@@ -19,6 +19,56 @@ from .markdown import normalize_markdown
 HTTP_METHOD_KEYS: tuple[str, ...] = ("get", "post", "put", "delete", "patch", "head", "options", "trace")
 
 
+# ---------------------------------------------------------------------------
+# $ref resolution
+# ---------------------------------------------------------------------------
+
+_MAX_REF_DEPTH = 20
+
+
+def _resolve_ref(ref_str: str, root: dict[str, Any]) -> dict[str, Any] | None:
+    """Resolve a single internal ``$ref`` pointer against the spec root.
+
+    Only ``#/...`` (JSON Pointer) refs are supported.  External refs
+    (``other-file.yaml#/...``) are left unresolved and return *None*.
+    """
+    if not ref_str.startswith("#/"):
+        return None  # External ref — leave unresolved
+    parts = ref_str.lstrip("#/").split("/")
+    node: Any = root
+    for p in parts:
+        if not isinstance(node, dict):
+            return None
+        node = node.get(p)
+    return dict(node) if isinstance(node, dict) else None
+
+
+def _resolve_refs(obj: Any, root: dict[str, Any], *, _depth: int = 0) -> Any:
+    """Recursively resolve all internal ``$ref`` pointers in *obj*.
+
+    Handles the three ref patterns seen in real OpenAPI specs:
+
+    * ``parameters`` array items  (``{"$ref": "#/components/parameters/X"}``)
+    * ``requestBody`` schema refs (``{"$ref": "#/components/schemas/X"}``)
+    * ``responses`` top-level refs (``{"$ref": "#/components/responses/X"}``)
+
+    Depth-limited to *_MAX_REF_DEPTH* to prevent circular-ref infinite loops.
+    """
+    if _depth > _MAX_REF_DEPTH:
+        return obj  # Safety: stop recursion
+    if isinstance(obj, dict):
+        if "$ref" in obj and len(obj) == 1:
+            resolved = _resolve_ref(obj["$ref"], root)
+            if resolved is not None:
+                # Recurse into the resolved object (may contain nested $refs)
+                return _resolve_refs(resolved, root, _depth=_depth + 1)
+            return obj  # Unresolvable — keep original
+        return {k: _resolve_refs(v, root, _depth=_depth + 1) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_resolve_refs(item, root, _depth=_depth + 1) for item in obj]
+    return obj
+
+
 @dataclass(frozen=True, slots=True)
 class OpenApiImportConfig:
     exchange: str
@@ -204,6 +254,8 @@ def import_openapi(
     if not isinstance(paths, dict):
         raise CexApiDocsError(code="EBADOPENAPI", message="OpenAPI spec missing paths{}.", details={"url": url})
 
+    components = spec.get("components", {})
+
     records: list[dict[str, Any]] = []
     for p, path_item in paths.items():
         if not isinstance(p, str):
@@ -222,6 +274,12 @@ def import_openapi(
 
             req_schema = _extract_request_schema(op)
             resp_schema = _extract_response_schema(op)
+
+            # Resolve $ref pointers so stored schemas contain full definitions.
+            if req_schema is not None and components:
+                req_schema = _resolve_refs(req_schema, spec)
+            if resp_schema is not None and components:
+                resp_schema = _resolve_refs(resp_schema, spec)
 
             op_excerpt = _find_operation_excerpt(md_norm, path=path, method_lower=mk)
 
