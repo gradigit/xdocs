@@ -187,7 +187,10 @@ def _load_jina_v3_mlx():
     if cls is None:
         raise ImportError(f"No MLXReranker or JinaForRanking class in {modpath}")
 
-    _jina_v3_model = cls() if modfile == "rerank.py" else cls.from_pretrained(model_dir, trust_remote_code=True)
+    if modfile == "rerank.py":
+        _jina_v3_model = cls(model_path=model_dir)
+    else:
+        _jina_v3_model = cls.from_pretrained(model_dir, trust_remote_code=True)
     return _jina_v3_model
 
 
