@@ -1059,17 +1059,20 @@ Dependency: None (can run parallel).
 See "Bugs Found in Spot Checks" section above for BUG-1 through BUG-6.
 
 Priority order:
-1. BUG-10 (Skill search-error `--` misuse) — medium, quick fix, agents fail on positive error codes
-2. BUG-11 (Skill no WebSocket routing) — medium, quick fix, skill-only change
-3. BUG-8 (Blend score overrides reranker) — medium, affects ranking quality across all exchanges
-4. BUG-9 (Chunk heading context lost) — medium, affects all single-page doc exchanges (9 exchanges)
-5. BUG-7 (Snippet depth too narrow) — medium, affects multi-detail queries
-6. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
-7. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
-8. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
-9. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
-10. BUG-3 (Breadcrumb artifacts) — low, cosmetic
-11. BUG-6 (Gate.io endpoint display) — low, cosmetic
+1. ~~BUG-10 (Skill search-error `--` misuse)~~ — **FIXED** (2026-03-10, commit 85a6a87)
+2. ~~BUG-11 (Skill no WebSocket routing)~~ — **FIXED** (2026-03-10, commit 85a6a87)
+3. BUG-13 (Answer cites wrong section) — medium, answer pipeline ignores section hint from question text
+4. BUG-8 (Blend score overrides reranker) — medium, affects ranking quality across all exchanges
+5. BUG-9 (Chunk heading context lost) — medium, affects all single-page doc exchanges (9 exchanges)
+6. BUG-14 (Code snippet detection gap) — low-medium, bare API code without imports classified as question
+7. BUG-7 (Snippet depth too narrow) — medium, affects multi-detail queries
+8. BUG-12 (Korean text classification) — low, affects 4 Korean exchanges
+9. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
+10. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
+11. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
+12. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
+13. BUG-3 (Breadcrumb artifacts) — low, cosmetic
+14. BUG-6 (Gate.io endpoint display) — low, cosmetic
 
 #### BUG-7: Semantic Search Snippet Window Too Narrow for Multi-Detail Queries
 **Severity**: Medium
@@ -1167,3 +1170,57 @@ WebSocket channel data exists in the crawled page content for all major exchange
 This doesn't require any new CLI commands — just skill-level routing guidance for agents.
 
 **Key files**: `.claude/skills/cex-api-query/SKILL.md` (routing table)
+
+#### BUG-12: Korean Text Classification Not Supported
+**Severity**: Low
+**Found**: 2026-03-10, CLI robustness test T1
+
+The `classify` command has zero support for Korean text. Korean error messages (e.g., "업비트 주문 API에서 잔고 부족 에러") get classified as `question` at 0.2 confidence instead of `error_message`. Korean exchange names (업비트=Upbit, 빗썸=Bithumb, 코인원=Coinone, 코빗=Korbit) and error keywords (에러=error, 오류=error, 실패=failure, 부족=insufficient) are not in the pattern lists. Affects 4 Korean exchanges.
+
+**Impact**: Low — most Korean devs query in English for API docs, and English keywords in the text (API, error codes) still work. But mixed Korean/English queries lose exchange detection and error type classification.
+
+**Fix**: Add Korean keyword lists to `classify.py`:
+1. Korean exchange names → `_get_exchange_names()` or separate Korean map
+2. Korean error keywords → `_ERROR_PHRASES` (에러, 오류, 실패, 부족, 인증, 권한)
+3. Korean exchange name → ASCII exchange hint extraction (업비트 → upbit)
+
+**Key files**: `src/cex_api_docs/classify.py` (pattern lists, exchange detection)
+
+#### BUG-13: Answer Pipeline Ignores Section Hint When Question Mentions Specific Section
+**Severity**: Medium
+**Found**: 2026-03-10, CLI robustness test T5
+
+When asked "What permissions does the Binance API key need to place a spot order?", the answer pipeline cites `https://developers.binance.com/docs/derivatives/quick-start` (a derivatives page) instead of `https://developers.binance.com/docs/binance-spot-api-docs/rest-api/request-security` (the correct spot auth page, 2696 words).
+
+**Root cause**: The answer pipeline calls `_detect_binance_section()` to extract section hints from the query, but the search results aren't filtered or boosted by section. The derivatives quick-start page ranks higher because it mentions "API Key Restrictions" prominently and has strong BM25 signal. The spot-specific auth page exists (page id=41) but doesn't outrank it.
+
+**Reproduction**: `cex-api-docs answer "What permissions does the Binance API key need to place a spot order?" --docs-dir ./cex-docs`
+
+**Fix options**:
+a) Apply section URL prefix filter when `_detect_binance_section()` returns a section — restrict search to that section's URL prefix
+b) Apply section boost (already tried in M16-M17 and disabled — net negative due to overlapping prefixes). May work if limited to answer pipeline's top-N reranking rather than full search
+c) Post-filter: when question contains "spot", demote results from derivatives/futures URLs
+d) Multi-section search: search both with and without section filter, take highest-ranked from section-filtered results if available
+
+**Key files**: `src/cex_api_docs/answer.py` (`_detect_binance_section()`, `_generic_search_answer()`), `src/cex_api_docs/fts_util.py`
+
+#### BUG-14: Code Snippet Detection Misses Bare API Usage Code
+**Severity**: Low-Medium
+**Found**: 2026-03-10, CLI robustness test T1
+
+The `classify` command's `_CODE_INDICATORS` (17 patterns) require import statements, SDK keywords, or variable declarations (const/let/var/def). Bare API usage code like `headers = {"X-MBX-APIKEY": api_key}; signature = hmac.new(secret, query_string, hashlib.sha256).hexdigest()` gets classified as `question` at 0.2 confidence instead of `code_snippet`.
+
+**Root cause**: The pattern list targets common code preambles (imports, SDK instantiation) but misses standalone crypto/API operations that a developer might paste for debugging. The `headers =` assignment doesn't match because `headers` isn't one of `const|let|var|def|async def`.
+
+**Missing patterns** (would catch the test case):
+- `hmac\.\w+` or `hmac\.new\(` (Python HMAC operations)
+- `hashlib\.\w+` (Python hash operations)
+- `\.hexdigest\(\)` or `\.digest\(\)` (hash output methods)
+- `\.encode\(` (string encoding, common in signing code)
+- `base64\.\w+` (base64 encoding)
+- `urllib\.parse` (URL encoding)
+- Python-style dict assignment: `\w+\s*=\s*\{["']` (headers, params, payload dicts)
+
+**Fix**: Add 5-7 crypto/API patterns to `_CODE_INDICATORS` in classify.py. Test with the HMAC example and also with typical signing code from Binance/OKX docs.
+
+**Key files**: `src/cex_api_docs/classify.py` (`_CODE_INDICATORS` list at line 83)
