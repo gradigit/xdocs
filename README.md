@@ -320,7 +320,7 @@ Production rollout guide:
 - `src/cex_api_docs/validate.py` — golden QA retrieval evaluation
 - `src/cex_api_docs/embeddings.py` — embedding backend selection (Jina MLX / SentenceTransformers)
 - `scripts/sync_runtime_repo.py` — sync maintainer repo → runtime repo
-- `schema/schema.sql` — SQLite schema (v4)
+- `schema/schema.sql` — SQLite schema (v6)
 - `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections)
 - `.claude/skills/cex-api-docs/SKILL.md` — maintainer workflow skill
 - `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill

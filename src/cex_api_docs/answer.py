@@ -18,11 +18,29 @@ from .resolve_docs_urls import _is_spec_url
 logger = logging.getLogger(__name__)
 
 # Feature flag: section-metadata post-fusion boost (default off until validated).
-_SECTION_BOOST_ENABLED = os.environ.get("CEX_SECTION_BOOST", "1") == "1"
+_SECTION_BOOST_ENABLED = os.environ.get("CEX_SECTION_BOOST", "0") == "1"
 _SECTION_BOOST_FACTOR = 1.3
 
 # Testnet/sandbox URL patterns to suppress from search results.
 _TESTNET_PATTERNS = ("/testnet/", "/sandbox/")
+
+# Page-type boost: promote overview/intro pages for broad questions.
+_PAGE_TYPE_BOOST_ENABLED = os.environ.get("CEX_PAGE_TYPE_BOOST", "1") == "1"
+_PAGE_TYPE_BOOST_FACTOR = 1.4
+_OVERVIEW_URL_PATTERNS = re.compile(
+    r"/(intro(?:duction)?|overview|general[_-]?info|getting[_-]?started|"
+    r"quick[_-]?start|authentication|request[_-]?security|"
+    r"rate[_-]?limit|api[_-]?info|rest-api(?:/|$))"
+    r"(?:[^/]*)?$",
+    re.IGNORECASE,
+)
+# Broad question indicators: queries that want overview pages, not specific endpoints.
+_BROAD_QUESTION_PATTERNS = re.compile(
+    r"\bhow\s+(?:to|do|does|can)\b|\bwhat\s+(?:is|are|does)\b|"
+    r"\brate\s+limit|\bpermission|\bauthenticat|\bintro(?:duction)?\b|"
+    r"\boverview\b|\bquickstart\b|\bgetting\s+started\b",
+    re.IGNORECASE,
+)
 
 
 def _is_testnet_url(url: str) -> bool:
@@ -145,6 +163,35 @@ def _apply_section_boost(
             rrf = entry.get("rrf_score", 0.0)
             entry["rrf_score"] = rrf * _SECTION_BOOST_FACTOR
             entry["section_boosted"] = True
+        boosted.append(entry)
+    boosted.sort(key=lambda x: x.get("rrf_score", 0.0), reverse=True)
+    return boosted
+
+
+def _apply_page_type_boost(
+    results: list[dict], *, norm: str,
+) -> list[dict]:
+    """Boost overview/intro pages for broad questions.
+
+    Broad questions ("how to", "what is", "rate limit", "authentication") often
+    want general info pages, but BM25 IDF penalizes common terms that appear
+    across many pages — causing specific endpoint pages to rank higher.
+
+    Multiplies rrf_score by _PAGE_TYPE_BOOST_FACTOR for pages whose URL matches
+    overview/intro patterns, then re-sorts.
+    """
+    if not _PAGE_TYPE_BOOST_ENABLED or not results:
+        return results
+    if not _BROAD_QUESTION_PATTERNS.search(norm):
+        return results
+    boosted = []
+    for item in results:
+        entry = dict(item)
+        url = entry.get("canonical_url", "")
+        if _OVERVIEW_URL_PATTERNS.search(url):
+            rrf = entry.get("rrf_score", 0.0)
+            entry["rrf_score"] = rrf * _PAGE_TYPE_BOOST_FACTOR
+            entry["page_type_boosted"] = True
         boosted.append(entry)
     boosted.sort(key=lambda x: x.get("rrf_score", 0.0), reverse=True)
     return boosted
@@ -639,38 +686,57 @@ def _generic_search_answer(
         })
         c += 1
 
-    # Search each section using directory prefix, collect top results.
-    # Prioritize detected section: search it first with a higher limit.
+    # Search each section using directory prefix, collect all candidates.
+    # Then apply section boost across the unified list before building claims.
     ordered_sections = list(seed_prefixes.items())
     if detected_section and detected_section in seed_prefixes:
         ordered_sections = [(detected_section, seed_prefixes[detected_section])] + [
             (sid, pfx) for sid, pfx in ordered_sections if sid != detected_section
         ]
+    all_section_candidates: list[tuple[str, dict[str, Any]]] = []  # (section_id, candidate)
+    seen_section_urls: set[str] = set()  # deduplicate across overlapping section prefixes
     for section_id, prefix in ordered_sections:
-        if c > max_claims:
-            break
         section_limit = 5 if (detected_section and section_id == detected_section) else 3
         candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=section_limit, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
         for cand in candidates:
-            md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
-            if not md_path or not md_path.exists():
+            curl = cand.get("canonical_url", "")
+            if curl in seen_section_urls:
                 continue
-            md = md_path.read_text(encoding="utf-8")
-            needle_re = re.compile("|".join(re.escape(t) for t in terms[:4]) if terms else re.escape(norm[:30]), re.IGNORECASE)
-            excerpt, start, end = _make_excerpt(md, needle_re=needle_re)
-            citation = {
-                "url": cand["canonical_url"],
-                "crawled_at": cand["crawled_at"],
-                "content_hash": cand["content_hash"],
-                "path_hash": cand["path_hash"],
-                "excerpt": excerpt,
-                "excerpt_start": start,
-                "excerpt_end": end,
-            }
-            claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}:{section_id}] {excerpt}", citation=citation))
-            c += 1
-            if c > max_claims:
-                break
+            seen_section_urls.add(curl)
+            all_section_candidates.append((section_id, cand))
+
+    # Apply section boost across all section candidates (reorders by rrf_score).
+    boost_prefix = seed_prefixes.get(detected_section) if detected_section else None
+    all_cands_flat = [cand for _, cand in all_section_candidates]
+    boosted_cands = _apply_section_boost(all_cands_flat, section_prefix=boost_prefix)
+    # Rebuild (section_id, cand) mapping after boost reordering.
+    url_to_section = {cand.get("canonical_url"): sid for sid, cand in all_section_candidates}
+    all_section_candidates = [(url_to_section.get(cand.get("canonical_url"), ""), cand) for cand in boosted_cands]
+
+    # Apply page-type boost: promote overview/intro pages for broad questions.
+    page_type_boosted = _apply_page_type_boost([cand for _, cand in all_section_candidates], norm=norm)
+    all_section_candidates = [(url_to_section.get(cand.get("canonical_url"), ""), cand) for cand in page_type_boosted]
+
+    for section_id, cand in all_section_candidates:
+        if c > max_claims:
+            break
+        md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
+        if not md_path or not md_path.exists():
+            continue
+        md = md_path.read_text(encoding="utf-8")
+        needle_re = re.compile("|".join(re.escape(t) for t in terms[:4]) if terms else re.escape(norm[:30]), re.IGNORECASE)
+        excerpt, start, end = _make_excerpt(md, needle_re=needle_re)
+        citation = {
+            "url": cand["canonical_url"],
+            "crawled_at": cand["crawled_at"],
+            "content_hash": cand["content_hash"],
+            "path_hash": cand["path_hash"],
+            "excerpt": excerpt,
+            "excerpt_start": start,
+            "excerpt_end": end,
+        }
+        claims.append(_claim(f"c{c}", text=f"[{exchange.exchange_id}:{section_id}] {excerpt}", citation=citation))
+        c += 1
 
     # Always search domain-level too (not just as fallback).
     # This catches pages outside section prefixes.
@@ -679,9 +745,9 @@ def _generic_search_answer(
         if c > max_claims:
             break
         candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=dp, limit=5, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint="question")
-        # Apply section boost if a section was detected (feature-flagged).
-        boost_prefix = seed_prefixes.get(detected_section) if detected_section else None
+        # Apply section boost and page-type boost for domain-level results.
         candidates = _apply_section_boost(candidates, section_prefix=boost_prefix)
+        candidates = _apply_page_type_boost(candidates, norm=norm)
         for cand in candidates:
             if cand["canonical_url"] in seen_urls:
                 continue

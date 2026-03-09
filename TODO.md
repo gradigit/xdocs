@@ -447,3 +447,59 @@ Dependency: M12 complete. Targets the ~24 prefix-level retrieval failures on pos
 3. ✅ No classification path regresses (all paths improved or stable)
 4. ✅ All 428 tests pass
 5. ✅ `position_aware_blend` actively used in pipeline
+
+---
+
+### M16: Excerpt Quality + Reranker Validation + A/B Benchmarks ✓
+Dependency: M15 complete.
+
+**Phase 1: Nav Region Detection** ✓
+- [x] 16.1a. `_is_nav_region()` — detects ToC/sidebar by bullet/link density (>55% in 1000-char window)
+- [x] 16.1b. `_make_excerpt()` iterates all matches, skips nav regions (uses first content match, nav fallback)
+- [x] 16.1c. Unit tests: 5 nav edge cases + 2 excerpt edge cases
+- [x] 16.1d. Verified on OKX (225K), Gate.io (192K), HTX (130K) single-page sites
+
+**Phase 2: Section Boost Refactor + A/B** ✓
+- [x] 16.2a. Refactored `_generic_search_answer`: boost now applied across ALL section candidates (was domain-only)
+- [x] 16.2b. A/B benchmark: 4 configs (FlashRank/Jina v3 × boost ON/OFF)
+- [x] 16.2c. Result: section boost hurts MRR by 0.5-1.1% → disabled by default (CEX_SECTION_BOOST=0)
+- [x] 16.2d. Root cause: boost promotes section-matching pages with lower relevance over better cross-section results
+
+**Phase 3: Reranker Validation** ✓
+- [x] 16.3a. Jina v3 confirmed working on Linux (auto cascade)
+- [x] 16.3b. FlashRank vs Jina v3 in pipeline: FlashRank +0.6% question MRR, Jina v3 +20% request_payload MRR
+- [x] 16.3c. Jina v3 41% faster (0.83s vs 1.42s) — selected as default
+- [x] 16.3d. Jina v3 preferred on macOS via MLX variant (unchanged)
+
+**Phase 4: Test + Golden QA Expansion** ✓
+- [x] 16.4a. Golden QA: 180→200 queries (+20 across CoinEx, Gemini, Bitfinex, Korbit, Phemex, WOO X, Orderly, Upbit)
+- [x] 16.4b. Tests: 461→485 (+24: binance section detection, exchange section keywords, direct route, directory prefix, boost reordering)
+- [x] 16.4c. Canary tests pass
+
+**Acceptance criteria** (all met):
+1. ✅ Nav region detection skips ToC on large single-page sites
+2. ✅ Section boost A/B'd with incremental isolation — disabled (net negative)
+3. ✅ Jina v3 vs FlashRank compared in full pipeline (not just isolated reranker benchmark)
+4. ✅ Golden QA expanded to 200 queries across 37 exchanges
+5. ✅ 485 tests pass (483 + 2 canary)
+
+### M17: Query Quality Deep Research + Optimization
+Dependency: M16 complete. Research-driven optimization targeting weak areas.
+
+**Current metrics** (200 queries): MRR=0.6180, code_snippet MRR=0.224, request_payload MRR=0.400
+
+**Phase 1: Research** ✓
+- [x] 17.1a. Online research: 10 optimization findings ranked by impact. Top 3: parameter inverted index (+0.15-0.25 request_payload MRR), code URL/path extraction (+0.15-0.20 code_snippet MRR), search_text param enrichment (+0.05-0.10)
+- [x] 17.1b. Analyze section boost regression: root cause = overlapping prefixes (wallet/copy_trading), duplicate URLs, re-sort destroying priority. 5 queries affected, all Binance
+- [x] 17.1c. Spot check 10 pages across 8 exchanges: 10/10 MATCH (Coinbase, WhiteBIT ×2, Bitget ×2, MEXC, Upbit, Backpack, OKX, HTX). Combined with M13: 20/20 across 18 exchanges
+- [x] 17.1d. URL dedup fix: deduplicate canonical_url across section prefixes in _generic_search_answer
+
+**Phase 2: Optimization** (pending research)
+- [ ] 17.2a. Apply findings from research phase
+- [ ] 17.2b. Target code_snippet MRR improvement (currently 0.224)
+- [ ] 17.2c. Target request_payload MRR improvement (currently 0.400)
+
+**Phase 3: Maintainer Workflow** ✓
+- [x] 17.3a. Review maintainer skill checklist for pre-commit/push readiness — 491 tests, quality-check OK, store report verified
+- [x] 17.3b. Sync all documentation (CLAUDE.md, AGENTS.md schema v4→v6, README.md schema v4→v6, test count 421→491)
+- [ ] 17.3c. Final test suite run + commit

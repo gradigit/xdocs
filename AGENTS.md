@@ -114,7 +114,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 - `src/cex_api_docs/validate.py` — golden QA retrieval validation
 - `src/cex_api_docs/embeddings.py` — embedding backend selection (MLX/SentenceTransformers)
 - `src/cex_api_docs/reranker.py` — cross-encoder reranking
-- `schema/schema.sql` — canonical DB schema (v4)
+- `schema/schema.sql` — canonical DB schema (v6)
 - `data/exchanges.yaml` — exchange/section registry (46 exchanges, 78 sections)
 - `.claude/skills/cex-api-docs/SKILL.md` — maintainer workflow skill
 - `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill
@@ -122,7 +122,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Context (from latest handoff)
 
-- Crawl validation pipeline implemented (10 phases, 25+ modules, 421 tests).
+- Crawl validation pipeline implemented (10 phases, 25+ modules, 491 tests).
 - Semantic index: jina-embeddings-v5-text-small (1024 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
 - 10,724 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.73M words, 4,872 endpoints, 78 sections.
 - Crawl targets bible v3 (`docs/crawl-targets-bible.md`) — 46 registered exchanges, all 8 missing exchanges now registered.
