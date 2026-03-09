@@ -254,7 +254,9 @@ def import_openapi(
     if not isinstance(paths, dict):
         raise CexApiDocsError(code="EBADOPENAPI", message="OpenAPI spec missing paths{}.", details={"url": url})
 
-    components = spec.get("components", {})
+    # Gate: resolve $refs if the spec has a definitions/components section.
+    # OpenAPI 3.x uses "components", Swagger 2.0 uses "definitions".
+    has_ref_targets = bool(spec.get("components")) or bool(spec.get("definitions"))
 
     records: list[dict[str, Any]] = []
     for p, path_item in paths.items():
@@ -276,9 +278,9 @@ def import_openapi(
             resp_schema = _extract_response_schema(op)
 
             # Resolve $ref pointers so stored schemas contain full definitions.
-            if req_schema is not None and components:
+            if req_schema is not None and has_ref_targets:
                 req_schema = _resolve_refs(req_schema, spec)
-            if resp_schema is not None and components:
+            if resp_schema is not None and has_ref_targets:
                 resp_schema = _resolve_refs(resp_schema, spec)
 
             op_excerpt = _find_operation_excerpt(md_norm, path=path, method_lower=mk)
