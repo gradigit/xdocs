@@ -886,3 +886,182 @@ Improvements to the test itself:
   - [x] 19.3 Plan: identify fixable bugs vs upstream gaps
   - [x] 19.4 Build: FTS sanitization in pages.py, Postman param extraction in postman_import.py
   - [x] 19.5 Review + improvement: empty query guard added
+
+### M20: Answer Pipeline Bug Fixes ✓
+- **Goal**: Fix 4 compounding bugs in answer.py discovered via pipeline analysis
+- **Result**: code_snippet MRR 0.224→0.332 (+48%), nDCG@5 +1%. 527 tests.
+- **Bugs fixed**:
+  1. `_search_pages` called with `exchange=` not `url_prefix=` in augmentation (silent TypeError)
+  2. `query_type_hint` hardcoded to "question" (RRF weights dead code for all other types)
+  3. BM25 shortcut included "question" type (questions now use vector search)
+  4. `position_aware_blend` was no-op in semantic.py (key mismatch "rrf_score" vs "score")
+
+### M21: Post-Hoc A/B Testing + Weight Retuning ✓
+- **Goal**: Validate each M20 change's individual contribution via A/B testing
+- **Result**: Found bug2 was net negative (-0.66% MRR) due to untested endpoint_path weights. Fixed: endpoint_path [0.7,1.3] (+5.2% MRR), code_snippet removed from BM25 shortcut (+3.5% MRR). Combined: MRR 0.6199→0.6308 (+1.8%). 529 tests.
+- **Artifacts**: `scripts/ab_test_m20.py`, `reports/m20-ab-test.json`
+- **Steps**:
+  - [x] 21.1 Wrote automated A/B testing script (6 eval runs, file-level reverts)
+  - [x] 21.2 endpoint_path weights [1.5,0.5]→[0.7,1.3] (+5.2% endpoint_path MRR)
+  - [x] 21.3 code_snippet removed from BM25 shortcut (+3.5% code_snippet MRR)
+  - [x] 21.4 Deep research: 3 parallel agents (web, spot checks, codebase analysis)
+  - [x] 21.5 CLAUDE.md + SUGGESTIONS.md updated with findings
+
+---
+
+### M22: Query Quality Optimizations — Top Priority Items
+Dependency: M21 complete. Targets the 3 weakest query types: code_snippet (MRR 0.332), request_payload (MRR 0.324), endpoint_path (MRR 0.454).
+
+**Current pipeline metrics** (200 queries, post-M21):
+- Overall: MRR=0.6308, nDCG@5=1.347, URL=64%, PFX=74%, domain=~97%
+- question: MRR=0.642, ok=92%
+- error_message: MRR=0.628, ok=100%
+- endpoint_path: MRR=0.454, ok=86%
+- code_snippet: MRR=0.332, ok=100% (was 0.224 pre-M20)
+- request_payload: MRR=0.324, ok=73%
+
+**Phase 1: Code-Syntax Stopwords** (est +20-25% code_snippet prefix hit)
+- [ ] 22.1a. Add CODE_STOPWORDS set (~25 terms: `ccxt`, `import`, `print`, `const`, `let`, `var`, `fetch`, `async`, `await`, `require`, `from`, `def`, `self`, `return`, `function`, `console`, `log`, `new`, `class`, `try`, `catch`, `if`, `else`, `for`, `while`) to `fts_util.py`
+- [ ] 22.1b. Apply stopwords when `classification.input_type == "code_snippet"` in `extract_search_terms()`
+- [ ] 22.1c. Switch augmentation from `_search_pages` (FTS only) to `_search_pages_with_semantic` (FTS + vector) in answer.py code_snippet path
+- [ ] 22.1d. A/B benchmark on 200-query golden QA (env var toggle)
+
+**Root cause**: Code_snippet queries inject programming tokens (`ccxt`, `fetch_ticker`, `print`, `import`) into 8-term AND queries that match zero API docs pages, triggering lossy OR fallback. 57% of code_snippet failures are caused by this (FORGE-MEMORY.md).
+
+**Key files**: `src/cex_api_docs/fts_util.py` (stopwords + term extraction), `src/cex_api_docs/answer.py` (code_snippet routing at ~line 1319-1374), `src/cex_api_docs/classify.py` (`_extract_code_context()`)
+
+**Phase 2: Operation-Type Inference** (est +20-30% request_payload prefix hit)
+- [ ] 22.2a. Build `_PAYLOAD_ACTION_MAP` in `classify.py` mapping parameter key combinations to action topics:
+  - `{side, type, quantity, price}` → "place order trading"
+  - `{asset, address, amount}` → "withdraw withdrawal"
+  - `{symbol, side, leverage}` → "leverage margin position"
+  - `{instrument_name, amount, type}` → "place order" (Deribit)
+  - `{product_id, order_configuration}` → "place order" (Coinbase)
+  - ~15 patterns total covering common endpoint parameter signatures
+- [ ] 22.2b. Use action topic as primary FTS query in answer.py request_payload handler instead of raw param names
+- [ ] 22.2c. Fix exchange signature ordering bug: sort `_PAYLOAD_EXCHANGE_SIGNATURES` by set size descending (most specific first) — currently Gate.io's `{currency_pair}` matches before Bitstamp's `{type, currency_pair}`
+- [ ] 22.2d. Expand `_PAYLOAD_EXCHANGE_SIGNATURES` from 8→16+ exchanges (add deribit, coinbase, orderly, mexc, bitfinex — see SUGGESTIONS.md)
+- [ ] 22.2e. A/B benchmark on 200-query golden QA
+
+**Root cause**: 57% of request_payload failures caused by missing operation inference. Pipeline searches raw param names but never infers what operation those params represent (FORGE-MEMORY.md).
+
+**Key files**: `src/cex_api_docs/classify.py` (`_PAYLOAD_EXCHANGE_SIGNATURES`, `_classify_request_payload()`), `src/cex_api_docs/answer.py` (request_payload routing at ~line 1233-1293)
+
+**Phase 3: Endpoint search_text Enrichment** (= OPT-3, est +5-10% FTS recall)
+- [ ] 22.3a. In `fts_util.py:endpoint_search_text()`, extract param names from `request_schema.parameters[].name` and append to search_text
+- [ ] 22.3b. Run `cex-api-docs fts-rebuild --docs-dir ./cex-docs`
+- [ ] 22.3c. A/B benchmark: before/after on 200-query golden QA
+
+**Root cause**: 94.4% of endpoint search_text entries are under 100 chars (just description). Adding parameter names enables FTS to match request_payload queries like "symbol side quantity" against endpoints that actually accept those params.
+
+**Key files**: `src/cex_api_docs/fts_util.py` (`endpoint_search_text()` at ~line 274), `src/cex_api_docs/pages.py` (fts-rebuild command)
+
+**Phase 4: FTS/Semantic Query Separation** (medium impact on embedding quality)
+- [ ] 22.4a. Modify `_search_pages_with_semantic()` in `semantic.py` to accept separate `fts_query` and `semantic_query` params
+- [ ] 22.4b. Pass clean `" ".join(terms)` to embedder instead of `"term1 AND term2"` with FTS operators
+- [ ] 22.4c. Update all callers in answer.py
+
+**Root cause**: FTS5 AND operators (literal "AND" token) get embedded as vector query text, degrading semantic search quality (FORGE-MEMORY.md, SUGGESTIONS.md).
+
+**Key files**: `src/cex_api_docs/semantic.py` (`_search_pages_with_semantic()`), `src/cex_api_docs/answer.py` (all callers)
+
+**Phase 5: Score-Aware Linear Fusion** (= OPT-13, est +3-5% nDCG)
+- [ ] 22.5a. Implement `score_fusion()` in `fts_util.py`: `alpha * max_norm(sem_scores) + (1-alpha) * max_norm(bm25_scores)`
+- [ ] 22.5b. Add `CEX_FUSION_MODE=cc|rrf` env var toggle
+- [ ] 22.5c. Replace `rrf_fuse()` call in `_search_pages_with_semantic()` with `score_fusion()` when mode=cc
+- [ ] 22.5d. Tune per-query-type alpha values on golden QA (reuse existing `_RRF_TYPE_WEIGHTS` structure)
+- [ ] 22.5e. A/B benchmark: RRF vs CC on 200-query golden QA
+
+**Source**: TopK benchmark shows +4.58% nDCG@10 over RRF on BEIR datasets. MinMax normalization preserves score magnitude that RRF discards.
+
+**Key files**: `src/cex_api_docs/fts_util.py` (`rrf_fuse()`), `src/cex_api_docs/semantic.py` (`_search_pages_with_semantic()`), `src/cex_api_docs/answer.py` (`_RRF_TYPE_WEIGHTS`)
+
+**Phase 6: Lower Auto-Rerank Threshold**
+- [ ] 22.6a. Lower `_AUTO_RERANK_MIN_CANDIDATES` from 12 to 6 in `semantic.py`
+- [ ] 22.6b. OR: add `rerank="always"` in answer.py pipeline for all query types
+- [ ] 22.6c. A/B benchmark on golden QA queries targeting small exchanges (backpack, nado, woo, phemex)
+
+**Root cause**: Small exchanges (1-192 pages) produce fewer candidates, often <12, which skips reranking entirely. These exchanges need reranking MORE since lower coverage means ranking quality matters more.
+
+**Key files**: `src/cex_api_docs/semantic.py` (`_AUTO_RERANK_MIN_CANDIDATES`)
+
+**Acceptance criteria**:
+1. code_snippet MRR >= 0.45 (currently 0.332)
+2. request_payload MRR >= 0.45 (currently 0.324)
+3. Overall MRR >= 0.65 (currently 0.6308)
+4. No regression on question or error_message MRR
+5. Each phase individually A/B benchmarked before committing
+6. All tests pass
+
+---
+
+### M23: Structured Endpoint Extraction from Crawled Docs
+Dependency: None (can run parallel with M22). This is a long-term architectural improvement.
+
+**Goal**: Build an extraction pipeline that derives structured endpoint schemas (parameter names, types, enums, required/optional) directly from crawled documentation pages, reducing dependence on external spec imports (OpenAPI/Postman) which can drift from official docs.
+
+**Rationale**: The current pipeline relies on two data sources for endpoint records:
+1. **Crawled docs** (10,727 pages) — ground truth, always up-to-date, but stored as unstructured markdown
+2. **Spec imports** (OpenAPI/Postman, 4,963 endpoints) — structured but can be outdated or incomplete
+
+Postman collections especially can drift from official docs. Example: Binance Spot Postman collection (imported 2026-02-10) missed 3 peg* parameters that exist in the official docs page. The ideal architecture extracts structure directly from crawled pages.
+
+**Phase 1: Research & Design**
+- [ ] 23.1a. Survey HTML table extraction approaches for API doc pages (readability heuristics, table header detection, nested list parsing)
+- [ ] 23.1b. Analyze format diversity across 46 exchanges — how many distinct table/list formats exist for parameter documentation?
+- [ ] 23.1c. Sample 10 diverse exchanges manually: extract parameter tables from stored markdown, categorize extraction difficulty
+- [ ] 23.1d. Design schema for extracted data: parameter name, type, required/optional, description, enum values, source page URL + byte offset (provenance)
+- [ ] 23.1e. Evaluate LLM-assisted extraction vs heuristic extraction vs hybrid (considering cite-only constraint)
+
+**Phase 2: Build Core Extractor**
+- [ ] 23.2a. Build `endpoint_extract.py` — extracts structured parameter data from markdown tables/lists
+- [ ] 23.2b. Handle common formats: markdown tables (`| Name | Type | Required |`), definition lists, bullet point lists with inline types
+- [ ] 23.2c. Extract enum values from inline lists (e.g., "LIMIT, MARKET, STOP_LOSS") and code blocks
+- [ ] 23.2d. Required/optional detection from column headers, keywords ("required", "mandatory", "optional"), and asterisk markers
+
+**Phase 3: Integration & Validation**
+- [ ] 23.3a. Cross-reference extracted data against existing spec-imported endpoint records
+- [ ] 23.3b. Measure extraction accuracy: precision/recall against known-good endpoint schemas (Binance OpenAPI as ground truth)
+- [ ] 23.3c. Integration: populate `endpoint_params` table or augment existing endpoint JSON with extraction-sourced params
+- [ ] 23.3d. Provenance tagging: each extracted field cites source page URL + byte offset
+
+**Phase 4: Spec Import Reconciliation**
+- [ ] 23.4a. Where extraction succeeds, prefer crawled-docs data over spec imports (closer to ground truth)
+- [ ] 23.4b. Where extraction fails (e.g., SPA pages, login-gated content), retain spec imports as fallback
+- [ ] 23.4c. Drift detection: compare extracted params against stored spec-imported params, flag divergences
+
+**Acceptance criteria**:
+1. Extraction pipeline produces structured endpoint records from crawled markdown for at least 5 exchanges
+2. Precision >= 90% against known-good OpenAPI endpoint schemas (Binance, Deribit, Orderly)
+3. Coverage >= 70% of parameters in tested endpoints
+4. Provenance: every extracted field cites source page and byte offset
+5. Integration: extracted data queryable via existing `get-endpoint` / `lookup-endpoint` CLI commands
+
+---
+
+### M24: Content Quality & Maintenance
+Dependency: None (can run parallel).
+
+**Goal**: Address known content quality gaps, URL drift, and stale data.
+
+- [ ] 24.1. Paradex re-sync: site restructured from `/docs/...` to `/releases/`, `/trading/`, etc. Stored URLs now 404. Need registry update + re-crawl. (SUGGESTIONS.md, high confidence)
+- [ ] 24.2. dYdX thin page investigation: 65% (183/283) thin pages, likely CSR issue. Test with `--render auto` / Playwright
+- [ ] 24.3. Kraken futures thin pages: 49 pages averaging 487 words, Docusaurus CSR. Path: extract specs from JS chunks or wait for `krakenfx/api-specs` publication
+- [ ] 24.4. Bluefin login-gated pages: 26% thin (login-gated ReadMe.io). Investigate auth-cookie approach or accept limitation
+- [ ] 24.5. KuCoin nav pollution: 97% of markdown is navigation. ReadMe.io JS widgets render as `* * *`. May need alternative crawl approach
+- [ ] 24.6. Gemini empty pages: 10 pages empty due to JS redirects. Re-crawl with Playwright
+- [ ] 24.7. Stale content check: 823 pages (7.7%) older than 7 days (Upbit, Paradex, Bitget, Coinbase, GMX, Perp)
+
+---
+
+### Bugs (Backlog)
+
+See "Bugs Found in Spot Checks" section above for BUG-1 through BUG-6.
+
+Priority order:
+1. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
+2. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
+3. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
+4. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
+5. BUG-3 (Breadcrumb artifacts) — low, cosmetic
+6. BUG-6 (Gate.io endpoint display) — low, cosmetic

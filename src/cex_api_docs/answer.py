@@ -470,9 +470,9 @@ def _search_pages_with_semantic(
     fts_results = _search_pages(conn, query=query, url_prefix=url_prefix, limit=limit * 2)
 
     # Strong-signal shortcut: skip vector search if BM25 is confident enough.
-    # Applies to code_snippet and error_message types only.
+    # Applies to error_message only — code_snippet benefits from vector search (A/B: +0.036 MRR).
     # endpoint_path uses direct routing; request_payload and question benefit from vector search.
-    if query_type_hint in ("code_snippet", "error_message") and should_skip_vector_search(fts_results):
+    if query_type_hint in ("error_message",) and should_skip_vector_search(fts_results):
         return fts_results[:limit]
 
     # Semantic vector search (if available).
@@ -515,7 +515,7 @@ def _search_pages_with_semantic(
     # [fts_weight, vector_weight] — tuned via golden QA eval.
     _RRF_WEIGHTS: dict[str | None, list[float]] = {
         "question": [0.7, 1.3],          # vector-favoring — validated via weight sweep on 79 queries
-        "endpoint_path": [1.5, 0.5],     # favor keyword match
+        "endpoint_path": [0.7, 1.3],     # vector-favoring — A/B validated: +0.052 MRR over [1.5,0.5]
         "error_message": [1.3, 0.7],     # favor keyword with some semantic
         "code_snippet": [0.7, 1.3],      # favor semantic
         "request_payload": [1.3, 0.7],   # keyword-favoring — exact param names match better in FTS5
