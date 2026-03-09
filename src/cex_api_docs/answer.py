@@ -42,6 +42,13 @@ _BROAD_QUESTION_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+# Deprecated/abandoned URL patterns to demote in ranking.
+_DEPRECATED_URL_PATTERNS = re.compile(
+    r"/(abandoned[_-]?endpoints?|deprecated|legacy[_-]?api|obsolete|old[_-]?api)/",
+    re.IGNORECASE,
+)
+_DEPRECATED_DEMOTION_FACTOR = 0.5  # Halve the score for deprecated URLs.
+
 
 def _is_testnet_url(url: str) -> bool:
     """Return True if URL points to a testnet/sandbox page."""
@@ -195,6 +202,23 @@ def _apply_page_type_boost(
         boosted.append(entry)
     boosted.sort(key=lambda x: x.get("rrf_score", 0.0), reverse=True)
     return boosted
+
+
+def _apply_deprecated_demotion(results: list[dict]) -> list[dict]:
+    """Demote deprecated/abandoned pages so current endpoints rank higher."""
+    if not results:
+        return results
+    demoted = []
+    for item in results:
+        entry = dict(item)
+        url = entry.get("canonical_url", "")
+        if _DEPRECATED_URL_PATTERNS.search(url):
+            rrf = entry.get("rrf_score", 0.0)
+            entry["rrf_score"] = rrf * _DEPRECATED_DEMOTION_FACTOR
+            entry["deprecated_demoted"] = True
+        demoted.append(entry)
+    demoted.sort(key=lambda x: x.get("rrf_score", 0.0), reverse=True)
+    return demoted
 
 
 def _sections_present(conn, *, exchange_id: str, seed_prefixes: dict[str, str]) -> list[dict[str, str]]:

@@ -1077,5 +1077,66 @@ class TestSectionBoostReordering(unittest.TestCase):
         self.assertEqual(result, [])
 
 
+class TestDeprecatedDemotion(unittest.TestCase):
+    """Test deprecated/abandoned URL demotion."""
+
+    def test_abandoned_endpoint_demoted(self):
+        from cex_api_docs.answer import _apply_deprecated_demotion
+        results = [
+            {"canonical_url": "https://kucoin.com/docs-new/abandoned-endpoints/get-deposit-v1", "rrf_score": 0.6},
+            {"canonical_url": "https://kucoin.com/docs-new/rest/account-info/deposit/get-deposit-v3", "rrf_score": 0.5},
+        ]
+        demoted = _apply_deprecated_demotion(results)
+        # Abandoned page (0.6*0.5=0.3) should now rank below current (0.5)
+        self.assertEqual(demoted[0]["canonical_url"], "https://kucoin.com/docs-new/rest/account-info/deposit/get-deposit-v3")
+        self.assertTrue(demoted[1].get("deprecated_demoted"))
+
+    def test_deprecated_path_demoted(self):
+        from cex_api_docs.answer import _apply_deprecated_demotion
+        results = [
+            {"canonical_url": "https://docs.ex.com/deprecated/old-order", "rrf_score": 0.8},
+            {"canonical_url": "https://docs.ex.com/api/new-order", "rrf_score": 0.5},
+        ]
+        demoted = _apply_deprecated_demotion(results)
+        self.assertEqual(demoted[0]["canonical_url"], "https://docs.ex.com/api/new-order")
+
+    def test_legacy_api_demoted(self):
+        from cex_api_docs.answer import _apply_deprecated_demotion
+        results = [
+            {"canonical_url": "https://docs.ex.com/legacy-api/balance", "rrf_score": 0.7},
+            {"canonical_url": "https://docs.ex.com/api/v3/balance", "rrf_score": 0.5},
+        ]
+        demoted = _apply_deprecated_demotion(results)
+        self.assertEqual(demoted[0]["canonical_url"], "https://docs.ex.com/api/v3/balance")
+
+    def test_no_deprecated_no_change(self):
+        from cex_api_docs.answer import _apply_deprecated_demotion
+        results = [
+            {"canonical_url": "https://docs.ex.com/api/ticker", "rrf_score": 0.6},
+            {"canonical_url": "https://docs.ex.com/api/balance", "rrf_score": 0.5},
+        ]
+        demoted = _apply_deprecated_demotion(results)
+        self.assertEqual(demoted[0]["canonical_url"], "https://docs.ex.com/api/ticker")
+        self.assertFalse(demoted[0].get("deprecated_demoted", False))
+
+    def test_empty_results(self):
+        from cex_api_docs.answer import _apply_deprecated_demotion
+        result = _apply_deprecated_demotion([])
+        self.assertEqual(result, [])
+
+    def test_url_patterns(self):
+        from cex_api_docs.answer import _DEPRECATED_URL_PATTERNS
+        # Should match
+        self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/abandoned-endpoints/get-deposit"))
+        self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/deprecated/old-endpoint"))
+        self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/legacy-api/v1/balance"))
+        self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/obsolete/ticker"))
+        self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/old-api/markets"))
+        # Should NOT match
+        self.assertIsNone(_DEPRECATED_URL_PATTERNS.search("/api/v3/balance"))
+        self.assertIsNone(_DEPRECATED_URL_PATTERNS.search("/rest/ticker"))
+        self.assertIsNone(_DEPRECATED_URL_PATTERNS.search("/docs/legacy"))  # not followed by /
+
+
 if __name__ == "__main__":
     unittest.main()
