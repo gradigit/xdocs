@@ -122,13 +122,11 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Context (from latest handoff)
 
-- Crawl validation pipeline implemented (10 phases, 25+ modules, 491 tests).
-- Semantic index: jina-embeddings-v5-text-small (1024 dims, Jina MLX / sentence-transformers) with heading-context-injected mistune chunking.
-- 10,724 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.73M words, 4,872 endpoints, 78 sections.
+- Query pipeline: MRR=0.6308, nDCG@5=1.347, 200-query golden QA across 37 exchanges. 529 tests.
+- Semantic index: jina-embeddings-v5-text-small (1024 dims), Jina Reranker v3, 334,935 chunks, 2.3 GB LanceDB.
+- 10,727 pages in store across 46 exchanges (29 CEX, 16 DEX, 1 ref), 16.75M words, 4,963 endpoints, 78 sections.
 - Crawl targets bible v3 (`docs/crawl-targets-bible.md`) — 46 registered exchanges, all 8 missing exchanges now registered.
-- 11 new exchanges: MEXC (114ep), BingX, Deribit (173ep), Backpack (22ep), CoinEx, WOO X, Phemex, Gemini, Orderly (203ep), Bluefin, Nado.
 - CCXT cross-reference: 33 exchanges mapped (korbit/orderly/bluefin/nado = None).
-- Spec imports: KuCoin (250), WhiteBIT (137), BitMart (94), Coinbase Prime (97) + Exchange (45), Paradex (97), Lighter (58), dYdX (83), MEXC (114 Postman), Deribit (173), Backpack (22), Orderly (203).
 - Multi-method crawl cascade: pipeline uses `--render auto` (requests + Playwright). Validation uses crawl4ai (primary), cloudscraper, headed browser, Agent Browser.
 
 ## Gotchas
@@ -144,9 +142,9 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,724 pages, 16.73M words, 4,872 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,963 structured endpoints**. Store is at `cex-docs/`.
 
-Next: Periodic CCXT docs refresh, changelog drift detection. Domain synonym/acronym expansion for query improvement.
+Next: M22 query quality optimizations (code stopwords, operation inference, score-aware fusion). M23 structured endpoint extraction from crawled docs. M24 content quality maintenance.
 
 ## Non-Goals / Safety
 
