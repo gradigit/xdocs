@@ -31,6 +31,7 @@ semantic-query = [
   "mlx>=0.20; sys_platform == 'darwin'",
   "mlx-lm>=0.20; sys_platform == 'darwin'",
   "tokenizers>=0.20; sys_platform == 'darwin'",
+  "sentence-transformers>=3.0; sys_platform == 'linux'",
   "huggingface-hub>=0.24",
   "mistune>=3.0",
   "flashrank>=0.2",
