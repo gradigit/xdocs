@@ -15,8 +15,10 @@ It intentionally excludes crawling/maintainer operations from day-to-day team us
 ```bash
 uv venv .venv
 source .venv/bin/activate
-uv pip install -e ".[semantic-query]"
+uv pip install -e .
 ```
+
+All query dependencies (including semantic search) are included by default.
 
 Then in a fresh agent session:
 
@@ -38,5 +40,5 @@ git pull
 ## Smoke check
 
 ```bash
-scripts/runtime_query_smoke.sh
+python scripts/runtime_query_smoke.py
 ```

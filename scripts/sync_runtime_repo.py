@@ -71,6 +71,65 @@ def _git_commit(repo_root: Path) -> str | None:
         return None
 
 
+def _generate_runtime_pyproject(src_toml: Path, dst_toml: Path) -> None:
+    """Generate a runtime pyproject.toml with semantic-query deps in base dependencies.
+
+    The runtime repo is query-only — semantic search is core functionality, not optional.
+    This merges the ``semantic-query`` extra into ``dependencies`` and drops extras that
+    are irrelevant to the runtime (dev, playwright, semantic, ccxt).
+    """
+    lines = src_toml.read_text(encoding="utf-8").splitlines(keepends=True)
+    out: list[str] = []
+    # Collect semantic-query deps from the source file.
+    sq_deps: list[str] = []
+    in_sq = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "semantic-query = [":
+            in_sq = True
+            continue
+        if in_sq:
+            if stripped == "]":
+                in_sq = False
+            else:
+                sq_deps.append(line)
+            continue
+    # Re-emit with semantic-query deps merged and extras trimmed.
+    in_deps = False
+    in_optional = False
+    skip_extra = False
+    for line in lines:
+        stripped = line.strip()
+        # Detect base dependencies block.
+        if stripped == "dependencies = [":
+            in_deps = True
+            out.append(line)
+            continue
+        if in_deps:
+            if stripped == "]":
+                # Append semantic-query deps before closing bracket.
+                for dep in sq_deps:
+                    out.append(dep)
+                out.append(line)
+                in_deps = False
+                continue
+            out.append(line)
+            continue
+        # Drop all optional-dependencies (not needed in runtime).
+        if stripped == "[project.optional-dependencies]":
+            in_optional = True
+            continue
+        if in_optional:
+            # End of optional-dependencies: next section header.
+            if stripped.startswith("[") and stripped != "[project.optional-dependencies]":
+                in_optional = False
+                out.append(line)
+            continue
+        out.append(line)
+    dst_toml.parent.mkdir(parents=True, exist_ok=True)
+    dst_toml.write_text("".join(out), encoding="utf-8")
+
+
 def _copy_path(src: Path, dst: Path, *, clean: bool) -> None:
     if not src.exists():
         raise SystemExit(f"Missing source path: {src}")
@@ -273,7 +332,6 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     copied: list[str] = []
     pairs: list[tuple[Path, Path]] = [
         (repo_root / "src", runtime_root / "src"),
-        (repo_root / "pyproject.toml", runtime_root / "pyproject.toml"),
         (repo_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md", runtime_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md"),
         (
             repo_root / ".claude" / "skills" / "cex-api-query" / "EVALUATIONS.md",
@@ -286,10 +344,22 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
         _copy_path(src, dst, clean=clean)
         copied.append(str(dst))
 
-    smoke_dst = runtime_root / "scripts" / "runtime_query_smoke.sh"
-    _copy_path(repo_root / "docs" / "templates" / "runtime-query-smoke.sh", smoke_dst, clean=clean)
-    smoke_dst.chmod(0o755)
-    copied.append(str(smoke_dst))
+    # Generate runtime pyproject.toml with semantic-query deps merged into base.
+    runtime_toml = runtime_root / "pyproject.toml"
+    _generate_runtime_pyproject(repo_root / "pyproject.toml", runtime_toml)
+    copied.append(str(runtime_toml))
+
+    # Copy both smoke test variants (Python is primary, shell kept for backwards compat).
+    smoke_py_dst = runtime_root / "scripts" / "runtime_query_smoke.py"
+    _copy_path(repo_root / "docs" / "templates" / "runtime-query-smoke.py", smoke_py_dst, clean=clean)
+    copied.append(str(smoke_py_dst))
+
+    smoke_sh_src = repo_root / "docs" / "templates" / "runtime-query-smoke.sh"
+    if smoke_sh_src.exists():
+        smoke_sh_dst = runtime_root / "scripts" / "runtime_query_smoke.sh"
+        _copy_path(smoke_sh_src, smoke_sh_dst, clean=clean)
+        smoke_sh_dst.chmod(0o755)
+        copied.append(str(smoke_sh_dst))
 
     gitignore = runtime_root / ".gitignore"
     gitignore.write_text(".DS_Store\n.venv/\nlogs/\nreports/\n__pycache__/\n*.pyc\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n", encoding="utf-8")
@@ -395,6 +465,7 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
         ".claude/skills/cex-api-query/EVALUATIONS.md",
         "README.md",
         "AGENTS.md",
+        "scripts/runtime_query_smoke.py",
         "scripts/runtime_query_smoke.sh",
     ]
     if cfg.include_data:
@@ -460,16 +531,17 @@ def _load_existing_manifest(runtime_root: Path) -> dict[str, Any] | None:
 
 
 def _run_smoke_test(runtime_root: Path) -> int:
-    """Run the runtime smoke test script. Returns 0 on success, 1 on failure."""
-    smoke_script = runtime_root / "scripts" / "runtime_query_smoke.sh"
-    if not smoke_script.exists():
-        print("ERROR: Smoke test script not found at " + str(smoke_script), file=sys.stderr)
+    """Run the runtime smoke test. Prefers Python version (no sqlite3 CLI needed)."""
+    smoke_py = runtime_root / "scripts" / "runtime_query_smoke.py"
+    smoke_sh = runtime_root / "scripts" / "runtime_query_smoke.sh"
+    if smoke_py.exists():
+        cmd = [sys.executable, str(smoke_py), str(runtime_root / "cex-docs")]
+    elif smoke_sh.exists():
+        cmd = [str(smoke_sh), str(runtime_root / "cex-docs")]
+    else:
+        print("ERROR: No smoke test script found in " + str(runtime_root / "scripts"), file=sys.stderr)
         return 1
-    result = subprocess.run(
-        [str(smoke_script), str(runtime_root / "cex-docs")],
-        capture_output=True,
-        text=True,
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"SMOKE TEST FAILED:\n{result.stdout}\n{result.stderr}", file=sys.stderr)
         return 1

@@ -22,7 +22,7 @@ This project uses two repositories. **Every push to the maintainer repo must be 
 - **Path**: `/home/lechat/Projects/cex-api-docs-runtime`
 - **Remote**: `github.com/henryaxis/cex-api-docs-runtime`
 - **Platform**: macOS (MacBook, MLX for embeddings/reranking)
-- **Install**: `uv pip install -e ".[semantic-query]"`
+- **Install**: `uv pip install -e .` (semantic-query deps are base dependencies in runtime pyproject.toml)
 - **Purpose**: Query-only CLI + prebuilt `cex-docs/` snapshot (SQLite + LanceDB index via Git LFS)
 - **Contains**: Query modules only, no crawl/sync/import code, no tests
 
