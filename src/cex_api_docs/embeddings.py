@@ -1,6 +1,6 @@
 """Embedding backend selection for semantic search.
 
-Default model: ``jina-embeddings-v5-text-small`` (1024 dims, EuroBERT backbone).
+Default model: ``jina-embeddings-v5-text-small`` (1024 dims, Qwen3-0.6B-Base backbone).
 Upgraded from v5-text-nano (768d) after M11 pre-rebuild validation confirmed
 +12.5% Hit@5 improvement with safe memory/VRAM usage.
 

@@ -361,9 +361,28 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
         smoke_sh_dst.chmod(0o755)
         copied.append(str(smoke_sh_dst))
 
+    # Copy bootstrap data script
+    bootstrap_src = repo_root / "docs" / "templates" / "runtime-bootstrap-data.sh"
+    if bootstrap_src.exists():
+        bootstrap_dst = runtime_root / "scripts" / "bootstrap-data.sh"
+        _copy_path(bootstrap_src, bootstrap_dst, clean=clean)
+        bootstrap_dst.chmod(0o755)
+        copied.append(str(bootstrap_dst))
+
     gitignore = runtime_root / ".gitignore"
-    gitignore.write_text(".DS_Store\n.venv/\nlogs/\nreports/\n__pycache__/\n*.pyc\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n", encoding="utf-8")
+    gitignore.write_text(
+        ".DS_Store\n.venv/\nlogs/\nreports/\n__pycache__/\n*.pyc\n"
+        ".pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n"
+        "cex-docs/\n",
+        encoding="utf-8",
+    )
     copied.append(str(gitignore))
+
+    # Remove .gitattributes if present (LFS no longer used)
+    gitattributes = runtime_root / ".gitattributes"
+    if gitattributes.exists():
+        gitattributes.unlink()
+
     return copied
 
 
@@ -551,16 +570,6 @@ def _run_smoke_test(runtime_root: Path) -> int:
 
 def _git_commit_runtime(runtime_root: Path, commit_msg: str) -> int:
     """Stage all changes and commit in the runtime repo. Returns 0 on success."""
-    # Check git-lfs is available
-    lfs_check = subprocess.run(
-        ["git", "lfs", "version"],
-        cwd=str(runtime_root),
-        capture_output=True,
-    )
-    if lfs_check.returncode != 0:
-        print("ERROR: git-lfs not installed (required for runtime repo)", file=sys.stderr)
-        return 1
-
     # Stage all changes
     result = subprocess.run(
         ["git", "add", "-A"],
@@ -622,18 +631,6 @@ def _git_push_runtime(runtime_root: Path) -> int:
             file=sys.stderr,
         )
         return 1
-
-    # Configure LFS timeouts for large uploads
-    subprocess.run(
-        ["git", "config", "lfs.activitytimeout", "600"],
-        cwd=str(runtime_root),
-        capture_output=True,
-    )
-    subprocess.run(
-        ["git", "config", "lfs.concurrenttransfers", "1"],
-        cwd=str(runtime_root),
-        capture_output=True,
-    )
 
     # Push
     result = subprocess.run(
@@ -710,6 +707,141 @@ def _git_tag_runtime(
     return 0
 
 
+def _publish_data_release(
+    docs_dir: Path,
+    runtime_root: Path,
+    *,
+    strip_maintenance: bool,
+    tag_name: str | None,
+) -> int:
+    """Build a compressed tarball from docs_dir and publish as a GitHub Release."""
+    import tempfile
+
+    # Check prerequisites
+    for cmd in ("gh", "zstd"):
+        rc = subprocess.run(["which", cmd], capture_output=True).returncode
+        if rc != 0:
+            print(f"ERROR: {cmd} is required for --publish", file=sys.stderr)
+            return 1
+
+    # Determine tag name
+    if tag_name is None:
+        today = datetime.now(timezone.utc).strftime("%Y.%m.%d")
+        tag_base = f"data-{today}"
+        # Check for existing tags
+        result = subprocess.run(
+            ["gh", "release", "list", "--repo", "henryaxis/cex-api-docs-runtime", "--limit", "100"],
+            capture_output=True, text=True,
+        )
+        existing = [line.split("\t")[0] for line in result.stdout.strip().split("\n") if line]
+        if tag_base not in existing:
+            tag_name = tag_base
+        else:
+            max_n = 0
+            for t in existing:
+                if t == tag_base:
+                    max_n = max(max_n, 0)
+                elif t.startswith(tag_base + "."):
+                    try:
+                        n = int(t.rsplit(".", 1)[-1])
+                        max_n = max(max_n, n)
+                    except ValueError:
+                        pass
+            tag_name = f"{tag_base}.{max_n + 1}"
+
+    # Checkpoint WAL
+    src_db = docs_dir / "db" / "docs.db"
+    if src_db.exists():
+        conn = sqlite3.connect(str(src_db), isolation_level=None)
+        try:
+            conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+        finally:
+            conn.close()
+
+    # Build tarball
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tarball = Path(tmpdir) / "cex-docs.tar.zst"
+
+        # If strip_maintenance, copy DB to temp, strip, then tar from there
+        if strip_maintenance:
+            staging = Path(tmpdir) / "cex-docs"
+            staging.mkdir()
+            # Copy DB and strip maintenance tables
+            staging_db_dir = staging / "db"
+            staging_db_dir.mkdir()
+            staging_db = staging_db_dir / "docs.db"
+            shutil.copy2(src_db, staging_db)
+            conn = sqlite3.connect(str(staging_db), isolation_level=None)
+            for table in ("inventories", "inventory_entries", "coverage_gaps"):
+                try:
+                    conn.execute(f"DELETE FROM {table};")
+                except sqlite3.OperationalError:
+                    pass
+            conn.execute("VACUUM;")
+            conn.execute("PRAGMA optimize;")
+            conn.close()
+            # Symlink other dirs to avoid copying
+            for subdir in ("pages", "meta", "lancedb-index"):
+                src = docs_dir / subdir
+                if src.exists():
+                    os.symlink(src, staging / subdir)
+            tar_src = str(staging)
+            tar_cwd = tmpdir
+        else:
+            tar_src = str(docs_dir)
+            tar_cwd = str(docs_dir.parent)
+
+        print(f"Building tarball from {tar_src}...")
+        result = subprocess.run(
+            ["tar", "chf", "-", "-C", tar_cwd, os.path.basename(tar_src)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if result.returncode != 0:
+            print(f"ERROR: tar failed: {result.stderr.decode()}", file=sys.stderr)
+            return 1
+
+        # Compress with zstd
+        zstd_result = subprocess.run(
+            ["zstd", "-3", "-o", str(tarball)],
+            input=result.stdout,
+            capture_output=True,
+        )
+        if zstd_result.returncode != 0:
+            print(f"ERROR: zstd failed: {zstd_result.stderr.decode()}", file=sys.stderr)
+            return 1
+
+        size_mb = tarball.stat().st_size / 1_000_000
+        print(f"Tarball: {size_mb:.0f} MB ({tarball.name})")
+
+        # Get source commit for release notes
+        source_commit = _git_commit(docs_dir.parent) or "unknown"
+
+        # Upload to GitHub Releases
+        print(f"Publishing release {tag_name}...")
+        release_notes = (
+            f"Data snapshot from maintainer repo commit {source_commit[:7]}.\n\n"
+            f"Download and extract:\n"
+            f"```bash\n./scripts/bootstrap-data.sh {tag_name}\n```"
+        )
+        result = subprocess.run(
+            [
+                "gh", "release", "create", tag_name,
+                str(tarball),
+                "--repo", "henryaxis/cex-api-docs-runtime",
+                "--title", f"Data {tag_name.removeprefix('data-')}",
+                "--notes", release_notes,
+            ],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            print(f"ERROR: gh release create failed: {result.stderr}", file=sys.stderr)
+            return 1
+
+        print(f"Published: {result.stdout.strip()}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sync a query-only runtime repo from maintainer repo + local snapshot.")
     parser.add_argument(
@@ -730,6 +862,8 @@ def main() -> int:
     parser.add_argument("--commit", action="store_true", help="Auto-stage and commit changes in the runtime repo.")
     parser.add_argument("--push", action="store_true", help="Push to remote after commit (requires --commit).")
     parser.add_argument("--tag", action="store_true", help="Create a CalVer annotated tag after commit (requires --commit).")
+    parser.add_argument("--publish", action="store_true", help="Build tarball and publish as GitHub Release (replaces LFS data distribution).")
+    parser.add_argument("--publish-tag", default=None, help="Explicit release tag name (default: CalVer data-YYYY.MM.DD).")
     args = parser.parse_args()
 
     if args.push and not args.commit:
@@ -822,6 +956,17 @@ def main() -> int:
                 rc = _git_push_runtime(runtime_root)
                 if rc != 0:
                     return rc
+
+    # Publish data as GitHub Release
+    if args.publish:
+        rc = _publish_data_release(
+            docs_dir,
+            runtime_root,
+            strip_maintenance=cfg.strip_maintenance,
+            tag_name=args.publish_tag,
+        )
+        if rc != 0:
+            return rc
 
     return 0
 
