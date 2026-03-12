@@ -339,6 +339,10 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
         ),
         (repo_root / "docs" / "templates" / "runtime-repo-README.md", runtime_root / "README.md"),
         (repo_root / "docs" / "templates" / "runtime-AGENTS.md", runtime_root / "AGENTS.md"),
+        (
+            repo_root / "docs" / "templates" / "runtime-skills" / "cex-qa-gapfinder" / "SKILL.md",
+            runtime_root / ".claude" / "skills" / "cex-qa-gapfinder" / "SKILL.md",
+        ),
     ]
     for src, dst in pairs:
         _copy_path(src, dst, clean=clean)
@@ -482,6 +486,7 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
         "src",
         ".claude/skills/cex-api-query/SKILL.md",
         ".claude/skills/cex-api-query/EVALUATIONS.md",
+        ".claude/skills/cex-qa-gapfinder/SKILL.md",
         "README.md",
         "AGENTS.md",
         "scripts/runtime_query_smoke.py",
