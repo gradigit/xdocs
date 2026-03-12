@@ -204,6 +204,26 @@ WebSocket channel data is stored in crawled page content (not in the endpoints t
 - OKX 60018: "Wrong URL or channel doesn't exist" — usually means connecting to wrong WS path (e.g., `/private` instead of `/business`)
 - OKX 60029: "VIP6+ only" — channel has tier restriction (e.g., fills channel)
 
+## Step 5c: Negative Evidence and Third-Party Queries
+
+**Negative evidence (feature/protocol support questions):**
+
+When the user asks "Does exchange X support feature Y?" and local retrieval finds nothing:
+
+1. Check structured endpoints for protocol/feature keywords (e.g., `SELECT count(*) FROM endpoints WHERE exchange=? AND lower(protocol) LIKE '%fix%'`).
+2. Grep stored markdown for the feature name.
+3. If both are negative, this is a valid local answer: **"Not found in the local docs snapshot."** Do not escalate to web search just because local retrieval is empty — absence of evidence in the store is useful information.
+4. Distinguish from "undocumented" (exchange exists but feature not mentioned) and "unknown" (can't route the query at all).
+5. Only browse live if the user explicitly asks for current verification or if you need to confirm a time-sensitive claim.
+
+**Third-party vendor questions:**
+
+When a query mixes official exchange docs with named third-party vendors (e.g., "Does Gate.io support FIX, or is Axon Trade the only option?"):
+
+1. Answer the official-exchange portion from the local store first.
+2. Label any named vendor or bridge as **out-of-corpus** — the store only contains official exchange documentation.
+3. Do not browse to validate vendor claims unless the user explicitly requests third-party verification.
+
 ## Step 6: Synthesize Answer
 
 ### Persona Templates
@@ -344,4 +364,8 @@ Update this skill when:
 3. **Better retrieval patterns discovered** — add to routing table or query patterns
 4. **Agent fails to find known information** — add the successful search strategy as a pattern
 
-Current version: 2.10.0
+Current version: 2.11.0
+
+### Changelog
+
+- v2.11.0: Added Step 5c — negative-evidence answer guidance (don't escalate to web for empty local results) and third-party vendor split (answer official-exchange portion from store, label vendors as out-of-corpus).

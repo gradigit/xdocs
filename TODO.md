@@ -1152,6 +1152,24 @@ r = answer_question(docs_dir='./cex-docs', question='How do Binance and OKX auth
 
 **Fix**: When `len(detected_exchanges) > 1`, either return `status="conflict"` with a clarification asking the user to pick one, or return results from both exchanges with clear labeling. ~15 LOC in answer.py.
 
+#### BUG-20: No Distinct `not_found` Status for Negative-Evidence Answers
+**Severity**: Medium
+**Found**: 2026-03-12, scoped Gate.io FIX protocol QA (real user query)
+**Source**: QA-REPORT.gate-fix-2026-03-12.md finding #1
+
+When a query routes correctly and search finds no relevant results, `answer()` returns `status=unknown` — the same status used for "can't parse/route your query." There's no way for callers to distinguish "I searched and found nothing" from "I don't understand what you're asking." This forces agents using the query skill to escalate to live web search instead of confidently saying "not found in local snapshot."
+
+**Reproduction**:
+```python
+from cex_api_docs.answer import answer_question
+r = answer_question(docs_dir='./cex-docs', question='Does Gate.io support FIX protocol?')
+# Returns status=unknown — same as for gibberish input
+```
+
+**Root cause**: `answer()` has only three terminal statuses: `ok`, `unknown`, `undocumented`. The `unknown` status conflates "routing failed" with "routing succeeded but search returned empty." The `undocumented` status only fires for specific endpoint_path/error_message queries that resolve to an exchange but find no matching record.
+
+**Fix**: Add `status=not_found` for cases where: (1) input classified successfully, (2) exchange detected, (3) search executed, (4) zero relevant results. Return the search summary (what was searched, how many results) so agents can report "not found in local docs snapshot" without guessing. ~10 LOC in answer.py.
+
 #### BUG-7: Semantic Search Snippet Window Too Narrow for Multi-Detail Queries
 **Severity**: Medium
 **Found**: 2026-03-09, Binance coverage test Q4 (authentication details)
