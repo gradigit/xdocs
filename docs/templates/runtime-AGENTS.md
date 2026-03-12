@@ -4,27 +4,26 @@ This runtime repo is for **querying** and **QA testing** the CEX API docs knowle
 
 ## Multi-Platform Skills
 
-All skills in this repo work with **both Claude Code and Codex CLI** (and any other agent platform). The canonical skill definitions live in `.claude/skills/` but are written to be platform-agnostic.
+All skills in this repo are **agent-agnostic**. Each skill exists in both platform directories — identical content, same SKILL.md format:
 
-- **Claude Code**: Reads skills from `.claude/skills/<name>/SKILL.md` automatically.
-- **Codex CLI**: Reads this `AGENTS.md` file. Skill references below point to the same `.claude/skills/` files — read the linked SKILL.md for full instructions.
-- **Other agents**: Read the linked SKILL.md files directly.
+- `.agents/skills/<name>/SKILL.md` — Codex CLI auto-discovers this path
+- `.claude/skills/<name>/SKILL.md` — Claude Code auto-discovers this path
 
-When creating, updating, or maintaining skills, always ensure they work on both platforms. Do not use Claude-specific or Codex-specific features in skill definitions.
+Both directories are synced from the same source. When creating, updating, or maintaining skills, always ensure they work on any agent platform. Do not use platform-specific features in skill definitions.
 
 ## Skills
 
-| Skill | Path | Purpose |
-|-------|------|---------|
-| `cex-api-query` | `.claude/skills/cex-api-query/SKILL.md` | Answer questions about exchange API documentation with citations |
-| `cex-qa-gapfinder` | `.claude/skills/cex-qa-gapfinder/SKILL.md` | Discover bugs, gaps, and quality issues in the knowledge base |
+| Skill | Purpose |
+|-------|---------|
+| `cex-api-query` | Answer questions about exchange API documentation with citations |
+| `cex-qa-gapfinder` | Discover bugs, gaps, and quality issues in the knowledge base |
 
 ## Teammate Workflow (Querying)
 
 1. `git pull`
 2. Start fresh agent session
-3. Ask: `Use cex-api-query skill.` (Claude) or reference the skill file path (Codex)
-4. Ask your question
+3. Ask your question — the agent will activate the `cex-api-query` skill automatically
+4. If not auto-activated: `Use cex-api-query skill.`
 
 ## QA Workflow (Gap Finding)
 
@@ -46,15 +45,11 @@ Runtime agent (here)          Maintainer agent (cex-api-docs)
 
 ### Running QA
 
-**Claude Code:**
 ```
 Use cex-qa-gapfinder skill.
 ```
 
-**Codex CLI:**
-```
-Read .claude/skills/cex-qa-gapfinder/SKILL.md and follow its instructions.
-```
+Both Claude Code and Codex CLI will auto-discover the skill from their respective directories.
 
 The agent will explore the data store, design tests, run them, and produce:
 - `qa-findings.jsonl` — structured findings (one JSON object per line)

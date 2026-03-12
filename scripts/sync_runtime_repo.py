@@ -332,21 +332,29 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     copied: list[str] = []
     pairs: list[tuple[Path, Path]] = [
         (repo_root / "src", runtime_root / "src"),
-        (repo_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md", runtime_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md"),
-        (
-            repo_root / ".claude" / "skills" / "cex-api-query" / "EVALUATIONS.md",
-            runtime_root / ".claude" / "skills" / "cex-api-query" / "EVALUATIONS.md",
-        ),
         (repo_root / "docs" / "templates" / "runtime-repo-README.md", runtime_root / "README.md"),
         (repo_root / "docs" / "templates" / "runtime-AGENTS.md", runtime_root / "AGENTS.md"),
-        (
-            repo_root / "docs" / "templates" / "runtime-skills" / "cex-qa-gapfinder" / "SKILL.md",
-            runtime_root / ".claude" / "skills" / "cex-qa-gapfinder" / "SKILL.md",
-        ),
     ]
     for src, dst in pairs:
         _copy_path(src, dst, clean=clean)
         copied.append(str(dst))
+
+    # Copy skills to both .claude/skills/ (Claude Code) and .agents/skills/ (Codex CLI).
+    # Each skill is a directory with SKILL.md (+ optional extras like EVALUATIONS.md).
+    _skill_sources: list[tuple[Path, str, list[str]]] = [
+        # (source_dir, skill_name, files_to_copy)
+        (repo_root / ".claude" / "skills" / "cex-api-query", "cex-api-query", ["SKILL.md", "EVALUATIONS.md"]),
+        (repo_root / "docs" / "templates" / "runtime-skills" / "cex-qa-gapfinder", "cex-qa-gapfinder", ["SKILL.md"]),
+    ]
+    for src_dir, skill_name, files in _skill_sources:
+        for fname in files:
+            src = src_dir / fname
+            if not src.exists():
+                continue
+            for platform_dir in (".claude/skills", ".agents/skills"):
+                dst = runtime_root / platform_dir / skill_name / fname
+                _copy_path(src, dst, clean=clean)
+                copied.append(str(dst))
 
     # Generate runtime pyproject.toml with semantic-query deps merged into base.
     runtime_toml = runtime_root / "pyproject.toml"
@@ -487,6 +495,9 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
         ".claude/skills/cex-api-query/SKILL.md",
         ".claude/skills/cex-api-query/EVALUATIONS.md",
         ".claude/skills/cex-qa-gapfinder/SKILL.md",
+        ".agents/skills/cex-api-query/SKILL.md",
+        ".agents/skills/cex-api-query/EVALUATIONS.md",
+        ".agents/skills/cex-qa-gapfinder/SKILL.md",
         "README.md",
         "AGENTS.md",
         "scripts/runtime_query_smoke.py",
