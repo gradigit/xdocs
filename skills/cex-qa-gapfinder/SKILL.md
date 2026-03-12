@@ -27,6 +27,16 @@ python3 scripts/runtime_query_smoke.py
 
 If the smoke test fails, stop and report the failure. Do not proceed with QA on a broken store.
 
+## Blind Mode
+
+Check if this is a **blind run** (every other run should be blind):
+
+- If `qa-findings.jsonl` exists from a previous run, count the number of previous runs from `QA-REPORT.md` headers or file timestamps.
+- **Odd-numbered runs** (1st, 3rd, 5th...): normal mode — read the full skill including Known Context.
+- **Even-numbered runs** (2nd, 4th, 6th...): **blind mode** — skip the "Known Context" section entirely. Do not read it. Discover the system's characteristics from scratch.
+
+Blind mode prevents anchoring to known issues and forces fresh exploration. Report which mode was used in the QA report.
+
 ## What You Test
 
 Design your own tests across these categories. Do not use a fixed test list — explore the data and craft tests based on what you find.
@@ -98,6 +108,69 @@ For answer pipeline results, verify:
 - Excerpts contain relevant content (not boilerplate, nav text, or unrelated sections)
 - Multiple claims don't cite the exact same URL with the same excerpt
 
+### 7. Answer Correctness (source verification)
+
+This is the most important category. Structural checks (status=ok, right domain) can pass while the answer is wrong.
+
+For **10-15 answer pipeline results**, do deep verification:
+
+1. Run `cex-api-docs answer "<query>" --docs-dir ./cex-docs` and capture the output.
+2. For each cited URL in the response, find the corresponding page markdown. Use `cex-api-docs search-pages "<url fragment>" --docs-dir ./cex-docs` or query the DB directly: `SELECT markdown_path FROM pages WHERE canonical_url LIKE '%<fragment>%'`.
+3. Read the actual markdown file from `cex-docs/pages/`.
+4. Verify: does the excerpt in the answer actually appear in the source page? Does the claim match what the source page says? Is the information attributed to the right exchange?
+
+Flag any answer where:
+- The excerpt doesn't appear in the source page (hallucinated citation)
+- The claim contradicts the source page (misattribution)
+- The answer cites a page that exists but has no relevant content for the query (irrelevant citation)
+- The answer is technically correct but misleading (e.g., cites a deprecated endpoint for a "how do I" question)
+
+### 8. Adversarial / Fuzzing
+
+Deliberately try to break the system with hostile inputs. This is NOT the same as "edge cases" — these are inputs a malicious or confused user might send.
+
+Test at minimum:
+- **SQL injection**: `'; DROP TABLE pages;--`, `" OR 1=1 --`, `UNION SELECT * FROM endpoints`
+- **FTS5 injection**: `pages_fts MATCH 'rate AND limit'`, `NEAR(a b)`, unbalanced quotes `"rate limit`
+- **Empty/whitespace**: empty string, spaces only, tabs, newlines
+- **Binary/garbage**: random bytes, null bytes (`\x00`), control characters
+- **Extreme length**: 50KB query string, single word repeated 10,000 times
+- **Only stopwords**: "the and or is a", "of to in for"
+- **Unicode edge cases**: RTL text, zero-width joiners, emoji-only queries, CJK characters
+- **Path traversal**: `../../etc/passwd`, `..%2f..%2f`
+- **Format confusion**: XML tags in queries, HTML entities, markdown formatting
+
+For each test: does the system crash, hang, return an error, or handle it gracefully? Any unhandled exception is a critical finding. Any hang >30s is a high finding.
+
+### 9. Golden QA Cross-Check
+
+The maintainer has a golden QA file with expected results. Use it as an independent oracle.
+
+1. Check if `tests/golden_qa.jsonl` exists. If not, skip this section.
+2. Load a **random sample of 20-30 entries** (not all — time budget).
+3. For each entry, run the answer pipeline with the query.
+4. Compare:
+   - Does the `status` match? (If golden QA expects a URL match but answer returns "unknown", that's a gap.)
+   - Does the returned URL match or prefix-match the expected URL?
+   - For entries with `classification` field, does `classify` produce the same type?
+5. Report any mismatches as findings with type `regression` if the system should have handled them.
+
+Do not treat the golden QA as infallible — it's a reference, not ground truth. If the system returns a better result than the golden QA expects, note it as an `observation`, not a bug.
+
+## Regression Tracking
+
+If `qa-findings.jsonl` exists from a **previous** QA run:
+
+1. Load the previous findings.
+2. For each previous finding with `reproducible: true`, re-run the test.
+3. Classify each as:
+   - **Fixed**: the issue no longer reproduces → type: `observation`, title: "FIXED: <original title>"
+   - **Still present**: the issue still reproduces → type: `regression`, with original evidence + new evidence
+   - **Changed**: the behavior changed but is still wrong → type: `bug`, describe both old and new behavior
+4. Include a "Regression Summary" section in QA-REPORT.md: N fixed, M still present, K changed.
+
+If no previous `qa-findings.jsonl` exists, skip this section and note "first run — no regression baseline" in the report.
+
 ## How to Design Tests
 
 1. **Explore the data first.** Query the DB to understand what's in the store. Which exchanges have the most pages? Which have structured endpoints? Which are single-page SPAs?
@@ -120,7 +193,7 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
 {
   "type": "bug|gap|regression|suggestion|observation",
   "severity": "critical|high|medium|low",
-  "category": "data_integrity|coverage|query_pipeline|edge_case|performance|citation_quality",
+  "category": "data_integrity|coverage|query_pipeline|edge_case|performance|citation_quality|answer_correctness|adversarial|golden_qa",
   "title": "Short description",
   "query": "The query that triggered this (if applicable)",
   "exchange": "Exchange name (if applicable)",
@@ -136,12 +209,17 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
 Generate a human-readable summary at `QA-REPORT.md` with:
 
 1. **Environment** — date, platform, data version, model info
-2. **Scope** — what was tested, how many tests, which exchanges
-3. **Summary metrics** — pass rate, findings by severity, findings by category
-4. **Critical/High findings** — detailed, with reproduction steps
-5. **Medium/Low findings** — table format
-6. **Observations** — things that aren't bugs but are worth noting
-7. **Suggested skill updates** — improvements to THIS skill based on what you learned
+2. **Mode** — normal or blind (and run number if known)
+3. **Scope** — what was tested, how many tests, which exchanges
+4. **Regression summary** — N fixed, M still present, K changed (or "first run")
+5. **Summary metrics** — pass rate, findings by severity, findings by category
+6. **Critical/High findings** — detailed, with reproduction steps
+7. **Medium/Low findings** — table format
+8. **Answer correctness results** — table of verified answers with pass/fail and reason
+9. **Golden QA cross-check results** — match rate, mismatches
+10. **Adversarial results** — table of inputs with crash/hang/error/graceful outcome
+11. **Observations** — things that aren't bugs but are worth noting
+12. **Suggested skill updates** — improvements to THIS skill based on what you learned
 
 ### 3. Human brief (mandatory final output)
 
@@ -150,14 +228,20 @@ After writing the files, your **final message to the human** must be a concise b
 ```
 ## QA Run Summary
 
+**Mode:** normal|blind (run #N)
 **Tests run:** N across M exchanges
 **Findings:** X critical, Y high, Z medium, W low
+**Regressions:** N fixed, M still present (or "first run")
 **Pass rate:** NN%
 
 ### Top issues (action required)
 1. [severity] Title — one-line description
 2. [severity] Title — one-line description
 3. ...
+
+### Answer correctness
+- N/M answers verified correct
+- Key failures: ...
 
 ### Observations (no action needed)
 - ...
@@ -166,7 +250,7 @@ After writing the files, your **final message to the human** must be a concise b
 **Next step:** Hand these files to the maintainer agent for verification.
 ```
 
-Keep it under 40 lines. The human should be able to read this in 30 seconds and know whether to escalate or continue.
+Keep it under 50 lines. The human should be able to read this in 30 seconds and know whether to escalate or continue.
 
 ### 4. Handing off to the maintainer
 
@@ -197,6 +281,8 @@ The maintainer will review and apply relevant suggestions to this skill for the 
 
 ## Known Context (for test design, not for skipping)
 
+**If this is a blind mode run (even-numbered), STOP READING HERE. Skip to the Version section.**
+
 These are known characteristics of the system. Do NOT skip testing them — verify they still hold:
 
 - Single-page sites (OKX, Gate.io, HTX, Crypto.com, Bitstamp, Phemex, Backpack, WOO X, BingX, BitMart) have 1-4 pages by design
@@ -210,9 +296,10 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 
 ## Version
 
-v1.1.0 — Added human brief + handoff instructions.
+v2.0.0 — Major update: answer correctness, adversarial fuzzing, golden QA cross-check, regression tracking, blind mode.
 
 ### Changelog
 
+- v2.0.0: Added 3 new test categories (answer correctness, adversarial/fuzzing, golden QA cross-check). Added regression tracking against previous qa-findings.jsonl. Added blind mode rotation (even runs skip Known Context). Updated report format with new sections. Updated JSONL category enum. Bumped human brief to 50 lines.
 - v1.1.0: Added mandatory human brief (concise final message), QA branch handoff workflow for cross-machine runs, restructured report format section.
 - v1.0.0: Initial gap finder skill with 6 test categories, JSONL + markdown report format, self-evolution mechanism.
