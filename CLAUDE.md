@@ -23,7 +23,7 @@ This project uses two repositories. **Every push to the maintainer repo must be 
 - **Remote**: `github.com/henryaxis/cex-api-docs-runtime`
 - **Platform**: macOS (MacBook, MLX for embeddings/reranking)
 - **Install**: `uv pip install -e .` (semantic-query deps are base dependencies in runtime pyproject.toml)
-- **Purpose**: Query-only CLI + prebuilt `cex-docs/` snapshot (SQLite + LanceDB index via Git LFS)
+- **Purpose**: Query-only CLI + prebuilt `cex-docs/` snapshot (SQLite + LanceDB index via GitHub Releases tarball)
 - **Contains**: Query modules only, no crawl/sync/import code, no tests
 
 ### Sync Protocol
@@ -43,7 +43,7 @@ git add -A && git commit -m "sync: <description>" && git push
 cd /home/lechat/Projects/cex-api-docs
 ```
 
-LanceDB index fragments are stored in Git LFS (max 1.9 GB per file, enforced by `compact_index(max_bytes_per_file=1_900_000_000)`).
+Data is distributed via GitHub Releases as a zstd-compressed tarball (~556 MB). Runtime users run `./scripts/bootstrap-data.sh` to download and extract.
 
 ## Build Commands
 
@@ -190,7 +190,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
 - `data/exchanges.yaml` Registry of all 46 exchanges (78 sections): seeds, allowed domains, base URLs, doc sources.
 - `scripts/` Automation helpers (`sync_runtime_repo.py`, `run_sync_preset.sh`, benchmarks).
-- `.claude/skills/` Claude Code skill definitions: `cex-api-docs` (maintainer), `cex-api-query` (query/answer), `cex-discovery` (new exchange discovery).
+- `skills/` Agent-agnostic skill definitions (canonical source). `.claude/skills/` and `.agents/skills/` are symlinks for platform auto-discovery.
 
 ## Data Flow
 
@@ -224,7 +224,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - Deterministic code: crawling, storage, indexing, querying, diffing.
 - Agent boundary: agent does interpretation and extraction; code does deterministic I/O and validation.
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
-- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update CLAUDE.md, README.md, AGENTS.md, all three SKILL.md files (cex-api-docs, cex-api-query, cex-discovery), and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `.claude/skills/cex-api-docs/SKILL.md` for the full checklist.
+- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update CLAUDE.md, README.md, AGENTS.md, all three SKILL.md files (cex-api-docs, cex-api-query, cex-discovery), and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/cex-api-docs/SKILL.md` for the full checklist.
 
 ## Key Files
 
@@ -276,9 +276,10 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/cex_api_docs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
 - `src/cex_api_docs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
 - `src/cex_api_docs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
-- `.claude/skills/cex-api-docs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
-- `.claude/skills/cex-api-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
-- `.claude/skills/cex-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
+- `skills/cex-api-docs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
+- `skills/cex-api-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
+- `skills/cex-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
+- `skills/cex-qa-gapfinder/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)
 
 ## Gotchas
 

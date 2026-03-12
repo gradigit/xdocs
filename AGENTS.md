@@ -13,17 +13,25 @@ It crawls official exchange docs, stores/indexes them (SQLite FTS5 + optional La
 - Keep deterministic behavior in crawling, storage, indexing, and query paths.
 - Prefer machine-readable JSON command output.
 
-## Local Skill Mapping (project)
+## Skills
 
-If a user asks for `cex-api-query` skill, treat it as a local project skill and run:
+Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platform auto-discovery directories (`.claude/skills/`, `.agents/skills/`) are symlinks to the canonical source.
 
-- Open and follow `.claude/skills/cex-api-query/SKILL.md`
+| Skill | Purpose |
+|-------|---------|
+| `cex-api-docs` | Maintainer workflow (sync, spec imports, validation, doc updates) |
+| `cex-api-query` | Query/answer (classification → search → cite-only answer) |
+| `cex-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
+| `cex-qa-gapfinder` | QA gap finder (iterative testing loop, runtime repo) |
+
+When creating, updating, or maintaining skills, edit the canonical file in `skills/<name>/SKILL.md`. The symlinks ensure both Claude Code and Codex CLI discover them automatically.
+
+### cex-api-query routing
+
 - Use `--docs-dir ./cex-docs` unless user explicitly asks for another store
-- Execute the classify-first routing flow from that skill
+- Execute the classify-first routing flow from the skill
 - For natural-language questions, prefer `semantic-search --mode hybrid --rerank-policy auto` first, then targeted endpoint/page fetch
 - Keep retrieval bounded (avoid broad markdown scans unless retrieval fails)
-
-If this local file is missing, fall back to equivalent direct CLI workflow (`classify` → `lookup-endpoint` / `search-error` / `search-endpoints` / `search-pages` / `answer`) and state that fallback explicitly.
 
 ## Environment
 
@@ -116,9 +124,7 @@ cex-api-docs ccxt-xref --docs-dir ./cex-docs
 - `src/cex_api_docs/reranker.py` — cross-encoder reranking
 - `schema/schema.sql` — canonical DB schema (v6)
 - `data/exchanges.yaml` — exchange/section registry (46 exchanges, 78 sections)
-- `.claude/skills/cex-api-docs/SKILL.md` — maintainer workflow skill
-- `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill
-- `.claude/skills/cex-discovery/SKILL.md` — exhaustive crawl target discovery skill
+- `skills/` — agent-agnostic skill definitions (`.claude/skills/` and `.agents/skills/` are symlinks)
 
 ## Current Context (from latest handoff)
 
