@@ -374,6 +374,13 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
         smoke_sh_dst.chmod(0o755)
         copied.append(str(smoke_sh_dst))
 
+    # Copy golden QA file (used by gapfinder cross-check)
+    golden_qa_src = repo_root / "tests" / "golden_qa.jsonl"
+    if golden_qa_src.exists():
+        golden_qa_dst = runtime_root / "tests" / "golden_qa.jsonl"
+        _copy_path(golden_qa_src, golden_qa_dst, clean=clean)
+        copied.append(str(golden_qa_dst))
+
     # Copy bootstrap data script
     bootstrap_src = repo_root / "docs" / "templates" / "runtime-bootstrap-data.sh"
     if bootstrap_src.exists():
@@ -503,6 +510,7 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
         "AGENTS.md",
         "scripts/runtime_query_smoke.py",
         "scripts/runtime_query_smoke.sh",
+        "tests/golden_qa.jsonl",
     ]
     if cfg.include_data:
         runtime_rel_paths += [

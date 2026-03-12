@@ -1114,6 +1114,44 @@ Same pattern for Binance `GET /api/v3/account` and Upbit `GET /v1/accounts`.
 
 **Fix**: In the endpoint_path routing, when no exchange is detected, try `lookup_endpoint_by_path()` without exchange filter. If exactly 1 exchange matches, use it. If multiple match, return results from all with disambiguation. ~20 LOC in answer.py.
 
+#### BUG-18: Direct-Routed Endpoint/Error Citations Missing Excerpts
+**Severity**: High
+**Found**: 2026-03-12, gapfinder v2 run (blind mode)
+**Source**: qa-findings.jsonl finding #4
+
+When the direct routing path fires for endpoint_path or error_message queries, citations come back as `{"url": "..."}` with no `excerpt`, `excerpt_start`, or `excerpt_end`. This means the answer can't be source-verified from the payload alone.
+
+**Reproduction**:
+```python
+from cex_api_docs.answer import answer_question
+r = answer_question(docs_dir='./cex-docs', question='OKX GET /api/v5/account/balance')
+# citations[0] has url but no excerpt, excerpt_start, excerpt_end
+```
+
+Reproduces for: OKX/Binance/Upbit endpoint paths, OKX/Bybit/KuCoin error codes.
+
+**Root cause**: The ENDPOINT-kind claim construction in direct routing builds citations with only `{"url": docs_url}` (answer.py ~line 1223). The generic search path builds full citations with excerpt extraction via `_make_excerpt()`. The direct route skips excerpt extraction entirely.
+
+**Fix**: In the direct routing code path, after resolving docs_url, read the page markdown and call `_make_excerpt()` with the endpoint path/description as search terms. Attach the result to the citation dict. ~15 LOC.
+
+#### BUG-19: Multi-Exchange Ambiguity Silently Picks First Exchange
+**Severity**: Medium
+**Found**: 2026-03-12, gapfinder v2 run (blind mode)
+**Source**: qa-findings.jsonl finding #7
+
+When a query explicitly names two exchanges (e.g., "How do Binance and OKX authenticate?"), the answer pipeline silently picks the first detected exchange and returns results for it. No `clarification` field, no `conflict` status.
+
+**Reproduction**:
+```python
+from cex_api_docs.answer import answer_question
+r = answer_question(docs_dir='./cex-docs', question='How do Binance and OKX authenticate?')
+# Returns Binance-only answer, no clarification
+```
+
+**Root cause**: `_detect_exchange()` returns a list of matches, but the caller takes `matches[0]` without checking if `len(matches) > 1`. No disambiguation logic exists.
+
+**Fix**: When `len(detected_exchanges) > 1`, either return `status="conflict"` with a clarification asking the user to pick one, or return results from both exchanges with clear labeling. ~15 LOC in answer.py.
+
 #### BUG-7: Semantic Search Snippet Window Too Narrow for Multi-Detail Queries
 **Severity**: Medium
 **Found**: 2026-03-09, Binance coverage test Q4 (authentication details)

@@ -27,6 +27,25 @@ python3 scripts/runtime_query_smoke.py
 
 If the smoke test fails, stop and report the failure. Do not proceed with QA on a broken store.
 
+Then detect the runtime model stack by running a single semantic query and capturing stderr:
+
+```python
+import os, sys, io
+stderr_capture = io.StringIO()
+old_stderr = sys.stderr
+sys.stderr = stderr_capture
+from cex_api_docs.semantic import semantic_search
+results = semantic_search(docs_dir='./cex-docs', query='test', limit=1, query_type='hybrid', rerank='auto')
+sys.stderr = old_stderr
+log = stderr_capture.getvalue()
+# Log will show: embedding backend (jina-mlx vs sentence-transformers),
+# reranker backend (jina-v3, flashrank, etc.), model loading messages.
+# Also check: os.environ.get('CEX_RERANKER_BACKEND', 'auto'),
+#             os.environ.get('CEX_FUSION_MODE', 'rrf')
+```
+
+Record all detected backends in the Environment section of QA-REPORT.md. This matters because different backends produce different ranking results — findings may not reproduce if the model stack differs.
+
 ## Blind Mode
 
 Check if this is a **blind run** (every other run should be blind):
@@ -90,7 +109,7 @@ Design tests for things that might break:
 - Very short queries ("ws", "auth", "fee")
 - Very long queries (paste a full error message or code block)
 - Queries about nonexistent exchanges or endpoints (should return "unknown" or "undocumented")
-- Queries that are ambiguous across exchanges (should either disambiguate or return multi-exchange results)
+- Queries that are ambiguous across exchanges (should either disambiguate or return multi-exchange results). Specifically test: "How do Binance and OKX authenticate?" — this should NOT silently pick one exchange. Expect `status=conflict`, a `clarification` field, or results from both.
 - Single-page exchange sites (OKX, Gate.io, HTX, Crypto.com) — verify they return content despite low page counts
 - Korean exchange queries (Upbit, Bithumb, Coinone) — verify English searchability
 
@@ -100,6 +119,7 @@ Measure latency for different query paths:
 
 - FTS-only queries (classify, search-pages, search-endpoints, lookup-endpoint)
 - Semantic queries (semantic-search in fts/vector/hybrid modes)
+- For semantic queries, note whether reranking actually triggered (the auto-rerank threshold skips reranking when candidate count is low). Log the reranker backend used.
 - Full answer pipeline (answer command)
 
 Distinguish between CLI latency (includes Python startup) and in-process latency (function call only). Report both, but flag if CLI overhead is disproportionate.
@@ -115,6 +135,7 @@ For answer pipeline results, verify:
 - Excerpts contain relevant content (not boilerplate, nav text, or unrelated sections)
 - Multiple claims don't cite the exact same URL with the same excerpt
 - **Nav chrome gate**: Fail any excerpt that begins with known navigation markers: "Skip to main content", "Jump to Content", language switcher blocks, breadcrumb trails, or menu chrome. These indicate the excerpt extraction hit the page header instead of substantive content.
+- **Citation schema gate**: Every citation must include `url`, `excerpt`, `excerpt_start`, and `excerpt_end`. Fail any citation that has only `url` with no excerpt — this indicates the code path skipped excerpt extraction (common in direct-routed endpoint/error answers).
 
 ### 7. Answer Correctness (source verification)
 
@@ -127,11 +148,17 @@ For **10-15 answer pipeline results**, do deep verification:
 3. Read the actual markdown file from `cex-docs/pages/`.
 4. Verify: does the excerpt in the answer actually appear in the source page? Does the claim match what the source page says? Is the information attributed to the right exchange?
 
+Grade each answer as one of:
+- **Clean pass**: correct URL, excerpt appears in source, content is on-topic
+- **Mixed pass**: partially correct (e.g., right exchange but wrong language variant, or relevant page but wrong section)
+- **Fail**: wrong page, missing excerpt, nav chrome, irrelevant content, or hallucinated citation
+
 Flag any answer where:
 - The excerpt doesn't appear in the source page (hallucinated citation)
 - The claim contradicts the source page (misattribution)
 - The answer cites a page that exists but has no relevant content for the query (irrelevant citation)
 - The answer is technically correct but misleading (e.g., cites a deprecated endpoint for a "how do I" question)
+- `status=ok` but the cited page doesn't match the expected target (benchmark-style miss — the pipeline claims success while returning the wrong content)
 
 ### 8. Adversarial / Fuzzing
 
@@ -148,7 +175,7 @@ Test at minimum:
 - **Path traversal**: `../../etc/passwd`, `..%2f..%2f`
 - **Format confusion**: XML tags in queries, HTML entities, markdown formatting
 
-For each test: does the system crash, hang, return an error, or handle it gracefully? Any unhandled exception is a critical finding. Any hang >30s is a high finding.
+For each test: does the system crash, hang, return an error, or handle it gracefully? Any unhandled exception is a critical finding. Any response >30s is a high finding. Note: extreme-length queries (50KB+) may take 20-30s without being a bug — flag as observation if under 30s, high finding if over.
 
 ### 9. Golden QA Cross-Check
 
@@ -242,7 +269,8 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
   "observed": "What happened",
   "expected": "What should have happened",
   "evidence": "Specific URLs, error messages, or metrics",
-  "reproducible": true
+  "reproducible": true,
+  "agent_model": "The LLM model running this QA (e.g., claude-opus-4-6, gpt-4.1, codex)"
 }
 ```
 
@@ -250,7 +278,15 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
 
 Generate a human-readable summary at `QA-REPORT.md` with:
 
-1. **Environment** — date, platform, data version, model info
+1. **Environment** — must include all of the following:
+   - Date, platform (OS, arch)
+   - Data version (from `runtime-manifest.json` or smoke test output)
+   - Agent model (the LLM running this QA, e.g., claude-opus-4-6, gpt-4.1)
+   - Runtime model stack (detect by running a test query and checking stderr/logs):
+     - Embedding backend: jina-mlx or sentence-transformers? Which model loaded?
+     - Reranker backend: jina-v3, jina-v3-mlx, cross-encoder, flashrank, or none? (Check `CEX_RERANKER_BACKEND` env var and auto-detection)
+     - Fusion mode: RRF or CC? (Check `CEX_FUSION_MODE` env var, default is RRF)
+   - Store stats: page count, endpoint count, schema version
 2. **Mode** — normal or blind (and run number if known)
 3. **Scope** — what was tested, how many tests, which exchanges
 4. **Regression summary** — N fixed, M still present, K changed (or "first run")
@@ -342,10 +378,12 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 
 ## Version
 
-v2.1.0 — Post-v1-run refinements: answer output schema docs, exchange detection sweep, bare endpoint path tests, nav chrome gate, numeric literal misclassification awareness.
+v2.2.0 — Post-v2-run refinements: citation schema gate, answer grading tiers, multi-exchange ambiguity test, adversarial thresholds.
 
 ### Changelog
 
+- v2.2.0: Added citation schema gate to Citation Quality (fail URL-only citations missing excerpts). Added clean/mixed/fail grading tiers to Answer Correctness. Added benchmark-style miss check (status=ok but wrong page). Added explicit multi-exchange ambiguity test to Edge Cases. Added >30s adversarial threshold with extreme-length note. All changes informed by v2 blind-mode run findings.
+- v2.1.1: Environment section now requires full runtime model stack detection (embedding backend, reranker backend, fusion mode). Added prerequisite code snippet for stack detection via stderr capture. Performance section notes reranker trigger status. JSONL schema includes agent_model field. Report environment expanded to list all runtime backends.
 - v2.1.0: Added Answer Output Schema section (claim/citation field paths). Added exchange detection sweep to Exchange Coverage. Added bare endpoint path, numeric literal, and payload relevance checks to Query Pipeline. Added nav chrome gate with specific markers to Citation Quality. Added 4 entries to Known Context (numeric literal misclassification, exchange alias mismatches, nav chrome in stored markdown, docs_url gaps). All changes informed by v1 run findings.
 - v2.0.0: Added 3 new test categories (answer correctness, adversarial/fuzzing, golden QA cross-check). Added regression tracking against previous qa-findings.jsonl. Added blind mode rotation (even runs skip Known Context). Updated report format with new sections. Updated JSONL category enum. Bumped human brief to 50 lines.
 - v1.1.0: Added mandatory human brief (concise final message), QA branch handoff workflow for cross-machine runs, restructured report format section.
