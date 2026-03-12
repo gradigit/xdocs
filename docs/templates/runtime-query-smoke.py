@@ -23,6 +23,7 @@ def main() -> int:
     # 1. DB exists and is reasonable size
     if not db_path.exists():
         print(f"FAIL: DB not found at {db_path}")
+        print("  Run ./scripts/bootstrap-data.sh to download the data snapshot.")
         return 1
     db_size = db_path.stat().st_size
     print(f"DB size: {db_size} bytes")

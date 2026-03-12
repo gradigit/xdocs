@@ -22,7 +22,7 @@ Use this skill when asked to "find gaps", "run QA", "benchmark the knowledge bas
 Before starting, verify the environment:
 
 ```bash
-python scripts/runtime_query_smoke.py
+python3 scripts/runtime_query_smoke.py
 ```
 
 If the smoke test fails, stop and report the failure. Do not proceed with QA on a broken store.
