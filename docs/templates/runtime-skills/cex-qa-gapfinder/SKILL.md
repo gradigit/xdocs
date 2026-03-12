@@ -103,6 +103,8 @@ For answer pipeline results, verify:
 
 ## Report Format
 
+### 1. Structured findings file
+
 Generate a single JSONL file at `qa-findings.jsonl` where each line is one finding:
 
 ```json
@@ -120,7 +122,9 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
 }
 ```
 
-Also generate a human-readable summary at `QA-REPORT.md` with:
+### 2. Full report
+
+Generate a human-readable summary at `QA-REPORT.md` with:
 
 1. **Environment** — date, platform, data version, model info
 2. **Scope** — what was tested, how many tests, which exchanges
@@ -129,6 +133,38 @@ Also generate a human-readable summary at `QA-REPORT.md` with:
 5. **Medium/Low findings** — table format
 6. **Observations** — things that aren't bugs but are worth noting
 7. **Suggested skill updates** — improvements to THIS skill based on what you learned
+
+### 3. Human brief (mandatory final output)
+
+After writing the files, your **final message to the human** must be a concise brief they can read without opening any files. Format:
+
+```
+## QA Run Summary
+
+**Tests run:** N across M exchanges
+**Findings:** X critical, Y high, Z medium, W low
+**Pass rate:** NN%
+
+### Top issues (action required)
+1. [severity] Title — one-line description
+2. [severity] Title — one-line description
+3. ...
+
+### Observations (no action needed)
+- ...
+
+**Files written:** qa-findings.jsonl, QA-REPORT.md
+**Next step:** Hand these files to the maintainer agent for verification.
+```
+
+Keep it under 40 lines. The human should be able to read this in 30 seconds and know whether to escalate or continue.
+
+### 4. Handing off to the maintainer
+
+If running on a **different machine** (e.g., MacBook), the findings need to reach the maintainer repo. Options:
+
+- **Push to a QA branch:** `git checkout -b qa/YYYY-MM-DD && git add qa-findings.jsonl QA-REPORT.md && git commit -m "qa: run YYYY-MM-DD" && git push -u origin qa/YYYY-MM-DD`. The maintainer fetches and reviews.
+- **Same machine:** If the maintainer repo is on the same system, just tell the human the file paths. The maintainer agent can read them directly from the runtime repo.
 
 ## What NOT to Do
 
@@ -165,8 +201,9 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 
 ## Version
 
-v1.0.0 — Initial skill. No prior QA loops completed.
+v1.1.0 — Added human brief + handoff instructions.
 
 ### Changelog
 
+- v1.1.0: Added mandatory human brief (concise final message), QA branch handoff workflow for cross-machine runs, restructured report format section.
 - v1.0.0: Initial gap finder skill with 6 test categories, JSONL + markdown report format, self-evolution mechanism.
