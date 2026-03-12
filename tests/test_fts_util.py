@@ -47,6 +47,17 @@ class TestSanitizeFtsQuery(unittest.TestCase):
         result = sanitize_fts_query("rate limit details?symbol=BTCUSDT")
         self.assertIn('"details?symbol=BTCUSDT"', result)
 
+    def test_single_quote_quoted(self) -> None:
+        """Single quotes must be quoted to avoid FTS5 syntax errors."""
+        result = sanitize_fts_query("'; DROP TABLE pages;--")
+        # Tokens with ' or ; must be wrapped in double quotes
+        self.assertIn("\"';\"", result)
+        self.assertIn('"pages;--"', result)
+
+    def test_semicolon_quoted(self) -> None:
+        result = sanitize_fts_query("test; SELECT 1")
+        self.assertIn('"test;"', result)
+
 
 class TestBuildFtsQuery(unittest.TestCase):
     def test_single_term(self) -> None:

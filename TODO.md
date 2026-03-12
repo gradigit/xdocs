@@ -1152,6 +1152,20 @@ r = answer_question(docs_dir='./cex-docs', question='How do Binance and OKX auth
 
 **Fix**: When `len(detected_exchanges) > 1`, either return `status="conflict"` with a clarification asking the user to pick one, or return results from both exchanges with clear labeling. ~15 LOC in answer.py.
 
+#### BUG-21: FTS5 Syntax Error on Single Quotes in search_pages (FIXED)
+**Severity**: Critical
+**Found**: 2026-03-12, 10-run batch QA (7/10 runs reproduced)
+**Source**: qa-batch-2026-03-12-10x3/qa-findings.10runs.jsonl finding #1
+**Status**: FIXED (f600ab5 → next commit)
+
+`search_pages("'; DROP TABLE pages;--")` threw unhandled `OperationalError: fts5: syntax error near "'"`. Not a real SQL injection (parameterized queries prevent that), but an unhandled crash in the FTS5 MATCH parser.
+
+**Root cause**: `sanitize_fts_query()` in `fts_util.py:80` had a regex character class missing `'` and `;`. Tokens containing these characters passed through unquoted, causing FTS5 parser errors.
+
+**Fix**: Added `'` and `;` to the special-character regex in `sanitize_fts_query()`. Tokens like `';` are now wrapped as `"';"` (FTS5 phrase syntax). Also affects `search-endpoints` (had a retry fallback that masked the bug) and `answer.py:_search_pages` (protected upstream by `extract_search_terms` stripping punctuation first).
+
+**Audit**: `search-error` was already safe (uses allowlist regex `[^\w\-]`). `search-endpoints` had a defense-in-depth retry block. Only `search-pages` was fully exposed.
+
 #### BUG-20: No Distinct `not_found` Status for Negative-Evidence Answers
 **Severity**: Medium
 **Found**: 2026-03-12, scoped Gate.io FIX protocol QA (real user query)

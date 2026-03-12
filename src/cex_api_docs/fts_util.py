@@ -77,7 +77,7 @@ def sanitize_fts_query(query: str) -> str:
     tokens = query.split()
     safe: list[str] = []
     for t in tokens:
-        if re.search(r'[-:"/{}()*?=&+#@!<>]', t):
+        if re.search(r'[-:"\'/{}()*?=&+#@!<>;]', t):
             # Already quoted — leave alone.
             if t.startswith('"') and t.endswith('"'):
                 safe.append(t)
