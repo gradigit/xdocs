@@ -56,8 +56,10 @@ Test that each exchange in the store actually returns useful results.
 
 - Get the list of exchanges from the DB (`SELECT DISTINCT domain FROM pages`).
 - For each exchange, run a basic query like "rate limit" or "authentication". Does it return results? Are the results from the correct exchange?
+- **Exchange detection sweep**: For a sample of exchanges (at least 10), run `answer("How do I authenticate to <Exchange>?")` via the Python API and verify `status != "unknown"`. Compare the set of exchanges the answer pipeline can detect against the set in the store. Any exchange present in the store but returning `unknown` on a named query is a coverage regression.
 - Identify "dead" exchanges — those with pages in the DB but zero useful search results.
 - Check endpoint counts: which exchanges have structured endpoints vs pages-only?
+- Check for alias mismatches: some internal IDs differ from user-facing names (e.g., `crypto_com` vs "Crypto.com", `mercadobitcoin` vs "Mercado Bitcoin"). Verify the answer pipeline handles both forms.
 
 ### 3. Query Pipeline
 
@@ -74,6 +76,11 @@ For each type, test at least 3 different exchanges. Verify:
 - The answer pipeline returns status "ok" (not "unknown") for valid queries
 - Cited URLs are from the correct exchange domain
 - Excerpts are readable text (not nav fragments, not raw JSON)
+
+Additional targeted checks:
+- **Bare endpoint paths**: Test literal paths WITHOUT exchange names (e.g., `GET /api/v5/account/balance` alone). These should either auto-detect the exchange or return a useful result — not `unknown`.
+- **Code snippets with numeric literals**: Test SDK code containing realistic prices/quantities (e.g., `create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)`). Verify the classifier does NOT misroute these as `error_message` due to the numeric value.
+- **Request payload relevance**: For payload queries that return `status=ok`, verify the top claim text is non-empty AND mentions the inferred action (e.g., an order payload should cite order/trading docs, not margin or FAQ pages).
 
 ### 4. Edge Cases
 
@@ -107,6 +114,7 @@ For answer pipeline results, verify:
 - Cited URLs point to pages from the queried exchange (not cross-contamination)
 - Excerpts contain relevant content (not boilerplate, nav text, or unrelated sections)
 - Multiple claims don't cite the exact same URL with the same excerpt
+- **Nav chrome gate**: Fail any excerpt that begins with known navigation markers: "Skip to main content", "Jump to Content", language switcher blocks, breadcrumb trails, or menu chrome. These indicate the excerpt extraction hit the page header instead of substantive content.
 
 ### 7. Answer Correctness (source verification)
 
@@ -170,6 +178,40 @@ If `qa-findings.jsonl` exists from a **previous** QA run:
 4. Include a "Regression Summary" section in QA-REPORT.md: N fixed, M still present, K changed.
 
 If no previous `qa-findings.jsonl` exists, skip this section and note "first run — no regression baseline" in the report.
+
+## Answer Output Schema
+
+The `answer_question()` function returns a dict with these keys:
+
+```
+status: "ok" | "unknown" | "undocumented" | "conflict"
+claims: list of claim dicts
+question: original question
+normalized_question: lowercased/cleaned version
+notes: list of strings
+ok: bool
+```
+
+Each **claim** has:
+
+```
+id: "c1", "c2", ...
+kind: "SOURCE" | "ENDPOINT" | "DERIVED"
+text: "[exchange:section] excerpt or endpoint summary"
+citations: list of citation dicts
+```
+
+Each **citation** has:
+
+```
+url: canonical page URL
+excerpt: extracted text from the page
+excerpt_start: byte offset in page markdown
+excerpt_end: byte offset in page markdown
+crawled_at: timestamp
+```
+
+**Important**: URLs are at `claim["citations"][0]["url"]`, NOT `claim["url"]`. Excerpts are at `claim["citations"][0]["excerpt"]`. The `claim["text"]` field is a formatted string that includes the exchange prefix and excerpt, but it is NOT the raw excerpt.
 
 ## How to Design Tests
 
@@ -293,13 +335,18 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 - 17 negative test cases exist in the maintainer's golden QA — the system should return "unknown"/"undocumented" for them
 - First semantic search query is slow (14-17s cold start for embedding model load)
 - The reranker auto-selects: macOS uses Jina v3 MLX, Linux uses Jina v3 or FlashRank fallback
+- Code snippets with numeric literals (prices like 30000, quantities like 50000) can misclassify as error_message — the generic `\d{5,6}` error pattern captures these. Test with realistic SDK code.
+- Some exchange internal IDs differ from user-facing names: `crypto_com` = "Crypto.com", `mercadobitcoin` = "Mercado Bitcoin", `woo` = "WOO X". The answer pipeline must handle both forms.
+- Stored page markdown often starts with navigation chrome ("Skip to main content", sidebar links, language toggles). The `_is_nav_region()` function is supposed to skip these but has known gaps — verify excerpts don't begin with nav text.
+- Many exchanges have endpoints with no `docs_url` (Hyperliquid 100%, Lighter 100%, Mercado Bitcoin 100%). This limits citation quality for endpoint answers.
 
 ## Version
 
-v2.0.0 — Major update: answer correctness, adversarial fuzzing, golden QA cross-check, regression tracking, blind mode.
+v2.1.0 — Post-v1-run refinements: answer output schema docs, exchange detection sweep, bare endpoint path tests, nav chrome gate, numeric literal misclassification awareness.
 
 ### Changelog
 
+- v2.1.0: Added Answer Output Schema section (claim/citation field paths). Added exchange detection sweep to Exchange Coverage. Added bare endpoint path, numeric literal, and payload relevance checks to Query Pipeline. Added nav chrome gate with specific markers to Citation Quality. Added 4 entries to Known Context (numeric literal misclassification, exchange alias mismatches, nav chrome in stored markdown, docs_url gaps). All changes informed by v1 run findings.
 - v2.0.0: Added 3 new test categories (answer correctness, adversarial/fuzzing, golden QA cross-check). Added regression tracking against previous qa-findings.jsonl. Added blind mode rotation (even runs skip Known Context). Updated report format with new sections. Updated JSONL category enum. Bumped human brief to 50 lines.
 - v1.1.0: Added mandatory human brief (concise final message), QA branch handoff workflow for cross-machine runs, restructured report format section.
 - v1.0.0: Initial gap finder skill with 6 test categories, JSONL + markdown report format, self-evolution mechanism.

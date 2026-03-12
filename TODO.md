@@ -1047,6 +1047,73 @@ Priority order:
 13. BUG-3 (Breadcrumb artifacts) — low, cosmetic
 14. BUG-6 (Gate.io endpoint display) — low, cosmetic
 
+#### BUG-15: Numeric Literals in Code Snippets Misclassify as error_message
+**Severity**: High
+**Found**: 2026-03-12, gapfinder v1 run
+**Source**: qa-findings.jsonl finding #2
+
+Code snippets containing realistic prices/quantities (e.g., `30000` in `create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)`) trigger the generic error pattern `\b\d{5,6}\b` in classify.py, scoring error_message at 0.7 vs code_snippet at ~0.6. The downstream answer then returns error/rate-limit material instead of order docs.
+
+**Reproduction**:
+```python
+from cex_api_docs.classify import classify_input
+classify_input("import ccxt\nexchange = ccxt.binance()\nexchange.create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)")
+# → input_type=error_message, confidence=0.7
+```
+
+Also reproduces with Bybit `RestClientV5.submitOrder(...)` containing price=30000.
+
+**Root cause**: Generic `("generic", re.compile(r"\b\d{5,6}\b"))` in `_ERROR_CODE_PATTERNS` (classify.py:64) matches any 5-6 digit number. Error boosting at line 265 sets score to `max(..., 0.7)` regardless of whether the match is exchange-specific or generic.
+
+**Fix**: Reduce error boost for generic-only matches. When all matched error codes are from the `"generic"` pattern (no exchange-specific pattern fired), use additive scoring (+0.3) instead of the hard floor (0.7). This lets code_snippet signals (0.6+) win. ~5 LOC change in classify.py.
+
+**Related**: Supersedes BUG-14 (same root cause area, more specific reproduction).
+
+#### BUG-16: Nav Chrome in Excerpts Despite _is_nav_region()
+**Severity**: High
+**Found**: 2026-03-12, gapfinder v1 run
+**Source**: qa-findings.jsonl finding #3
+
+Auth answer excerpts start with "Skip to main content", language switcher chrome, and sidebar nav links instead of substantive content. Confirmed for Binance, Gate.io, Upbit, and Coinone auth queries.
+
+**Reproduction**:
+```python
+from cex_api_docs.answer import answer_question
+r = answer_question(docs_dir='./cex-docs', question='How do I authenticate to Binance spot REST API?')
+# First claim text starts with "[coinbase:...] Skip to main content..."
+```
+
+**Root cause**: Three gaps in `_is_nav_region()` (answer.py:288-312):
+1. Threshold too high (55%) — mixed nav regions (nav + metadata + version selectors) score 35-40%, passing the check
+2. No skip-link pattern detection — "Skip to main content" / "Jump to Content" at page start are universal nav markers, not caught
+3. Fallback excerpt (lines 326-330) extracts first N chars without ANY nav filtering when no keyword match is found
+
+**Fix**: Lower `_is_nav_region()` threshold from 55% to ~35%. Add skip-link pattern detection (return True immediately for "Skip to", "Jump to"). Integrate `_is_nav_region()` check into fallback excerpt path. ~30 LOC.
+
+**Related**: Extends BUG-5 (Coinbase nav sidebar FTS). BUG-5 is about FTS indexing nav text; this is about excerpt extraction.
+
+#### BUG-17: Path-Only Endpoint Queries Return Unknown
+**Severity**: Medium
+**Found**: 2026-03-12, gapfinder v1 run
+**Source**: qa-findings.jsonl finding #4
+
+Literal endpoint paths without exchange names return `status=unknown`, even when `lookup_endpoint_by_path()` finds a unique match. Adding the exchange name fixes it.
+
+**Reproduction**:
+```python
+from cex_api_docs.answer import answer_question
+answer_question(docs_dir='./cex-docs', question='GET /api/v5/account/balance')
+# → status=unknown
+answer_question(docs_dir='./cex-docs', question='OKX GET /api/v5/account/balance')
+# → status=ok, with correct OKX endpoint
+```
+
+Same pattern for Binance `GET /api/v3/account` and Upbit `GET /v1/accounts`.
+
+**Root cause**: The endpoint_path direct routing in answer.py requires exchange detection to succeed. When no exchange name is in the query, the pipeline falls through to generic search which doesn't find the right page. Many exchange API paths have distinctive prefixes (`/api/v5/` = OKX, `/api/v3/` and `/sapi/` = Binance, `/v1/` with Korean-style = Upbit) that could be used for auto-detection.
+
+**Fix**: In the endpoint_path routing, when no exchange is detected, try `lookup_endpoint_by_path()` without exchange filter. If exactly 1 exchange matches, use it. If multiple match, return results from all with disambiguation. ~20 LOC in answer.py.
+
 #### BUG-7: Semantic Search Snippet Window Too Narrow for Multi-Detail Queries
 **Severity**: Medium
 **Found**: 2026-03-09, Binance coverage test Q4 (authentication details)
