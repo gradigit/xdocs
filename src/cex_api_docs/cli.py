@@ -4,6 +4,7 @@ import argparse
 from dataclasses import asdict
 import json
 from pathlib import Path
+import signal
 import sys
 from typing import Any
 
@@ -55,6 +56,8 @@ def _dedupe_preserve_order(items: list[str]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> None:
+    # Exit quietly on broken pipe (e.g., output piped to head).
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--docs-dir", default="./cex-docs", help="Store root (default: ./cex-docs)")
     common.add_argument(

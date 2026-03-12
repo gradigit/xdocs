@@ -279,7 +279,7 @@ INSERT INTO pages (
             page_id = int(cur.lastrowid)
 
         meta["prev_content_hash"] = prev_content_hash
-        atomic_write_text(meta_path, json.dumps(meta, sort_keys=True, ensure_ascii=False, indent=2) + "\\n")
+        atomic_write_text(meta_path, json.dumps(meta, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
 
         conn.execute(
             """
