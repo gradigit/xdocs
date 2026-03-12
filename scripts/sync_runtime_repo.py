@@ -339,14 +339,15 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
         _copy_path(src, dst, clean=clean)
         copied.append(str(dst))
 
-    # Copy skills to both .claude/skills/ (Claude Code) and .agents/skills/ (Codex CLI).
-    # Each skill is a directory with SKILL.md (+ optional extras like EVALUATIONS.md).
-    _skill_sources: list[tuple[Path, str, list[str]]] = [
-        # (source_dir, skill_name, files_to_copy)
-        (repo_root / ".claude" / "skills" / "cex-api-query", "cex-api-query", ["SKILL.md", "EVALUATIONS.md"]),
-        (repo_root / "docs" / "templates" / "runtime-skills" / "cex-qa-gapfinder", "cex-qa-gapfinder", ["SKILL.md"]),
+    # Copy runtime skills from canonical skills/ dir to both platform directories.
+    # Source: skills/<name>/ (canonical, agent-agnostic)
+    # Targets: .claude/skills/<name>/ (Claude Code) + .agents/skills/<name>/ (Codex CLI)
+    _runtime_skills: list[tuple[str, list[str]]] = [
+        ("cex-api-query", ["SKILL.md", "EVALUATIONS.md"]),
+        ("cex-qa-gapfinder", ["SKILL.md"]),
     ]
-    for src_dir, skill_name, files in _skill_sources:
+    for skill_name, files in _runtime_skills:
+        src_dir = repo_root / "skills" / skill_name
         for fname in files:
             src = src_dir / fname
             if not src.exists():
