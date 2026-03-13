@@ -56,6 +56,24 @@ Check if this is a **blind run** (every other run should be blind):
 
 Blind mode prevents anchoring to known issues and forces fresh exploration. Report which mode was used in the QA report.
 
+## Execution Mode
+
+This skill supports two execution modes. **Default is sequential** unless the user explicitly requests parallel.
+
+### Sequential (default)
+
+Run all test categories yourself, one at a time, in a single agent. This is the safe mode for machines with limited RAM (e.g., MacBook) because ML models (embeddings + reranker) are loaded once and shared across all tests.
+
+### Parallel (`--parallel N`)
+
+If the user says "run in parallel", "use N agents", or passes `--parallel N`:
+- Split test categories across up to N sub-agents
+- **Maximum N=3** — each agent loads ~2-4 GB of ML models (embeddings + reranker)
+- On macOS with 16 GB RAM, use N=2 max. On 32 GB+, N=3 is safe.
+- Each sub-agent gets a disjoint set of categories. Merge findings into one report at the end.
+
+**IMPORTANT**: Do NOT spawn parallel agents unless the user explicitly requests it. The default is sequential. Loading multiple copies of Jina embeddings + reranker will OOM a MacBook.
+
 ## What You Test
 
 Design your own tests across these categories. Do not use a fixed test list — explore the data and craft tests based on what you find.
@@ -378,10 +396,11 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 
 ## Version
 
-v2.2.0 — Post-v2-run refinements: citation schema gate, answer grading tiers, multi-exchange ambiguity test, adversarial thresholds.
+v2.3.0 — Execution mode control: sequential default, explicit parallel opt-in with RAM guardrails.
 
 ### Changelog
 
+- v2.3.0: Added Execution Mode section with sequential (default) and parallel (`--parallel N`) modes. Sequential prevents ML model duplication on RAM-constrained machines. Parallel capped at N=3 with macOS RAM guidance. Agents must not parallelize unless user explicitly requests it.
 - v2.2.0: Added citation schema gate to Citation Quality (fail URL-only citations missing excerpts). Added clean/mixed/fail grading tiers to Answer Correctness. Added benchmark-style miss check (status=ok but wrong page). Added explicit multi-exchange ambiguity test to Edge Cases. Added >30s adversarial threshold with extreme-length note. All changes informed by v2 blind-mode run findings.
 - v2.1.1: Environment section now requires full runtime model stack detection (embedding backend, reranker backend, fusion mode). Added prerequisite code snippet for stack detection via stderr capture. Performance section notes reranker trigger status. JSONL schema includes agent_model field. Report environment expanded to list all runtime backends.
 - v2.1.0: Added Answer Output Schema section (claim/citation field paths). Added exchange detection sweep to Exchange Coverage. Added bare endpoint path, numeric literal, and payload relevance checks to Query Pipeline. Added nav chrome gate with specific markers to Citation Quality. Added 4 entries to Known Context (numeric literal misclassification, exchange alias mismatches, nav chrome in stored markdown, docs_url gaps). All changes informed by v1 run findings.
