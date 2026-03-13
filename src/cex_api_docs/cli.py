@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict
 import json
+import os
 from pathlib import Path
 import signal
 import sys
@@ -59,7 +60,7 @@ def main(argv: list[str] | None = None) -> None:
     # Exit quietly on broken pipe (e.g., output piped to head).
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--docs-dir", default="./cex-docs", help="Store root (default: ./cex-docs)")
+    common.add_argument("--docs-dir", default=os.environ.get("CEX_DOCS_DIR", "./cex-docs"), help="Store root (env: CEX_DOCS_DIR, default: ./cex-docs)")
     common.add_argument(
         "--lock-timeout-s",
         default=10.0,
