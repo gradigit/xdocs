@@ -285,11 +285,15 @@ LIMIT 1;
     return dict(row)
 
 
+_MULTI_LINK_RE = re.compile(r"\[.*?\]\(.*?\)")
+
+
 def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
     """Return True if *pos* falls in a navigation / table-of-contents region.
 
-    Heuristic: in a *window*-char neighbourhood, if >55 % of non-empty lines
-    are bullet items or link-only lines we treat the area as navigation.
+    Heuristic: in a *window*-char neighbourhood, if >40 % of non-empty lines
+    are bullet items, link-only lines, multi-link separator lines, or skip
+    links, we treat the area as navigation.
     Large single-page sites (OKX 225 K words, Gate.io 192 K, HTX 130 K) put a
     dense ToC at the top — the first regex match of a query term lands in that
     ToC rather than in the substantive content below it.
@@ -306,24 +310,31 @@ def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
         # Bullet list items (ToC entries are usually short)
         if (s.startswith("*") or s.startswith("-") or s.startswith("+")) and len(s) < 140:
             nav += 1
-        # Link-only lines: [text](url)
+        # Link-only lines: [text](url) — also catches skip-links like [Skip](#main)
         elif s.startswith("[") and s.endswith(")") and "](" in s:
             nav += 1
-    return nav / len(lines) > 0.55
+        # Multi-link lines: [Foo](url1) | [Bar](url2) or similar separators
+        elif len(_MULTI_LINK_RE.findall(s)) >= 2 and len(s) < 200:
+            nav += 1
+    return nav / len(lines) > 0.40
 
 
 def _make_excerpt(md: str, *, needle_re: re.Pattern[str], target_len: int = 400, hard_max: int = 600) -> tuple[str, int, int]:
     # Find all matches and prefer those outside navigation regions.
     best_match = None
+    all_nav = True
     for m in needle_re.finditer(md):
         if not _is_nav_region(md, m.start()):
             best_match = m
+            all_nav = False
             break
         if best_match is None:
             best_match = m  # keep first match as fallback
 
-    if not best_match:
-        # Fallback: first N chars, snapped to boundary.
+    if not best_match or all_nav:
+        # No matches at all, or every match is inside a nav region.
+        # Use the page prefix as the excerpt (more informative than nav
+        # chrome).
         end = min(len(md), target_len)
         end = _snap_end_forward(md, end)
         excerpt = _clean_excerpt(md[:end])
@@ -1163,6 +1174,55 @@ def _binance_answer(
     }
 
 
+def _build_full_citation(
+    conn: sqlite3.Connection,
+    url: str,
+    search_terms: str,
+) -> dict[str, Any]:
+    """Build a citation dict with excerpt from a page URL.
+
+    Returns a dict with url, crawled_at, content_hash, path_hash,
+    excerpt, excerpt_start, excerpt_end — or just {"url": url} if the
+    page cannot be loaded or has no markdown.
+    """
+    citation: dict[str, Any] = {"url": url}
+    if not url:
+        return citation
+    row = conn.execute(
+        "SELECT canonical_url, crawled_at, content_hash, path_hash, markdown_path "
+        "FROM pages WHERE canonical_url = ?;",
+        (url,),
+    ).fetchone()
+    if not row:
+        return citation
+    page = dict(row)
+    citation["crawled_at"] = page.get("crawled_at", "")
+    citation["content_hash"] = page.get("content_hash", "")
+    citation["path_hash"] = page.get("path_hash", "")
+    md_path = Path(page["markdown_path"]) if page.get("markdown_path") else None
+    if not md_path or not md_path.exists():
+        return citation
+    try:
+        md = md_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return citation
+    if not md.strip():
+        return citation
+    # Build a regex from the search terms for excerpt extraction.
+    escaped = [re.escape(t) for t in search_terms.split() if len(t) > 1]
+    if not escaped:
+        escaped = [re.escape(search_terms)] if search_terms else []
+    if not escaped:
+        return citation
+    needle = re.compile("|".join(escaped), re.IGNORECASE)
+    excerpt, start, end = _make_excerpt(md, needle_re=needle)
+    if excerpt:
+        citation["excerpt"] = excerpt
+        citation["excerpt_start"] = start
+        citation["excerpt_end"] = end
+    return citation
+
+
 def _direct_route(
     conn: sqlite3.Connection,
     *,
@@ -1216,11 +1276,15 @@ def _direct_route(
                         resolved = _resolve_endpoint_citation_url(conn, ep=ep_data, exchange=exchange)
                         if resolved:
                             docs_url = resolved
+                    ep_citation = _build_full_citation(
+                        conn, docs_url,
+                        f"{http.get('method', '')} {http.get('path', '')} {record.get('description', '')}",
+                    ) if docs_url else {}
                     claims.append({
                         "id": f"c{c}",
                         "kind": "ENDPOINT",
                         "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
-                        "citations": [{"url": docs_url}] if docs_url else [],
+                        "citations": [ep_citation] if ep_citation.get("url") else [],
                         "endpoint_id": record.get("endpoint_id", ""),
                     })
                     c += 1
@@ -1251,19 +1315,30 @@ def _direct_route(
                         continue  # Skip results that don't actually mention this error code.
                     if er.get("source_type") == "page":
                         url = er.get("canonical_url", "")
+                        err_citation = _build_full_citation(conn, url, code) if url else {}
                         claims.append({
                             "id": f"c{c}",
                             "kind": "SOURCE",
                             "text": f"[{exchange.exchange_id}:error] {snippet}",
-                            "citations": [{"url": url}] if url else [],
+                            "citations": [err_citation] if err_citation.get("url") else [],
                         })
                         c += 1
                     elif er.get("source_type") == "endpoint":
+                        ep_id = er.get("endpoint_id", "")
+                        ep_docs_url = ""
+                        if ep_id:
+                            ep_row = conn.execute(
+                                "SELECT docs_url FROM endpoints WHERE endpoint_id = ?;",
+                                (ep_id,),
+                            ).fetchone()
+                            if ep_row:
+                                ep_docs_url = ep_row[0] or ""
+                        ep_err_citation = _build_full_citation(conn, ep_docs_url, code) if ep_docs_url else {}
                         claims.append({
                             "id": f"c{c}",
                             "kind": "ENDPOINT",
                             "text": f"[{exchange.exchange_id}:{er.get('section', '')}] {er.get('method', '')} {er.get('path', '')} — {snippet}",
-                            "citations": [],
+                            "citations": [ep_err_citation] if ep_err_citation.get("url") else [],
                             "endpoint_id": er.get("endpoint_id", ""),
                         })
                         c += 1

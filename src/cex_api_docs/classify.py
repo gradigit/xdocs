@@ -261,8 +261,17 @@ def classify_input(text: str) -> InputClassification:
 
         if error_codes:
             signals["error_codes"] = error_codes
-            # Error codes are a strong signal — boost significantly when present.
-            scores["error_message"] = max(scores["error_message"], 0.7)
+            # Only apply hard floor when an exchange-specific pattern matched.
+            # Generic-only matches (bare 5-6 digit numbers) get the per-match
+            # +0.4 but no floor — prevents false-positive classification of
+            # queries that happen to contain large numbers (e.g. timestamps,
+            # order IDs, quantities).
+            has_specific_match = any(
+                c["exchange_hint"] not in ("generic", "http")
+                for c in error_codes
+            )
+            if has_specific_match:
+                scores["error_message"] = max(scores["error_message"], 0.7)
 
     # --- Endpoint path detection ---
     path_match = re.search(

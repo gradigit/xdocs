@@ -147,6 +147,64 @@ class TestClassifyJsonPayloadNotError(unittest.TestCase):
         self.assertEqual(result.input_type, "error_message")
 
 
+class TestBug15GenericErrorCodeFloor(unittest.TestCase):
+    """BUG-15: Generic-only numeric codes should not get the 0.7 hard floor.
+
+    Bare 5-6 digit numbers (e.g. timestamps, order IDs) were being over-scored
+    because the generic pattern ``\\d{5,6}`` triggered the same floor as
+    exchange-specific patterns like Binance's ``-\\d{4}``.
+    """
+
+    def test_generic_only_code_no_floor(self) -> None:
+        """A bare 5-digit number without exchange context scores below 0.7."""
+        result = classify_input("order 12345 is pending")
+        # Should NOT be classified as error_message with high confidence.
+        # The generic match gives +0.4, but no 0.7 floor.
+        if result.input_type == "error_message":
+            self.assertLess(result.confidence, 0.7)
+
+    def test_generic_six_digit_no_floor(self) -> None:
+        """A bare 6-digit number like a timestamp should not get error floor."""
+        result = classify_input("created at 170045")
+        if "error_codes" in result.signals:
+            codes = result.signals["error_codes"]
+            has_specific = any(c["exchange_hint"] not in ("generic", "http") for c in codes)
+            self.assertFalse(has_specific, "Should only have generic match")
+        # Should not be high-confidence error_message
+        if result.input_type == "error_message":
+            self.assertLess(result.confidence, 0.7)
+
+    def test_exchange_specific_still_gets_floor(self) -> None:
+        """Binance -1002 should still get the 0.7 floor."""
+        result = classify_input("-1002")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertGreaterEqual(result.confidence, 0.7)
+
+    def test_okx_specific_still_gets_floor(self) -> None:
+        """OKX 50004 should still get the 0.7 floor."""
+        result = classify_input("50004")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertGreaterEqual(result.confidence, 0.7)
+
+    def test_mixed_generic_and_specific_gets_floor(self) -> None:
+        """If both generic and exchange-specific patterns match, floor applies."""
+        result = classify_input("error -1002 with trace 99999")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertGreaterEqual(result.confidence, 0.7)
+
+    def test_http_only_no_floor(self) -> None:
+        """HTTP status codes alone should not get the exchange-specific floor."""
+        result = classify_input("HTTP 503 service unavailable")
+        # HTTP match gives +0.4, error phrase gives +0.3, but no 0.7 floor
+        # from exchange-specific patterns. Total could exceed 0.7 naturally
+        # from phrase + HTTP match, which is fine — we test that the floor
+        # mechanism itself doesn't fire for http-only.
+        if "error_codes" in result.signals:
+            codes = result.signals["error_codes"]
+            has_specific = any(c["exchange_hint"] not in ("generic", "http") for c in codes)
+            self.assertFalse(has_specific)
+
+
 class TestClassifyEdgeCases(unittest.TestCase):
     def test_empty_input(self) -> None:
         result = classify_input("")

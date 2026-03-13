@@ -211,6 +211,33 @@ CREATE TABLE inventory_entries (
             self.assertEqual(int(dry2["schema_user_version"]), 6)
 
 
+class TestVerifyImportSource(unittest.TestCase):
+    """Test the import source guard in cex_api_docs.__init__."""
+
+    def test_passes_for_current_repo(self) -> None:
+        from cex_api_docs import verify_import_source
+
+        result = verify_import_source(REPO_ROOT)
+        self.assertTrue(result.exists())
+        self.assertEqual(result.name, "cex_api_docs")
+
+    def test_passes_with_auto_detection(self) -> None:
+        from cex_api_docs import verify_import_source
+
+        # When called from within the repo, auto-detection should work
+        result = verify_import_source()
+        self.assertTrue(result.exists())
+
+    def test_fails_for_wrong_repo(self) -> None:
+        from cex_api_docs import verify_import_source
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(RuntimeError) as ctx:
+                verify_import_source(tmp)
+            self.assertIn("Wrong source tree imported", str(ctx.exception))
+            self.assertIn("uv pip install", str(ctx.exception))
+
+
 class TestSearchPagesSanitization(unittest.TestCase):
     """Test that search_pages() sanitizes FTS5-hostile characters."""
 

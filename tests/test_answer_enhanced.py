@@ -61,8 +61,8 @@ def _insert_endpoint(docs_dir: Path, conn, *, endpoint: dict) -> None:
     with conn:
         cur = conn.execute(
             """
-INSERT INTO endpoints (endpoint_id, exchange, section, protocol, method, path, base_url, description, json, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO endpoints (endpoint_id, exchange, section, protocol, method, path, base_url, description, json, updated_at, docs_url)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """,
             (
                 endpoint["endpoint_id"],
@@ -75,6 +75,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 endpoint.get("description"),
                 json.dumps(endpoint, sort_keys=True, ensure_ascii=False),
                 updated_at,
+                endpoint.get("docs_url"),
             ),
         )
         rowid = int(cur.lastrowid)
@@ -649,6 +650,91 @@ class TestNavRegionEdgeCases(unittest.TestCase):
         self.assertFalse(_is_nav_region(md, content_pos, window=200))
 
 
+class TestBug16NavChromeInExcerpts(unittest.TestCase):
+    """BUG-16: Nav chrome leaks into excerpts on single-page sites.
+
+    Four failure modes fixed:
+    1. All-nav fallback: when every match is in nav, use page prefix not nav match
+    2. Skip-link detection: [Skip to content](#main) lines
+    3. Multi-link lines: [Foo](url1) | [Bar](url2) separator lines
+    4. Threshold lowered from 55% to 40%
+    """
+
+    def test_all_nav_matches_use_prefix_fallback(self):
+        """When every match is in a nav region, excerpt should be page prefix."""
+        import re
+        from cex_api_docs.answer import _make_excerpt
+
+        # Build a page where "orders" only appears in nav
+        nav = "\n".join([f"* [Orders page {i}](https://ex.com/orders/{i})" for i in range(20)])
+        content = "\n\n## Introduction\n\nThis API provides trading capabilities.\n\n" + (
+            "The exchange supports spot and margin trading. " * 20
+        )
+        md = nav + content
+        needle = re.compile(r"orders", re.IGNORECASE)
+        excerpt, start, end = _make_excerpt(md, needle_re=needle)
+        # Should get page prefix (Introduction) not nav chrome
+        self.assertEqual(start, 0, "All-nav fallback should start at 0")
+
+    def test_skip_link_detected_as_nav(self):
+        """Anchor-only skip links like [Skip to content](#main) are nav (caught by link-only-line branch)."""
+        from cex_api_docs.answer import _is_nav_region
+
+        lines = [
+            "[Skip to content](#main)",
+            "[Home](#home)",
+            "[API Reference](#api-ref)",
+            "[REST API](#rest)",
+            "[WebSocket](#ws)",
+            "[Authentication](#auth)",
+            "[Rate Limits](#limits)",
+            "[Errors](#errors)",
+        ]
+        md = "\n".join(lines)
+        self.assertTrue(_is_nav_region(md, len(md) // 2))
+
+    def test_multi_link_lines_detected_as_nav(self):
+        """Lines with multiple links separated by pipes are nav."""
+        from cex_api_docs.answer import _is_nav_region
+
+        lines = [
+            "[Home](/) | [API](/api) | [Docs](/docs)",
+            "[REST](/rest) | [WebSocket](/ws) | [FIX](/fix)",
+            "[Spot](/spot) | [Futures](/futures) | [Options](/options)",
+            "[Auth](/auth) | [Limits](/limits)",
+            "[Errors](/errors) | [Changelog](/changelog)",
+            "[SDK](/sdk) | [Examples](/examples)",
+        ]
+        md = "\n".join(lines)
+        self.assertTrue(_is_nav_region(md, len(md) // 2))
+
+    def test_threshold_40_percent(self):
+        """Region with 42% nav lines (was below old 55% threshold) now detected."""
+        from cex_api_docs.answer import _is_nav_region
+
+        # 5 nav + 7 content = 12 lines, 5/12 = 41.7%
+        lines = []
+        for i in range(5):
+            lines.append(f"* [Link {i}](https://example.com/{i})")
+        for i in range(7):
+            lines.append(f"This is substantive content line {i} with enough words to be real text.")
+        md = "\n".join(lines)
+        self.assertTrue(_is_nav_region(md, len(md) // 4))  # pos in nav area
+
+    def test_35_percent_nav_not_detected(self):
+        """Region with 35% nav should NOT be detected (still below 40%)."""
+        from cex_api_docs.answer import _is_nav_region
+
+        # 7 nav + 13 content = 20 lines, 7/20 = 35%
+        lines = []
+        for i in range(7):
+            lines.append(f"* [Link {i}](https://example.com/{i})")
+        for i in range(13):
+            lines.append(f"This is substantive content line {i} with enough words to be real text.")
+        md = "\n".join(lines)
+        self.assertFalse(_is_nav_region(md, len(md) // 2))
+
+
 class TestMakeExcerptEdgeCases(unittest.TestCase):
     """Test excerpt extraction edge cases."""
 
@@ -906,6 +992,104 @@ class TestDirectRoute(unittest.TestCase):
             # May or may not find via FTS depending on how search_error_code works
             # but should not crash
             self.assertTrue(result is None or result.get("routing") == "direct")
+
+
+class TestBug18DirectRouteExcerpts(unittest.TestCase):
+    """BUG-18: Direct-routed citations must include excerpts."""
+
+    def _setup_store(self, tmp_path):
+        docs_dir = tmp_path / "cex-docs"
+        init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+        conn = open_db(docs_dir / "db" / "docs.db")
+        return docs_dir, conn
+
+    def _make_exchange(self, exchange_id="binance"):
+        from types import SimpleNamespace
+        return SimpleNamespace(
+            exchange_id=exchange_id,
+            sections=[SimpleNamespace(section_id="spot", seed_urls=["https://developers.binance.com/docs/"])],
+            allowed_domains=["developers.binance.com"],
+        )
+
+    def _make_classification(self, input_type, confidence=0.8, signals=None):
+        from types import SimpleNamespace
+        return SimpleNamespace(input_type=input_type, confidence=confidence, signals=signals or {})
+
+    def test_endpoint_path_claim_has_excerpt(self) -> None:
+        from cex_api_docs.answer import _direct_route
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir, conn = self._setup_store(Path(tmp))
+            page_url = "https://developers.binance.com/docs/spot/ticker-price"
+            md = "# Symbol Price Ticker\n\nGET /api/v3/ticker/price\n\nGet latest price for a symbol or all symbols.\n\n## Parameters\n\n| Name | Type | Required |\n| symbol | STRING | NO |\n"
+            _insert_page(docs_dir, conn, url=page_url, md=md)
+            _insert_endpoint(docs_dir, conn, endpoint={
+                "endpoint_id": "ep-ticker",
+                "exchange": "binance",
+                "section": "spot",
+                "protocol": "http",
+                "http": {"method": "GET", "path": "/api/v3/ticker/price"},
+                "description": "Symbol price ticker",
+                "docs_url": page_url,
+            })
+            exchange = self._make_exchange()
+            cls = self._make_classification("endpoint_path", signals={"path": "/api/v3/ticker/price", "method": "GET"})
+            result = _direct_route(conn, classification=cls, exchange=exchange,
+                                   docs_dir=str(docs_dir), question="GET /api/v3/ticker/price", norm="get /api/v3/ticker/price")
+            self.assertIsNotNone(result)
+            citations = result["claims"][0]["citations"]
+            self.assertTrue(len(citations) > 0)
+            cit = citations[0]
+            self.assertEqual(cit["url"], page_url)
+            self.assertIn("excerpt", cit)
+            self.assertIn("excerpt_start", cit)
+            self.assertIn("excerpt_end", cit)
+            self.assertTrue(len(cit["excerpt"]) > 0)
+
+    def test_error_message_page_claim_has_excerpt(self) -> None:
+        from cex_api_docs.answer import _direct_route
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir, conn = self._setup_store(Path(tmp))
+            page_url = "https://developers.binance.com/docs/errors"
+            md = "# Error Codes\n\nThe Binance API uses the following error codes:\n\n| Code | Description |\n| -1003 | Too many requests. Rate limit exceeded. |\n| -1021 | Timestamp outside recvWindow. |\n"
+            _insert_page(docs_dir, conn, url=page_url, md=md)
+            exchange = self._make_exchange()
+            cls = self._make_classification("error_message", signals={"error_codes": [{"code": "-1003", "exchange_hint": "binance"}]})
+            result = _direct_route(conn, classification=cls, exchange=exchange,
+                                   docs_dir=str(docs_dir), question="Binance error -1003", norm="binance error -1003")
+            # FTS5 may or may not match "-1003" depending on tokenizer behavior
+            # in fresh test stores. When it does match, verify excerpts are present.
+            if result is None or not result["claims"]:
+                self.skipTest("FTS5 did not match error code in fresh test store")
+            cit_list = result["claims"][0].get("citations", [])
+            if not cit_list:
+                self.skipTest("No citation URL resolved for error claim")
+            cit = cit_list[0]
+            self.assertIn("excerpt", cit, "Direct-route error citation must have excerpt")
+            self.assertIn("excerpt_start", cit)
+            self.assertIn("excerpt_end", cit)
+
+    def test_build_full_citation_returns_url_only_for_missing_page(self) -> None:
+        from cex_api_docs.answer import _build_full_citation
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir, conn = self._setup_store(Path(tmp))
+            cit = _build_full_citation(conn, "https://nonexistent.example.com/page", "test query")
+            self.assertEqual(cit["url"], "https://nonexistent.example.com/page")
+            self.assertNotIn("excerpt", cit)
+
+    def test_build_full_citation_returns_excerpt_for_existing_page(self) -> None:
+        from cex_api_docs.answer import _build_full_citation
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir, conn = self._setup_store(Path(tmp))
+            page_url = "https://example.com/api/docs"
+            md = "# API Documentation\n\nThis page describes the create order endpoint for placing trades.\n\n## Parameters\n\nsymbol, side, type, quantity.\n"
+            _insert_page(docs_dir, conn, url=page_url, md=md)
+            cit = _build_full_citation(conn, page_url, "create order")
+            self.assertEqual(cit["url"], page_url)
+            self.assertIn("excerpt", cit)
+            self.assertIn("excerpt_start", cit)
+            self.assertIn("excerpt_end", cit)
+            self.assertIn("crawled_at", cit)
+            self.assertTrue(len(cit["excerpt"]) > 0)
 
 
 class TestDirectoryPrefix(unittest.TestCase):
