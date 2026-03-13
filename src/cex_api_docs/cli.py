@@ -60,7 +60,8 @@ def main(argv: list[str] | None = None) -> None:
     # Exit quietly on broken pipe (e.g., output piped to head).
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--docs-dir", default=os.environ.get("CEX_DOCS_DIR", "./cex-docs"), help="Store root (env: CEX_DOCS_DIR, default: ./cex-docs)")
+    _default_docs = os.environ.get("CEX_DOCS_DIR") or str(Path(__file__).resolve().parents[2] / "cex-docs")
+    common.add_argument("--docs-dir", default=_default_docs, help="Store root (env: CEX_DOCS_DIR, default: <repo>/cex-docs)")
     common.add_argument(
         "--lock-timeout-s",
         default=10.0,
