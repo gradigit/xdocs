@@ -12,7 +12,7 @@ description: >
   Aster, ApeX, GRVT, or Paradex API documentation. Also activates when user pastes
   API errors, endpoint paths, request payloads, or code snippets related to exchange APIs.
 metadata:
-  version: "2.11.0"
+  version: "2.12.0"
 ---
 
 # CEX API Query v2
@@ -46,8 +46,7 @@ Then run classification and the standard workflow below.
 Run classification first to route correctly:
 
 ```bash
-source .venv/bin/activate && cex-api-docs classify "USER_INPUT_HERE" --docs-dir ./cex-docs
-```
+cex-api-docs classify "USER_INPUT_HERE"```
 
 Returns `input_type`, `confidence`, and `signals` (extracted error codes, paths, exchange hints).
 
@@ -72,11 +71,9 @@ When `input_type == "error_message"`:
 ```bash
 # IMPORTANT: Only use -- before NEGATIVE error codes (codes starting with -)
 # Negative codes: -- is required to prevent argparse interpreting the dash as a flag
-cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
-
+cex-api-docs search-error -- -1002 --exchange binance
 # Positive codes: do NOT use -- (it breaks --exchange and --docs-dir parsing)
-cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
-
+cex-api-docs search-error 60029 --exchange okx
 # If error code is in the patterns file, check common meaning first
 # e.g. Binance -1002 = "Unauthorized — API key missing or invalid"
 ```
@@ -84,8 +81,7 @@ cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
 4. If the search finds endpoint results, get the full record:
 
 ```bash
-cex-api-docs get-endpoint ENDPOINT_ID --docs-dir ./cex-docs
-```
+cex-api-docs get-endpoint ENDPOINT_ID```
 
 5. Read the source page for full context (some errors require out-of-band steps like the Binance Convert API questionnaire).
 
@@ -104,14 +100,11 @@ When `input_type == "endpoint_path"`:
 
 ```bash
 # Direct path lookup (uses SQL LIKE, handles {{url}} prefix)
-cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance --docs-dir ./cex-docs
-
+cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance
 # Get full record with all fields
-cex-api-docs get-endpoint ENDPOINT_ID --docs-dir ./cex-docs
-
+cex-api-docs get-endpoint ENDPOINT_ID
 # Browse endpoints by exchange/section
-cex-api-docs list-endpoints --exchange okx --section rest --limit 20 --docs-dir ./cex-docs
-```
+cex-api-docs list-endpoints --exchange okx --section rest --limit 20```
 
 The full endpoint JSON contains:
 - `http.method`, `http.path`, `http.base_url` — the API call
@@ -127,10 +120,10 @@ For documentation context beyond endpoint records — authentication flows, conc
 
 ```bash
 # Primary for natural-language questions (agent-decided rerank):
-cex-api-docs semantic-search "how to calculate signature" --exchange binance --docs-dir ./cex-docs --mode hybrid --rerank-policy auto --limit 8
+cex-api-docs semantic-search "how to calculate signature" --exchange binance --mode hybrid --rerank-policy auto --limit 8
 
 # Use FTS5 only for literal anchors (exact error code/path/header string):
-cex-api-docs search-pages "X-MBX-APIKEY -1021 recvWindow" --docs-dir ./cex-docs --limit 5
+cex-api-docs search-pages "X-MBX-APIKEY -1021 recvWindow" --limit 5
 ```
 
 ### Retrieval Budget (Efficiency Guardrail)
@@ -150,8 +143,9 @@ When you find the right page but need more than the snippet:
 ```bash
 # Get the markdown file path for a page URL
 python3 -c "
-import sqlite3
-conn = sqlite3.connect('cex-docs/db/docs.db')
+from pathlib import Path; import sqlite3
+db = Path(__import__('cex_api_docs').__file__).resolve().parents[2] / 'cex-docs/db/docs.db'
+conn = sqlite3.connect(str(db))
 row = conn.execute('SELECT markdown_path, word_count FROM pages WHERE canonical_url = ?', ('URL_HERE',)).fetchone()
 if row: print(row[0], f'({row[1]} words)')
 "
@@ -170,21 +164,17 @@ WebSocket channel data is stored in crawled page content (not in the endpoints t
 1. **WS error codes** (OKX 60xxx, Binance negative codes, etc.):
    ```bash
    # Positive codes — no -- prefix
-   cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
-
+   cex-api-docs search-error 60029 --exchange okx
    # Negative codes — use -- prefix
-   cex-api-docs search-error -- -1102 --exchange binance --docs-dir ./cex-docs
-   ```
+   cex-api-docs search-error -- -1102 --exchange binance   ```
 
 2. **WS channel lookup** — try semantic search first:
    ```bash
-   cex-api-docs semantic-search "fills channel websocket" --exchange okx --mode hybrid --limit 5 --docs-dir ./cex-docs
-   ```
+   cex-api-docs semantic-search "fills channel websocket" --exchange okx --mode hybrid --limit 5   ```
 
 3. **If semantic results have generic headings** ("Response parameters", "URL Path", a date), the chunk lost its parent heading context. Fall back to FTS:
    ```bash
-   cex-api-docs search-pages "deposit-info business websocket" --docs-dir ./cex-docs
-   ```
+   cex-api-docs search-pages "deposit-info business websocket"   ```
 
 4. **If still insufficient**, find the section directly in the stored markdown:
    ```bash
@@ -329,8 +319,7 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints. **10,724 pages, 16.73M words, 4,872 structured endpoints** across 46 exchanges.
 
 ```bash
-source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
-```
+cex-api-docs store-report```
 
 **CEX with structured endpoints (21):** Binance (spot 703, futures_usdm 192, futures_coinm 130, portfolio_margin 225, margin_trading 59, options 46, wallet 47, copy_trading 2, portfolio_margin_pro 21), OKX (rest 313), Gate.io (v4 363), HTX (spot 87, dm 82, coin_margined_swap 72, usdt_swap 131), Bybit (v5 129), Bitget (v2 102, copy_trading 45, margin 45, earn 27, broker 14), Bitstamp (rest 82), Bitfinex (v2 81), KuCoin (spot 250, futures 54), Crypto.com (exchange 63), Upbit (rest_en 44), Bithumb (rest 36), Korbit (rest 32), Coinone (rest 22), Coinbase (intx 49, prime 97, exchange 45), BitMEX (rest 95), BitMart (spot 48, futures 46), WhiteBIT (v4 137), Mercado Bitcoin (v4 31).
 
@@ -348,7 +337,7 @@ source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
 
 ## Gotchas
 
-- **Always activate venv first:** `source .venv/bin/activate`
+- **CLI auto-discovers data:** `--docs-dir` is resolved from the package install location. No flags or env vars needed if installed via `uv tool install -e .` or `uv sync`.
 - `{{url}}`** in paths:** Some Postman-imported endpoints have `{{url}}/sapi/v1/...` paths. `lookup-endpoint` handles this automatically.
 - **Korean exchanges:** Upbit, Bithumb, Coinone, Korbit docs are partially in Korean.
 - **Unresolved **`$ref`**:** OpenAPI-imported request/response schemas may contain `$ref` pointers. If you need the referenced definition, search for the component name in the source page.
@@ -364,8 +353,9 @@ Update this skill when:
 3. **Better retrieval patterns discovered** — add to routing table or query patterns
 4. **Agent fails to find known information** — add the successful search strategy as a pattern
 
-Current version: 2.11.0
+Current version: 2.12.0
 
 ### Changelog
 
+- v2.12.0: Removed all `--docs-dir ./cex-docs` flags and `source .venv/bin/activate` prefixes. CLI now auto-discovers data via `__file__` resolution. Skill works globally when installed via `uv tool install -e .` and symlinked to `~/.claude/skills/` or `~/.agents/skills/`.
 - v2.11.0: Added Step 5c — negative-evidence answer guidance (don't escalate to web for empty local results) and third-party vendor split (answer official-exchange portion from store, label vendors as out-of-corpus).

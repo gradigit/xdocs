@@ -35,7 +35,9 @@ stderr_capture = io.StringIO()
 old_stderr = sys.stderr
 sys.stderr = stderr_capture
 from cex_api_docs.semantic import semantic_search
-results = semantic_search(docs_dir='./cex-docs', query='test', limit=1, query_type='hybrid', rerank='auto')
+from pathlib import Path
+docs_dir = str(Path(__import__('cex_api_docs').__file__).resolve().parents[2] / 'cex-docs')
+results = semantic_search(docs_dir=docs_dir, query='test', limit=1, query_type='hybrid', rerank='auto')
 sys.stderr = old_stderr
 log = stderr_capture.getvalue()
 # Log will show: embedding backend (jina-mlx vs sentence-transformers),
@@ -161,8 +163,8 @@ This is the most important category. Structural checks (status=ok, right domain)
 
 For **10-15 answer pipeline results**, do deep verification:
 
-1. Run `cex-api-docs answer "<query>" --docs-dir ./cex-docs` and capture the output.
-2. For each cited URL in the response, find the corresponding page markdown. Use `cex-api-docs search-pages "<url fragment>" --docs-dir ./cex-docs` or query the DB directly: `SELECT markdown_path FROM pages WHERE canonical_url LIKE '%<fragment>%'`.
+1. Run `cex-api-docs answer "<query>"` and capture the output.
+2. For each cited URL in the response, find the corresponding page markdown. Use `cex-api-docs search-pages "<url fragment>"` or query the DB directly: `SELECT markdown_path FROM pages WHERE canonical_url LIKE '%<fragment>%'`.
 3. Read the actual markdown file from `cex-docs/pages/`.
 4. Verify: does the excerpt in the answer actually appear in the source page? Does the claim match what the source page says? Is the information attributed to the right exchange?
 
