@@ -1,57 +1,48 @@
 # CEX Docs Copilot Runtime
 
-This repository is the **team runtime** for querying exchange API documentation.
+```bash
+git clone https://github.com/henryaxis/cex-api-docs-runtime.git && cd cex-api-docs-runtime && uv tool install -e . && ./scripts/bootstrap-data.sh && mkdir -p ~/.claude/skills ~/.agents/skills && ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query && ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
+```
 
-It includes:
+Query exchange API documentation from any project, any directory, on both Claude Code and Codex CLI.
 
-- query CLI/tooling (`cex-api-docs`)
-- query skill (`cex-api-query`)
+## What you get
+
+- `cex-api-docs` CLI — globally on PATH, works from anywhere
+- `cex-api-query` skill — available in every project (Claude Code + Codex)
+- 10,700+ pages, 4,900+ endpoints across 46 exchanges
 
 Data snapshots (`cex-docs/`) are distributed via GitHub Releases, not git.
 
-## Quick start
+## Step-by-step install
 
 ```bash
 git clone https://github.com/henryaxis/cex-api-docs-runtime.git
 cd cex-api-docs-runtime
-uv venv .venv
-source .venv/bin/activate
-uv pip install -e .
+uv tool install -e .
 ./scripts/bootstrap-data.sh
+
+# Make skill available globally (Claude Code + Codex)
+mkdir -p ~/.claude/skills ~/.agents/skills
+ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query
+ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
 ```
-
-All query dependencies (including semantic search) are included by default.
-
-Then in a fresh agent session:
-
-```text
-Use cex-api-query skill.
-```
-
-and ask your natural-language CEX API docs question.
 
 ## Update
 
-Code updates:
-
 ```bash
-git pull
+cd /path/to/cex-api-docs-runtime
+git pull && uv tool install -e .
 ```
 
 Data updates (published separately):
-
 ```bash
+cd /path/to/cex-api-docs-runtime
 ./scripts/bootstrap-data.sh
-```
-
-Or download a specific version:
-
-```bash
-./scripts/bootstrap-data.sh data-2026.03.11
 ```
 
 ## Smoke check
 
 ```bash
-python scripts/runtime_query_smoke.py
+cex-api-docs store-report
 ```
