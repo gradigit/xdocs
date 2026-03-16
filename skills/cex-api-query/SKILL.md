@@ -19,6 +19,20 @@ metadata:
 
 Answer user questions about cryptocurrency exchange APIs. Route input through classification, search the local doc store, and compose answers with citations.
 
+## Pre-check (first query in session)
+
+Before the first query, verify the data store exists:
+
+```bash
+cex-api-docs store-report 2>&1 | head -5
+```
+
+If this returns `ENOINIT` or "No such file", the data isn't installed. Tell the user:
+- **First-time setup**: `cd /path/to/cex-api-docs-runtime && ./scripts/bootstrap-data.sh`
+- **After a code update**: `git pull && ./scripts/bootstrap-data.sh`
+
+Skip this check on subsequent queries in the same session.
+
 ## Workflow
 
 - [ ] 1. Classify the input to determine routing
