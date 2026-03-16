@@ -1,38 +1,28 @@
-# Session Log Digest (Token-Budgeted)
+# Session Log Digest
 
-Token target: 3000-4000
-Scope: Extractive, high-signal decisions with brief evidence.
+**Generated**: 2026-03-12
+**Token budget**: 4000 target / ~3500 actual
 
-## Decision Timeline
+## Key Decisions
 
-- Expanded registry scope beyond prior CEX-only set.
-  - Decision: include additional perp DEX docs plus CCXT manual docs.
-  - Why: user explicitly requested broader production-ready coverage for team queries.
+1. **Gapfinder v1 → v2 evolution**: v1 run revealed wrong claim field paths (`claim["url"]` vs `claim["citations"][0]["url"]`). Added Answer Output Schema to skill. v2 blind mode successfully rediscovered all v1 findings from scratch — validates blind mode mechanism.
 
-- Maintenance workflow execution model changed from one huge long-running sync to targeted per-section and explicit fetch fallback where needed.
-  - Why: some long runs stalled/hung; smaller deterministic runs completed reliably.
+2. **BUG-21 fix prioritized over other bugs**: 10-run batch revealed FTS5 crash on `'` in `search_pages` (7/10 runs). Critical severity — fixed immediately by adding `'` and `;` to `sanitize_fts_query` regex. Other bugs (BUG-15-20) catalogued for later.
 
-- Runtime readiness was treated as a hard final gate.
-  - Decision: sync runtime workspace, install runtime venv, run runtime smoke query.
-  - Why: user requirement was “open new agent and query immediately.”
+3. **Runtime repo code is stale**: v1 gapfinder run showed `status=unknown` for exchanges that return `status=ok` on maintainer. Root cause: runtime has pre-M20/M22 code. Not a new bug — needs code sync (which was done this session).
 
-## Rejected / Deprioritized Approaches
+4. **Negative-evidence answer mode**: Gate.io FIX protocol query exposed that `answer()` has no way to say "searched and found nothing" — only `unknown` (conflates with "can't route"). Added BUG-20 and updated cex-api-query skill with guidance.
 
-- Blindly waiting on stalled sync processes without intervention.
-  - Rejected because several runs became non-productive with no file/inventory progress.
+5. **10-run batch validates bug inventory**: No new bug categories emerged from 340 tests across 10 runs. All findings map to BUG-15 through BUG-21.
 
-- Shipping without runtime environment setup.
-  - Rejected because runtime smoke script depends on local `.venv` and would fail for immediate usage.
+## Rejected Alternatives
 
-## User Constraints / Approvals
+- Did NOT fix BUG-15-20 this session — user explicitly said "add as TODOs for later work"
+- Did NOT update gapfinder to v3 — v2.2.0 incorporates all run learnings, no structural changes needed
+- Golden QA cross-check was always skipping on runtime — fixed by adding golden_qa.jsonl to sync script
 
-- Must include Lighter DEX.
-- Must include CCXT docs.
-- Must complete full maintenance workflow end-to-end before handoff.
-- Runtime workspace must be ready for immediate fresh-agent use.
+## User Constraints
 
-## Open Questions
-
-1. Should runtime workspace be converted into a git repo for team pull/update workflow?
-2. Should golden QA be replaced with a broader relevance-based benchmark to avoid exact-URL drift?
-3. Should Playwright extras be installed by default for maintainer runs?
+- "Clinical in the way we proceed" — A/B test everything, catch regressions
+- Bugs are catalogued with repro steps, not fixed ad-hoc
+- Both repos must stay in sync after every push

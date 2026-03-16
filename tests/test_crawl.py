@@ -7,9 +7,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 # TODO: migrate to inventory+fetch_inventory pipeline (crawl is deprecated)
-from cex_api_docs.crawler import crawl_store
-from cex_api_docs.pages import diff_pages, search_pages
-from cex_api_docs.store import init_store
+from xdocs.crawler import crawl_store
+from xdocs.pages import diff_pages, search_pages
+from xdocs.store import init_store
 from tests.http_server import serve_directory, serve_handler
 
 

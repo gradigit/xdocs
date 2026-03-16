@@ -123,7 +123,7 @@ def crawl_store(
     root = Path(docs_dir)
     db_path = root / "db" / "docs.db"
     if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `cex-api-docs init` first.", details={"docs_dir": docs_dir})
+        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `xdocs init` first.", details={"docs_dir": docs_dir})
 
     lock_path = root / "db" / ".write.lock"
 

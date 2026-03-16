@@ -38,7 +38,7 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 4. **Reliability-first crawling.** No single crawl method works for all sites. The default should be the most reliable tool, with lighter tools as optimizations for known-safe sites. `requests` fails on ~40% of our exchanges (SPAs, Cloudflare, WAF). `cloudscraper` fails on Gate.io and all JS SPAs. Starting with unreliable tools means re-crawling nearly half the registry — no time saved.
 
-   **Pipeline render modes** (what `cex-api-docs sync --render` supports):
+   **Pipeline render modes** (what `xdocs sync --render` supports):
    - `http` (default): `requests` library — fast, works for static HTML (~60% of exchanges)
    - `auto`: tries `requests` first, falls back to Playwright for thin/failed pages
    - `playwright`: headless Chromium — for JS-rendered SPAs

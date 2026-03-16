@@ -24,7 +24,7 @@ print("=" * 80)
 
 print("\n[1/6] Loading Qwen3 embedding model via project embedder...")
 t0 = time.monotonic()
-from cex_api_docs.embeddings import get_embedder
+from xdocs.embeddings import get_embedder
 
 embedder = get_embedder()
 ndims = embedder.ndims()

@@ -23,7 +23,7 @@ if [[ "$ENTRYPOINT_MODE" == "module" ]]; then
   export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
   RUN_CMD=("$PY" -m cex_api_docs.cli)
 else
-  CLI="${CEX_API_DOCS_CLI:-.venv/bin/cex-api-docs}"
+  CLI="${CEX_API_DOCS_CLI:-.venv/bin/xdocs}"
   if [[ ! -x "$CLI" ]]; then
     echo "Missing CLI executable: $CLI" >&2
     exit 1

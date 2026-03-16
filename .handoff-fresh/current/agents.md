@@ -1,53 +1,55 @@
 # Agents Onboarding — CEX API Docs
 
-Generated: 2026-02-27 03:17 UTC
+**Generated**: 2026-03-12
 
 <!-- BEGIN SHARED-ONBOARDING-CONTEXT -->
-# Shared Onboarding Context
 
-## Project Snapshot
-- Project: `cex-api-docs` (local, cite-only exchange docs knowledge base)
-- Primary flow: inventory → fetch → SQLite/FTS5 + LanceDB semantic index → cite-only query answers
-- Current expansion now includes additional perp DEX + CCXT docs coverage.
+## What This Is
 
-## Current Working State
-- Branch: `main`
-- Working tree entries (tracked+untracked): `49`
-- Last commit: `729b106 feat: API Assistant v2 — input classification, endpoint lookup, error search, enhanced answers`
-- Latest maintenance summary: `reports/2026-02-26-maintenance-run-summary.md`
+Local-only, cite-only CEX API documentation knowledge base (library + CLI + agent skill). 46 exchanges, 10,727 pages, 4,963 endpoints, SQLite FTS5 + LanceDB vector search.
 
-## Key Outcomes in This Handoff Window
-1. Added registry coverage for: GMX, Drift, Aevo, Perpetual Protocol, Gains, Kwenta, Lighter, and CCXT manual docs.
-2. Ran maintenance workflow (sync, benchmark, retrieval eval, final gate).
-3. Synced runtime workspace at `/Users/aaaaa/Projects/cex-api-docs-runtime` with fresh snapshot + manifest.
-4. Runtime smoke check passes in runtime workspace with local `.venv` installed.
+## Two-Repo Architecture
 
-## Build/Test Commands
+- **Maintainer** (`/home/lechat/Projects/cex-api-docs`): Linux, full dev. `uv pip install -e ".[dev,semantic]"`
+- **Runtime** (`/home/lechat/Projects/cex-api-docs-runtime`): macOS, query-only. `uv pip install -e .`
+- **Every push to maintainer MUST be followed by runtime sync + push** via `scripts/sync_runtime_repo.py`
+
+## Quick Start
+
 ```bash
-# Main repo checks
-bash scripts/pre_share_check.sh ./cex-docs
-
-# Retrieval eval
-PYTHONPATH=src .venv/bin/python -m cex_api_docs.cli validate-retrieval --docs-dir ./cex-docs --qa-file tests/golden_qa.jsonl --limit 5 --no-rerank
-PYTHONPATH=src .venv/bin/python -m cex_api_docs.cli validate-retrieval --docs-dir ./cex-docs --qa-file tests/golden_qa.jsonl --limit 5 --rerank
-
-# Runtime smoke
-cd /Users/aaaaa/Projects/cex-api-docs-runtime
-bash scripts/runtime_query_smoke.sh
+source /home/lechat/Projects/.venv/bin/activate  # shared venv
+pytest tests/ -x -q                               # 559 tests, ~90s
+cex-api-docs --help                                # 51 subcommands
 ```
 
-## Key Files and Rules
-- `data/exchanges.yaml`: registry source-of-truth.
-- `.claude/skills/cex-api-query/SKILL.md`: query workflow contract (v2.6.1).
-- `scripts/run_sync_preset.sh`: sync presets.
-- `scripts/sync_runtime_repo.py`: maintainer→runtime publish path.
-- `reports/`: latest benchmark/eval artifacts.
-- Cite-only policy is mandatory: unsupported facts must be `unknown` / `undocumented` / `conflict`.
+## Key Files
+
+- `CLAUDE.md` — full project instructions (symlink to AGENTS.md)
+- `TODO.md` — all milestones (M1-M22b done) + open bugs (BUG-15 through BUG-21)
+- `data/exchanges.yaml` — registry of 46 exchanges, 78 sections
+- `schema/schema.sql` — SQLite DDL (schema v6)
+- `src/cex_api_docs/answer.py` — cite-only answer assembly (main query pipeline)
+- `src/cex_api_docs/classify.py` — input classification (error/endpoint/payload/code/question)
+- `src/cex_api_docs/fts_util.py` — FTS5 utilities (sanitize, BM25, RRF, blend)
+- `src/cex_api_docs/semantic.py` — LanceDB vector/hybrid search
+- `tests/golden_qa.jsonl` — 206-query benchmark across 37 exchanges
+- `tests/eval_answer_pipeline.py` — pipeline evaluation (MRR, nDCG@5)
+
+## Current Metrics
+
+MRR=0.644, nDCG@5=1.343, PFX=78%, URL=65%, domain=97%, OK=92%. 559 tests.
+
+## Open Bugs (High Priority)
+
+- **BUG-18**: Direct-route citations missing excerpts (answer.py ~L1223/1258/1266)
+- **BUG-15**: Numeric literals → error_message (classify.py `\d{5,6}`)
+- **BUG-16**: Nav chrome in excerpts (`_is_nav_region` threshold)
+
+## Conventions
+
+- Cite-only: no unsupported claims. Return `unknown`/`undocumented`/`conflict` when uncertain.
+- JSON-first CLI: stdout for data, stderr for logs.
+- A/B test every pipeline change independently before merging.
+- Skills stay in sync with store — update docs after any significant change.
+
 <!-- END SHARED-ONBOARDING-CONTEXT -->
-
-
-## Agent-Specific Appendix
-
-- Keep retrieval bounded; avoid broad raw markdown scans unless retrieval fails.
-- Prefer classify-first routing and semantic-first search for natural-language docs queries.
-- Preserve deterministic, cite-only behavior in all tool flows.

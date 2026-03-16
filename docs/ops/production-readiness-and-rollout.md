@@ -19,7 +19,7 @@ Date: 2026-02-27
 
 ## 2) Naming recommendation (production-facing)
 
-Current package name: `cex-api-docs`.
+Current package name: `xdocs`.
 
 Recommended product naming options:
 
@@ -31,7 +31,7 @@ Recommended product naming options:
    - strongest “analysis” framing; less CLI-specific.
 
 Suggested split:
-- Repo/package (technical): keep `cex-api-docs` for near-term stability.
+- Repo/package (technical): keep `xdocs` for near-term stability.
 - Product/internal rollout name: **CEX Docs Copilot**.
 
 ## 3) Pre-share checklist (must pass)

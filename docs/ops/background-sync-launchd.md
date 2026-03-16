@@ -9,7 +9,7 @@ This repo includes two sync presets for safe day/night operation:
 
 ```bash
 # Optional preflight migration check
-cex-api-docs migrate-schema --docs-dir ./cex-docs
+xdocs migrate-schema --docs-dir ./cex-docs
 
 # Fast daytime refresh (resume mode)
 scripts/run_sync_preset.sh fast-daytime ./cex-docs

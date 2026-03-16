@@ -9,9 +9,9 @@ import time
 import unittest
 from pathlib import Path
 
-from cex_api_docs.errors import CexApiDocsError
-from cex_api_docs.lock import acquire_write_lock
-from cex_api_docs.store import ensure_store_schema, init_store, migrate_store_schema
+from xdocs.errors import CexApiDocsError
+from xdocs.lock import acquire_write_lock
+from xdocs.store import ensure_store_schema, init_store, migrate_store_schema
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -58,7 +58,7 @@ class TestInit(unittest.TestCase):
             holder_code = """
 import sys, time
 from pathlib import Path
-from cex_api_docs.lock import acquire_write_lock
+from xdocs.lock import acquire_write_lock
 
 lock_path = Path(sys.argv[1])
 with acquire_write_lock(lock_path, timeout_s=0.0):
@@ -212,24 +212,24 @@ CREATE TABLE inventory_entries (
 
 
 class TestVerifyImportSource(unittest.TestCase):
-    """Test the import source guard in cex_api_docs.__init__."""
+    """Test the import source guard in xdocs.__init__."""
 
     def test_passes_for_current_repo(self) -> None:
-        from cex_api_docs import verify_import_source
+        from xdocs import verify_import_source
 
         result = verify_import_source(REPO_ROOT)
         self.assertTrue(result.exists())
-        self.assertEqual(result.name, "cex_api_docs")
+        self.assertEqual(result.name, "xdocs")
 
     def test_passes_with_auto_detection(self) -> None:
-        from cex_api_docs import verify_import_source
+        from xdocs import verify_import_source
 
         # When called from within the repo, auto-detection should work
         result = verify_import_source()
         self.assertTrue(result.exists())
 
     def test_fails_for_wrong_repo(self) -> None:
-        from cex_api_docs import verify_import_source
+        from xdocs import verify_import_source
 
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(RuntimeError) as ctx:
@@ -243,7 +243,7 @@ class TestSearchPagesSanitization(unittest.TestCase):
 
     def test_hyphenated_query_no_crash(self) -> None:
         """Hyphens in queries (e.g. X-MBX-APIKEY) must not crash FTS5."""
-        from cex_api_docs.pages import search_pages
+        from xdocs.pages import search_pages
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = Path(tmp) / "cex-docs"
@@ -256,7 +256,7 @@ class TestSearchPagesSanitization(unittest.TestCase):
 
     def test_colon_query_no_crash(self) -> None:
         """Colons in queries (e.g. column:prefix) must not crash FTS5."""
-        from cex_api_docs.pages import search_pages
+        from xdocs.pages import search_pages
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = Path(tmp) / "cex-docs"
@@ -268,7 +268,7 @@ class TestSearchPagesSanitization(unittest.TestCase):
 
     def test_special_chars_query_no_crash(self) -> None:
         """Mixed special characters must not crash FTS5."""
-        from cex_api_docs.pages import search_pages
+        from xdocs.pages import search_pages
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = Path(tmp) / "cex-docs"

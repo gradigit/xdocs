@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from cex_api_docs.classify import InputClassification, classify_input
+from xdocs.classify import InputClassification, classify_input
 
 
 class TestClassifyErrorMessages(unittest.TestCase):

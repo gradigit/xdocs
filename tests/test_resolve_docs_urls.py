@@ -7,13 +7,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.resolve_docs_urls import (
+from xdocs.resolve_docs_urls import (
     _is_spec_url,
     _path_segments,
     link_endpoints_bulk,
     resolve_docs_url,
 )
-from cex_api_docs.store import init_store
+from xdocs.store import init_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

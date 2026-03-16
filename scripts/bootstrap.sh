@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Bootstrap: clone-to-running setup for cex-api-docs.
+# Bootstrap: clone-to-running setup for xdocs.
 # Usage: scripts/bootstrap.sh [docs-dir]
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -37,9 +37,9 @@ fi
 echo ""
 echo "--- Checking store ---"
 if [ ! -d "$DOCS_DIR/db" ]; then
-    cex-api-docs init --docs-dir "$DOCS_DIR"
+    xdocs init --docs-dir "$DOCS_DIR"
     echo "Store initialized at $DOCS_DIR"
-    echo "Next: run 'cex-api-docs sync --docs-dir $DOCS_DIR' to crawl exchanges"
+    echo "Next: run 'xdocs sync --docs-dir $DOCS_DIR' to crawl exchanges"
 else
     echo "Store already exists at $DOCS_DIR"
 fi

@@ -17,8 +17,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-ANSWER_PY = Path("src/cex_api_docs/answer.py")
-SEMANTIC_PY = Path("src/cex_api_docs/semantic.py")
+ANSWER_PY = Path("src/xdocs/answer.py")
+SEMANTIC_PY = Path("src/xdocs/semantic.py")
 
 
 def _backup(paths: list[Path], tmpdir: Path) -> dict[Path, Path]:

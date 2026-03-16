@@ -1,84 +1,75 @@
-# Handoff (Fresh Bundle) — CEX API Docs
-
-Generated: 2026-02-27 03:17 UTC
-Bundle path: `.handoff-fresh/current`
+# Handoff — 2026-03-12T22:00:00+09:00
 
 ## Current Status
 
-Maintenance workflow is complete for this cycle, including expanded source coverage and runtime repo sync.
+Session complete. All work committed and pushed. Both repos (maintainer + runtime) in sync.
 
-- Registry now includes additional perp DEX + CCXT sources (including Lighter).
-- Full maintenance run completed and validated.
-- Runtime workspace is prepared for immediate fresh-agent querying.
+**Pipeline**: MRR=0.644, nDCG@5=1.343, PFX=78%, URL=65%, domain=97%, OK=92%
+**Store**: 10,727 pages, 16.75M words, 4,963 endpoints, 46 exchanges, 78 sections
+**Tests**: 559 passing. **Schema**: v6.
 
-## What Was Done
+## What Was Done This Session
 
-1. Added/validated new registry sources:
-   - gmx, drift, aevo, perp, gains, kwenta, lighter, ccxt
-2. Updated query skill/classifier triggers for new exchanges/docs families.
-3. Ran sync/fetch maintenance workflow across configured sections.
-4. Rebuilt semantic index and reran retrieval eval (no-rerank + rerank).
-5. Executed final pre-share gate and synced runtime workspace.
-6. Verified runtime query smoke in runtime workspace.
+1. **Gapfinder skill v1.0→v2.2.0**: answer output schema, exchange detection sweep, nav chrome gate, citation schema gate, answer grading tiers (clean/mixed/fail), runtime model stack detection, adversarial >30s threshold, multi-exchange ambiguity test
+2. **3 QA runs evaluated**: v1 (46 tests, 67.4%), v2 blind-mode (108 tests, 67.6%), 10-run batch (340 tests, 61.1%)
+3. **7 bugs catalogued** (BUG-15 through BUG-21) with repro steps and root cause in TODO.md
+4. **BUG-21 FIXED**: FTS5 crash on `'` in `sanitize_fts_query()` — critical, found by 10-run batch (7/10)
+5. **cex-api-query v2.11.0**: negative-evidence guidance + third-party vendor split (Step 5c)
+6. **Sync script**: copies `tests/golden_qa.jsonl` to runtime repo
+7. **Gate.io FIX protocol QA report** evaluated → BUG-20 (not_found status distinction)
+8. Both repos pushed: maintainer `5687003`, runtime `390fbfc3`
 
 ## What Is Next
 
-1. Commit and push maintainer repo changes (currently many uncommitted changes).
-2. Rebaseline `tests/golden_qa.jsonl` for the expanded corpus so eval reflects current URLs.
-3. Optionally add Playwright extras for stronger JS-heavy doc route discovery.
-4. Optionally initialize git in runtime workspace if team distribution via git is desired.
+Priority bugs (all in TODO.md with full context):
+
+| Bug | Severity | Summary | LOC |
+|-----|----------|---------|-----|
+| BUG-18 | High | Direct-route citations missing excerpts | ~15 |
+| BUG-15 | High | Numeric literals → error_message misclassification | ~5 |
+| BUG-16 | High | Nav chrome in excerpts (_is_nav_region threshold) | ~30 |
+| BUG-19 | Medium | Multi-exchange ambiguity picks first exchange | ~15 |
+| BUG-17 | Medium | Path-only endpoints return unknown | ~20 |
+| BUG-20 | Medium | No not_found status for negative evidence | ~10 |
+
+Deferred milestones: M23 (structured endpoint extraction), M24 (content quality).
 
 ## Blockers / Open Questions
 
-- Retrieval golden QA hit-rate is low due corpus/URL alignment drift; metric currently under-represents practical utility.
-- Playwright extras are not installed; some JS-heavy sections may be less comprehensive under HTTP-only paths.
+None.
 
-## First Read Order (Fresh Agent)
+---
 
-1. `handoff.md`
-2. `claude.md`
-3. `todo.md`
-4. `state.md`
-5. `context.md`
+## Read Gate
 
-## Read Gate (Mandatory — complete before prep/coding)
-Read these files in order:
-1. `handoff.md`
-2. `claude.md`
-3. `todo.md`
-4. `state.md`
-5. `context.md`
+**Read Gate is mandatory. Complete it before Workspace Preparation.**
+**Do not run implementation steps until Read Gate is complete.**
 
-Reply with this read receipt format before any prep/coding:
+Required files in order: `handoff.md`, `claude.md`, `todo.md`, `state.md`, `context.md`
+
+Receipt format:
+```
 - [x] handoff.md — <1-line takeaway>
 - [x] claude.md — <1-line takeaway>
 - [x] todo.md — <1-line takeaway>
 - [x] state.md — <1-line takeaway>
 - [x] context.md — <1-line takeaway>
+```
 
-If any required file is unread or takeaway is missing:
-- Stop and ask-question if needed.
-- Do not proceed to Workspace Preparation or coding.
+If user prompt only says "read handoff.md", treat as bootstrap — continue Read Gate automatically. Do not send interim summaries before receipt is complete.
 
-Bootstrap/autostart rule:
-- If the user prompt only says "Read .handoff-fresh/current/handoff.md", treat it as onboarding bootstrap.
-- Continue to read all required Read Gate files before replying.
-- Do not send interim "done, I read handoff.md" summaries.
+Run `/handoff-fresh --validate-read-gate` after completing `read-receipt.md` and before coding.
 
-Preflight before coding:
-- Fresh agent runs read-gate preflight validator (`/handoff-fresh --validate-read-gate` or script equivalent)
-- If validator fails, fix `read-receipt.md`, ask-question if needed, and rerun.
+---
 
-## Workspace Preparation (Do before coding)
-1. Confirm repo root and current branch.
-2. Confirm working tree status and note uncommitted changes.
-3. Confirm required root docs/folders are present.
-4. Re-run `/sync-docs` if drift is detected.
-5. Run Question Gate:
-   - If required information is missing/ambiguous, use ask-question before coding.
-   - If no answer yet, do only safe/reversible prep and log assumptions in `state.md`.
-6. Start implementation only after steps 1-5 are complete.
+## Workspace Preparation
 
-## Note on Prerequisite Sync
+After Read Gate:
 
-`/sync-docs` command is not directly available in this Codex run. Equivalent preflight was satisfied via fresh validation runs (`pre_share_check`, retrieval eval, runtime smoke) before bundle generation.
+1. Confirm project root: `/home/lechat/Projects/cex-api-docs`
+2. Confirm branch: `main`, clean working tree
+3. Confirm venv: `source /home/lechat/Projects/.venv/bin/activate`
+4. Run `pytest tests/ -x -q` to verify 559 tests pass
+5. Re-run `/sync-docs` if drift detected
+
+**Question Gate**: If anything is missing or ambiguous, ask before coding.

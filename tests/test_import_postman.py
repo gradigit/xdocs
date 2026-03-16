@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.coverage import endpoint_coverage
-from cex_api_docs.endpoints import search_endpoints
-from cex_api_docs.postman_import import import_postman
-from cex_api_docs.store import init_store
+from xdocs.coverage import endpoint_coverage
+from xdocs.endpoints import search_endpoints
+from xdocs.postman_import import import_postman
+from xdocs.store import init_store
 from tests.http_server import serve_directory
 
 

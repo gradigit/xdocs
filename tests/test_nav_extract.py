@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cex_api_docs.nav_extract import (
+from xdocs.nav_extract import (
     NavExtractionResult,
     NavNode,
     _COMBINED_SELECTOR,
@@ -141,7 +141,7 @@ class TestProcessRawLinks:
 
 
 class TestExtractViaHttp:
-    @patch("cex_api_docs.nav_extract.requests")
+    @patch("xdocs.nav_extract.requests")
     def test_extracts_nav_links(self, mock_requests):
         mock_resp = MagicMock()
         mock_resp.text = SAMPLE_HTML
@@ -163,7 +163,7 @@ class TestExtractViaHttp:
         result_paths = {u.replace("https://docs.example.com", "") for u in result.urls}
         assert result_paths == expected_paths
 
-    @patch("cex_api_docs.nav_extract.requests")
+    @patch("xdocs.nav_extract.requests")
     def test_handles_http_error(self, mock_requests):
         mock_requests.get.side_effect = ConnectionError("Network error")
 
@@ -178,7 +178,7 @@ class TestExtractViaHttp:
         assert len(result.errors) == 1
         assert result.errors[0]["stage"] == "http_fetch"
 
-    @patch("cex_api_docs.nav_extract.requests")
+    @patch("xdocs.nav_extract.requests")
     def test_nav_node_depth(self, mock_requests):
         mock_resp = MagicMock()
         mock_resp.text = SAMPLE_HTML
@@ -208,8 +208,8 @@ class TestExtractViaAgentBrowser:
             args=[], returncode=returncode, stdout=stdout, stderr=stderr,
         )
 
-    @patch("cex_api_docs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
-    @patch("cex_api_docs.nav_extract._run_agent_browser")
+    @patch("xdocs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
+    @patch("xdocs.nav_extract._run_agent_browser")
     def test_successful_extraction(self, mock_run, mock_which):
         nav_data = json.dumps([
             {"href": "/docs/spot", "text": "Spot API", "depth": 0},
@@ -234,7 +234,7 @@ class TestExtractViaAgentBrowser:
         assert len(result.urls) == 2
         assert len(result.errors) == 0
 
-    @patch("cex_api_docs.nav_extract.shutil.which", return_value=None)
+    @patch("xdocs.nav_extract.shutil.which", return_value=None)
     def test_agent_browser_not_found(self, mock_which):
         with pytest.raises(FileNotFoundError, match="agent-browser"):
             _extract_via_agent_browser(
@@ -243,8 +243,8 @@ class TestExtractViaAgentBrowser:
                 timeout_s=30.0,
             )
 
-    @patch("cex_api_docs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
-    @patch("cex_api_docs.nav_extract._run_agent_browser")
+    @patch("xdocs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
+    @patch("xdocs.nav_extract._run_agent_browser")
     def test_open_failure(self, mock_run, mock_which):
         mock_run.return_value = self._make_completed(returncode=1, stderr="connection refused")
 
@@ -255,8 +255,8 @@ class TestExtractViaAgentBrowser:
                 timeout_s=30.0,
             )
 
-    @patch("cex_api_docs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
-    @patch("cex_api_docs.nav_extract._run_agent_browser")
+    @patch("xdocs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
+    @patch("xdocs.nav_extract._run_agent_browser")
     def test_eval_failure_returns_empty(self, mock_run, mock_which):
         mock_run.side_effect = [
             self._make_completed(),        # open
@@ -275,8 +275,8 @@ class TestExtractViaAgentBrowser:
         assert len(result.errors) == 1
         assert result.errors[0]["stage"] == "eval"
 
-    @patch("cex_api_docs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
-    @patch("cex_api_docs.nav_extract._run_agent_browser")
+    @patch("xdocs.nav_extract.shutil.which", return_value="/usr/local/bin/agent-browser")
+    @patch("xdocs.nav_extract._run_agent_browser")
     def test_invalid_json_returns_empty(self, mock_run, mock_which):
         mock_run.side_effect = [
             self._make_completed(),        # open
@@ -302,7 +302,7 @@ class TestExtractViaAgentBrowser:
 
 
 class TestExtractNavUrls:
-    @patch("cex_api_docs.nav_extract._extract_via_agent_browser")
+    @patch("xdocs.nav_extract._extract_via_agent_browser")
     def test_uses_agent_browser_when_available(self, mock_ab):
         mock_ab.return_value = NavExtractionResult(
             seed_url=SEED_URL,
@@ -322,8 +322,8 @@ class TestExtractNavUrls:
         assert len(result.urls) == 1
         mock_ab.assert_called_once()
 
-    @patch("cex_api_docs.nav_extract._extract_via_http")
-    @patch("cex_api_docs.nav_extract._extract_via_agent_browser")
+    @patch("xdocs.nav_extract._extract_via_http")
+    @patch("xdocs.nav_extract._extract_via_agent_browser")
     def test_falls_back_to_http_on_file_not_found(self, mock_ab, mock_http):
         mock_ab.side_effect = FileNotFoundError("not found")
         mock_http.return_value = NavExtractionResult(
@@ -343,8 +343,8 @@ class TestExtractNavUrls:
         assert result.method == "http_fallback"
         mock_http.assert_called_once()
 
-    @patch("cex_api_docs.nav_extract._extract_via_http")
-    @patch("cex_api_docs.nav_extract._extract_via_agent_browser")
+    @patch("xdocs.nav_extract._extract_via_http")
+    @patch("xdocs.nav_extract._extract_via_agent_browser")
     def test_falls_back_to_http_on_zero_urls(self, mock_ab, mock_http):
         mock_ab.return_value = NavExtractionResult(
             seed_url=SEED_URL,
@@ -369,8 +369,8 @@ class TestExtractNavUrls:
 
         assert result.method == "http_fallback"
 
-    @patch("cex_api_docs.nav_extract._extract_via_http")
-    @patch("cex_api_docs.nav_extract._extract_via_agent_browser")
+    @patch("xdocs.nav_extract._extract_via_http")
+    @patch("xdocs.nav_extract._extract_via_agent_browser")
     def test_falls_back_on_timeout(self, mock_ab, mock_http):
         mock_ab.side_effect = subprocess.TimeoutExpired(cmd="agent-browser", timeout=30)
         mock_http.return_value = NavExtractionResult(
@@ -389,8 +389,8 @@ class TestExtractNavUrls:
 
         assert result.method == "http_fallback"
 
-    @patch("cex_api_docs.nav_extract._extract_via_http")
-    @patch("cex_api_docs.nav_extract._extract_via_agent_browser")
+    @patch("xdocs.nav_extract._extract_via_http")
+    @patch("xdocs.nav_extract._extract_via_agent_browser")
     def test_falls_back_on_runtime_error(self, mock_ab, mock_http):
         mock_ab.side_effect = RuntimeError("open failed")
         mock_http.return_value = NavExtractionResult(

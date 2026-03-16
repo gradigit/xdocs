@@ -8,7 +8,7 @@ Query exchange API documentation from any project, any directory, on both Claude
 
 ## What you get
 
-- `cex-api-docs` CLI — globally on PATH, works from anywhere
+- `xdocs` CLI — globally on PATH, works from anywhere
 - `cex-api-query` skill — available in every project (Claude Code + Codex)
 - 10,700+ pages, 4,900+ endpoints across 46 exchanges
 
@@ -31,18 +31,18 @@ ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
 ## Update
 
 ```bash
-cd /path/to/cex-api-docs-runtime
+cd /path/to/xdocs-runtime
 git pull && uv tool install -e .
 ```
 
 Data updates (published separately):
 ```bash
-cd /path/to/cex-api-docs-runtime
+cd /path/to/xdocs-runtime
 ./scripts/bootstrap-data.sh
 ```
 
 ## Smoke check
 
 ```bash
-cex-api-docs store-report
+xdocs store-report
 ```

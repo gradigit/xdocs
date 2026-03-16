@@ -24,7 +24,7 @@ scripts/pre_share_check.sh ./cex-docs
 
 ```bash
 python3 scripts/sync_runtime_repo.py \
-  --runtime-root /path/to/cex-api-docs-runtime \
+  --runtime-root /path/to/xdocs-runtime \
   --docs-dir ./cex-docs \
   --clean
 ```

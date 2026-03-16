@@ -264,7 +264,7 @@ def list_changelogs(
         conn.close()
         return {
             "ok": False,
-            "error": "changelog_entries table not found — run 'cex-api-docs init' first",
+            "error": "changelog_entries table not found — run 'xdocs init' first",
             "entries": [],
             "schema_version": "v1",
         }

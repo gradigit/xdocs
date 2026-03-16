@@ -53,7 +53,7 @@ class TestCanaryQA(unittest.TestCase):
     """Fast canary regression tests for the answer pipeline."""
 
     def _run_answer(self, query: str) -> dict:
-        from cex_api_docs.answer import answer_question
+        from xdocs.answer import answer_question
         return answer_question(docs_dir=DOCS_DIR, question=query)
 
     def test_canary_queries_produce_expected_results(self) -> None:

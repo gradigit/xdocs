@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.discover_sources import discover_sources
+from xdocs.discover_sources import discover_sources
 from tests.http_server import serve_directory
 
 

@@ -24,7 +24,7 @@ Every discoverable source must be found. If a source type exists for the exchang
 
 ## Prerequisites
 
-- Active Python venv with `cex-api-docs` installed
+- Active Python venv with `xdocs` installed
 - Web access for URL probing and search
 - `crawl4ai`, `cloudscraper`, Playwright installed for crawl testing
 - CCXT installed for cross-reference (`uv pip install ccxt`)
@@ -475,16 +475,16 @@ Include comments explaining any non-obvious choices (scope_priority, render_mode
    - If the exchange was in Section 6 (Missing Exchanges), move it out
    - Run initial sync:
      ```bash
-     cex-api-docs sync --exchange {id} --docs-dir ./cex-docs --render {mode}
+     xdocs sync --exchange {id} --docs-dir ./cex-docs --render {mode}
      ```
    - Validate:
      ```bash
-     cex-api-docs validate-crawl-targets --exchange {id} --enable-nav --docs-dir ./cex-docs
-     cex-api-docs quality-check --docs-dir ./cex-docs
+     xdocs validate-crawl-targets --exchange {id} --enable-nav --docs-dir ./cex-docs
+     xdocs quality-check --docs-dir ./cex-docs
      ```
-   - Import any discovered specs (use `cex-api-docs import-openapi`/`import-postman`)
-   - Run `cex-api-docs ccxt-xref --exchange {id} --docs-dir ./cex-docs`
-   - Update all docs per "Updating Skills & Documentation" in `cex-api-docs` SKILL.md
+   - Import any discovered specs (use `xdocs import-openapi`/`import-postman`)
+   - Run `xdocs ccxt-xref --exchange {id} --docs-dir ./cex-docs`
+   - Update all docs per "Updating Skills & Documentation" in `xdocs` SKILL.md
 
 ## Exhaustive Discovery Checklist
 

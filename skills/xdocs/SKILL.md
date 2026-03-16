@@ -1,5 +1,5 @@
 ---
-name: cex-api-docs
+name: xdocs
 description: >
   Cite-only CEX API docs knowledge base. Sync official exchange documentation into a local
   SQLite FTS5 store via deterministic inventory+fetch pipeline, extract endpoint JSON with
@@ -38,7 +38,7 @@ If you are starting a new session with no prior context, follow these steps befo
 5. **Assess current store state**:
 
 ```bash
-source .venv/bin/activate && cex-api-docs store-report --docs-dir ./cex-docs
+source .venv/bin/activate && xdocs store-report --docs-dir ./cex-docs
 ```
 
 6. **Determine what phase to start from**:
@@ -95,15 +95,15 @@ bash scripts/run_sync_preset.sh overnight-safe ./cex-docs   # force-refetch, slo
 
 ```bash
 # 1. Quality gate — flags empty/thin/tiny_html pages
-cex-api-docs quality-check --docs-dir ./cex-docs
+xdocs quality-check --docs-dir ./cex-docs
 
 # 2. Changelog extraction — new entries after sync = API drift detected
-cex-api-docs extract-changelogs --docs-dir ./cex-docs
-cex-api-docs list-changelogs --since YYYY-MM-DD --docs-dir ./cex-docs
+xdocs extract-changelogs --docs-dir ./cex-docs
+xdocs list-changelogs --since YYYY-MM-DD --docs-dir ./cex-docs
 
 # 3. Incremental semantic index — embeds only new/changed pages
-cex-api-docs build-index --incremental --docs-dir ./cex-docs
-cex-api-docs compact-index --docs-dir ./cex-docs   # merge fragments after large additions
+xdocs build-index --incremental --docs-dir ./cex-docs
+xdocs compact-index --docs-dir ./cex-docs   # merge fragments after large additions
 ```
 
 ### Periodic Maintenance
@@ -126,7 +126,7 @@ bash scripts/pre_share_check.sh [./cex-docs]
 
 # Export query-only runtime (strips maintenance tables, writes manifest)
 python3 scripts/sync_runtime_repo.py \
-  --runtime-root ../cex-api-docs-runtime \
+  --runtime-root ../xdocs-runtime \
   --docs-dir ./cex-docs \
   --strip-maintenance \
   --clean
@@ -141,11 +141,11 @@ Summary after discovery is complete:
 1. Run the `cex-discovery` skill for the target exchange — produces bible entry + registry YAML
 2. Add the bible entry to `docs/crawl-targets-bible.md` (Section 3-5 per exchange type)
 3. Add the registry entry to `data/exchanges.yaml`
-4. `cex-api-docs sync --exchange <id> --docs-dir ./cex-docs --render auto`
+4. `xdocs sync --exchange <id> --docs-dir ./cex-docs --render auto`
 5. Multi-method crawl validation (see "Post-Sync Validation" below)
-6. `cex-api-docs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
+6. `xdocs validate-crawl-targets --exchange <id> --enable-nav --docs-dir ./cex-docs`
 7. Import any discovered specs (OpenAPI, Postman, AsyncAPI)
-8. `cex-api-docs build-index --incremental --docs-dir ./cex-docs`
+8. `xdocs build-index --incremental --docs-dir ./cex-docs`
 9. Follow "Updating Skills & Documentation" checklist (all 7 files)
 
 ### Updating Skills & Documentation
@@ -154,7 +154,7 @@ After any significant store change (new exchange, spec import, crawl gap fix, ne
 
 1. **CLAUDE.md** — Commands section, Key Files, Current Phase stats
 2. **cex-api-query SKILL.md** (`.claude/skills/cex-api-query/SKILL.md`) — "What's In The Store" section: endpoint counts per exchange/section, DEX page counts, CCXT stats. Bump `version` in metadata when changing content.
-3. **cex-api-docs SKILL.md** (this file) — CLI command reference, workflow steps
+3. **xdocs SKILL.md** (this file) — CLI command reference, workflow steps
 4. **cex-discovery SKILL.md** (`.claude/skills/cex-discovery/SKILL.md`) — exchange list, spec patterns, platform detection (update when new exchange types or doc platforms are encountered)
 5. **README.md** — Exchange counts, project structure, command examples
 6. **AGENTS.md** — Current context stats, command reference
@@ -164,7 +164,7 @@ After any significant store change (new exchange, spec import, crawl gap fix, ne
 
 ```bash
 # Get current numbers
-cex-api-docs store-report --docs-dir ./cex-docs
+xdocs store-report --docs-dir ./cex-docs
 
 # Cross-check endpoints in query skill against DB
 source .venv/bin/activate && python3 -c "
@@ -185,7 +185,7 @@ When executing a complete sync (all exchanges, all specs, all validation), follo
 3. **Baseline snapshot** — record current counts to measure delta after sync:
 
 ```bash
-cex-api-docs store-report --docs-dir ./cex-docs
+xdocs store-report --docs-dir ./cex-docs
 ```
 
 4. **Inventory state check** — identify pending/error entries (decides `--resume` vs fresh):
@@ -242,13 +242,13 @@ Before syncing, ensure `data/exchanges.yaml` matches the bible:
 
 ```bash
 # Full sync with JS fallback (1-4 hours for all 46 exchanges)
-cex-api-docs sync --docs-dir ./cex-docs --render auto --concurrency 2
+xdocs sync --docs-dir ./cex-docs --render auto --concurrency 2
 
 # If interrupted, resume (reuses inventories, fetches only pending/error)
-cex-api-docs sync --docs-dir ./cex-docs --resume --concurrency 2
+xdocs sync --docs-dir ./cex-docs --resume --concurrency 2
 
 # Re-sync specific exchange (e.g., after fixing registry entry)
-cex-api-docs sync --exchange kraken --docs-dir ./cex-docs --render auto
+xdocs sync --exchange kraken --docs-dir ./cex-docs --render auto
 ```
 
 **Timeout handling**: Full sync takes 1-4 hours. Use `--concurrency 2` to balance speed vs rate limits. If running agentically, use background execution for the sync and check progress via `store-report`. If an exchange fails (403, timeout), re-sync it individually. Gate.io rate-limits aggressively — may need `--concurrency 1` or longer delays.
@@ -262,7 +262,7 @@ Import all verified specs. See bible Section 9 for the full priority list with e
 for spec in openapi-spot openapi-futures openapi-account openapi-margin openapi-broker openapi-earn openapi-copytrading openapi-viplending openapi-affiliate; do
   base_url="https://api.kucoin.com"
   [[ "$spec" == *futures* || "$spec" == *copytrading* ]] && base_url="https://api-futures.kucoin.com"
-  cex-api-docs import-openapi --exchange kucoin --section spot \
+  xdocs import-openapi --exchange kucoin --section spot \
     --url "https://raw.githubusercontent.com/Kucoin/kucoin-universal-sdk/main/spec/rest/entry/${spec}.json" \
     --base-url "$base_url" --docs-dir ./cex-docs --continue-on-error
 done
@@ -270,44 +270,44 @@ done
 # WhiteBIT (7 OpenAPI specs)
 for spec in public/http-v4.yaml public/http-v2.yaml public/http-v1.yaml \
   private/main_api_v4.yaml private/http-trade-v4.yaml private/http-trade-v1.yaml oauth2.yaml; do
-  cex-api-docs import-openapi --exchange whitebit --section v4 \
+  xdocs import-openapi --exchange whitebit --section v4 \
     --url "https://docs.whitebit.com/openapi/${spec}" --docs-dir ./cex-docs --continue-on-error
 done
 
 # BitMart (2 Postman collections: Spot 54 + Futures 57 = 111 endpoints)
-cex-api-docs import-postman --exchange bitmart --section spot \
+xdocs import-postman --exchange bitmart --section spot \
   --url "https://raw.githubusercontent.com/bitmartexchange/bitmart-postman-api/master/collections/Spot.postman_collection.json" \
   --docs-dir ./cex-docs --continue-on-error
-cex-api-docs import-postman --exchange bitmart --section futures \
+xdocs import-postman --exchange bitmart --section futures \
   --url "https://raw.githubusercontent.com/bitmartexchange/bitmart-postman-api/master/collections/Futures.postman_collection.json" \
   --docs-dir ./cex-docs --continue-on-error
 
 # Coinbase Prime (351KB, ~95 endpoints)
-cex-api-docs import-openapi --exchange coinbase --section prime \
+xdocs import-openapi --exchange coinbase --section prime \
   --url "https://api.prime.coinbase.com/v1/openapi.yaml" --docs-dir ./cex-docs --continue-on-error
 
 # Paradex (380KB, 67 paths — spec lacks servers[], needs --base-url)
-cex-api-docs import-openapi --exchange paradex --section api \
+xdocs import-openapi --exchange paradex --section api \
   --url "https://api.prod.paradex.trade/swagger/doc.json" \
   --base-url "https://api.prod.paradex.trade/v1" --docs-dir ./cex-docs --continue-on-error
 
 # Lighter (225KB, 72 paths — spec lacks servers[], needs --base-url)
-cex-api-docs import-openapi --exchange lighter --section docs \
+xdocs import-openapi --exchange lighter --section docs \
   --url "https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json" \
   --base-url "https://api.lighter.xyz" --docs-dir ./cex-docs --continue-on-error
 
 # dYdX (115KB, 43 paths — spec lacks servers[], needs --base-url)
-cex-api-docs import-openapi --exchange dydx --section docs \
+xdocs import-openapi --exchange dydx --section docs \
   --url "https://raw.githubusercontent.com/dydxprotocol/v4-chain/main/indexer/services/comlink/public/swagger.json" \
   --base-url "https://indexer.dydx.trade/v4" --docs-dir ./cex-docs --continue-on-error
 
 # Coinbase Exchange (community spec, 157KB, 38 paths)
-cex-api-docs import-openapi --exchange coinbase --section exchange \
+xdocs import-openapi --exchange coinbase --section exchange \
   --url "https://raw.githubusercontent.com/metalocal/coinbase-exchange-api/main/api.oas3.json" \
   --docs-dir ./cex-docs --continue-on-error
 
 # Link imported endpoints to doc pages
-cex-api-docs link-endpoints --docs-dir ./cex-docs
+xdocs link-endpoints --docs-dir ./cex-docs
 ```
 
 After each import, verify endpoint count matches bible expectations. If count is significantly lower, check for `--continue-on-error` output for parsing failures.
@@ -316,29 +316,29 @@ After each import, verify endpoint count matches bible expectations. If count is
 
 ```bash
 # Quality gate (empty/thin/tiny_html pages)
-cex-api-docs quality-check --docs-dir ./cex-docs
+xdocs quality-check --docs-dir ./cex-docs
 
 # Store consistency (DB/file mismatches)
-cex-api-docs fsck --docs-dir ./cex-docs
+xdocs fsck --docs-dir ./cex-docs
 
 # CCXT cross-reference (gap detection)
-cex-api-docs ccxt-xref --docs-dir ./cex-docs
+xdocs ccxt-xref --docs-dir ./cex-docs
 
 # Changelog extraction (API drift detection)
-cex-api-docs extract-changelogs --docs-dir ./cex-docs
+xdocs extract-changelogs --docs-dir ./cex-docs
 
 # Stale citation detection
-cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+xdocs detect-stale-citations --docs-dir ./cex-docs
 
 # Semantic index rebuild
-cex-api-docs build-index --incremental --docs-dir ./cex-docs
-cex-api-docs compact-index --docs-dir ./cex-docs
+xdocs build-index --incremental --docs-dir ./cex-docs
+xdocs compact-index --docs-dir ./cex-docs
 
 # Coverage gaps
-cex-api-docs coverage-gaps --docs-dir ./cex-docs
+xdocs coverage-gaps --docs-dir ./cex-docs
 
 # Final report — compare against Phase 0 baseline
-cex-api-docs store-report --docs-dir ./cex-docs
+xdocs store-report --docs-dir ./cex-docs
 ```
 
 Spot-check 5% of pages with `crawl4ai`. If content differs >20% from stored markdown, flag the exchange for re-crawl with `--render auto`.
@@ -408,30 +408,30 @@ uv venv .venv
 source .venv/bin/activate
 uv pip install -e .
 
-cex-api-docs init --docs-dir ./cex-docs
+xdocs init --docs-dir ./cex-docs
 ```
 
 ## Sync Docs
 
 ```bash
 # Full sync (inventory + fetch)
-cex-api-docs sync --docs-dir ./cex-docs
+xdocs sync --docs-dir ./cex-docs
 
 # With JS rendering for sites that require it
-cex-api-docs sync --docs-dir ./cex-docs --render auto
+xdocs sync --docs-dir ./cex-docs --render auto
 
 # Resume interrupted sync
-cex-api-docs sync --docs-dir ./cex-docs --resume
+xdocs sync --docs-dir ./cex-docs --resume
 
 # Parallel fetch
-cex-api-docs sync --docs-dir ./cex-docs --concurrency 4
+xdocs sync --docs-dir ./cex-docs --concurrency 4
 ```
 
 ### Step-by-Step Alternative
 
 ```bash
-cex-api-docs inventory --exchange binance --section spot --docs-dir ./cex-docs
-cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
+xdocs inventory --exchange binance --section spot --docs-dir ./cex-docs
+xdocs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume --concurrency 4
 ```
 
 > **Note:** The legacy `crawl` command still works but emits a deprecation warning. Use `sync` instead.
@@ -439,15 +439,15 @@ cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-
 ## Store Report
 
 ```bash
-cex-api-docs store-report --docs-dir ./cex-docs
-cex-api-docs store-report --exchange binance --section spot --output report.md
+xdocs store-report --docs-dir ./cex-docs
+xdocs store-report --exchange binance --section spot --output report.md
 ```
 
 ## Validate Registry (Domains/Seeds)
 
 ```bash
-cex-api-docs validate-registry
-cex-api-docs validate-base-urls
+xdocs validate-registry
+xdocs validate-base-urls
 ```
 
 ## Troubleshooting (403 / WAF / Seed Drift)
@@ -472,49 +472,49 @@ If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drif
 ## Find Sources
 
 ```bash
-cex-api-docs search-pages "rate limit" --docs-dir ./cex-docs
-cex-api-docs get-page "https://..." --docs-dir ./cex-docs
+xdocs search-pages "rate limit" --docs-dir ./cex-docs
+xdocs get-page "https://..." --docs-dir ./cex-docs
 ```
 
 ## Store Integrity & Quality
 
 ```bash
-cex-api-docs fsck --docs-dir ./cex-docs
-cex-api-docs quality-check --docs-dir ./cex-docs
-cex-api-docs coverage --docs-dir ./cex-docs
-cex-api-docs coverage-gaps --docs-dir ./cex-docs
-cex-api-docs detect-stale-citations --docs-dir ./cex-docs
-cex-api-docs fts-optimize --docs-dir ./cex-docs
-cex-api-docs check-links --docs-dir ./cex-docs
-cex-api-docs check-links --exchange binance --sample 50 --docs-dir ./cex-docs
+xdocs fsck --docs-dir ./cex-docs
+xdocs quality-check --docs-dir ./cex-docs
+xdocs coverage --docs-dir ./cex-docs
+xdocs coverage-gaps --docs-dir ./cex-docs
+xdocs detect-stale-citations --docs-dir ./cex-docs
+xdocs fts-optimize --docs-dir ./cex-docs
+xdocs check-links --docs-dir ./cex-docs
+xdocs check-links --exchange binance --sample 50 --docs-dir ./cex-docs
 ```
 
 ## Changelog Extraction
 
 ```bash
 # Extract dated entries from stored changelog pages (idempotent)
-cex-api-docs extract-changelogs --docs-dir ./cex-docs
+xdocs extract-changelogs --docs-dir ./cex-docs
 
 # List entries; new entries after a sync = API drift
-cex-api-docs list-changelogs --docs-dir ./cex-docs --exchange binance --since 2026-01-01
+xdocs list-changelogs --docs-dir ./cex-docs --exchange binance --since 2026-01-01
 ```
 
 ## Crawl Target Validation
 
 ```bash
 # Quick (no network)
-cex-api-docs sanitize-check --docs-dir ./cex-docs
+xdocs sanitize-check --docs-dir ./cex-docs
 
 # Sitemap health
-cex-api-docs validate-sitemaps --docs-dir ./cex-docs
+xdocs validate-sitemaps --docs-dir ./cex-docs
 
 # Multi-method discovery
-cex-api-docs validate-crawl-targets --exchange binance --docs-dir ./cex-docs
-cex-api-docs validate-crawl-targets --exchange binance --enable-nav --enable-wayback --docs-dir ./cex-docs
+xdocs validate-crawl-targets --exchange binance --docs-dir ./cex-docs
+xdocs validate-crawl-targets --exchange binance --enable-nav --enable-wayback --docs-dir ./cex-docs
 
 # Coverage audit + backfill
-cex-api-docs crawl-coverage --docs-dir ./cex-docs
-cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage
+xdocs crawl-coverage --docs-dir ./cex-docs
+xdocs audit --docs-dir ./cex-docs --include-crawl-coverage
 ```
 
 ### When to Validate
@@ -534,8 +534,8 @@ cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage
 ## Import Specs
 
 ```bash
-cex-api-docs import-openapi spec.yaml --docs-dir ./cex-docs
-cex-api-docs import-postman collection.json --docs-dir ./cex-docs
+xdocs import-openapi spec.yaml --docs-dir ./cex-docs
+xdocs import-postman collection.json --docs-dir ./cex-docs
 ```
 
 ## Extract Endpoints (Agent Responsibility)
@@ -551,23 +551,23 @@ cex-api-docs import-postman collection.json --docs-dir ./cex-docs
 ## Ingest Endpoints (Deterministic)
 
 ```bash
-cex-api-docs save-endpoint endpoint.json --docs-dir ./cex-docs
-cex-api-docs search-endpoints "balance" --exchange binance --docs-dir ./cex-docs
+xdocs save-endpoint endpoint.json --docs-dir ./cex-docs
+xdocs search-endpoints "balance" --exchange binance --docs-dir ./cex-docs
 ```
 
 ## Review Queue
 
 ```bash
-cex-api-docs review-list --docs-dir ./cex-docs
-cex-api-docs review-show <id> --docs-dir ./cex-docs
-cex-api-docs review-resolve <id> --docs-dir ./cex-docs
+xdocs review-list --docs-dir ./cex-docs
+xdocs review-show <id> --docs-dir ./cex-docs
+xdocs review-resolve <id> --docs-dir ./cex-docs
 ```
 
 ## Answer Questions
 
 ```bash
-cex-api-docs answer "..." --docs-dir ./cex-docs
-cex-api-docs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
+xdocs answer "..." --docs-dir ./cex-docs
+xdocs answer "..." --clarification binance:portfolio_margin --docs-dir ./cex-docs
 ```
 
 If a question is ambiguous, the tool returns `needs_clarification` with concrete section choices.
@@ -575,13 +575,13 @@ If a question is ambiguous, the tool returns `needs_clarification` with concrete
 ## Semantic Search
 
 ```bash
-cex-api-docs semantic-search "check wallet balance" --docs-dir ./cex-docs
-cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
+xdocs semantic-search "check wallet balance" --docs-dir ./cex-docs
+xdocs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
 ```
 
 ## CCXT Cross-Reference
 
 ```bash
-cex-api-docs ccxt-xref --docs-dir ./cex-docs
-cex-api-docs ccxt-xref --exchange binance --docs-dir ./cex-docs
+xdocs ccxt-xref --docs-dir ./cex-docs
+xdocs ccxt-xref --exchange binance --docs-dir ./cex-docs
 ```

@@ -1,4 +1,4 @@
-"""Semantic search via LanceDB (optional, requires ``cex-api-docs[semantic]``)."""
+"""Semantic search via LanceDB (optional, requires ``xdocs[semantic]``)."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def _require_lancedb():
             import lancedb
         except ImportError:
             raise ImportError(
-                "lancedb is not installed. Run: pip install cex-api-docs[semantic]"
+                "lancedb is not installed. Run: pip install xdocs[semantic]"
             )
         _lancedb = lancedb
     return _lancedb
@@ -660,7 +660,7 @@ def semantic_search(
             raw_results = do_rerank(query, rerank_input, top_n=limit * 2, text_key="text")
             rerank_applied = True
         except ImportError:
-            logger.warning("Reranker not available (pip install cex-api-docs[reranker]). Skipping rerank.")
+            logger.warning("Reranker not available (pip install xdocs[reranker]). Skipping rerank.")
             rerank_reason = "reranker_unavailable"
     elif should_rerank and raw_results and not has_text:
         rerank_reason = "text_not_available"

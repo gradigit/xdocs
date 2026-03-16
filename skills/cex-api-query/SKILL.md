@@ -1,7 +1,7 @@
 ---
 name: cex-api-query
 description: >
-  Answers questions about cryptocurrency exchange APIs using the local cex-api-docs
+  Answers questions about cryptocurrency exchange APIs using the local xdocs
   SQLite store. Searches endpoints and documentation pages across CEX, perp DEX,
   and CCXT documentation sources.
   Activates when user asks about exchange API endpoints, rate limits, authentication,
@@ -24,7 +24,7 @@ Answer user questions about cryptocurrency exchange APIs. Route input through cl
 Before the first query, verify the tool is installed, data is available, and check for updates:
 
 ```bash
-command -v cex-api-docs && cex-api-docs --version && cex-api-docs store-report 2>&1 | head -5
+command -v xdocs && xdocs --version && xdocs store-report 2>&1 | head -5
 ```
 
 If `command not found` or `store-report` fails, tell the user to run setup:
@@ -38,7 +38,7 @@ uv tool install -e . && ./scripts/bootstrap-data.sh
 After confirming the CLI works, check for updates (non-blocking — respond to the user first):
 
 ```bash
-LOCAL=$(cex-api-docs --version 2>/dev/null | awk '{print $2}')
+LOCAL=$(xdocs --version 2>/dev/null | awk '{print $2}')
 REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/xdocs/main/VERSION 2>/dev/null | tr -d '[:space:]')
 ```
 
@@ -75,7 +75,7 @@ Then run classification and the standard workflow below.
 Run classification first to route correctly:
 
 ```bash
-cex-api-docs classify "USER_INPUT_HERE"```
+xdocs classify "USER_INPUT_HERE"```
 
 Returns `input_type`, `confidence`, and `signals` (extracted error codes, paths, exchange hints).
 
@@ -100,9 +100,9 @@ When `input_type == "error_message"`:
 ```bash
 # IMPORTANT: Only use -- before NEGATIVE error codes (codes starting with -)
 # Negative codes: -- is required to prevent argparse interpreting the dash as a flag
-cex-api-docs search-error -- -1002 --exchange binance
+xdocs search-error -- -1002 --exchange binance
 # Positive codes: do NOT use -- (it breaks --exchange and --docs-dir parsing)
-cex-api-docs search-error 60029 --exchange okx
+xdocs search-error 60029 --exchange okx
 # If error code is in the patterns file, check common meaning first
 # e.g. Binance -1002 = "Unauthorized — API key missing or invalid"
 ```
@@ -110,7 +110,7 @@ cex-api-docs search-error 60029 --exchange okx
 4. If the search finds endpoint results, get the full record:
 
 ```bash
-cex-api-docs get-endpoint ENDPOINT_ID```
+xdocs get-endpoint ENDPOINT_ID```
 
 5. Read the source page for full context (some errors require out-of-band steps like the Binance Convert API questionnaire).
 
@@ -129,11 +129,11 @@ When `input_type == "endpoint_path"`:
 
 ```bash
 # Direct path lookup (uses SQL LIKE, handles {{url}} prefix)
-cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance
+xdocs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance
 # Get full record with all fields
-cex-api-docs get-endpoint ENDPOINT_ID
+xdocs get-endpoint ENDPOINT_ID
 # Browse endpoints by exchange/section
-cex-api-docs list-endpoints --exchange okx --section rest --limit 20```
+xdocs list-endpoints --exchange okx --section rest --limit 20```
 
 The full endpoint JSON contains:
 - `http.method`, `http.path`, `http.base_url` — the API call
@@ -149,10 +149,10 @@ For documentation context beyond endpoint records — authentication flows, conc
 
 ```bash
 # Primary for natural-language questions (agent-decided rerank):
-cex-api-docs semantic-search "how to calculate signature" --exchange binance --mode hybrid --rerank-policy auto --limit 8
+xdocs semantic-search "how to calculate signature" --exchange binance --mode hybrid --rerank-policy auto --limit 8
 
 # Use FTS5 only for literal anchors (exact error code/path/header string):
-cex-api-docs search-pages "X-MBX-APIKEY -1021 recvWindow" --limit 5
+xdocs search-pages "X-MBX-APIKEY -1021 recvWindow" --limit 5
 ```
 
 ### Retrieval Budget (Efficiency Guardrail)
@@ -193,17 +193,17 @@ WebSocket channel data is stored in crawled page content (not in the endpoints t
 1. **WS error codes** (OKX 60xxx, Binance negative codes, etc.):
    ```bash
    # Positive codes — no -- prefix
-   cex-api-docs search-error 60029 --exchange okx
+   xdocs search-error 60029 --exchange okx
    # Negative codes — use -- prefix
-   cex-api-docs search-error -- -1102 --exchange binance   ```
+   xdocs search-error -- -1102 --exchange binance   ```
 
 2. **WS channel lookup** — try semantic search first:
    ```bash
-   cex-api-docs semantic-search "fills channel websocket" --exchange okx --mode hybrid --limit 5   ```
+   xdocs semantic-search "fills channel websocket" --exchange okx --mode hybrid --limit 5   ```
 
 3. **If semantic results have generic headings** ("Response parameters", "URL Path", a date), the chunk lost its parent heading context. Fall back to FTS:
    ```bash
-   cex-api-docs search-pages "deposit-info business websocket"   ```
+   xdocs search-pages "deposit-info business websocket"   ```
 
 4. **If still insufficient**, find the section directly in the stored markdown:
    ```bash
@@ -349,7 +349,7 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 
 ## What's In The Store
 
-Run `cex-api-docs store-report` for current page/endpoint counts. The pre-check already does this on first query.
+Run `xdocs store-report` for current page/endpoint counts. The pre-check already does this on first query.
 
 The store covers 46 exchanges (CEX, perp DEX, CCXT reference) with:
 - SQLite FTS5 indexes on pages and endpoints

@@ -2,7 +2,7 @@
 """
 CEX API Query Skill — Coverage Test
 
-Tests whether the cex-api-docs CLI can surface the same level of detail
+Tests whether the xdocs CLI can surface the same level of detail
 that the Binance spot skill (binance-skills-hub) pre-bakes into its SKILL.md.
 
 Covers:
@@ -121,8 +121,8 @@ REF_NAME_MAP = {
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def run_cli(args: list[str], docs_dir: str, timeout: int = 30) -> dict[str, Any]:
-    """Run a cex-api-docs CLI command. Returns {ok, stdout, stderr, returncode}."""
-    cmd = ["cex-api-docs"] + args + ["--docs-dir", docs_dir]
+    """Run a xdocs CLI command. Returns {ok, stdout, stderr, returncode}."""
+    cmd = ["xdocs"] + args + ["--docs-dir", docs_dir]
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout,
@@ -136,7 +136,7 @@ def run_cli(args: list[str], docs_dir: str, timeout: int = 30) -> dict[str, Any]
     except subprocess.TimeoutExpired:
         return {"ok": False, "stdout": "", "stderr": "TIMEOUT", "returncode": -1}
     except FileNotFoundError:
-        return {"ok": False, "stdout": "", "stderr": "cex-api-docs not found — is venv active?", "returncode": -1}
+        return {"ok": False, "stdout": "", "stderr": "xdocs not found — is venv active?", "returncode": -1}
 
 
 def parse_cli_json(text: str) -> Any:
@@ -193,7 +193,7 @@ def find_endpoint(result: dict, method: str, path: str) -> dict | None:
 def get_endpoint_detail(endpoint_id: str, docs_dir: str) -> tuple[dict | None, str]:
     """Fetch full endpoint record by ID. Returns (data, cli_command)."""
     cmd = ["get-endpoint", endpoint_id]
-    cli_str = f"cex-api-docs {' '.join(cmd)}"
+    cli_str = f"xdocs {' '.join(cmd)}"
     r = run_cli(cmd, docs_dir)
     if r["ok"]:
         return parse_cli_json(r["stdout"]), cli_str
@@ -220,7 +220,7 @@ def test_q1_parameters(docs_dir: str) -> TestResult:
     # Step 1: lookup-endpoint
     cmd1_args = ["lookup-endpoint", gt["endpoint"]["path"],
                  "--method", gt["endpoint"]["method"], "--exchange", EXCHANGE]
-    tr.commands_run.append(f"cex-api-docs {' '.join(cmd1_args)}")
+    tr.commands_run.append(f"xdocs {' '.join(cmd1_args)}")
     r1 = run_cli(cmd1_args, docs_dir)
     if not r1["ok"]:
         tr.detail = f"lookup-endpoint failed: {r1['stderr'][:100]}"
@@ -324,7 +324,7 @@ def test_q2_enums(docs_dir: str) -> TestResult:
     # Strategy 1: Get endpoint record — check if inline enums exist
     cmd1_args = ["lookup-endpoint", "/api/v3/order",
                  "--method", "POST", "--exchange", EXCHANGE]
-    tr.commands_run.append(f"cex-api-docs {' '.join(cmd1_args)}")
+    tr.commands_run.append(f"xdocs {' '.join(cmd1_args)}")
     r1 = run_cli(cmd1_args, docs_dir)
 
     enum_from_schema: dict[str, list[str]] = {}
@@ -350,7 +350,7 @@ def test_q2_enums(docs_dir: str) -> TestResult:
     cmd3_args = ["semantic-search",
                  "spot order type side timeInForce enum values definitions",
                  "--exchange", EXCHANGE, "--mode", "hybrid", "--limit", "5"]
-    tr.commands_run.append(f"cex-api-docs {' '.join(cmd3_args)}")
+    tr.commands_run.append(f"xdocs {' '.join(cmd3_args)}")
     r3 = run_cli(cmd3_args, docs_dir, timeout=60)
 
     pages_found = 0
@@ -436,7 +436,7 @@ def test_q3_order_lists(docs_dir: str) -> TestResult:
     for name, spec in gt.items():
         cmd_args = ["lookup-endpoint", spec["path"],
                     "--method", spec["method"], "--exchange", EXCHANGE]
-        tr.commands_run.append(f"cex-api-docs {' '.join(cmd_args)}")
+        tr.commands_run.append(f"xdocs {' '.join(cmd_args)}")
         r = run_cli(cmd_args, docs_dir)
 
         entry: dict[str, Any] = {
@@ -529,7 +529,7 @@ def test_q4_auth(docs_dir: str) -> TestResult:
     cmd1_args = ["semantic-search",
                  "Binance spot API authentication signature HMAC SHA256 RSA Ed25519 X-MBX-APIKEY",
                  "--exchange", EXCHANGE, "--mode", "hybrid", "--limit", "8"]
-    tr.commands_run.append(f"cex-api-docs {' '.join(cmd1_args)}")
+    tr.commands_run.append(f"xdocs {' '.join(cmd1_args)}")
     r1 = run_cli(cmd1_args, docs_dir, timeout=60)
 
     pages_found = 0
@@ -546,7 +546,7 @@ def test_q4_auth(docs_dir: str) -> TestResult:
 
     # Strategy 2: search-pages (note: no --exchange flag)
     cmd2_args = ["search-pages", "X-MBX-APIKEY HMAC SHA256 signature recvWindow binance"]
-    tr.commands_run.append(f"cex-api-docs {' '.join(cmd2_args)}")
+    tr.commands_run.append(f"xdocs {' '.join(cmd2_args)}")
     r2 = run_cli(cmd2_args, docs_dir)
 
     if r2["ok"] and r2["stdout"]:
@@ -619,7 +619,7 @@ def test_q5_newer_endpoints(docs_dir: str) -> TestResult:
     for ep_spec in gt:
         cmd_args = ["lookup-endpoint", ep_spec["path"],
                      "--method", ep_spec["method"], "--exchange", EXCHANGE]
-        tr.commands_run.append(f"cex-api-docs {' '.join(cmd_args)}")
+        tr.commands_run.append(f"xdocs {' '.join(cmd_args)}")
         r = run_cli(cmd_args, docs_dir)
 
         entry: dict[str, Any] = {
@@ -769,7 +769,7 @@ def generate_report(results: list[TestResult], run_dir: Path) -> str:
         "",
         "## What This Tests",
         "",
-        "Whether an agent using ONLY the `cex-api-docs` CLI can discover the same details",
+        "Whether an agent using ONLY the `xdocs` CLI can discover the same details",
         "that the Binance spot skill pre-bakes into its SKILL.md reference table:",
         "",
         "1. Parameter names, types, required/optional status, constraints",

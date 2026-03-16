@@ -193,7 +193,7 @@ agent-browser find testid "submit-btn" click
 
 ## CEX API Docs: Crawl Validation Use Cases
 
-agent-browser is used by the `cex-api-docs` validation pipeline for:
+agent-browser is used by the `xdocs` validation pipeline for:
 
 ### Nav Extraction (Discovery)
 
@@ -201,7 +201,7 @@ Extract navigation URLs from JS-rendered doc sites that static HTML parsing miss
 
 ```bash
 # agent-browser renders the page, then runs DOM queries to extract all nav links
-# This is automated by: cex-api-docs validate-crawl-targets --exchange binance --enable-nav
+# This is automated by: xdocs validate-crawl-targets --exchange binance --enable-nav
 ```
 
 The pipeline uses these CSS selectors: `nav a`, `aside a`, `[role="navigation"] a`,

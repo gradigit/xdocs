@@ -255,12 +255,12 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
             if key == (4, 5):
                 logger.warning(
                     "Migrated FTS5 tables to porter stemming (v4→v5). "
-                    "Run 'cex-api-docs fts-rebuild' to repopulate search indexes."
+                    "Run 'xdocs fts-rebuild' to repopulate search indexes."
                 )
             if key == (5, 6):
                 logger.warning(
                     "Migrated changelog_entries_fts to porter stemming (v5→v6). "
-                    "Run 'cex-api-docs fts-rebuild' to repopulate changelog search index."
+                    "Run 'xdocs fts-rebuild' to repopulate changelog search index."
                 )
 
     return _get_user_version(conn)

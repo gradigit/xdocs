@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from cex_api_docs.url_sanitize import SanitizeResult, sanitize_url, sanitize_urls
+from xdocs.url_sanitize import SanitizeResult, sanitize_url, sanitize_urls
 
 
 class TestSanitizeUrlAccepted:

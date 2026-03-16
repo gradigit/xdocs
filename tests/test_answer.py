@@ -6,13 +6,13 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from cex_api_docs.answer import answer_question
-from cex_api_docs.db import open_db
-from cex_api_docs.hashing import sha256_hex_bytes, sha256_hex_text
-from cex_api_docs.markdown import normalize_markdown
-from cex_api_docs.registry import load_registry
-from cex_api_docs.store import init_store
-from cex_api_docs.timeutil import now_iso_utc
+from xdocs.answer import answer_question
+from xdocs.db import open_db
+from xdocs.hashing import sha256_hex_bytes, sha256_hex_text
+from xdocs.markdown import normalize_markdown
+from xdocs.registry import load_registry
+from xdocs.store import init_store
+from xdocs.timeutil import now_iso_utc
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

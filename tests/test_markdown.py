@@ -5,11 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.db import open_db
-from cex_api_docs.httpfetch import FetchResult
-from cex_api_docs.markdown import apply_quality_fallback, extract_block_metadata, extractor_info_v1, normalize_markdown
-from cex_api_docs.page_store import extract_page_markdown, store_page
-from cex_api_docs.store import init_store
+from xdocs.db import open_db
+from xdocs.httpfetch import FetchResult
+from xdocs.markdown import apply_quality_fallback, extract_block_metadata, extractor_info_v1, normalize_markdown
+from xdocs.page_store import extract_page_markdown, store_page
+from xdocs.store import init_store
 
 
 class TestMarkdownPipeline(unittest.TestCase):

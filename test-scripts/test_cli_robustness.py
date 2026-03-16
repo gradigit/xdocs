@@ -39,13 +39,13 @@ from typing import Any
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def run_cli(args: list[str], docs_dir: str, timeout: int = 60) -> dict[str, Any]:
-    """Run a cex-api-docs CLI command. Returns {ok, stdout, stderr, returncode}."""
+    """Run a xdocs CLI command. Returns {ok, stdout, stderr, returncode}."""
     # Insert --docs-dir before any -- separator so argparse sees it as a flag
     if "--" in args:
         idx = args.index("--")
-        cmd = ["cex-api-docs"] + args[:idx] + ["--docs-dir", docs_dir] + args[idx:]
+        cmd = ["xdocs"] + args[:idx] + ["--docs-dir", docs_dir] + args[idx:]
     else:
-        cmd = ["cex-api-docs"] + args + ["--docs-dir", docs_dir]
+        cmd = ["xdocs"] + args + ["--docs-dir", docs_dir]
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout,
@@ -59,7 +59,7 @@ def run_cli(args: list[str], docs_dir: str, timeout: int = 60) -> dict[str, Any]
     except subprocess.TimeoutExpired:
         return {"ok": False, "stdout": "", "stderr": "TIMEOUT", "returncode": -1}
     except FileNotFoundError:
-        return {"ok": False, "stdout": "", "stderr": "cex-api-docs not found", "returncode": -1}
+        return {"ok": False, "stdout": "", "stderr": "xdocs not found", "returncode": -1}
 
 
 def parse_cli_json(text: str) -> Any:
@@ -132,7 +132,7 @@ def test_t1_classify_routing(docs_dir: str) -> TestResult:
 
     for case in cases:
         cmd_args = ["classify", case["input"]]
-        tr.commands_run.append(f"cex-api-docs classify \"{case['input'][:60]}...\"")
+        tr.commands_run.append(f"xdocs classify \"{case['input'][:60]}...\"")
         r = run_cli(cmd_args, docs_dir, timeout=15)
 
         entry = {"expected": case["expected_type"], "got": None, "confidence": 0, "pass": False}
@@ -191,7 +191,7 @@ def test_t2_negative_error_codes(docs_dir: str) -> TestResult:
     for code, label in codes:
         # Flags before -- for negative codes
         cmd_args = ["search-error", "--exchange", "binance", "--", code]
-        tr.commands_run.append(f"cex-api-docs search-error --exchange binance -- {code}")
+        tr.commands_run.append(f"xdocs search-error --exchange binance -- {code}")
         r = run_cli(cmd_args, docs_dir, timeout=15)
 
         entry = {"code": code, "label": label, "match_count": 0, "pass": False}
@@ -248,7 +248,7 @@ def test_t3_cross_exchange_rate_limits(docs_dir: str) -> TestResult:
     for exchange, query in exchanges:
         cmd_args = ["semantic-search", query,
                     "--exchange", exchange, "--mode", "hybrid", "--limit", "3"]
-        tr.commands_run.append(f"cex-api-docs semantic-search \"{query}\" --exchange {exchange}")
+        tr.commands_run.append(f"xdocs semantic-search \"{query}\" --exchange {exchange}")
         r = run_cli(cmd_args, docs_dir, timeout=90)
 
         entry = {"exchange": exchange, "result_count": 0, "pass": False,
@@ -306,7 +306,7 @@ def test_t4_korean_exchange(docs_dir: str) -> TestResult:
 
     # Subtest A: lookup Upbit order endpoint
     cmd_a = ["lookup-endpoint", "/v1/orders", "--method", "POST", "--exchange", "upbit"]
-    tr.commands_run.append("cex-api-docs lookup-endpoint /v1/orders --method POST --exchange upbit")
+    tr.commands_run.append("xdocs lookup-endpoint /v1/orders --method POST --exchange upbit")
     r_a = run_cli(cmd_a, docs_dir, timeout=15)
     entry_a = {"label": "lookup_endpoint", "pass": False}
 
@@ -335,7 +335,7 @@ def test_t4_korean_exchange(docs_dir: str) -> TestResult:
     # Subtest B: semantic search in Korean
     cmd_b = ["semantic-search", "Upbit \uc8fc\ubb38 API \ub9e4\uc218 \ub9e4\ub3c4",
              "--exchange", "upbit", "--mode", "hybrid", "--limit", "3"]
-    tr.commands_run.append("cex-api-docs semantic-search \"Upbit \uc8fc\ubb38 API \ub9e4\uc218 \ub9e4\ub3c4\" --exchange upbit")
+    tr.commands_run.append("xdocs semantic-search \"Upbit \uc8fc\ubb38 API \ub9e4\uc218 \ub9e4\ub3c4\" --exchange upbit")
     r_b = run_cli(cmd_b, docs_dir, timeout=90)
     entry_b = {"label": "korean_semantic_search", "pass": False}
 
@@ -369,7 +369,7 @@ def test_t4_korean_exchange(docs_dir: str) -> TestResult:
 
     # Subtest C: search-endpoints for Upbit
     cmd_c = ["search-endpoints", "order", "--exchange", "upbit"]
-    tr.commands_run.append("cex-api-docs search-endpoints order --exchange upbit")
+    tr.commands_run.append("xdocs search-endpoints order --exchange upbit")
     r_c = run_cli(cmd_c, docs_dir, timeout=15)
     entry_c = {"label": "search_endpoints", "pass": False}
 
@@ -412,7 +412,7 @@ def test_t5_answer_e2e(docs_dir: str) -> TestResult:
 
     question = "What permissions does the Binance API key need to place a spot order?"
     cmd_args = ["answer", question]
-    tr.commands_run.append(f"cex-api-docs answer \"{question}\"")
+    tr.commands_run.append(f"xdocs answer \"{question}\"")
     r = run_cli(cmd_args, docs_dir, timeout=120)
 
     entry = {"pass": False, "has_citations": False, "status": None, "claim_count": 0}
@@ -504,7 +504,7 @@ def test_t6_futures_spot_disambiguation(docs_dir: str) -> TestResult:
         cmd_args = ["lookup-endpoint", spec["path"],
                     "--method", spec["method"], "--exchange", "binance"]
         tr.commands_run.append(
-            f"cex-api-docs lookup-endpoint {spec['path']} --method {spec['method']} --exchange binance"
+            f"xdocs lookup-endpoint {spec['path']} --method {spec['method']} --exchange binance"
         )
         r = run_cli(cmd_args, docs_dir, timeout=15)
 
@@ -554,7 +554,7 @@ def test_t7_coverage_gaps(docs_dir: str) -> TestResult:
     tr = TestResult("T7", "Coverage gaps (Binance spot)", "FAIL", "")
 
     cmd_args = ["coverage-gaps", "--exchange", "binance", "--section", "spot"]
-    tr.commands_run.append("cex-api-docs coverage-gaps --exchange binance --section spot")
+    tr.commands_run.append("xdocs coverage-gaps --exchange binance --section spot")
     r = run_cli(cmd_args, docs_dir, timeout=30)
 
     if not r["ok"]:
@@ -634,7 +634,7 @@ def test_t8_okx_websocket(docs_dir: str) -> TestResult:
     # Subtest A: search-error 60029 (fills VIP6)
     # Note: positive error code — do NOT use -- separator
     cmd_a = ["search-error", "--exchange", "okx", "60029"]
-    tr.commands_run.append("cex-api-docs search-error --exchange okx 60029")
+    tr.commands_run.append("xdocs search-error --exchange okx 60029")
     r_a = run_cli(cmd_a, docs_dir, timeout=15)
     entry_a = {"label": "error_60029", "pass": False}
 
@@ -652,7 +652,7 @@ def test_t8_okx_websocket(docs_dir: str) -> TestResult:
 
     # Subtest B: search-error 60018 (wrong URL)
     cmd_b = ["search-error", "--exchange", "okx", "60018"]
-    tr.commands_run.append("cex-api-docs search-error --exchange okx 60018")
+    tr.commands_run.append("xdocs search-error --exchange okx 60018")
     r_b = run_cli(cmd_b, docs_dir, timeout=15)
     entry_b = {"label": "error_60018", "pass": False}
 
@@ -672,7 +672,7 @@ def test_t8_okx_websocket(docs_dir: str) -> TestResult:
     cmd_c = ["semantic-search", "OKX fills channel VIP6 websocket subscription",
              "--exchange", "okx", "--mode", "hybrid", "--limit", "5"]
     tr.commands_run.append(
-        "cex-api-docs semantic-search \"OKX fills channel VIP6 websocket subscription\" --exchange okx"
+        "xdocs semantic-search \"OKX fills channel VIP6 websocket subscription\" --exchange okx"
     )
     r_c = run_cli(cmd_c, docs_dir, timeout=90)
     entry_c = {"label": "semantic_fills_channel", "pass": False}
@@ -703,7 +703,7 @@ def test_t8_okx_websocket(docs_dir: str) -> TestResult:
              "OKX deposit-info withdrawal-info websocket channel business endpoint",
              "--exchange", "okx", "--mode", "hybrid", "--limit", "5"]
     tr.commands_run.append(
-        "cex-api-docs semantic-search \"OKX deposit-info withdrawal-info...\" --exchange okx"
+        "xdocs semantic-search \"OKX deposit-info withdrawal-info...\" --exchange okx"
     )
     r_d = run_cli(cmd_d, docs_dir, timeout=90)
     entry_d = {"label": "semantic_deposit_withdrawal", "pass": False}
@@ -829,7 +829,7 @@ def generate_report(results: list[TestResult], run_dir: Path) -> str:
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Test cex-api-docs CLI robustness")
+    parser = argparse.ArgumentParser(description="Test xdocs CLI robustness")
     parser.add_argument("--docs-dir", default="./cex-docs",
                         help="Path to cex-docs directory (default: ./cex-docs)")
     parser.add_argument("--run-dir", default=None,

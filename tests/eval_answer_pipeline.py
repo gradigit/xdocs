@@ -104,7 +104,7 @@ def evaluate_answer_pipeline(
     qa_path: str,
     limit: int | None = None,
 ) -> AnswerEvalSummary:
-    from cex_api_docs.answer import answer_question
+    from xdocs.answer import answer_question
 
     qa_file = Path(qa_path)
     pairs = []

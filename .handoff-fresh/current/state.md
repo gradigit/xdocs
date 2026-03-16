@@ -1,80 +1,59 @@
-# State
-
-Generated: 2026-02-27 03:17 UTC
+# State — 2026-03-12T22:00:00+09:00
 
 ## Git
 
-- Repo root: `/Users/aaaaa/Projects/cex-api-docs`
-- Branch: `main`
-- Last commit: `729b106 feat: API Assistant v2 — input classification, endpoint lookup, error search, enhanced answers`
-- Remote(s):
+- **Branch**: `main`
+- **Remote**: `origin https://github.com/henryaxis/cex-api-docs.git`
+- **Last commit**: `5687003 fix: FTS5 crash on single quotes in search_pages (BUG-21)`
+- **Working tree**: Clean (only git-excluded handoff artifacts)
+- **Up to date**: Yes
 
-```
-(no remotes configured)
-```
+## Runtime Repo
 
-- Working tree entries (tracked + untracked): `49`
-
-### `git status --short`
-
-```
-M .claude/skills/cex-api-query/EVALUATIONS.md
- M .claude/skills/cex-api-query/SKILL.md
- M README.md
- M data/exchanges.yaml
- M pyproject.toml
- M schema/schema.sql
- M src/cex_api_docs/answer.py
- M src/cex_api_docs/classify.py
- M src/cex_api_docs/cli.py
- M src/cex_api_docs/db.py
- M src/cex_api_docs/httpfetch.py
- M src/cex_api_docs/inventory_fetch.py
- M src/cex_api_docs/markdown.py
- M src/cex_api_docs/page_store.py
- M src/cex_api_docs/registry.py
- M src/cex_api_docs/report.py
- M src/cex_api_docs/semantic.py
- M src/cex_api_docs/store.py
- M src/cex_api_docs/sync.py
- M tests/test_init.py
- M tests/test_inventory.py
- M tests/test_semantic.py
-?? .codex/
-?? .github/
-?? .playwright-mcp/
-?? AGENTS.md
-?? docs/
-?? logs/
-?? ops/
-?? poc-binance-account-endpoints.jpeg
-?? reports/
-?? scripts/bench_crawl_refresh.py
-?? scripts/bench_extraction_quality.py
-?? scripts/pre_share_check.sh
-?? scripts/run_sync_preset.sh
-?? scripts/sync_demo_skills.py
-?? scripts/sync_runtime_repo.py
-?? security_best_practices_report.md
-?? src/cex_api_docs/chunker.py
-?? src/cex_api_docs/embeddings.py
-?? src/cex_api_docs/reranker.py
-?? src/cex_api_docs/validate.py
-?? tests/golden_qa.jsonl
-?? tests/test_chunker.py
-?? tests/test_markdown.py
-?? tests/test_reranker.py
-?? tests/test_retry_after.py
-?? tests/test_validate.py
-?? uv.lock
-```
+- **Path**: `/home/lechat/Projects/cex-api-docs-runtime`
+- **Remote**: `origin https://github.com/henryaxis/cex-api-docs-runtime`
+- **Last commit**: `390fbfc3 sync: fix FTS5 crash on single quotes (BUG-21)`
+- **In sync**: Yes
 
 ## Active Phase
 
-Post-maintenance stabilization + handoff packaging.
+No active milestone. Last completed: **M22b** (Score Fusion & BUG-14 Fix).
+This session was QA evaluation + bug cataloguing (not a forge milestone).
 
-## Current Risks / Blockers
+## Pipeline Metrics (post-M22)
 
-1. Golden QA mismatch suppresses retrieval quality score confidence.
-2. Playwright optional dependency absent in this environment.
-3. Large uncommitted tree should be curated/committed before broader sharing.
+| Metric | Value |
+|--------|-------|
+| MRR | 0.644 |
+| nDCG@5 | 1.343 |
+| URL hit | 65% |
+| Prefix hit | 78% |
+| Domain hit | 97% |
+| OK rate | 92% |
+| Tests | 559 |
+
+## Store
+
+| Metric | Value |
+|--------|-------|
+| Pages | 10,727 |
+| Words | 16.75M |
+| Endpoints | 4,963 |
+| Exchanges | 46 |
+| Sections | 78 |
+| Schema | v6 |
+| LanceDB | 334,935 rows, 2.3 GB |
+
+## Environment
+
+- **Platform**: Linux WSL2 (Ubuntu)
+- **Python**: 3.12
+- **venv**: `/home/lechat/Projects/.venv/bin/activate`
+- **DB**: `./cex-docs/db/docs.db`
+- **Embedding**: jina-embeddings-v5-text-small (1024d, SentenceTransformers on Linux)
+- **Reranker**: Jina v3 auto cascade (jina-v3 → cross-encoder → flashrank)
+- **Fusion**: RRF k=60 (CC opt-in via `CEX_FUSION_MODE=cc`)
+
+## Blockers
+
+None.

@@ -68,7 +68,7 @@ def run_benchmark():
     # Lazy import — triggers model loading once
     print("Loading semantic search module and embedding model...", flush=True)
     t_load = time.time()
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
     # Warm up the model with a dummy query
     semantic_search(docs_dir=DOCS_DIR, query="test", limit=1, query_type="hybrid",
                     rerank=False, include_meta=False)

@@ -6,12 +6,12 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from cex_api_docs.db import open_db
-from cex_api_docs.hashing import sha256_hex_bytes, sha256_hex_text
-from cex_api_docs.lookup import lookup_endpoint_by_path, search_error_code
-from cex_api_docs.markdown import normalize_markdown
-from cex_api_docs.store import init_store
-from cex_api_docs.timeutil import now_iso_utc
+from xdocs.db import open_db
+from xdocs.hashing import sha256_hex_bytes, sha256_hex_text
+from xdocs.lookup import lookup_endpoint_by_path, search_error_code
+from xdocs.markdown import normalize_markdown
+from xdocs.store import init_store
+from xdocs.timeutil import now_iso_utc
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -234,7 +234,7 @@ class TestGetEndpoint(unittest.TestCase):
             docs_dir = Path(tmp) / "cex-docs"
             _setup_store_with_endpoints(docs_dir)
 
-            from cex_api_docs.endpoints import get_endpoint
+            from xdocs.endpoints import get_endpoint
             result = get_endpoint(docs_dir=str(docs_dir), endpoint_id="test-ep-1")
             self.assertEqual(result["endpoint_id"], "test-ep-1")
             self.assertEqual(result["http"]["path"], "/sapi/v1/convert/getQuote")
@@ -244,8 +244,8 @@ class TestGetEndpoint(unittest.TestCase):
             docs_dir = Path(tmp) / "cex-docs"
             _setup_store_with_endpoints(docs_dir)
 
-            from cex_api_docs.endpoints import get_endpoint
-            from cex_api_docs.errors import CexApiDocsError
+            from xdocs.endpoints import get_endpoint
+            from xdocs.errors import CexApiDocsError
             with self.assertRaises(CexApiDocsError) as ctx:
                 get_endpoint(docs_dir=str(docs_dir), endpoint_id="nonexistent")
             self.assertEqual(ctx.exception.code, "ENOTFOUND")

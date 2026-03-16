@@ -17,8 +17,8 @@ def _pairs(repo_root: Path) -> list[tuple[Path, Path]]:
             Path(".claude/skills/cex-api-query/EVALUATIONS.md"),
         ),
         (
-            repo_root / ".claude" / "skills" / "cex-api-docs" / "SKILL.md",
-            Path(".claude/skills/cex-api-docs/SKILL.md"),
+            repo_root / ".claude" / "skills" / "xdocs" / "SKILL.md",
+            Path(".claude/skills/xdocs/SKILL.md"),
         ),
     ]
 

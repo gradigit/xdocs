@@ -22,7 +22,7 @@ Use this skill when asked to "find gaps", "run QA", "benchmark the knowledge bas
 Before starting, verify the tool is installed and data is available:
 
 ```bash
-command -v cex-api-docs && cex-api-docs --version && cex-api-docs store-report 2>&1 | head -5
+command -v xdocs && xdocs --version && xdocs store-report 2>&1 | head -5
 ```
 
 If either check fails, tell the user to run setup first:
@@ -34,7 +34,7 @@ uv tool install -e . && ./scripts/bootstrap-data.sh
 ### Update check
 
 ```bash
-LOCAL=$(cex-api-docs --version 2>/dev/null | awk '{print $2}')
+LOCAL=$(xdocs --version 2>/dev/null | awk '{print $2}')
 REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/xdocs/main/VERSION 2>/dev/null | tr -d '[:space:]')
 ```
 
@@ -43,7 +43,7 @@ If `REMOTE` is newer than `LOCAL`: tell the user â€” "Update available (LOCAL â†
 Then run the smoke test:
 
 ```bash
-cex-api-docs store-report 2>/dev/null | head -1 && python3 scripts/runtime_query_smoke.py
+xdocs store-report 2>/dev/null | head -1 && python3 scripts/runtime_query_smoke.py
 ```
 
 If the smoke test fails, stop and report the failure. Do not proceed with QA on a broken store.
@@ -184,8 +184,8 @@ This is the most important category. Structural checks (status=ok, right domain)
 
 For **10-15 answer pipeline results**, do deep verification:
 
-1. Run `cex-api-docs answer "<query>"` and capture the output.
-2. For each cited URL in the response, find the corresponding page markdown. Use `cex-api-docs search-pages "<url fragment>"` or query the DB directly: `SELECT markdown_path FROM pages WHERE canonical_url LIKE '%<fragment>%'`.
+1. Run `xdocs answer "<query>"` and capture the output.
+2. For each cited URL in the response, find the corresponding page markdown. Use `xdocs search-pages "<url fragment>"` or query the DB directly: `SELECT markdown_path FROM pages WHERE canonical_url LIKE '%<fragment>%'`.
 3. Read the actual markdown file from `cex-docs/pages/`.
 4. Verify: does the excerpt in the answer actually appear in the source page? Does the claim match what the source page says? Is the information attributed to the right exchange?
 

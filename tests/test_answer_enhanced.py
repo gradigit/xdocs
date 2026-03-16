@@ -6,11 +6,11 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from cex_api_docs.answer import answer_question
-from cex_api_docs.db import open_db
-from cex_api_docs.hashing import sha256_hex_bytes, sha256_hex_text
-from cex_api_docs.store import init_store
-from cex_api_docs.timeutil import now_iso_utc
+from xdocs.answer import answer_question
+from xdocs.db import open_db
+from xdocs.hashing import sha256_hex_bytes, sha256_hex_text
+from xdocs.store import init_store
+from xdocs.timeutil import now_iso_utc
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -170,43 +170,43 @@ class TestDetectBinanceSection(unittest.TestCase):
     """Test _detect_binance_section keyword-to-section mapping."""
 
     def test_spot(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("binance spot trading api"), "spot")
 
     def test_futures_usdm(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("usd-m futures rate limit"), "futures_usdm")
 
     def test_futures_coinm(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("coin-m delivery endpoint"), "futures_coinm")
 
     def test_portfolio_margin(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("portfolio margin account info"), "portfolio_margin")
 
     def test_websocket(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("ws stream connection"), "websocket")
 
     def test_no_match(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertIsNone(_detect_binance_section("what is the api key format"))
 
     def test_generic_futures(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("futures order endpoint"), "futures_usdm")
 
     def test_options(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("european options pricing"), "options")
 
     def test_wallet(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("wallet deposit address"), "wallet")
 
     def test_copy_trading(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("copy trading lead trader"), "copy_trading")
 
 
@@ -220,22 +220,22 @@ class TestDetectSectionKeywords(unittest.TestCase):
         return SimpleNamespace(sections=sections)
 
     def test_exact_section_match(self) -> None:
-        from cex_api_docs.answer import _detect_section_keywords
+        from xdocs.answer import _detect_section_keywords
         ex = self._make_exchange(["spot", "futures", "websocket"])
         self.assertEqual(_detect_section_keywords("spot order book depth", ex), "spot")
 
     def test_underscore_to_space_match(self) -> None:
-        from cex_api_docs.answer import _detect_section_keywords
+        from xdocs.answer import _detect_section_keywords
         ex = self._make_exchange(["rest", "copy_trading", "options"])
         self.assertEqual(_detect_section_keywords("how does copy trading work", ex), "copy_trading")
 
     def test_single_section_returns_none(self) -> None:
-        from cex_api_docs.answer import _detect_section_keywords
+        from xdocs.answer import _detect_section_keywords
         ex = self._make_exchange(["rest"])
         self.assertIsNone(_detect_section_keywords("rest endpoint info", ex))
 
     def test_no_match(self) -> None:
-        from cex_api_docs.answer import _detect_section_keywords
+        from xdocs.answer import _detect_section_keywords
         ex = self._make_exchange(["spot", "futures"])
         self.assertIsNone(_detect_section_keywords("api key permissions", ex))
 
@@ -244,34 +244,34 @@ class TestSanitizeExchangeFilter(unittest.TestCase):
     """Test _sanitize_exchange_filter prevents injection."""
 
     def test_valid_name(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         self.assertEqual(_sanitize_exchange_filter("binance"), "binance")
 
     def test_valid_with_underscores(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         self.assertEqual(_sanitize_exchange_filter("crypto_com"), "crypto_com")
 
     def test_valid_with_digits(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         self.assertEqual(_sanitize_exchange_filter("gate_io2"), "gate_io2")
 
     def test_rejects_sql_injection(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         with self.assertRaises(ValueError):
             _sanitize_exchange_filter("binance' OR 1=1 --")
 
     def test_rejects_special_chars(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         with self.assertRaises(ValueError):
             _sanitize_exchange_filter("bin;DROP TABLE")
 
     def test_rejects_uppercase(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         with self.assertRaises(ValueError):
             _sanitize_exchange_filter("Binance")
 
     def test_rejects_empty(self) -> None:
-        from cex_api_docs.semantic import _sanitize_exchange_filter
+        from xdocs.semantic import _sanitize_exchange_filter
         with self.assertRaises(ValueError):
             _sanitize_exchange_filter("")
 
@@ -280,19 +280,19 @@ class TestSpecUrlSuppression(unittest.TestCase):
     """Test that _is_spec_url correctly identifies spec URLs."""
 
     def test_openapi_url(self) -> None:
-        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        from xdocs.resolve_docs_urls import _is_spec_url
         self.assertTrue(_is_spec_url("https://example.com/openapi/v3/spec.json"))
 
     def test_swagger_url(self) -> None:
-        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        from xdocs.resolve_docs_urls import _is_spec_url
         self.assertTrue(_is_spec_url("https://example.com/swagger.json"))
 
     def test_normal_doc_url(self) -> None:
-        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        from xdocs.resolve_docs_urls import _is_spec_url
         self.assertFalse(_is_spec_url("https://docs.example.com/api/v5/order"))
 
     def test_postman_url(self) -> None:
-        from cex_api_docs.resolve_docs_urls import _is_spec_url
+        from xdocs.resolve_docs_urls import _is_spec_url
         self.assertTrue(_is_spec_url("https://www.postman.com/collections/12345"))
 
 
@@ -301,7 +301,7 @@ class TestSchemaVersion6Migration(unittest.TestCase):
 
     def test_fresh_db_gets_version_6(self) -> None:
         import sqlite3
-        from cex_api_docs.db import init_db
+        from xdocs.db import init_db
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "test.db"
             result = init_db(db_path, REPO_ROOT / "schema" / "schema.sql")
@@ -309,7 +309,7 @@ class TestSchemaVersion6Migration(unittest.TestCase):
 
     def test_v5_migrates_to_v6(self) -> None:
         import sqlite3
-        from cex_api_docs.db import apply_schema, open_db, _get_user_version
+        from xdocs.db import apply_schema, open_db, _get_user_version
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "test.db"
             conn = open_db(db_path)
@@ -353,7 +353,7 @@ class TestNavRegionDetection(unittest.TestCase):
     """Test that excerpt extraction skips navigation/TOC regions."""
 
     def test_is_nav_region_bullet_list(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         nav_md = "\n".join([
             "NAV",
@@ -370,7 +370,7 @@ class TestNavRegionDetection(unittest.TestCase):
         self.assertTrue(_is_nav_region(nav_md, 50))
 
     def test_is_nav_region_content(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         content_md = "\n".join([
             "## Rate Limits",
@@ -387,7 +387,7 @@ class TestNavRegionDetection(unittest.TestCase):
 
     def test_make_excerpt_skips_nav(self):
         import re
-        from cex_api_docs.answer import _make_excerpt
+        from xdocs.answer import _make_excerpt
 
         # Build a large enough nav section so it's clearly separated from content
         nav_lines = [f"* [{f'Section {i}'}](https://example.com/s{i})" for i in range(40)]
@@ -414,35 +414,35 @@ class TestIsTestnetUrl(unittest.TestCase):
     """Test testnet/sandbox URL detection."""
 
     def test_testnet_path(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         self.assertTrue(_is_testnet_url("https://testnet.binance.vision/testnet/api"))
         self.assertTrue(_is_testnet_url("https://api.binance.com/testnet/v3/account"))
 
     def test_sandbox_path(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         self.assertTrue(_is_testnet_url("https://api.coinbase.com/sandbox/v2/orders"))
 
     def test_case_insensitive(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         self.assertTrue(_is_testnet_url("https://api.example.com/TESTNET/api"))
         self.assertTrue(_is_testnet_url("https://api.example.com/Sandbox/api"))
 
     def test_normal_url(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         self.assertFalse(_is_testnet_url("https://api.binance.com/api/v3/account"))
         self.assertFalse(_is_testnet_url("https://www.okx.com/docs-v5/en/"))
 
     def test_empty_url(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         self.assertFalse(_is_testnet_url(""))
 
     def test_testnet_in_domain_not_path(self):
-        from cex_api_docs.answer import _is_testnet_url
+        from xdocs.answer import _is_testnet_url
 
         # "testnet" in domain but not as /testnet/ path segment
         self.assertFalse(_is_testnet_url("https://testnet.binance.vision/api/v3"))
@@ -452,8 +452,8 @@ class TestApplySectionBoost(unittest.TestCase):
     """Test section boost score multiplication."""
 
     def test_boost_matching_urls(self):
-        from cex_api_docs import answer
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs import answer
+        from xdocs.answer import _apply_section_boost
 
         old = answer._SECTION_BOOST_ENABLED
         try:
@@ -476,8 +476,8 @@ class TestApplySectionBoost(unittest.TestCase):
             answer._SECTION_BOOST_ENABLED = old
 
     def test_boost_reorders(self):
-        from cex_api_docs import answer
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs import answer
+        from xdocs.answer import _apply_section_boost
 
         old = answer._SECTION_BOOST_ENABLED
         try:
@@ -494,7 +494,7 @@ class TestApplySectionBoost(unittest.TestCase):
 
     def test_no_boost_when_disabled(self):
         import os
-        from cex_api_docs import answer
+        from xdocs import answer
 
         old = answer._SECTION_BOOST_ENABLED
         try:
@@ -506,14 +506,14 @@ class TestApplySectionBoost(unittest.TestCase):
             answer._SECTION_BOOST_ENABLED = old
 
     def test_no_boost_when_no_prefix(self):
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs.answer import _apply_section_boost
 
         results = [{"canonical_url": "https://a.com/x", "rrf_score": 0.5}]
         out = _apply_section_boost(results, section_prefix=None)
         self.assertEqual(out[0]["rrf_score"], 0.5)
 
     def test_empty_results(self):
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs.answer import _apply_section_boost
 
         out = _apply_section_boost([], section_prefix="https://a.com/spot/")
         self.assertEqual(out, [])
@@ -523,7 +523,7 @@ class TestExcerptSnapping(unittest.TestCase):
     """Test excerpt boundary snapping functions."""
 
     def test_snap_start_backward_to_newline(self):
-        from cex_api_docs.answer import _snap_start_backward
+        from xdocs.answer import _snap_start_backward
 
         md = "line one\nline two\nline three"
         # Snap backward from middle of "line two"
@@ -532,12 +532,12 @@ class TestExcerptSnapping(unittest.TestCase):
         self.assertEqual(snapped, md.index("line two"))
 
     def test_snap_start_backward_at_zero(self):
-        from cex_api_docs.answer import _snap_start_backward
+        from xdocs.answer import _snap_start_backward
 
         self.assertEqual(_snap_start_backward("any text", 0), 0)
 
     def test_snap_end_forward_to_paragraph(self):
-        from cex_api_docs.answer import _snap_end_forward
+        from xdocs.answer import _snap_end_forward
 
         md = "First sentence.\n\nSecond paragraph."
         pos = 10  # middle of first sentence
@@ -546,7 +546,7 @@ class TestExcerptSnapping(unittest.TestCase):
         self.assertEqual(snapped, md.index("\n\n"))
 
     def test_snap_end_forward_to_sentence(self):
-        from cex_api_docs.answer import _snap_end_forward
+        from xdocs.answer import _snap_end_forward
 
         md = "First sentence. Second sentence."
         pos = 10
@@ -554,7 +554,7 @@ class TestExcerptSnapping(unittest.TestCase):
         self.assertEqual(snapped, md.index(". ") + 1)
 
     def test_snap_end_forward_at_eof(self):
-        from cex_api_docs.answer import _snap_end_forward
+        from xdocs.answer import _snap_end_forward
 
         md = "short"
         self.assertEqual(_snap_end_forward(md, len(md)), len(md))
@@ -564,19 +564,19 @@ class TestCleanExcerpt(unittest.TestCase):
     """Test zero-width character stripping."""
 
     def test_strips_zero_width_chars(self):
-        from cex_api_docs.answer import _clean_excerpt
+        from xdocs.answer import _clean_excerpt
 
         text = "hello\u200bworld\u200c\u200d\ufeff\u00ad"
         cleaned = _clean_excerpt(text)
         self.assertEqual(cleaned, "helloworld")
 
     def test_strips_whitespace(self):
-        from cex_api_docs.answer import _clean_excerpt
+        from xdocs.answer import _clean_excerpt
 
         self.assertEqual(_clean_excerpt("  hello  "), "hello")
 
     def test_empty_string(self):
-        from cex_api_docs.answer import _clean_excerpt
+        from xdocs.answer import _clean_excerpt
 
         self.assertEqual(_clean_excerpt(""), "")
 
@@ -585,22 +585,22 @@ class TestExtractWeightFromExcerpt(unittest.TestCase):
     """Test weight extraction from excerpt text."""
 
     def test_weight_is_pattern(self):
-        from cex_api_docs.answer import _extract_weight_from_excerpt
+        from xdocs.answer import _extract_weight_from_excerpt
 
         self.assertEqual(_extract_weight_from_excerpt("The weight is 10 for this endpoint"), 10)
 
     def test_weight_colon_pattern(self):
-        from cex_api_docs.answer import _extract_weight_from_excerpt
+        from xdocs.answer import _extract_weight_from_excerpt
 
         self.assertEqual(_extract_weight_from_excerpt("weight: 5"), 5)
 
     def test_weight_equals_pattern(self):
-        from cex_api_docs.answer import _extract_weight_from_excerpt
+        from xdocs.answer import _extract_weight_from_excerpt
 
         self.assertEqual(_extract_weight_from_excerpt("weight=20"), 20)
 
     def test_no_weight(self):
-        from cex_api_docs.answer import _extract_weight_from_excerpt
+        from xdocs.answer import _extract_weight_from_excerpt
 
         self.assertIsNone(_extract_weight_from_excerpt("No weight info here"))
 
@@ -609,25 +609,25 @@ class TestNavRegionEdgeCases(unittest.TestCase):
     """Test nav region detection edge cases."""
 
     def test_short_region_not_nav(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         short = "Just a line."
         self.assertFalse(_is_nav_region(short, 5))
 
     def test_empty_string(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         self.assertFalse(_is_nav_region("", 0))
 
     def test_link_only_lines(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         # Pure link-only lines should be detected as nav
         links = "\n".join([f"[Page {i}](https://example.com/p{i})" for i in range(20)])
         self.assertTrue(_is_nav_region(links, len(links) // 2))
 
     def test_mixed_content_below_threshold(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         # Mix of content and nav — below 55% threshold
         lines = []
@@ -640,7 +640,7 @@ class TestNavRegionEdgeCases(unittest.TestCase):
         self.assertFalse(_is_nav_region(md, len(md) // 2))
 
     def test_window_parameter(self):
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         # Large nav followed by content — position in content should not be nav
         nav = "\n".join([f"* [Link {i}](https://example.com/{i})" for i in range(50)])
@@ -663,7 +663,7 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
     def test_all_nav_matches_use_prefix_fallback(self):
         """When every match is in a nav region, excerpt should be page prefix."""
         import re
-        from cex_api_docs.answer import _make_excerpt
+        from xdocs.answer import _make_excerpt
 
         # Build a page where "orders" only appears in nav
         nav = "\n".join([f"* [Orders page {i}](https://ex.com/orders/{i})" for i in range(20)])
@@ -678,7 +678,7 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
 
     def test_skip_link_detected_as_nav(self):
         """Anchor-only skip links like [Skip to content](#main) are nav (caught by link-only-line branch)."""
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         lines = [
             "[Skip to content](#main)",
@@ -695,7 +695,7 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
 
     def test_multi_link_lines_detected_as_nav(self):
         """Lines with multiple links separated by pipes are nav."""
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         lines = [
             "[Home](/) | [API](/api) | [Docs](/docs)",
@@ -710,7 +710,7 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
 
     def test_threshold_40_percent(self):
         """Region with 42% nav lines (was below old 55% threshold) now detected."""
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         # 5 nav + 7 content = 12 lines, 5/12 = 41.7%
         lines = []
@@ -723,7 +723,7 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
 
     def test_35_percent_nav_not_detected(self):
         """Region with 35% nav should NOT be detected (still below 40%)."""
-        from cex_api_docs.answer import _is_nav_region
+        from xdocs.answer import _is_nav_region
 
         # 7 nav + 13 content = 20 lines, 7/20 = 35%
         lines = []
@@ -740,7 +740,7 @@ class TestMakeExcerptEdgeCases(unittest.TestCase):
 
     def test_no_match_fallback(self):
         import re
-        from cex_api_docs.answer import _make_excerpt
+        from xdocs.answer import _make_excerpt
 
         md = "This is a document without the search term."
         needle = re.compile(r"nonexistent_term_xyz")
@@ -751,7 +751,7 @@ class TestMakeExcerptEdgeCases(unittest.TestCase):
 
     def test_match_in_content_not_nav(self):
         import re
-        from cex_api_docs.answer import _make_excerpt
+        from xdocs.answer import _make_excerpt
 
         # Simulate large page: nav → filler → content
         nav = "\n".join([f"* [Item {i}](https://ex.com/{i})" for i in range(30)])
@@ -769,54 +769,54 @@ class TestDetectBinanceSection(unittest.TestCase):
     """Test _detect_binance_section for all keyword patterns."""
 
     def test_portfolio_margin(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("portfolio margin requirements"), "portfolio_margin")
 
     def test_copy_trading(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("copy trading lead trader"), "copy_trading")
 
     def test_margin_trading(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("margin trading interest rates"), "margin_trading")
 
     def test_futures_coinm(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("coin-m futures mark price"), "futures_coinm")
         self.assertEqual(_detect_binance_section("futures coinm delivery"), "futures_coinm")
 
     def test_futures_usdm(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("usd-m futures open interest"), "futures_usdm")
         self.assertEqual(_detect_binance_section("usds contract details"), "futures_usdm")
 
     def test_futures_generic_maps_to_usdm(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("futures position risk"), "futures_usdm")
 
     def test_options(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("european options pricing"), "options")
 
     def test_websocket(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("websocket stream connection"), "websocket")
         self.assertEqual(_detect_binance_section("ws connection limit"), "websocket")
 
     def test_wallet(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("wallet deposit address"), "wallet")
 
     def test_spot(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertEqual(_detect_binance_section("spot order book depth"), "spot")
 
     def test_no_match(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         self.assertIsNone(_detect_binance_section("api key permissions"))
 
     def test_priority_specific_over_generic(self) -> None:
-        from cex_api_docs.answer import _detect_binance_section
+        from xdocs.answer import _detect_binance_section
         # "coin-m" should match before generic "futures"
         self.assertEqual(_detect_binance_section("coin-m futures"), "futures_coinm")
         # "portfolio margin" should match before generic "margin"
@@ -827,7 +827,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
     """Test _EXCHANGE_SECTION_KEYWORDS patterns for multi-section exchanges."""
 
     def test_kucoin_futures(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["kucoin"]
         matched = None
         for pat, sid in patterns:
@@ -837,7 +837,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "futures")
 
     def test_kucoin_margin(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["kucoin"]
         matched = None
         for pat, sid in patterns:
@@ -847,7 +847,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "margin")
 
     def test_htx_coin_margined(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["htx"]
         matched = None
         for pat, sid in patterns:
@@ -857,7 +857,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "coin_margined_swap")
 
     def test_htx_usdt_swap(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["htx"]
         matched = None
         for pat, sid in patterns:
@@ -867,7 +867,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "usdt_swap")
 
     def test_coinbase_prime(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["coinbase"]
         matched = None
         for pat, sid in patterns:
@@ -877,7 +877,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "prime")
 
     def test_okx_websocket(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["okx"]
         matched = None
         for pat, sid in patterns:
@@ -887,7 +887,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "websocket")
 
     def test_mexc_futures(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["mexc"]
         matched = None
         for pat, sid in patterns:
@@ -897,7 +897,7 @@ class TestExchangeSectionKeywords(unittest.TestCase):
         self.assertEqual(matched, "futures")
 
     def test_bitmart_spot(self) -> None:
-        from cex_api_docs.answer import _EXCHANGE_SECTION_KEYWORDS
+        from xdocs.answer import _EXCHANGE_SECTION_KEYWORDS
         patterns = _EXCHANGE_SECTION_KEYWORDS["bitmart"]
         matched = None
         for pat, sid in patterns:
@@ -929,7 +929,7 @@ class TestDirectRoute(unittest.TestCase):
         return SimpleNamespace(input_type=input_type, confidence=confidence, signals=signals or {})
 
     def test_endpoint_path_returns_none_when_no_match(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             exchange = self._make_exchange()
@@ -939,7 +939,7 @@ class TestDirectRoute(unittest.TestCase):
             self.assertIsNone(result)
 
     def test_error_message_returns_none_when_no_match(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             exchange = self._make_exchange()
@@ -949,7 +949,7 @@ class TestDirectRoute(unittest.TestCase):
             self.assertIsNone(result)
 
     def test_endpoint_path_with_stored_endpoint(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             _insert_endpoint(docs_dir, conn, endpoint={
@@ -969,7 +969,7 @@ class TestDirectRoute(unittest.TestCase):
             self.assertTrue(len(result["claims"]) > 0)
 
     def test_question_type_returns_none(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             exchange = self._make_exchange()
@@ -979,7 +979,7 @@ class TestDirectRoute(unittest.TestCase):
             self.assertIsNone(result)
 
     def test_error_message_with_stored_page(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             # Insert a page that mentions error -1003
@@ -1016,7 +1016,7 @@ class TestBug18DirectRouteExcerpts(unittest.TestCase):
         return SimpleNamespace(input_type=input_type, confidence=confidence, signals=signals or {})
 
     def test_endpoint_path_claim_has_excerpt(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             page_url = "https://developers.binance.com/docs/spot/ticker-price"
@@ -1046,7 +1046,7 @@ class TestBug18DirectRouteExcerpts(unittest.TestCase):
             self.assertTrue(len(cit["excerpt"]) > 0)
 
     def test_error_message_page_claim_has_excerpt(self) -> None:
-        from cex_api_docs.answer import _direct_route
+        from xdocs.answer import _direct_route
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             page_url = "https://developers.binance.com/docs/errors"
@@ -1069,7 +1069,7 @@ class TestBug18DirectRouteExcerpts(unittest.TestCase):
             self.assertIn("excerpt_end", cit)
 
     def test_build_full_citation_returns_url_only_for_missing_page(self) -> None:
-        from cex_api_docs.answer import _build_full_citation
+        from xdocs.answer import _build_full_citation
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             cit = _build_full_citation(conn, "https://nonexistent.example.com/page", "test query")
@@ -1077,7 +1077,7 @@ class TestBug18DirectRouteExcerpts(unittest.TestCase):
             self.assertNotIn("excerpt", cit)
 
     def test_build_full_citation_returns_excerpt_for_existing_page(self) -> None:
-        from cex_api_docs.answer import _build_full_citation
+        from xdocs.answer import _build_full_citation
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir, conn = self._setup_store(Path(tmp))
             page_url = "https://example.com/api/docs"
@@ -1096,35 +1096,35 @@ class TestDirectoryPrefix(unittest.TestCase):
     """Test _directory_prefix URL stripping."""
 
     def test_strips_last_segment(self):
-        from cex_api_docs.answer import _directory_prefix
+        from xdocs.answer import _directory_prefix
         self.assertEqual(
             _directory_prefix("https://example.com/docs/ws/connect"),
             "https://example.com/docs/ws/",
         )
 
     def test_trailing_slash_kept(self):
-        from cex_api_docs.answer import _directory_prefix
+        from xdocs.answer import _directory_prefix
         self.assertEqual(
             _directory_prefix("https://example.com/docs/"),
             "https://example.com/docs/",
         )
 
     def test_strips_query(self):
-        from cex_api_docs.answer import _directory_prefix
+        from xdocs.answer import _directory_prefix
         self.assertEqual(
             _directory_prefix("https://example.com/docs/page?v=2"),
             "https://example.com/docs/",
         )
 
     def test_strips_fragment(self):
-        from cex_api_docs.answer import _directory_prefix
+        from xdocs.answer import _directory_prefix
         self.assertEqual(
             _directory_prefix("https://example.com/docs/page#section"),
             "https://example.com/docs/",
         )
 
     def test_root_path(self):
-        from cex_api_docs.answer import _directory_prefix
+        from xdocs.answer import _directory_prefix
         # Short URL shouldn't strip beyond scheme
         result = _directory_prefix("https://a.com/x")
         self.assertTrue(result.startswith("https://"))
@@ -1134,7 +1134,7 @@ class TestPageTypeBoost(unittest.TestCase):
     """Test page-type boost for overview/intro pages."""
 
     def test_broad_question_boosts_intro_url(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._PAGE_TYPE_BOOST_ENABLED
         try:
             answer._PAGE_TYPE_BOOST_ENABLED = True
@@ -1150,7 +1150,7 @@ class TestPageTypeBoost(unittest.TestCase):
             answer._PAGE_TYPE_BOOST_ENABLED = old
 
     def test_specific_query_no_boost(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._PAGE_TYPE_BOOST_ENABLED
         try:
             answer._PAGE_TYPE_BOOST_ENABLED = True
@@ -1165,7 +1165,7 @@ class TestPageTypeBoost(unittest.TestCase):
             answer._PAGE_TYPE_BOOST_ENABLED = old
 
     def test_rate_limit_question_boosts(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._PAGE_TYPE_BOOST_ENABLED
         try:
             answer._PAGE_TYPE_BOOST_ENABLED = True
@@ -1180,7 +1180,7 @@ class TestPageTypeBoost(unittest.TestCase):
             answer._PAGE_TYPE_BOOST_ENABLED = old
 
     def test_overview_url_patterns(self):
-        from cex_api_docs.answer import _OVERVIEW_URL_PATTERNS
+        from xdocs.answer import _OVERVIEW_URL_PATTERNS
         # Should match
         self.assertIsNotNone(_OVERVIEW_URL_PATTERNS.search("/rest-api/introduction"))
         self.assertIsNotNone(_OVERVIEW_URL_PATTERNS.search("/general-info"))
@@ -1193,7 +1193,7 @@ class TestPageTypeBoost(unittest.TestCase):
         self.assertIsNone(_OVERVIEW_URL_PATTERNS.search("/trade/place-order"))
 
     def test_disabled_no_effect(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._PAGE_TYPE_BOOST_ENABLED
         try:
             answer._PAGE_TYPE_BOOST_ENABLED = False
@@ -1207,7 +1207,7 @@ class TestPageTypeBoost(unittest.TestCase):
             answer._PAGE_TYPE_BOOST_ENABLED = old
 
     def test_empty_results(self):
-        from cex_api_docs.answer import _apply_page_type_boost
+        from xdocs.answer import _apply_page_type_boost
         result = _apply_page_type_boost([], norm="how to authenticate")
         self.assertEqual(result, [])
 
@@ -1216,7 +1216,7 @@ class TestSectionBoostReordering(unittest.TestCase):
     """Test that _apply_section_boost correctly reorders candidates."""
 
     def test_boost_promotes_matching_urls(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._SECTION_BOOST_ENABLED
         try:
             answer._SECTION_BOOST_ENABLED = True
@@ -1233,7 +1233,7 @@ class TestSectionBoostReordering(unittest.TestCase):
             answer._SECTION_BOOST_ENABLED = old
 
     def test_boost_disabled_no_change(self):
-        from cex_api_docs import answer
+        from xdocs import answer
         old = answer._SECTION_BOOST_ENABLED
         try:
             answer._SECTION_BOOST_ENABLED = False
@@ -1247,7 +1247,7 @@ class TestSectionBoostReordering(unittest.TestCase):
             answer._SECTION_BOOST_ENABLED = old
 
     def test_no_prefix_no_change(self):
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs.answer import _apply_section_boost
         candidates = [
             {"canonical_url": "https://a.com/p1", "rrf_score": 0.5},
             {"canonical_url": "https://a.com/p2", "rrf_score": 0.4},
@@ -1256,7 +1256,7 @@ class TestSectionBoostReordering(unittest.TestCase):
         self.assertEqual(result[0]["canonical_url"], "https://a.com/p1")
 
     def test_empty_results(self):
-        from cex_api_docs.answer import _apply_section_boost
+        from xdocs.answer import _apply_section_boost
         result = _apply_section_boost([], section_prefix="https://a.com/")
         self.assertEqual(result, [])
 
@@ -1265,7 +1265,7 @@ class TestDeprecatedDemotion(unittest.TestCase):
     """Test deprecated/abandoned URL demotion."""
 
     def test_abandoned_endpoint_demoted(self):
-        from cex_api_docs.answer import _apply_deprecated_demotion
+        from xdocs.answer import _apply_deprecated_demotion
         results = [
             {"canonical_url": "https://kucoin.com/docs-new/abandoned-endpoints/get-deposit-v1", "rrf_score": 0.6},
             {"canonical_url": "https://kucoin.com/docs-new/rest/account-info/deposit/get-deposit-v3", "rrf_score": 0.5},
@@ -1276,7 +1276,7 @@ class TestDeprecatedDemotion(unittest.TestCase):
         self.assertTrue(demoted[1].get("deprecated_demoted"))
 
     def test_deprecated_path_demoted(self):
-        from cex_api_docs.answer import _apply_deprecated_demotion
+        from xdocs.answer import _apply_deprecated_demotion
         results = [
             {"canonical_url": "https://docs.ex.com/deprecated/old-order", "rrf_score": 0.8},
             {"canonical_url": "https://docs.ex.com/api/new-order", "rrf_score": 0.5},
@@ -1285,7 +1285,7 @@ class TestDeprecatedDemotion(unittest.TestCase):
         self.assertEqual(demoted[0]["canonical_url"], "https://docs.ex.com/api/new-order")
 
     def test_legacy_api_demoted(self):
-        from cex_api_docs.answer import _apply_deprecated_demotion
+        from xdocs.answer import _apply_deprecated_demotion
         results = [
             {"canonical_url": "https://docs.ex.com/legacy-api/balance", "rrf_score": 0.7},
             {"canonical_url": "https://docs.ex.com/api/v3/balance", "rrf_score": 0.5},
@@ -1294,7 +1294,7 @@ class TestDeprecatedDemotion(unittest.TestCase):
         self.assertEqual(demoted[0]["canonical_url"], "https://docs.ex.com/api/v3/balance")
 
     def test_no_deprecated_no_change(self):
-        from cex_api_docs.answer import _apply_deprecated_demotion
+        from xdocs.answer import _apply_deprecated_demotion
         results = [
             {"canonical_url": "https://docs.ex.com/api/ticker", "rrf_score": 0.6},
             {"canonical_url": "https://docs.ex.com/api/balance", "rrf_score": 0.5},
@@ -1304,12 +1304,12 @@ class TestDeprecatedDemotion(unittest.TestCase):
         self.assertFalse(demoted[0].get("deprecated_demoted", False))
 
     def test_empty_results(self):
-        from cex_api_docs.answer import _apply_deprecated_demotion
+        from xdocs.answer import _apply_deprecated_demotion
         result = _apply_deprecated_demotion([])
         self.assertEqual(result, [])
 
     def test_url_patterns(self):
-        from cex_api_docs.answer import _DEPRECATED_URL_PATTERNS
+        from xdocs.answer import _DEPRECATED_URL_PATTERNS
         # Should match
         self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/abandoned-endpoints/get-deposit"))
         self.assertIsNotNone(_DEPRECATED_URL_PATTERNS.search("/deprecated/old-endpoint"))
@@ -1326,47 +1326,47 @@ class TestPayloadActionInference(unittest.TestCase):
     """Tests for _infer_payload_action and _PAYLOAD_ACTION_MAP."""
 
     def test_place_order_binance(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["symbol", "side", "type", "quantity", "price"])
         self.assertEqual(result, "place order")
 
     def test_place_order_okx(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["instId", "tdMode", "side", "ordType", "px", "sz"])
         self.assertEqual(result, "place order")
 
     def test_place_order_bybit(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["category", "symbol", "orderType", "side", "qty"])
         self.assertEqual(result, "place order")
 
     def test_withdraw(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["asset", "address", "amount", "network"])
         self.assertEqual(result, "withdraw")
 
     def test_withdraw_coin(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["coin", "chain", "address", "amount"])
         self.assertEqual(result, "withdraw")
 
     def test_set_leverage(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["leverage", "symbol", "marginCoin"])
         self.assertEqual(result, "set leverage")
 
     def test_websocket_subscribe(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["type", "channel", "instId"])
         self.assertEqual(result, "websocket subscribe")
 
     def test_no_match(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action(["symbol", "invalid"])
         self.assertIsNone(result)
 
     def test_empty(self) -> None:
-        from cex_api_docs.answer import _infer_payload_action
+        from xdocs.answer import _infer_payload_action
         result = _infer_payload_action([])
         self.assertIsNone(result)
 
@@ -1375,29 +1375,29 @@ class TestBroadQuestionPatterns(unittest.TestCase):
     """Tests for broadened _BROAD_QUESTION_PATTERNS."""
 
     def test_how_many(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("How many requests per minute does Bitget allow"))
 
     def test_endpoints_suffix(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Binance margin account endpoints"))
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Binance USDM futures order endpoint"))
 
     def test_api_suffix(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Bitget copy trading API"))
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Coinbase Advanced Trade API"))
 
     def test_best_practice(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Upbit REST API best practice"))
 
     def test_sandbox(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("Gemini API sandbox environment"))
 
     def test_original_patterns_preserved(self) -> None:
-        from cex_api_docs.answer import _BROAD_QUESTION_PATTERNS
+        from xdocs.answer import _BROAD_QUESTION_PATTERNS
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("how to authenticate"))
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("what is the rate limit"))
         self.assertIsNotNone(_BROAD_QUESTION_PATTERNS.search("authentication guide"))
@@ -1408,25 +1408,25 @@ class TestCodeIndicatorPatternsBug14(unittest.TestCase):
     """BUG-14: Bare API signing code should be classified as code_snippet."""
 
     def test_hmac_signing_code(self) -> None:
-        from cex_api_docs.classify import classify_input
+        from xdocs.classify import classify_input
         text = 'headers = {"X-MBX-APIKEY": api_key}; signature = hmac.new(secret, query_string, hashlib.sha256).hexdigest()'
         result = classify_input(text)
         self.assertEqual(result.input_type, "code_snippet")
 
     def test_base64_encoding(self) -> None:
-        from cex_api_docs.classify import classify_input
+        from xdocs.classify import classify_input
         text = "sign = base64.b64encode(hmac.new(secret.encode(), message.encode(), hashlib.sha256).digest())"
         result = classify_input(text)
         self.assertEqual(result.input_type, "code_snippet")
 
     def test_nodejs_crypto(self) -> None:
-        from cex_api_docs.classify import classify_input
+        from xdocs.classify import classify_input
         text = "const signature = crypto.createHmac('sha256', secretKey).update(queryString).digest('hex')"
         result = classify_input(text)
         self.assertEqual(result.input_type, "code_snippet")
 
     def test_plain_question_unchanged(self) -> None:
-        from cex_api_docs.classify import classify_input
+        from xdocs.classify import classify_input
         text = "How do I authenticate with the Binance API?"
         result = classify_input(text)
         self.assertEqual(result.input_type, "question")

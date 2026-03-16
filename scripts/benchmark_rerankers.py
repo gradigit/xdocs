@@ -118,7 +118,7 @@ def paired_significance(scores_a: np.ndarray, scores_b: np.ndarray):
 
 def retrieve_candidates(docs_dir: str, qa_pairs: list[dict], pool_size: int = 30):
     """Retrieve fixed candidate sets for all queries (no reranking)."""
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
 
     print(f"Retrieving top-{pool_size} candidates for {len(qa_pairs)} queries...", file=sys.stderr)
 
@@ -171,7 +171,7 @@ def evaluate_reranker(
     top_n: int = 5,
 ) -> ModelResult:
     """Evaluate a single reranker on fixed candidate sets."""
-    import cex_api_docs.reranker as mod
+    import xdocs.reranker as mod
 
     # Save and set backend
     orig_backend = mod._BACKEND

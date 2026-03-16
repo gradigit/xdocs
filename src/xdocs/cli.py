@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     _version = (Path(__file__).resolve().parents[2] / "VERSION").read_text(encoding="utf-8").strip()
-    parser = argparse.ArgumentParser(prog="cex-api-docs", parents=[common])
+    parser = argparse.ArgumentParser(prog="xdocs", parents=[common])
     parser.add_argument("--version", action="version", version=f"%(prog)s {_version}")
 
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -640,7 +640,7 @@ def main(argv: list[str] | None = None) -> None:
             if inv_id is None:
                 raise CexApiDocsError(
                     code="ENOINV",
-                    message="No inventory exists yet for exchange/section. Run `cex-api-docs inventory` first.",
+                    message="No inventory exists yet for exchange/section. Run `xdocs inventory` first.",
                     details={"exchange_id": ex.exchange_id, "section_id": sec.section_id},
                 )
             r = fetch_inventory(

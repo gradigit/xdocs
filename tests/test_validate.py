@@ -1,4 +1,4 @@
-"""Tests for golden QA validation (src/cex_api_docs/validate.py)."""
+"""Tests for golden QA validation (src/xdocs/validate.py)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from cex_api_docs.validate import (
+from xdocs.validate import (
     ValidationResult,
     _domain,
     _match_counts,
@@ -121,7 +121,7 @@ class TestValidate(unittest.TestCase):
                 return [{"url": "https://example.com/order", "title": "Order", "page_id": 2, "exchange": "test", "word_count": 60, "score": 0.8}]
             return []
 
-        with patch("cex_api_docs.semantic.semantic_search", side_effect=mock_search):
+        with patch("xdocs.semantic.semantic_search", side_effect=mock_search):
             result = validate_retrieval(docs_dir="/tmp/fake", qa_path=qa_path, limit=5)
 
         self.assertEqual(result.total_queries, 3)
@@ -155,7 +155,7 @@ class TestValidate(unittest.TestCase):
         def mock_search(**kwargs):
             return [{"url": "https://docs.ex.com/v5/position/leverage"}]
 
-        with patch("cex_api_docs.semantic.semantic_search", side_effect=mock_search):
+        with patch("xdocs.semantic.semantic_search", side_effect=mock_search):
             result = validate_retrieval(docs_dir="/tmp/fake", qa_path=qa_path, limit=5)
 
         qr = result.per_query[0]
@@ -183,7 +183,7 @@ class TestValidate(unittest.TestCase):
         def mock_search(**kwargs):
             return [{"url": "https://docs.ex.com/totally-different"}]
 
-        with patch("cex_api_docs.semantic.semantic_search", side_effect=mock_search):
+        with patch("xdocs.semantic.semantic_search", side_effect=mock_search):
             result = validate_retrieval(docs_dir="/tmp/fake", qa_path=qa_path, limit=5)
 
         qr = result.per_query[0]
@@ -207,7 +207,7 @@ class TestValidate(unittest.TestCase):
             seen_kwargs.update(kwargs)
             return [{"url": "https://example.com/account"}]
 
-        with patch("cex_api_docs.semantic.semantic_search", side_effect=mock_search):
+        with patch("xdocs.semantic.semantic_search", side_effect=mock_search):
             validate_retrieval(docs_dir="/tmp/fake", qa_path=qa_path, limit=5, rerank=False)
 
         self.assertIn("rerank", seen_kwargs)

@@ -10,7 +10,7 @@ import requests
 from .timeutil import now_iso_utc
 
 
-USER_AGENT = "cex-api-docs"
+USER_AGENT = "xdocs"
 
 _BROWSER_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "

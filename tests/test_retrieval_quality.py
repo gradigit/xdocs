@@ -22,7 +22,7 @@ LANCE_INDEX = DOCS_DIR / "lancedb-index"
 # Skip conditions
 _skip_no_index = pytest.mark.skipif(
     not LANCE_INDEX.exists(),
-    reason="LanceDB index not built (run: cex-api-docs build-index --docs-dir ./cex-docs)",
+    reason="LanceDB index not built (run: xdocs build-index --docs-dir ./cex-docs)",
 )
 _skip_no_semantic = pytest.importorskip  # used inline below
 
@@ -63,7 +63,7 @@ def test_retrieval_recall_at_10():
     """Assert Recall@10 >= 0.70 on the golden QA set (filtered, hybrid mode)."""
     _skip_no_semantic("lancedb", reason="lancedb not installed (pip install -e '.[semantic]')")
 
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
 
     cases = _load_golden_qa()
     assert len(cases) >= 20, f"Expected >= 20 golden QA cases, got {len(cases)}"

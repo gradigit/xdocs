@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from cex_api_docs.sitemap_validate import (
+from xdocs.sitemap_validate import (
     SitemapCrossValidation,
     SitemapHealth,
     cross_validate_sitemap,
 )
-from cex_api_docs.sitemaps import SitemapEntry, parse_sitemap_bytes
-from cex_api_docs.sitemap_validate import _check_sitemap, _count_stale
+from xdocs.sitemaps import SitemapEntry, parse_sitemap_bytes
+from xdocs.sitemap_validate import _check_sitemap, _count_stale
 
 import requests
 

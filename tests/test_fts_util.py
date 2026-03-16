@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from cex_api_docs.fts_util import (
+from xdocs.fts_util import (
     sanitize_fts_query,
     build_fts_query,
     extract_search_terms,
@@ -190,7 +190,7 @@ class TestRrfFuse(unittest.TestCase):
     """Test Reciprocal Rank Fusion."""
 
     def test_single_list(self) -> None:
-        from cex_api_docs.fts_util import rrf_fuse
+        from xdocs.fts_util import rrf_fuse
         items = [{"canonical_url": "a"}, {"canonical_url": "b"}]
         result = rrf_fuse(items)
         self.assertEqual(len(result), 2)
@@ -198,7 +198,7 @@ class TestRrfFuse(unittest.TestCase):
         self.assertGreater(result[0]["rrf_score"], result[1]["rrf_score"])
 
     def test_two_lists_overlap(self) -> None:
-        from cex_api_docs.fts_util import rrf_fuse
+        from xdocs.fts_util import rrf_fuse
         list1 = [{"canonical_url": "a"}, {"canonical_url": "b"}]
         list2 = [{"canonical_url": "b"}, {"canonical_url": "c"}]
         result = rrf_fuse(list1, list2)
@@ -207,7 +207,7 @@ class TestRrfFuse(unittest.TestCase):
         self.assertEqual(len(result), 3)
 
     def test_disjoint_lists(self) -> None:
-        from cex_api_docs.fts_util import rrf_fuse
+        from xdocs.fts_util import rrf_fuse
         list1 = [{"canonical_url": "a"}]
         list2 = [{"canonical_url": "b"}]
         result = rrf_fuse(list1, list2)
@@ -216,12 +216,12 @@ class TestRrfFuse(unittest.TestCase):
         self.assertAlmostEqual(result[0]["rrf_score"], result[1]["rrf_score"])
 
     def test_empty_lists(self) -> None:
-        from cex_api_docs.fts_util import rrf_fuse
+        from xdocs.fts_util import rrf_fuse
         result = rrf_fuse([], [])
         self.assertEqual(result, [])
 
     def test_k_parameter(self) -> None:
-        from cex_api_docs.fts_util import rrf_fuse
+        from xdocs.fts_util import rrf_fuse
         items = [{"canonical_url": "a"}]
         r60 = rrf_fuse(items, k=60)
         r10 = rrf_fuse(items, k=10)
@@ -233,7 +233,7 @@ class TestPositionAwareBlend(unittest.TestCase):
     """Test position-aware reranker blending."""
 
     def test_no_rerank_scores(self) -> None:
-        from cex_api_docs.fts_util import position_aware_blend
+        from xdocs.fts_util import position_aware_blend
         items = [{"rrf_score": 0.5}, {"rrf_score": 0.3}]
         result = position_aware_blend(items)
         # Max-normalized: 0.5/0.5 = 1.0, 0.3/0.5 = 0.6
@@ -241,7 +241,7 @@ class TestPositionAwareBlend(unittest.TestCase):
         self.assertAlmostEqual(result[1]["blended_score"], 0.6)
 
     def test_with_rerank_scores(self) -> None:
-        from cex_api_docs.fts_util import position_aware_blend
+        from xdocs.fts_util import position_aware_blend
         items = [
             {"rrf_score": 0.5, "rerank_score": 2.0},
             {"rrf_score": 0.3, "rerank_score": -1.0},
@@ -251,7 +251,7 @@ class TestPositionAwareBlend(unittest.TestCase):
         self.assertGreater(result[0]["blended_score"], result[1]["blended_score"])
 
     def test_reranker_can_reorder(self) -> None:
-        from cex_api_docs.fts_util import position_aware_blend
+        from xdocs.fts_util import position_aware_blend
         # Second item has much higher reranker score.
         items = [
             {"rrf_score": 0.5, "rerank_score": -5.0},
@@ -266,27 +266,27 @@ class TestShouldSkipVectorSearch(unittest.TestCase):
     """Test strong-signal BM25 shortcut."""
 
     def test_strong_signal(self) -> None:
-        from cex_api_docs.fts_util import should_skip_vector_search
+        from xdocs.fts_util import should_skip_vector_search
         results = [{"bm25_score": 0.9}, {"bm25_score": 0.2}]
         self.assertTrue(should_skip_vector_search(results))
 
     def test_weak_signal(self) -> None:
-        from cex_api_docs.fts_util import should_skip_vector_search
+        from xdocs.fts_util import should_skip_vector_search
         results = [{"bm25_score": 0.4}, {"bm25_score": 0.3}]
         self.assertFalse(should_skip_vector_search(results))
 
     def test_close_scores(self) -> None:
-        from cex_api_docs.fts_util import should_skip_vector_search
+        from xdocs.fts_util import should_skip_vector_search
         results = [{"bm25_score": 0.8}, {"bm25_score": 0.7}]
         self.assertFalse(should_skip_vector_search(results))
 
     def test_single_result(self) -> None:
-        from cex_api_docs.fts_util import should_skip_vector_search
+        from xdocs.fts_util import should_skip_vector_search
         results = [{"bm25_score": 0.8}]
         self.assertTrue(should_skip_vector_search(results))
 
     def test_empty_results(self) -> None:
-        from cex_api_docs.fts_util import should_skip_vector_search
+        from xdocs.fts_util import should_skip_vector_search
         self.assertFalse(should_skip_vector_search([]))
 
 
@@ -294,19 +294,19 @@ class TestSigmoid(unittest.TestCase):
     """Test sigmoid normalization."""
 
     def test_zero(self) -> None:
-        from cex_api_docs.fts_util import sigmoid
+        from xdocs.fts_util import sigmoid
         self.assertAlmostEqual(sigmoid(0.0), 0.5)
 
     def test_large_positive(self) -> None:
-        from cex_api_docs.fts_util import sigmoid
+        from xdocs.fts_util import sigmoid
         self.assertGreater(sigmoid(10.0), 0.99)
 
     def test_large_negative(self) -> None:
-        from cex_api_docs.fts_util import sigmoid
+        from xdocs.fts_util import sigmoid
         self.assertLess(sigmoid(-10.0), 0.01)
 
     def test_monotonic(self) -> None:
-        from cex_api_docs.fts_util import sigmoid
+        from xdocs.fts_util import sigmoid
         self.assertLess(sigmoid(-1.0), sigmoid(0.0))
         self.assertLess(sigmoid(0.0), sigmoid(1.0))
 
@@ -315,7 +315,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
     """Test Postman parameter extraction from request objects."""
 
     def test_urlencoded_body(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "body": {
                 "mode": "urlencoded",
@@ -335,7 +335,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[1]["in"], "body")
 
     def test_url_query_params(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "url": {
                 "raw": "https://api.example.com/v1/order",
@@ -355,7 +355,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[1]["in"], "query")
 
     def test_formdata_body(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "body": {
                 "mode": "formdata",
@@ -373,7 +373,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[0]["in"], "body")
 
     def test_raw_json_body(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "body": {
                 "mode": "raw",
@@ -391,7 +391,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
             self.assertEqual(p["in"], "body")
 
     def test_mixed_query_and_body(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "url": {
                 "raw": "https://api.example.com/v1/order",
@@ -418,18 +418,18 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(body_params[0]["name"], "symbol")
 
     def test_empty_request_returns_none(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         result = _extract_request_schema({})
         self.assertIsNone(result)
 
     def test_no_params_returns_none(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {"url": {"raw": "https://api.example.com/v1/time"}}
         result = _extract_request_schema(req)
         self.assertIsNone(result)
 
     def test_raw_invalid_json_returns_none(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "body": {
                 "mode": "raw",
@@ -440,7 +440,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_deduplicates_params(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "url": {
                 "raw": "https://api.example.com/v1/order",
@@ -457,7 +457,7 @@ class TestPostmanExtractRequestSchema(unittest.TestCase):
         self.assertEqual(params[0]["name"], "symbol")
 
     def test_empty_key_skipped(self) -> None:
-        from cex_api_docs.postman_import import _extract_request_schema
+        from xdocs.postman_import import _extract_request_schema
         req = {
             "body": {
                 "mode": "urlencoded",
@@ -479,7 +479,7 @@ class TestCcFuse(unittest.TestCase):
     """Tests for cc_fuse (convex combination score-aware fusion)."""
 
     def test_basic_fusion(self) -> None:
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         fts = [
             {"canonical_url": "a", "bm25_score": 0.9},
             {"canonical_url": "b", "bm25_score": 0.5},
@@ -500,7 +500,7 @@ class TestCcFuse(unittest.TestCase):
             self.assertIn("rrf_score", r)
 
     def test_alpha_zero_semantic_only(self) -> None:
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         fts = [{"canonical_url": "a", "bm25_score": 0.9}]
         sem = [
             {"canonical_url": "b", "semantic_score": 0.9},
@@ -511,7 +511,7 @@ class TestCcFuse(unittest.TestCase):
         self.assertEqual(result[0]["canonical_url"], "b")
 
     def test_alpha_one_bm25_only(self) -> None:
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         fts = [
             {"canonical_url": "a", "bm25_score": 0.9},
             {"canonical_url": "b", "bm25_score": 0.3},
@@ -522,7 +522,7 @@ class TestCcFuse(unittest.TestCase):
         self.assertEqual(result[0]["canonical_url"], "a")
 
     def test_empty_inputs(self) -> None:
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         self.assertEqual(cc_fuse([], []), [])
         result = cc_fuse(
             [{"canonical_url": "a", "bm25_score": 0.5}],
@@ -533,7 +533,7 @@ class TestCcFuse(unittest.TestCase):
         self.assertEqual(result[0]["canonical_url"], "a")
 
     def test_single_item_minmax(self) -> None:
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         # Single item in each list → MinMax yields 1.0 (OpenSearch convention).
         result = cc_fuse(
             [{"canonical_url": "a", "bm25_score": 0.3}],
@@ -545,7 +545,7 @@ class TestCcFuse(unittest.TestCase):
 
     def test_reranker_correction_preserved(self) -> None:
         """BUG-8 scenario: reranker should correct retrieval ranking."""
-        from cex_api_docs.fts_util import cc_fuse
+        from xdocs.fts_util import cc_fuse
         # FTS: a > b (close scores).
         fts = [
             {"canonical_url": "a", "bm25_score": 0.65},
@@ -565,7 +565,7 @@ class TestCodeStopwords(unittest.TestCase):
     """Tests for CODE_STOPWORDS used in code_snippet query cleaning."""
 
     def test_code_stopwords_exist(self) -> None:
-        from cex_api_docs.fts_util import CODE_STOPWORDS
+        from xdocs.fts_util import CODE_STOPWORDS
         self.assertIn("import", CODE_STOPWORDS)
         self.assertIn("ccxt", CODE_STOPWORDS)
         self.assertIn("exchange", CODE_STOPWORDS)
@@ -573,7 +573,7 @@ class TestCodeStopwords(unittest.TestCase):
         self.assertIn("require", CODE_STOPWORDS)
 
     def test_code_stopwords_strip_noise(self) -> None:
-        from cex_api_docs.fts_util import CODE_STOPWORDS
+        from xdocs.fts_util import CODE_STOPWORDS
         terms = extract_search_terms(
             "import ccxt exchange ccxt binance balance fetch_balance",
             extra_stopwords=CODE_STOPWORDS,
@@ -585,7 +585,7 @@ class TestCodeStopwords(unittest.TestCase):
         self.assertIn("balance", terms)
 
     def test_code_stopwords_preserve_domain_terms(self) -> None:
-        from cex_api_docs.fts_util import CODE_STOPWORDS
+        from xdocs.fts_util import CODE_STOPWORDS
         terms = extract_search_terms(
             "const client new kucoinclient passphrase getaccountslist",
             extra_stopwords=CODE_STOPWORDS,

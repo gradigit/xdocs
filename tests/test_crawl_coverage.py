@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cex_api_docs.crawl_coverage import (
+from xdocs.crawl_coverage import (
     CoverageAuditResult,
     SectionCoverage,
     _get_stale_urls,
@@ -14,8 +14,8 @@ from cex_api_docs.crawl_coverage import (
     audit_crawl_coverage,
     backfill_gaps,
 )
-from cex_api_docs.crawl_targets import DiscoveredUrl, DiscoveryResult
-from cex_api_docs.registry import (
+from xdocs.crawl_targets import DiscoveredUrl, DiscoveryResult
+from xdocs.registry import (
     Exchange,
     ExchangeSection,
     Registry,
@@ -186,11 +186,11 @@ class TestGetStaleUrls:
 
 
 class TestAuditCrawlCoverage:
-    @patch("cex_api_docs.crawl_coverage._get_stale_urls")
-    @patch("cex_api_docs.crawl_coverage._get_store_urls_for_domains")
-    @patch("cex_api_docs.crawl_coverage.discover_crawl_targets")
-    @patch("cex_api_docs.crawl_coverage.require_store_db")
-    @patch("cex_api_docs.crawl_coverage.load_registry")
+    @patch("xdocs.crawl_coverage._get_stale_urls")
+    @patch("xdocs.crawl_coverage._get_store_urls_for_domains")
+    @patch("xdocs.crawl_coverage.discover_crawl_targets")
+    @patch("xdocs.crawl_coverage.require_store_db")
+    @patch("xdocs.crawl_coverage.load_registry")
     def test_full_coverage(self, mock_reg, mock_db, mock_disc, mock_store, mock_stale):
         mock_reg.return_value = _make_registry()
         mock_db.return_value = Path("/tmp/db/docs.db")
@@ -212,11 +212,11 @@ class TestAuditCrawlCoverage:
         assert result.total_missing == 0
         assert result.total_stale == 0
 
-    @patch("cex_api_docs.crawl_coverage._get_stale_urls")
-    @patch("cex_api_docs.crawl_coverage._get_store_urls_for_domains")
-    @patch("cex_api_docs.crawl_coverage.discover_crawl_targets")
-    @patch("cex_api_docs.crawl_coverage.require_store_db")
-    @patch("cex_api_docs.crawl_coverage.load_registry")
+    @patch("xdocs.crawl_coverage._get_stale_urls")
+    @patch("xdocs.crawl_coverage._get_store_urls_for_domains")
+    @patch("xdocs.crawl_coverage.discover_crawl_targets")
+    @patch("xdocs.crawl_coverage.require_store_db")
+    @patch("xdocs.crawl_coverage.load_registry")
     def test_partial_coverage(self, mock_reg, mock_db, mock_disc, mock_store, mock_stale):
         mock_reg.return_value = _make_registry()
         mock_db.return_value = Path("/tmp/db/docs.db")
@@ -238,11 +238,11 @@ class TestAuditCrawlCoverage:
         assert result.total_missing == 2
         assert len(result.sections[0].missing_urls) == 2
 
-    @patch("cex_api_docs.crawl_coverage._get_stale_urls")
-    @patch("cex_api_docs.crawl_coverage._get_store_urls_for_domains")
-    @patch("cex_api_docs.crawl_coverage.discover_crawl_targets")
-    @patch("cex_api_docs.crawl_coverage.require_store_db")
-    @patch("cex_api_docs.crawl_coverage.load_registry")
+    @patch("xdocs.crawl_coverage._get_stale_urls")
+    @patch("xdocs.crawl_coverage._get_store_urls_for_domains")
+    @patch("xdocs.crawl_coverage.discover_crawl_targets")
+    @patch("xdocs.crawl_coverage.require_store_db")
+    @patch("xdocs.crawl_coverage.load_registry")
     def test_stale_pages_detected(self, mock_reg, mock_db, mock_disc, mock_store, mock_stale):
         mock_reg.return_value = _make_registry()
         mock_db.return_value = Path("/tmp/db/docs.db")
@@ -262,11 +262,11 @@ class TestAuditCrawlCoverage:
         assert result.total_stale == 1
         assert any("stale" in w for w in result.sections[0].warnings)
 
-    @patch("cex_api_docs.crawl_coverage._get_stale_urls")
-    @patch("cex_api_docs.crawl_coverage._get_store_urls_for_domains")
-    @patch("cex_api_docs.crawl_coverage.discover_crawl_targets")
-    @patch("cex_api_docs.crawl_coverage.require_store_db")
-    @patch("cex_api_docs.crawl_coverage.load_registry")
+    @patch("xdocs.crawl_coverage._get_stale_urls")
+    @patch("xdocs.crawl_coverage._get_store_urls_for_domains")
+    @patch("xdocs.crawl_coverage.discover_crawl_targets")
+    @patch("xdocs.crawl_coverage.require_store_db")
+    @patch("xdocs.crawl_coverage.load_registry")
     def test_zero_discovered(self, mock_reg, mock_db, mock_disc, mock_store, mock_stale):
         mock_reg.return_value = _make_registry()
         mock_db.return_value = Path("/tmp/db/docs.db")
@@ -284,11 +284,11 @@ class TestAuditCrawlCoverage:
         # 0 discovered => 100% coverage (nothing to miss).
         assert result.sections[0].coverage_pct == 100.0
 
-    @patch("cex_api_docs.crawl_coverage._get_stale_urls")
-    @patch("cex_api_docs.crawl_coverage._get_store_urls_for_domains")
-    @patch("cex_api_docs.crawl_coverage.discover_crawl_targets")
-    @patch("cex_api_docs.crawl_coverage.require_store_db")
-    @patch("cex_api_docs.crawl_coverage.load_registry")
+    @patch("xdocs.crawl_coverage._get_stale_urls")
+    @patch("xdocs.crawl_coverage._get_store_urls_for_domains")
+    @patch("xdocs.crawl_coverage.discover_crawl_targets")
+    @patch("xdocs.crawl_coverage.require_store_db")
+    @patch("xdocs.crawl_coverage.load_registry")
     def test_overall_coverage(self, mock_reg, mock_db, mock_disc, mock_store, mock_stale):
         # Registry with 2 sections.
         registry = Registry(exchanges=[

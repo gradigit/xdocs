@@ -176,13 +176,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--cli-path",
-        default="./.venv/bin/cex-api-docs",
-        help="Path to cex-api-docs executable (default: ./.venv/bin/cex-api-docs)",
+        default="./.venv/bin/xdocs",
+        help="Path to xdocs executable (default: ./.venv/bin/xdocs)",
     )
     parser.add_argument(
         "--module",
         default=None,
-        help="Run via `python -m <module>` (recommended for local dev, e.g. cex_api_docs.cli).",
+        help="Run via `python -m <module>` (recommended for local dev, e.g. xdocs.cli).",
     )
     parser.add_argument(
         "--modes",

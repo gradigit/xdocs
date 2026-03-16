@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from cex_api_docs.errors import CexApiDocsError
-from cex_api_docs.nodepwfetch import (
+from xdocs.errors import CexApiDocsError
+from xdocs.nodepwfetch import (
     NodePlaywrightFetcher,
     _find_node_pw_module,
     _NODE_PW_MODULE,
@@ -24,7 +24,7 @@ class TestFindNodePwModule(unittest.TestCase):
         self.assertEqual(result, Path("/tmp/fake-pw"))
 
     @patch.dict("os.environ", {}, clear=True)
-    @patch("cex_api_docs.nodepwfetch._NODE_PW_MODULE", Path("/nonexistent/path"))
+    @patch("xdocs.nodepwfetch._NODE_PW_MODULE", Path("/nonexistent/path"))
     def test_raises_if_not_found(self) -> None:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(
@@ -38,8 +38,8 @@ class TestFindNodePwModule(unittest.TestCase):
 class TestNodePlaywrightFetcherInit(unittest.TestCase):
     """Test NodePlaywrightFetcher open/close lifecycle."""
 
-    @patch("cex_api_docs.nodepwfetch._check_chromium_binary")
-    @patch("cex_api_docs.nodepwfetch._find_node_pw_module")
+    @patch("xdocs.nodepwfetch._check_chromium_binary")
+    @patch("xdocs.nodepwfetch._find_node_pw_module")
     @patch("subprocess.Popen")
     def test_open_success(self, mock_popen, mock_find, mock_check) -> None:
         mock_find.return_value = Path("/opt/homebrew/lib/node_modules/playwright")
@@ -53,8 +53,8 @@ class TestNodePlaywrightFetcherInit(unittest.TestCase):
         self.assertIs(result, fetcher)
         self.assertIsNotNone(fetcher._proc)
 
-    @patch("cex_api_docs.nodepwfetch._check_chromium_binary")
-    @patch("cex_api_docs.nodepwfetch._find_node_pw_module")
+    @patch("xdocs.nodepwfetch._check_chromium_binary")
+    @patch("xdocs.nodepwfetch._find_node_pw_module")
     @patch("subprocess.Popen")
     def test_close(self, mock_popen, mock_find, mock_check) -> None:
         mock_find.return_value = Path("/opt/homebrew/lib/node_modules/playwright")

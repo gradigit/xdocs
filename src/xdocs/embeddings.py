@@ -208,7 +208,7 @@ def get_embedder() -> Embedder:
             if backend in {"jina-mlx", "jina_mlx"}:
                 raise ImportError(
                     "Jina MLX embedding backend requested but unavailable. "
-                    "Install extras: pip install cex-api-docs[semantic]"
+                    "Install extras: pip install xdocs[semantic]"
                 ) from e
             logger.warning("Jina MLX embedding backend unavailable; falling back: %s", e)
 
@@ -221,7 +221,7 @@ def get_embedder() -> Embedder:
             tried.append(f"sentence-transformers ({st_model}): {e}")
             raise ImportError(
                 "No embedding backend available. "
-                "Install extras: pip install cex-api-docs[semantic]"
+                "Install extras: pip install xdocs[semantic]"
             ) from e
 
     raise ValueError(

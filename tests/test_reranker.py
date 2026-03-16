@@ -1,4 +1,4 @@
-"""Tests for reranker module (src/cex_api_docs/reranker.py).
+"""Tests for reranker module (src/xdocs/reranker.py).
 
 These tests mock the Jina v3 backend to avoid downloading models.
 """
@@ -31,10 +31,10 @@ class TestReranker(unittest.TestCase):
         mock_model.rerank = mock_rerank
         return mock_model
 
-    @patch("cex_api_docs.reranker._load_jina_v3")
+    @patch("xdocs.reranker._load_jina_v3")
     def test_rerank_changes_order(self, mock_load) -> None:
         """Reranking should reorder results by relevance."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
 
         mock_load.return_value = self._make_mock_jina()
 
@@ -52,13 +52,13 @@ class TestReranker(unittest.TestCase):
 
     def test_empty_input(self) -> None:
         """Empty results list should return empty."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
         self.assertEqual(rerank("query", []), [])
 
-    @patch("cex_api_docs.reranker._load_jina_v3")
+    @patch("xdocs.reranker._load_jina_v3")
     def test_top_n_truncation(self, mock_load) -> None:
         """top_n should limit the number of returned results."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
 
         mock_load.return_value = self._make_mock_jina()
 
@@ -69,10 +69,10 @@ class TestReranker(unittest.TestCase):
         reranked = rerank("testing", results, top_n=3)
         self.assertEqual(len(reranked), 3)
 
-    @patch("cex_api_docs.reranker._load_jina_v3")
+    @patch("xdocs.reranker._load_jina_v3")
     def test_jina_v3_returns_rerank_score(self, mock_load) -> None:
         """Jina v3 should return results with rerank_score."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
 
         mock_model = MagicMock()
         mock_model.rerank.return_value = [
@@ -85,11 +85,11 @@ class TestReranker(unittest.TestCase):
         self.assertEqual(len(reranked), 1)
         self.assertAlmostEqual(reranked[0]["rerank_score"], 0.9)
 
-    @patch("cex_api_docs.reranker._is_mlx_available", return_value=False)
-    @patch("cex_api_docs.reranker._load_jina_v3")
+    @patch("xdocs.reranker._is_mlx_available", return_value=False)
+    @patch("xdocs.reranker._load_jina_v3")
     def test_auto_uses_jina_v3_on_linux(self, mock_load_jina, mock_mlx) -> None:
         """On Linux (no MLX), auto should use jina-v3 PyTorch."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
 
         mock_model = MagicMock()
         mock_model.rerank.return_value = [
@@ -101,11 +101,11 @@ class TestReranker(unittest.TestCase):
         self.assertEqual(len(result), 1)
         mock_load_jina.assert_called_once()
 
-    @patch("cex_api_docs.reranker._is_mlx_available", return_value=True)
-    @patch("cex_api_docs.reranker._load_jina_v3_mlx")
+    @patch("xdocs.reranker._is_mlx_available", return_value=True)
+    @patch("xdocs.reranker._load_jina_v3_mlx")
     def test_auto_uses_mlx_on_macos(self, mock_load_mlx, mock_mlx) -> None:
         """On macOS with MLX, auto should try MLX variant first."""
-        from cex_api_docs.reranker import rerank
+        from xdocs.reranker import rerank
 
         mock_model = MagicMock()
         mock_model.rerank.return_value = [

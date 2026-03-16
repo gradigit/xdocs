@@ -30,7 +30,7 @@ Both directories are synced from the same source. When creating, updating, or ma
 This is an iterative loop between this runtime repo and the maintainer repo:
 
 ```
-Runtime agent (here)          Maintainer agent (cex-api-docs)
+Runtime agent (here)          Maintainer agent (xdocs)
 ──────────────────────        ───────────────────────────────
 1. Run cex-qa-gapfinder  ──→  2. Read qa-findings.jsonl
    Designs own tests              Verify findings

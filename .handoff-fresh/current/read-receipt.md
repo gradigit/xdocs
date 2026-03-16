@@ -1,7 +1,7 @@
 # Read Receipt (Mandatory Before Prep/Coding)
 
-- [x] handoff.md — Maintenance cycle complete; registry expanded with perp DEX + CCXT; runtime workspace ready; next: commit changes + rebaseline golden QA.
-- [x] claude.md — Fish shell, python3, OSC-8 links, cite-only policy; build/test commands via pre_share_check + retrieval eval.
-- [x] todo.md — Immediate: commit uncommitted changes + decide on runtime git repo; quality: rebaseline golden_qa.jsonl; reliability: optional Playwright extras.
-- [x] state.md — Branch main at 729b106; 49 working tree entries (many modified + untracked); no remotes configured; large uncommitted tree needs curation.
-- [x] context.md — Cite-only SQLite FTS5 + LanceDB knowledge base; maintainer/runtime split architecture; golden QA baseline needs rework for expanded corpus.
+- [x] handoff.md — Session closed cleanly; next work should start with BUG-18, BUG-15, and BUG-16 in that order.
+- [x] claude.md — Core onboarding context confirms the two-repo workflow, shared venv, and 559-test baseline.
+- [x] todo.md — Open bug queue is current, with BUG-18/15/16 as the active high-priority fixes and BUG-21 already fixed.
+- [x] state.md — Repo is expected on `main` at `5687003` with no blockers, runtime synced, and schema/store metrics current.
+- [x] context.md — The system is a cite-only local docs/search pipeline with current retrieval architecture and known query limitations recorded.

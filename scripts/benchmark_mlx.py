@@ -106,7 +106,7 @@ def _get_platform_info(mx) -> dict:
 
 def benchmark_embedding_quality(docs_dir: str, qa_pairs: list[dict], limit: int = 5):
     """Measure retrieval quality using vector-only search."""
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
 
     # Warm up (3 calls for shader compilation)
     for _ in range(3):
@@ -180,7 +180,7 @@ def benchmark_embedding_quality(docs_dir: str, qa_pairs: list[dict], limit: int 
 
 def benchmark_embedding_throughput(mx, texts: list[str], batch_sizes=(1, 16, 32, 64)):
     """Measure embedding throughput at different batch sizes."""
-    from cex_api_docs.embeddings import get_embedder
+    from xdocs.embeddings import get_embedder
     embedder = get_embedder()
 
     results = {}
@@ -216,7 +216,7 @@ def benchmark_embedding_throughput(mx, texts: list[str], batch_sizes=(1, 16, 32,
 def benchmark_reranker(docs_dir: str, qa_pairs: list[dict], candidate_pool: int = 30, top_n: int = 5):
     """Measure reranker quality lift: unreranked vs reranked nDCG@5."""
     os.environ["CEX_RERANKER_BACKEND"] = "jina-v3-mlx"
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
 
     # Warm up
     semantic_search(docs_dir=docs_dir, query="test", limit=1,
@@ -286,7 +286,7 @@ def benchmark_reranker(docs_dir: str, qa_pairs: list[dict], candidate_pool: int 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MLX benchmark for cex-api-docs")
+    parser = argparse.ArgumentParser(description="MLX benchmark for xdocs")
     parser.add_argument("--docs-dir", default="./cex-docs")
     parser.add_argument("--qa-file", default="tests/golden_qa.jsonl")
     parser.add_argument("--limit", type=int, default=None)
@@ -306,7 +306,7 @@ def main():
 
     # Detect embedding model
     os.environ.setdefault("CEX_EMBEDDING_BACKEND", "jina-mlx")
-    from cex_api_docs.embeddings import get_embedder
+    from xdocs.embeddings import get_embedder
     embedder = get_embedder()
     print(f"Embedder: {embedder.model_name} ({embedder.ndims()}d, {embedder.backend_name})",
           file=sys.stderr)

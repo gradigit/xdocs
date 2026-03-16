@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from cex_api_docs.extraction_verify import ExtractionQuality, verify_extraction
-from cex_api_docs.inventory_fetch import _check_truncation
-from cex_api_docs.httpfetch import FetchResult
+from xdocs.extraction_verify import ExtractionQuality, verify_extraction
+from xdocs.inventory_fetch import _check_truncation
+from xdocs.httpfetch import FetchResult
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+Jina MLX embedding backend unavailable; falling back: No module named 'mlx'
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 162/310 [00:00<00:00, 1617.38it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 1862.86it/s]
+Fetching 8 files:   0%|          | 0/8 [00:00<?, ?it/s]Fetching 8 files: 100%|██████████| 8/8 [00:00<00:00, 4729.31it/s]
+Default prompt name is set to 'document'. This prompt will be applied to all `encode()` calls, except if `encode()` is called with `prompt` or `prompt_name` parameters.
+Loading weights:   0%|          | 0/312 [00:00<?, ?it/s]Loading weights:  51%|█████     | 159/312 [00:00<00:00, 1581.98it/s]Loading weights: 100%|██████████| 312/312 [00:00<00:00, 1953.87it/s]

@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cex_api_docs.live_validate import (
+from xdocs.live_validate import (
     LiveValidationResult,
     _get_store_urls,
     validate_live_site,
 )
-from cex_api_docs.nav_extract import NavExtractionResult, NavNode
-from cex_api_docs.registry import Exchange, ExchangeSection, InventoryPolicy, Registry
+from xdocs.nav_extract import NavExtractionResult, NavNode
+from xdocs.registry import Exchange, ExchangeSection, InventoryPolicy, Registry
 
 
 # ---------------------------------------------------------------------------
@@ -139,10 +139,10 @@ class TestGetStoreUrls:
 
 
 class TestValidateLiveSite:
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_basic_coverage(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")
@@ -176,10 +176,10 @@ class TestValidateLiveSite:
         assert "https://developers.binance.com/docs/wallet" in result.missing_from_live
         assert result.coverage_pct == pytest.approx(66.67, abs=0.01)
 
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_full_coverage(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")
@@ -202,10 +202,10 @@ class TestValidateLiveSite:
         assert len(result.missing_from_store) == 0
         assert len(result.missing_from_live) == 0
 
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_empty_nav_with_store_pages(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")
@@ -223,7 +223,7 @@ class TestValidateLiveSite:
         warning_types = [w["type"] for w in result.warnings]
         assert "nav_extraction_empty" in warning_types
 
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.load_registry")
     def test_no_seed_urls(self, mock_load_reg):
         # Registry with no seed URLs.
         mock_load_reg.return_value = Registry(exchanges=[
@@ -253,10 +253,10 @@ class TestValidateLiveSite:
         warning_types = [w["type"] for w in result.warnings]
         assert "no_seeds" in warning_types
 
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_nav_errors_propagated(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")
@@ -276,10 +276,10 @@ class TestValidateLiveSite:
         assert len(result.errors) == 1
         assert result.errors[0]["stage"] == "http_fetch"
 
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_missing_from_store_warning(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")
@@ -299,10 +299,10 @@ class TestValidateLiveSite:
         warning_types = [w["type"] for w in result.warnings]
         assert "missing_from_store" in warning_types
 
-    @patch("cex_api_docs.live_validate.extract_nav_urls")
-    @patch("cex_api_docs.live_validate._get_store_urls")
-    @patch("cex_api_docs.live_validate.require_store_db")
-    @patch("cex_api_docs.live_validate.load_registry")
+    @patch("xdocs.live_validate.extract_nav_urls")
+    @patch("xdocs.live_validate._get_store_urls")
+    @patch("xdocs.live_validate.require_store_db")
+    @patch("xdocs.live_validate.load_registry")
     def test_nav_method_reported(self, mock_load_reg, mock_require_db, mock_get_store, mock_nav):
         mock_load_reg.return_value = _make_registry()
         mock_require_db.return_value = Path("/tmp/db/docs.db")

@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def verify_import_source(repo_root: Path | str | None = None) -> Path:
-    """Verify that the imported cex_api_docs package comes from the expected repo.
+    """Verify that the imported xdocs package comes from the expected repo.
 
     Compares the resolved location of this package against *repo_root*.
     If *repo_root* is ``None``, it is inferred as the git toplevel of the
@@ -15,7 +15,7 @@ def verify_import_source(repo_root: Path | str | None = None) -> Path:
     Raises ``RuntimeError`` if the package was loaded from a different source
     tree (e.g. a shared venv pointing at another editable install).
     """
-    pkg_dir = Path(__file__).resolve().parent  # .../src/cex_api_docs
+    pkg_dir = Path(__file__).resolve().parent  # .../src/xdocs
     pkg_src = pkg_dir.parent.parent            # .../repo-root (two levels up from package)
 
     if repo_root is None:
@@ -36,7 +36,7 @@ def verify_import_source(repo_root: Path | str | None = None) -> Path:
 
     if pkg_src != repo_root:
         raise RuntimeError(
-            f"Wrong source tree imported: cex_api_docs loaded from "
+            f"Wrong source tree imported: xdocs loaded from "
             f"{pkg_src}, but expected {repo_root}. "
             f"Activate the correct venv or reinstall with: "
             f"uv pip install -e \"{repo_root}\""

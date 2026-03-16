@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from cex_api_docs.playwrightfetch import _is_localhostish, _is_public_ip_literal, _resolves_to_non_public_ip
+from xdocs.playwrightfetch import _is_localhostish, _is_public_ip_literal, _resolves_to_non_public_ip
 
 
 class TestPlaywrightFetchSecurity(unittest.TestCase):

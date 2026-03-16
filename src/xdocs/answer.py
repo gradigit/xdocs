@@ -1614,7 +1614,7 @@ def answer_question(
             "normalized_question": _normalize_question(question),
             "clarification": None,
             "claims": [],
-            "notes": ["Store not initialized. Run `cex-api-docs init` and `cex-api-docs sync` first."],
+            "notes": ["Store not initialized. Run `xdocs init` and `xdocs sync` first."],
         }
 
     norm = _normalize_question(question)

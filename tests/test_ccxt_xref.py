@@ -9,16 +9,16 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from typing import Any
 
-from cex_api_docs.ccxt_xref import (
+from xdocs.ccxt_xref import (
     CCXT_EXCHANGE_MAP,
     _extract_ccxt_endpoints,
     _normalize_path,
     _strip_version_prefix,
     ccxt_cross_reference,
 )
-from cex_api_docs.db import open_db
-from cex_api_docs.store import init_store
-from cex_api_docs.timeutil import now_iso_utc
+from xdocs.db import open_db
+from xdocs.store import init_store
+from xdocs.timeutil import now_iso_utc
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -208,7 +208,7 @@ class TestCcxtCrossReference(unittest.TestCase):
             docs_dir = Path(tmp) / "cex-docs"
             _setup_store_with_endpoints(docs_dir)
 
-            from cex_api_docs.errors import CexApiDocsError
+            from xdocs.errors import CexApiDocsError
 
             with self.assertRaises((CexApiDocsError, ImportError)):
                 ccxt_cross_reference(docs_dir=str(docs_dir), exchange="binance")

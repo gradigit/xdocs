@@ -5,8 +5,8 @@ import unittest
 import importlib.util
 from pathlib import Path
 
-from cex_api_docs.db import open_db
-from cex_api_docs.store import init_store
+from xdocs.db import open_db
+from xdocs.store import init_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -42,7 +42,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 class TestSemantic(unittest.TestCase):
     def test_rerank_policy_normalization(self) -> None:
-        from cex_api_docs.semantic import _normalize_rerank_policy
+        from xdocs.semantic import _normalize_rerank_policy
 
         self.assertEqual(_normalize_rerank_policy(True), "always")
         self.assertEqual(_normalize_rerank_policy(False), "never")
@@ -53,7 +53,7 @@ class TestSemantic(unittest.TestCase):
             _normalize_rerank_policy("sometimes")
 
     def test_auto_rerank_heuristic(self) -> None:
-        from cex_api_docs.semantic import _should_auto_rerank
+        from xdocs.semantic import _should_auto_rerank
 
         ambiguous = [
             {"score": 0.1000},
@@ -93,7 +93,7 @@ class TestSemantic(unittest.TestCase):
 
     def test_build_index_and_search(self) -> None:
         try:
-            from cex_api_docs.semantic import build_index, semantic_search
+            from xdocs.semantic import build_index, semantic_search
         except ImportError:
             self.skipTest("lancedb not installed (optional dependency)")
         if importlib.util.find_spec("lancedb") is None:
@@ -179,7 +179,7 @@ class TestSemantic(unittest.TestCase):
     def test_incremental_build_index(self) -> None:
         """Build index, add a page, rebuild incrementally, verify new page is searchable."""
         try:
-            from cex_api_docs.semantic import build_index, semantic_search
+            from xdocs.semantic import build_index, semantic_search
         except ImportError:
             self.skipTest("lancedb not installed (optional dependency)")
         if importlib.util.find_spec("lancedb") is None:

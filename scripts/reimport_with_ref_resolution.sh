@@ -5,7 +5,7 @@
 set -euo pipefail
 
 DOCS_DIR="${DOCS_DIR:-./cex-docs}"
-CMD="cex-api-docs import-openapi --docs-dir $DOCS_DIR --continue-on-error"
+CMD="xdocs import-openapi --docs-dir $DOCS_DIR --continue-on-error"
 TOTAL=0
 FAILED=0
 

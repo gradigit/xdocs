@@ -5,8 +5,8 @@ import subprocess
 import unittest
 from unittest.mock import MagicMock, patch
 
-from cex_api_docs.agentbrowserfetch import AgentBrowserFetcher, _run
-from cex_api_docs.errors import CexApiDocsError
+from xdocs.agentbrowserfetch import AgentBrowserFetcher, _run
+from xdocs.errors import CexApiDocsError
 
 
 class TestAgentBrowserFetcherInit(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestAgentBrowserFetcherInit(unittest.TestCase):
                 fetcher.open()
             self.assertEqual(ctx.exception.code, "ENOAGENTBROWSER")
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     @patch.object(shutil, "which", return_value="/usr/bin/agent-browser")
     def test_open_success(self, mock_which, mock_run) -> None:
         mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
@@ -29,7 +29,7 @@ class TestAgentBrowserFetcherInit(unittest.TestCase):
         self.assertTrue(fetcher._open)
         mock_run.assert_called_once()
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     @patch.object(shutil, "which", return_value="/usr/bin/agent-browser")
     def test_context_manager(self, mock_which, mock_run) -> None:
         mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
@@ -85,7 +85,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
             fetcher.fetch(url="https://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENOAGENTBROWSER")
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     def test_fetch_success(self, mock_run) -> None:
         html_body = "<html><body><p>Hello World</p></body></html>"
         mock_run.side_effect = _mock_side_effect(final_url="https://example.com/page", html_body=html_body)
@@ -97,7 +97,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
         self.assertEqual(result.http_status, 200)
         self.assertEqual(result.body, html_body.encode("utf-8"))
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     def test_fetch_domain_violation(self, mock_run) -> None:
         """Final URL on a different domain should raise EDOMAIN."""
         mock_run.side_effect = _mock_side_effect(final_url="https://evil.com/phish", html_body="<html></html>")
@@ -106,7 +106,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
             fetcher.fetch(url="https://example.com/page", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "EDOMAIN")
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     def test_fetch_max_bytes_enforced(self, mock_run) -> None:
         big_body = "x" * 2000
         mock_run.side_effect = _mock_side_effect(final_url="https://example.com/big", html_body=big_body)
@@ -115,7 +115,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
             fetcher.fetch(url="https://example.com/big", timeout_s=10, max_bytes=100, retries=0)
         self.assertEqual(ctx.exception.code, "ETOOBIG")
 
-    @patch("cex_api_docs.agentbrowserfetch._run")
+    @patch("xdocs.agentbrowserfetch._run")
     def test_fetch_redirect_detected(self, mock_run) -> None:
         """When final_url differs from requested url, redirect_chain should be populated."""
         mock_run.side_effect = _mock_side_effect(

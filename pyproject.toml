@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cex-api-docs"
+name = "xdocs"
 version = "0.2.0"
 description = "Local-only, cite-only CEX API docs knowledge base (crawler + SQLite FTS5 + agent extraction ingest)."
 readme = "README.md"
@@ -51,7 +51,7 @@ ccxt = [
 ]
 
 [project.scripts]
-cex-api-docs = "cex_api_docs.cli:main"
+xdocs = "xdocs.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

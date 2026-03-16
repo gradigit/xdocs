@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from cex_api_docs.base_urls_validate import validate_base_urls
+from xdocs.base_urls_validate import validate_base_urls
 from tests.http_server import serve_handler
 
 

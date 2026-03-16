@@ -93,7 +93,7 @@ def _check_one_url(url: str, *, timeout_s: float, delay_s: float) -> LinkCheckRe
     t0 = time.monotonic()
     try:
         req = urllib.request.Request(url, method="HEAD")
-        req.add_header("User-Agent", "cex-api-docs-link-checker/1.0")
+        req.add_header("User-Agent", "xdocs-link-checker/1.0")
         with urllib.request.urlopen(req, timeout=timeout_s) as resp:
             redirect_url = resp.url if resp.url != url else None
             return _make_result(url, t0, http_status=resp.status, redirect_url=redirect_url)
@@ -102,7 +102,7 @@ def _check_one_url(url: str, *, timeout_s: float, delay_s: float) -> LinkCheckRe
             # HEAD not allowed — retry with GET.
             try:
                 req2 = urllib.request.Request(url, method="GET")
-                req2.add_header("User-Agent", "cex-api-docs-link-checker/1.0")
+                req2.add_header("User-Agent", "xdocs-link-checker/1.0")
                 with urllib.request.urlopen(req2, timeout=timeout_s) as resp2:
                     redirect_url2 = resp2.url if resp2.url != url else None
                     return _make_result(url, t0, http_status=resp2.status, redirect_url=redirect_url2)

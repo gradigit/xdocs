@@ -6,11 +6,11 @@ import unittest
 from pathlib import Path
 
 # TODO: migrate to inventory+fetch_inventory pipeline (crawl is deprecated)
-from cex_api_docs.crawler import crawl_store
-from cex_api_docs.endpoints import compute_endpoint_id, review_list, review_resolve, save_endpoint, search_endpoints
-from cex_api_docs.pages import get_page
-from cex_api_docs.store import init_store
-from cex_api_docs.db import open_db
+from xdocs.crawler import crawl_store
+from xdocs.endpoints import compute_endpoint_id, review_list, review_resolve, save_endpoint, search_endpoints
+from xdocs.pages import get_page
+from xdocs.store import init_store
+from xdocs.db import open_db
 from tests.http_server import serve_directory
 
 

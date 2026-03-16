@@ -152,7 +152,7 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
                 "- **Coverage rows:** "
                 f"endpoints={c.get('endpoints')}, rows={c.get('rows')}, rows_with_gaps={c.get('rows_with_gaps')}"
             )
-            lines.append("- Use `cex-api-docs coverage-gaps-list` to drill into field-level samples.")
+            lines.append("- Use `xdocs coverage-gaps-list` to drill into field-level samples.")
 
         if isinstance(stale, dict) and stale.get("counts"):
             c = stale.get("counts") or {}
@@ -163,7 +163,7 @@ def render_sync_markdown(*, sync_result: dict[str, Any], max_errors: int = 50) -
                 "- **Findings:** "
                 f"total={c.get('total_findings')}, stale={c.get('stale_citation')}, missing_source={c.get('missing_source')}, review_items_created={c.get('review_items_created')}"
             )
-            lines.append("- Use `cex-api-docs review-list --status open` to triage.")
+            lines.append("- Use `xdocs review-list --status open` to triage.")
 
     lines.append("")
     lines.append("## Notes")

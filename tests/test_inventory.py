@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 
-from cex_api_docs.inventory import create_inventory
-from cex_api_docs.inventory_fetch import fetch_inventory
-from cex_api_docs.store import init_store
+from xdocs.inventory import create_inventory
+from xdocs.inventory_fetch import fetch_inventory
+from xdocs.store import init_store
 
 from .http_server import serve_directory, serve_handler
 
@@ -225,7 +225,7 @@ class TestInventory(unittest.TestCase):
                     ignore_robots=False,
                 )
 
-                from cex_api_docs.errors import CexApiDocsError
+                from xdocs.errors import CexApiDocsError
 
                 with self.assertRaises(CexApiDocsError) as ctx:
                     fetch_inventory(

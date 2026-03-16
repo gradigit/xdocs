@@ -34,7 +34,7 @@ def require_store_db(docs_dir: str) -> Path:
     if not db_path.exists():
         raise CexApiDocsError(
             code="ENOINIT",
-            message="Store not initialized. Run `cex-api-docs init` first.",
+            message="Store not initialized. Run `xdocs init` first.",
             details={"docs_dir": docs_dir},
         )
     return db_path

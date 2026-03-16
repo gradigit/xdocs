@@ -21,7 +21,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STORE_DIR="${1:-$ROOT_DIR/cex-docs}"
 REPORT_DIR="$STORE_DIR/reports"
-CLI="${CEX_API_DOCS_CLI:-.venv/bin/cex-api-docs}"
+CLI="${CEX_API_DOCS_CLI:-.venv/bin/xdocs}"
 
 mkdir -p "$REPORT_DIR"
 

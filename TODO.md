@@ -834,7 +834,7 @@ for p in params:
         parts.append(name)
 ```
 
-Then `cex-api-docs fts-rebuild --docs-dir ./cex-docs`.
+Then `xdocs fts-rebuild --docs-dir ./cex-docs`.
 
 #### COVERAGE-3: Postman Parameter Extraction from Request Body Examples
 **Severity**: Medium
@@ -1253,10 +1253,10 @@ The skill's gotchas section does say "Use `--` before negative numbers in CLI ar
 **Fix**: Update the skill and CLAUDE.md to show both patterns:
 ```bash
 # Negative error codes need -- to prevent argparse flag interpretation
-cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+xdocs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
 
 # Positive error codes do NOT use --
-cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
+xdocs search-error 60029 --exchange okx --docs-dir ./cex-docs
 ```
 
 Also add an explicit warning in the routing table: "Only use `--` when the error code starts with a dash."
@@ -1304,7 +1304,7 @@ When asked "What permissions does the Binance API key need to place a spot order
 
 **Root cause**: The answer pipeline calls `_detect_binance_section()` to extract section hints from the query, but the search results aren't filtered or boosted by section. The derivatives quick-start page ranks higher because it mentions "API Key Restrictions" prominently and has strong BM25 signal. The spot-specific auth page exists (page id=41) but doesn't outrank it.
 
-**Reproduction**: `cex-api-docs answer "What permissions does the Binance API key need to place a spot order?" --docs-dir ./cex-docs`
+**Reproduction**: `xdocs answer "What permissions does the Binance API key need to place a spot order?" --docs-dir ./cex-docs`
 
 **Fix options**:
 a) Apply section URL prefix filter when `_detect_binance_section()` returns a section — restrict search to that section's URL prefix

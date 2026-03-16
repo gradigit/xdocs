@@ -8,9 +8,9 @@ from email.utils import format_datetime
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
-from cex_api_docs.inventory import create_inventory
-from cex_api_docs.inventory_fetch import _parse_retry_after_seconds, fetch_inventory
-from cex_api_docs.store import init_store
+from xdocs.inventory import create_inventory
+from xdocs.inventory_fetch import _parse_retry_after_seconds, fetch_inventory
+from xdocs.store import init_store
 
 from .http_server import serve_handler
 

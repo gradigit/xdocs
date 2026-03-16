@@ -448,7 +448,7 @@ def _copy_runtime_data(cfg: SyncConfig) -> list[str]:
                     break
         if needs_compact:
             try:
-                from cex_api_docs.semantic import compact_index
+                from xdocs.semantic import compact_index
                 logger.info("Fragment exceeds LFS limit -- compacting (max_bytes_per_file=%s)...", _LFS_MAX_BYTES)
                 result = compact_index(docs_dir=str(cfg.docs_dir), max_bytes_per_file=_LFS_MAX_BYTES)
                 for frag in result.get("fragments", []):

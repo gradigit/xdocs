@@ -18,7 +18,7 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 
 | Skill | Purpose |
 |-------|---------|
-| `cex-api-docs` | Maintainer workflow (sync, spec imports, validation, doc updates) |
+| `xdocs` | Maintainer workflow (sync, spec imports, validation, doc updates) |
 | `cex-api-query` | Query/answer (classification → search → cite-only answer) |
 | `cex-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
 | `cex-qa-gapfinder` | QA gap finder (iterative testing loop, runtime repo) |
@@ -62,142 +62,142 @@ uv pip install -e ".[dev,semantic]"
 pytest
 pytest tests/test_endpoints.py -x    # single module, stop on first failure
 pytest -k "test_stale" -x            # run tests matching pattern
-cex-api-docs --help
+xdocs --help
 ```
 
 ## Commands
 
 ```bash
 # Initialize a local store (idempotent)
-cex-api-docs init --docs-dir ./cex-docs
+xdocs init --docs-dir ./cex-docs
 
 # Deterministic sync (inventory -> fetch); use --render auto for JS-heavy docs
-cex-api-docs sync --docs-dir ./cex-docs --render auto
+xdocs sync --docs-dir ./cex-docs --render auto
 
 # Resume an interrupted sync (reuse existing inventories, fetch only pending/error entries)
-cex-api-docs sync --docs-dir ./cex-docs --resume
+xdocs sync --docs-dir ./cex-docs --resume
 
 # Parallel fetch (N concurrent workers with per-domain rate limiting)
-cex-api-docs sync --docs-dir ./cex-docs --concurrency 4
+xdocs sync --docs-dir ./cex-docs --concurrency 4
 
 # Force re-download all pages to detect content changes
-cex-api-docs sync --docs-dir ./cex-docs --force-refetch
+xdocs sync --docs-dir ./cex-docs --force-refetch
 
 # Resume an interrupted inventory fetch
-cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume
+xdocs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --resume
 
 # Parallel inventory fetch
-cex-api-docs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --concurrency 4
+xdocs fetch-inventory --exchange binance --section spot --docs-dir ./cex-docs --concurrency 4
 
 # Report on current store contents (pages, inventories, endpoints, review queue)
-cex-api-docs store-report --docs-dir ./cex-docs
-cex-api-docs store-report --exchange binance --section spot --output report.md
+xdocs store-report --docs-dir ./cex-docs
+xdocs store-report --exchange binance --section spot --output report.md
 
 # Import endpoints from OpenAPI spec (use --base-url if spec lacks servers[].url)
-cex-api-docs import-openapi --exchange binance --section spot --url <spec-url> --docs-dir ./cex-docs --continue-on-error
+xdocs import-openapi --exchange binance --section spot --url <spec-url> --docs-dir ./cex-docs --continue-on-error
 
 # Import endpoints from Postman collection
-cex-api-docs import-postman --exchange bybit --section v5 --url <collection-url> --docs-dir ./cex-docs --continue-on-error
+xdocs import-postman --exchange bybit --section v5 --url <collection-url> --docs-dir ./cex-docs --continue-on-error
 
 # Search endpoints by keyword
-cex-api-docs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-docs
+xdocs search-endpoints "rate limit" --exchange binance --docs-dir ./cex-docs
 
 # Get full endpoint record by ID
-cex-api-docs get-endpoint <endpoint_id> --docs-dir ./cex-docs
+xdocs get-endpoint <endpoint_id> --docs-dir ./cex-docs
 
 # List endpoint summaries by exchange/section
-cex-api-docs list-endpoints --exchange binance --section spot --limit 20 --docs-dir ./cex-docs
+xdocs list-endpoints --exchange binance --section spot --limit 20 --docs-dir ./cex-docs
 
 # Lookup endpoint by HTTP path (SQL LIKE, handles {{url}} prefix)
-cex-api-docs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance --docs-dir ./cex-docs
+xdocs lookup-endpoint /sapi/v1/convert/getQuote --method POST --exchange binance --docs-dir ./cex-docs
 
 # Search error code across endpoints + pages
 # Use -- only for negative codes (dash would be parsed as a flag)
-cex-api-docs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
+xdocs search-error -- -1002 --exchange binance --docs-dir ./cex-docs
 # Positive codes: no -- needed
-cex-api-docs search-error 60029 --exchange okx --docs-dir ./cex-docs
+xdocs search-error 60029 --exchange okx --docs-dir ./cex-docs
 
 # Classify input text (error, endpoint, payload, code, question)
-cex-api-docs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs
+xdocs classify "POST /sapi/v1/convert/getQuote" --docs-dir ./cex-docs
 
 # Content quality check (empty/thin/tiny_html pages)
-cex-api-docs quality-check --docs-dir ./cex-docs
+xdocs quality-check --docs-dir ./cex-docs
 
 # Build LanceDB semantic search index (requires uv pip install -e ".[semantic]")
-cex-api-docs build-index --docs-dir ./cex-docs
-cex-api-docs build-index --exchange binance --limit 500 --docs-dir ./cex-docs
+xdocs build-index --docs-dir ./cex-docs
+xdocs build-index --exchange binance --limit 500 --docs-dir ./cex-docs
 
 # Compact LanceDB index (merge fragments + cleanup old versions)
-cex-api-docs compact-index --docs-dir ./cex-docs
+xdocs compact-index --docs-dir ./cex-docs
 
 # Semantic search via LanceDB (vector, fts, or hybrid mode)
-cex-api-docs semantic-search "check wallet balance" --docs-dir ./cex-docs
-cex-api-docs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
+xdocs semantic-search "check wallet balance" --docs-dir ./cex-docs
+xdocs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./cex-docs
 
 # Cite-only answer from local store
-cex-api-docs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
+xdocs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
 
 # Crawl target validation
-cex-api-docs sanitize-check --docs-dir ./cex-docs
-cex-api-docs validate-sitemaps [--exchange X] --docs-dir ./cex-docs
-cex-api-docs validate-crawl-targets --exchange X [--enable-nav] [--enable-wayback] --docs-dir ./cex-docs
-cex-api-docs crawl-coverage [--exchange X] [--enable-live] [--enable-nav] [--backfill] --docs-dir ./cex-docs
-cex-api-docs check-links [--exchange X] [--sample N] --docs-dir ./cex-docs
+xdocs sanitize-check --docs-dir ./cex-docs
+xdocs validate-sitemaps [--exchange X] --docs-dir ./cex-docs
+xdocs validate-crawl-targets --exchange X [--enable-nav] [--enable-wayback] --docs-dir ./cex-docs
+xdocs crawl-coverage [--exchange X] [--enable-live] [--enable-nav] [--backfill] --docs-dir ./cex-docs
+xdocs check-links [--exchange X] [--sample N] --docs-dir ./cex-docs
 
 # Enhanced audit
-cex-api-docs audit --docs-dir ./cex-docs --include-crawl-coverage --include-live-validation --exchange X
+xdocs audit --docs-dir ./cex-docs --include-crawl-coverage --include-live-validation --exchange X
 
 # Schema migration (dry-run by default, --apply to execute)
-cex-api-docs migrate-schema --docs-dir ./cex-docs
-cex-api-docs migrate-schema --docs-dir ./cex-docs --apply
+xdocs migrate-schema --docs-dir ./cex-docs
+xdocs migrate-schema --docs-dir ./cex-docs --apply
 
 # Diff pages between crawl runs
-cex-api-docs diff --docs-dir ./cex-docs
+xdocs diff --docs-dir ./cex-docs
 
 # Discover sitemap/spec URLs from registry seeds
-cex-api-docs discover-sources --docs-dir ./cex-docs
+xdocs discover-sources --docs-dir ./cex-docs
 
 # Render sync JSON artifact into Markdown report
-cex-api-docs report <sync-artifact.json>
+xdocs report <sync-artifact.json>
 
 # Ingest a browser-captured page into the store (HTML or markdown)
-cex-api-docs ingest-page --exchange binance --section spot --url <page-url> --html-file page.html --docs-dir ./cex-docs
+xdocs ingest-page --exchange binance --section spot --url <page-url> --html-file page.html --docs-dir ./cex-docs
 
 # Import AsyncAPI spec (stub — no CEX specs implemented yet)
-cex-api-docs import-asyncapi --exchange whitebit --section v4 --url <spec-url> --docs-dir ./cex-docs
+xdocs import-asyncapi --exchange whitebit --section v4 --url <spec-url> --docs-dir ./cex-docs
 
 # Endpoint field coverage aggregation
-cex-api-docs coverage --docs-dir ./cex-docs
+xdocs coverage --docs-dir ./cex-docs
 
 # Compute + persist endpoint completeness gaps
-cex-api-docs coverage-gaps --docs-dir ./cex-docs
-cex-api-docs coverage-gaps-list --docs-dir ./cex-docs
+xdocs coverage-gaps --docs-dir ./cex-docs
+xdocs coverage-gaps-list --docs-dir ./cex-docs
 
 # Detect stale endpoint citations vs current page content
-cex-api-docs detect-stale-citations --docs-dir ./cex-docs
+xdocs detect-stale-citations --docs-dir ./cex-docs
 
 # Rebuild FTS5 indexes from stored markdown
-cex-api-docs fts-rebuild --docs-dir ./cex-docs
+xdocs fts-rebuild --docs-dir ./cex-docs
 
 # Golden QA retrieval validation (requires [semantic])
-cex-api-docs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
+xdocs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
 
 # Resolve docs_url for spec-imported endpoints
-cex-api-docs link-endpoints --docs-dir ./cex-docs
+xdocs link-endpoints --docs-dir ./cex-docs
 
 # Validate registry/base URLs
-cex-api-docs validate-registry
-cex-api-docs validate-base-urls
+xdocs validate-registry
+xdocs validate-base-urls
 
 # CCXT cross-reference
-cex-api-docs ccxt-xref --docs-dir ./cex-docs
+xdocs ccxt-xref --docs-dir ./cex-docs
 ```
 
 Note: The legacy `crawl` command still works but emits a deprecation warning. Use `sync` or `inventory`+`fetch-inventory` instead.
 
 ## Project Structure
 
-- `src/cex_api_docs/` Python package (all source modules).
+- `src/xdocs/` Python package (all source modules).
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
@@ -237,59 +237,59 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - Deterministic code: crawling, storage, indexing, querying, diffing.
 - Agent boundary: agent does interpretation and extraction; code does deterministic I/O and validation.
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
-- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update AGENTS.md, README.md, all SKILL.md files, and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/cex-api-docs/SKILL.md` for the full checklist.
+- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update AGENTS.md, README.md, all SKILL.md files, and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/xdocs/SKILL.md` for the full checklist.
 
 ## Key Files
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs
 - `schema/schema.sql` SQLite schema (pages, endpoints, FTS5, review queue, inventories, coverage_gaps)
-- `src/cex_api_docs/cli.py` CLI entrypoint (51 subcommands)
-- `src/cex_api_docs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
-- `src/cex_api_docs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
-- `src/cex_api_docs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
-- `src/cex_api_docs/store.py` Store init + `require_store_db` helper (shared across all modules)
-- `src/cex_api_docs/lock.py` File-based exclusive write lock (all DB writes go through this)
-- `src/cex_api_docs/inventory.py` Inventory generation (sitemaps + deterministic link-follow fallback)
-- `src/cex_api_docs/inventory_fetch.py` Fetch + persist inventory entries (--resume, --concurrency with per-domain rate limiting, 3-phase locking)
-- `src/cex_api_docs/playwrightfetch.py` Playwright fetch wrapper (JS-rendered docs fallback)
-- `src/cex_api_docs/sync.py` Cron-friendly orchestration (inventory + fetch, --resume, --concurrency)
-- `src/cex_api_docs/endpoints.py` Endpoint CRUD (`get_endpoint`, `list_endpoints`, `search_endpoints`), FTS search, review queue management
-- `src/cex_api_docs/openapi_import.py` OpenAPI/Swagger spec import into endpoint DB
-- `src/cex_api_docs/postman_import.py` Postman collection import into endpoint DB
-- `src/cex_api_docs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
-- `src/cex_api_docs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
-- `src/cex_api_docs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
-- `src/cex_api_docs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 46 exchanges; Binance has richer heuristics)
+- `src/xdocs/cli.py` CLI entrypoint (51 subcommands)
+- `src/xdocs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
+- `src/xdocs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
+- `src/xdocs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
+- `src/xdocs/store.py` Store init + `require_store_db` helper (shared across all modules)
+- `src/xdocs/lock.py` File-based exclusive write lock (all DB writes go through this)
+- `src/xdocs/inventory.py` Inventory generation (sitemaps + deterministic link-follow fallback)
+- `src/xdocs/inventory_fetch.py` Fetch + persist inventory entries (--resume, --concurrency with per-domain rate limiting, 3-phase locking)
+- `src/xdocs/playwrightfetch.py` Playwright fetch wrapper (JS-rendered docs fallback)
+- `src/xdocs/sync.py` Cron-friendly orchestration (inventory + fetch, --resume, --concurrency)
+- `src/xdocs/endpoints.py` Endpoint CRUD (`get_endpoint`, `list_endpoints`, `search_endpoints`), FTS search, review queue management
+- `src/xdocs/openapi_import.py` OpenAPI/Swagger spec import into endpoint DB
+- `src/xdocs/postman_import.py` Postman collection import into endpoint DB
+- `src/xdocs/report.py` Markdown report rendering for sync JSON artifacts + store-report command
+- `src/xdocs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
+- `src/xdocs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
+- `src/xdocs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 46 exchanges; Binance has richer heuristics)
 - `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + cex-api-query skill)
-- `src/cex_api_docs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
-- `src/cex_api_docs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
-- `src/cex_api_docs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
-- `src/cex_api_docs/url_sanitize.py` URL sanitization filter (template artifacts, CDN paths, bad schemes)
-- `src/cex_api_docs/extraction_verify.py` Structural extraction verification (HTML vs markdown quality scoring)
-- `src/cex_api_docs/sitemap_validate.py` Sitemap health checks + cross-validation against store
-- `src/cex_api_docs/nav_extract.py` Nav extraction via agent-browser + HTTP/BS4 fallback
-- `src/cex_api_docs/crawl_targets.py` Multi-method URL discovery (sitemap + link-follow + nav + Wayback CDX)
-- `src/cex_api_docs/live_validate.py` Live site nav comparison against store
-- `src/cex_api_docs/crawl_coverage.py` Coverage audit + gap backfill
-- `src/cex_api_docs/link_check.py` Stored page URL reachability checks (HEAD requests)
-- `src/cex_api_docs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
-- `src/cex_api_docs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
-- `src/cex_api_docs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
-- `src/cex_api_docs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, BM25 normalization, RRF fusion, position-aware blend, strong-signal shortcut)
-- `src/cex_api_docs/reranker.py` Backend-agnostic reranking (auto | cross-encoder | qwen3 | jina-v3 | jina-v3-mlx | flashrank). OS auto-detection: macOS+MLX→jina-v3-mlx→jina-v3→cross-encoder→flashrank, Linux→jina-v3→cross-encoder→flashrank. M10 benchmark (163 queries): Jina v3 MRR=0.556 (+15.6% over MiniLM, p=0.0014), 218ms/query.
+- `src/xdocs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
+- `src/xdocs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
+- `src/xdocs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
+- `src/xdocs/url_sanitize.py` URL sanitization filter (template artifacts, CDN paths, bad schemes)
+- `src/xdocs/extraction_verify.py` Structural extraction verification (HTML vs markdown quality scoring)
+- `src/xdocs/sitemap_validate.py` Sitemap health checks + cross-validation against store
+- `src/xdocs/nav_extract.py` Nav extraction via agent-browser + HTTP/BS4 fallback
+- `src/xdocs/crawl_targets.py` Multi-method URL discovery (sitemap + link-follow + nav + Wayback CDX)
+- `src/xdocs/live_validate.py` Live site nav comparison against store
+- `src/xdocs/crawl_coverage.py` Coverage audit + gap backfill
+- `src/xdocs/link_check.py` Stored page URL reachability checks (HEAD requests)
+- `src/xdocs/ccxt_xref.py` CCXT cross-reference validation against endpoint DB
+- `src/xdocs/embeddings.py` Embedding backend selection (Jina MLX primary, SentenceTransformers fallback)
+- `src/xdocs/chunker.py` Heading-aware markdown chunking (mistune AST) for semantic index
+- `src/xdocs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, BM25 normalization, RRF fusion, position-aware blend, strong-signal shortcut)
+- `src/xdocs/reranker.py` Backend-agnostic reranking (auto | cross-encoder | qwen3 | jina-v3 | jina-v3-mlx | flashrank). OS auto-detection: macOS+MLX→jina-v3-mlx→jina-v3→cross-encoder→flashrank, Linux→jina-v3→cross-encoder→flashrank. M10 benchmark (163 queries): Jina v3 MRR=0.556 (+15.6% over MiniLM, p=0.0014), 218ms/query.
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
-- `src/cex_api_docs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
-- `src/cex_api_docs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
-- `src/cex_api_docs/coverage.py` Endpoint field_status coverage aggregation
-- `src/cex_api_docs/coverage_gaps.py` Endpoint completeness gap computation + persistence
-- `src/cex_api_docs/stale_citations.py` Stale citation detection (endpoint citations vs current page content)
-- `src/cex_api_docs/resolve_docs_urls.py` Docs URL resolution for spec-imported endpoints (link-endpoints command)
-- `src/cex_api_docs/asyncapi_import.py` AsyncAPI spec import (stub — no CEX specs implemented yet)
-- `src/cex_api_docs/ingest_page.py` Manual page ingestion from browser capture (HTML or markdown input)
-- `src/cex_api_docs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
-- `src/cex_api_docs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
-- `src/cex_api_docs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
-- `skills/cex-api-docs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
+- `src/xdocs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
+- `src/xdocs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
+- `src/xdocs/coverage.py` Endpoint field_status coverage aggregation
+- `src/xdocs/coverage_gaps.py` Endpoint completeness gap computation + persistence
+- `src/xdocs/stale_citations.py` Stale citation detection (endpoint citations vs current page content)
+- `src/xdocs/resolve_docs_urls.py` Docs URL resolution for spec-imported endpoints (link-endpoints command)
+- `src/xdocs/asyncapi_import.py` AsyncAPI spec import (stub — no CEX specs implemented yet)
+- `src/xdocs/ingest_page.py` Manual page ingestion from browser capture (HTML or markdown input)
+- `src/xdocs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
+- `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
+- `src/xdocs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
+- `skills/xdocs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
 - `skills/cex-api-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
 - `skills/cex-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
 - `skills/cex-qa-gapfinder/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)

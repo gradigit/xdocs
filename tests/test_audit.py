@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.db import open_db
-from cex_api_docs.store import init_store
+from xdocs.db import open_db
+from xdocs.store import init_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -91,7 +91,7 @@ def _insert_endpoint(conn, *, docs_dir: Path, endpoint_id: str, exchange: str, s
 
 class TestFsckVerifyHashes(unittest.TestCase):
     def test_clean_hashes(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -109,7 +109,7 @@ class TestFsckVerifyHashes(unittest.TestCase):
             self.assertEqual(len(hash_issues), 0)
 
     def test_mismatch_detected(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -136,7 +136,7 @@ class TestFsckVerifyHashes(unittest.TestCase):
 
 class TestFsckVerifyFts(unittest.TestCase):
     def test_clean_fts(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -154,7 +154,7 @@ class TestFsckVerifyFts(unittest.TestCase):
             self.assertEqual(r["fts_verification"]["pages_fts_orphans"], 0)
 
     def test_missing_fts_entry(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -178,7 +178,7 @@ class TestFsckVerifyFts(unittest.TestCase):
 
 class TestFsckVerifyEndpointJson(unittest.TestCase):
     def test_clean_endpoint_json(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -197,7 +197,7 @@ class TestFsckVerifyEndpointJson(unittest.TestCase):
             self.assertEqual(len(ej_issues), 0)
 
     def test_mismatch_detected(self) -> None:
-        from cex_api_docs.fsck import fsck_store
+        from xdocs.fsck import fsck_store
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -225,7 +225,7 @@ class TestFsckVerifyEndpointJson(unittest.TestCase):
 
 class TestAudit(unittest.TestCase):
     def test_clean_store_passes(self) -> None:
-        from cex_api_docs.audit import run_audit
+        from xdocs.audit import run_audit
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))
@@ -244,7 +244,7 @@ class TestAudit(unittest.TestCase):
             self.assertEqual(r["summary"]["skip"], 8)
 
     def test_hash_mismatch_fails_audit(self) -> None:
-        from cex_api_docs.audit import run_audit
+        from xdocs.audit import run_audit
 
         with tempfile.TemporaryDirectory() as tmp:
             docs_dir = _setup_store(Path(tmp))

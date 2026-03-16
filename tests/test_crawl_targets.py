@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cex_api_docs.crawl_targets import (
+from xdocs.crawl_targets import (
     DiscoveredUrl,
     DiscoveryResult,
     _discover_link_follow,
@@ -15,8 +15,8 @@ from cex_api_docs.crawl_targets import (
     _self_check,
     discover_crawl_targets,
 )
-from cex_api_docs.nav_extract import NavExtractionResult, NavNode
-from cex_api_docs.registry import (
+from xdocs.nav_extract import NavExtractionResult, NavNode
+from xdocs.registry import (
     DocSource,
     Exchange,
     ExchangeSection,
@@ -260,7 +260,7 @@ class TestDiscoverLinkFollow:
 
 
 class TestDiscoverWayback:
-    @patch("cex_api_docs.crawl_targets.time.sleep")  # Skip real delays.
+    @patch("xdocs.crawl_targets.time.sleep")  # Skip real delays.
     def test_parses_cdx_response(self, mock_sleep):
         session = MagicMock()
         mock_resp = MagicMock()
@@ -285,7 +285,7 @@ class TestDiscoverWayback:
         assert any("margin" in u for u in urls)
         assert not any("other.com" in u for u in urls)
 
-    @patch("cex_api_docs.crawl_targets.time.sleep")
+    @patch("xdocs.crawl_targets.time.sleep")
     def test_handles_404(self, mock_sleep):
         session = MagicMock()
         mock_resp = MagicMock()
@@ -302,7 +302,7 @@ class TestDiscoverWayback:
         assert len(urls) == 0
         assert len(errors) == 0  # 404 is normal empty.
 
-    @patch("cex_api_docs.crawl_targets.time.sleep")
+    @patch("xdocs.crawl_targets.time.sleep")
     def test_handles_503_retries(self, mock_sleep):
         session = MagicMock()
 
@@ -322,7 +322,7 @@ class TestDiscoverWayback:
         assert len(errors) == 1
         assert "503" in errors[0]["error"]
 
-    @patch("cex_api_docs.crawl_targets.time.sleep")
+    @patch("xdocs.crawl_targets.time.sleep")
     def test_handles_json_decode_error(self, mock_sleep):
         session = MagicMock()
         mock_resp = MagicMock()
@@ -348,9 +348,9 @@ class TestDiscoverWayback:
 
 
 class TestDiscoverCrawlTargets:
-    @patch("cex_api_docs.crawl_targets._discover_link_follow")
-    @patch("cex_api_docs.crawl_targets._discover_sitemap")
-    @patch("cex_api_docs.crawl_targets.load_registry")
+    @patch("xdocs.crawl_targets._discover_link_follow")
+    @patch("xdocs.crawl_targets._discover_sitemap")
+    @patch("xdocs.crawl_targets.load_registry")
     def test_union_with_provenance(self, mock_reg, mock_sm, mock_lf):
         mock_reg.return_value = _make_registry()
 
@@ -391,10 +391,10 @@ class TestDiscoverCrawlTargets:
         assert result.method_counts["sitemap"] == 2
         assert result.method_counts["link_follow"] == 2
 
-    @patch("cex_api_docs.crawl_targets._discover_nav")
-    @patch("cex_api_docs.crawl_targets._discover_link_follow")
-    @patch("cex_api_docs.crawl_targets._discover_sitemap")
-    @patch("cex_api_docs.crawl_targets.load_registry")
+    @patch("xdocs.crawl_targets._discover_nav")
+    @patch("xdocs.crawl_targets._discover_link_follow")
+    @patch("xdocs.crawl_targets._discover_sitemap")
+    @patch("xdocs.crawl_targets.load_registry")
     def test_nav_enabled(self, mock_reg, mock_sm, mock_lf, mock_nav):
         mock_reg.return_value = _make_registry()
         mock_sm.return_value = (["https://docs.testex.com/api/spot"], [])
@@ -413,10 +413,10 @@ class TestDiscoverCrawlTargets:
         assert len(nav_urls) == 1
         assert "nav_extraction" in nav_urls[0].sources
 
-    @patch("cex_api_docs.crawl_targets._discover_wayback")
-    @patch("cex_api_docs.crawl_targets._discover_link_follow")
-    @patch("cex_api_docs.crawl_targets._discover_sitemap")
-    @patch("cex_api_docs.crawl_targets.load_registry")
+    @patch("xdocs.crawl_targets._discover_wayback")
+    @patch("xdocs.crawl_targets._discover_link_follow")
+    @patch("xdocs.crawl_targets._discover_sitemap")
+    @patch("xdocs.crawl_targets.load_registry")
     def test_wayback_enabled(self, mock_reg, mock_sm, mock_lf, mock_wb):
         mock_reg.return_value = _make_registry()
         mock_sm.return_value = ([], [])
@@ -434,9 +434,9 @@ class TestDiscoverCrawlTargets:
         wb_urls = [u for u in result.urls if "archived" in u.url]
         assert len(wb_urls) == 1
 
-    @patch("cex_api_docs.crawl_targets._discover_link_follow")
-    @patch("cex_api_docs.crawl_targets._discover_sitemap")
-    @patch("cex_api_docs.crawl_targets.load_registry")
+    @patch("xdocs.crawl_targets._discover_link_follow")
+    @patch("xdocs.crawl_targets._discover_sitemap")
+    @patch("xdocs.crawl_targets.load_registry")
     def test_errors_collected(self, mock_reg, mock_sm, mock_lf):
         mock_reg.return_value = _make_registry()
         mock_sm.return_value = ([], [{"url": "sitemap.xml", "error": "404"}])
@@ -451,9 +451,9 @@ class TestDiscoverCrawlTargets:
         assert len(result.method_errors["sitemap"]) == 1
         assert len(result.method_errors["link_follow"]) == 1
 
-    @patch("cex_api_docs.crawl_targets._discover_link_follow")
-    @patch("cex_api_docs.crawl_targets._discover_sitemap")
-    @patch("cex_api_docs.crawl_targets.load_registry")
+    @patch("xdocs.crawl_targets._discover_link_follow")
+    @patch("xdocs.crawl_targets._discover_sitemap")
+    @patch("xdocs.crawl_targets.load_registry")
     def test_self_check_warnings(self, mock_reg, mock_sm, mock_lf):
         mock_reg.return_value = _make_registry()
         mock_sm.return_value = ([], [])

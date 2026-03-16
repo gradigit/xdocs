@@ -1,4 +1,4 @@
-"""Tests for markdown chunking (src/cex_api_docs/chunker.py)."""
+"""Tests for markdown chunking (src/xdocs/chunker.py)."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ HAS_MISTUNE = _require_mistune()
 class TestChunker(unittest.TestCase):
     def test_single_section(self) -> None:
         """A small document with one heading should produce a single chunk."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         md = "# Title\n\nShort paragraph here."
         chunks = chunk_markdown(md)
@@ -38,7 +38,7 @@ class TestChunker(unittest.TestCase):
 
     def test_multiple_h2_sections(self) -> None:
         """Multiple H2 sections should produce one chunk per section."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         md = "## Section A\n\nContent A.\n\n## Section B\n\nContent B.\n\n## Section C\n\nContent C."
         chunks = chunk_markdown(md, max_tokens=10)
@@ -53,7 +53,7 @@ class TestChunker(unittest.TestCase):
 
     def test_oversized_section_splits(self) -> None:
         """A section exceeding max_tokens should be split at paragraph boundaries."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         # Create a large section: ~800 tokens worth (3200 chars).
         paragraphs = [f"Paragraph {i}. " + "word " * 80 for i in range(10)]
@@ -67,7 +67,7 @@ class TestChunker(unittest.TestCase):
 
     def test_code_blocks_with_hash(self) -> None:
         """Code blocks containing # should not be treated as headings."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         md = "## API Guide\n\n```python\n# This is a comment\nprint('hello')\n```\n\nSome text after code."
         chunks = chunk_markdown(md)
@@ -81,14 +81,14 @@ class TestChunker(unittest.TestCase):
 
     def test_empty_input(self) -> None:
         """Empty or whitespace-only input should return no chunks."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         self.assertEqual(chunk_markdown(""), [])
         self.assertEqual(chunk_markdown("   \n\n  "), [])
 
     def test_char_offset_coverage(self) -> None:
         """Char offsets should cover the document without gaps in non-overlap case."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         # Use max_tokens=10 to force splitting on this small document.
         md = "## First\n\nContent one.\n\n## Second\n\nContent two."
@@ -106,7 +106,7 @@ class TestChunker(unittest.TestCase):
 
     def test_preamble_before_first_heading(self) -> None:
         """Text before the first heading should be in its own chunk with heading_level=0."""
-        from cex_api_docs.chunker import chunk_markdown
+        from xdocs.chunker import chunk_markdown
 
         md = "Some preamble text here.\n\n## Heading\n\nContent."
         chunks = chunk_markdown(md, max_tokens=10)

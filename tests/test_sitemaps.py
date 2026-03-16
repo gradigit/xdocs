@@ -3,7 +3,7 @@ from __future__ import annotations
 import gzip
 import unittest
 
-from cex_api_docs.sitemaps import parse_sitemap_bytes
+from xdocs.sitemaps import parse_sitemap_bytes
 
 
 class TestSitemaps(unittest.TestCase):

@@ -113,7 +113,7 @@ def _insert_page(store_path: Path, url: str, domain: str = "localhost") -> None:
 
 class TestCheckStoredLinks:
     def test_head_200_ok(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/ok")
@@ -130,7 +130,7 @@ class TestCheckStoredLinks:
         assert len(report.results) == 0  # No non-ok results
 
     def test_head_404_error(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/not-found")
@@ -147,7 +147,7 @@ class TestCheckStoredLinks:
         assert report.results[0].http_status == 404
 
     def test_head_405_get_fallback(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/head-not-allowed")
@@ -162,7 +162,7 @@ class TestCheckStoredLinks:
         assert report.client_error == 0
 
     def test_server_error(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/server-error")
@@ -176,7 +176,7 @@ class TestCheckStoredLinks:
         assert report.server_error == 1
 
     def test_timeout_network_error(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/slow")
@@ -190,7 +190,7 @@ class TestCheckStoredLinks:
         assert report.network_error == 1
 
     def test_exchange_filter(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/ok", domain="docs.binance.com")
@@ -205,7 +205,7 @@ class TestCheckStoredLinks:
         assert report.checked == 1  # Only binance
 
     def test_sample_limit(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             for i in range(10):
@@ -220,7 +220,7 @@ class TestCheckStoredLinks:
         assert report.checked == 3
 
     def test_redirect_detected(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         with serve_handler(LinkCheckHandler) as base_url:
             _insert_page(store_with_urls, f"{base_url}/redirect")
@@ -236,7 +236,7 @@ class TestCheckStoredLinks:
         assert report.results[0].redirect_url is not None
 
     def test_non_http_scheme_skipped(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         _insert_page(store_with_urls, "ftp://example.com/file")
         report = check_stored_links(
@@ -250,7 +250,7 @@ class TestCheckStoredLinks:
         assert "non-HTTP scheme" in report.results[0].error
 
     def test_empty_store(self, store_with_urls: Path):
-        from cex_api_docs.link_check import check_stored_links
+        from xdocs.link_check import check_stored_links
 
         report = check_stored_links(
             docs_dir=str(store_with_urls),

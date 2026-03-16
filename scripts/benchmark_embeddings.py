@@ -81,7 +81,7 @@ def evaluate_search(
     limit: int = 5,
 ) -> dict:
     """Run all queries through semantic_search, compute per-query metrics."""
-    from cex_api_docs.semantic import semantic_search
+    from xdocs.semantic import semantic_search
 
     # Warm up
     semantic_search(docs_dir=docs_dir, query="test", limit=1,
@@ -227,7 +227,7 @@ def main():
     args = parser.parse_args()
 
     # Detect current embedding model
-    from cex_api_docs.embeddings import get_embedder
+    from xdocs.embeddings import get_embedder
     embedder = get_embedder()
     model_name = embedder.model_name
     dims = embedder.ndims()

@@ -5,9 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cex_api_docs.db import open_db
-from cex_api_docs.quality import quality_check
-from cex_api_docs.store import init_store
+from xdocs.db import open_db
+from xdocs.quality import quality_check
+from xdocs.store import init_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
