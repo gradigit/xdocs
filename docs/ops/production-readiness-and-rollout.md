@@ -76,7 +76,7 @@ This executes:
 4. (Optional) run demo skill sync:
    - `python3 scripts/sync_demo_skills.py --demo-root <path>`
 5. Start fresh agent session in demo workspace and prompt:
-   - `Use cex-api-query skill.`
+   - `Use xdocs-query skill.`
    - then ask the natural-language CEX API question.
 
 ## 6) Final gate before broad share

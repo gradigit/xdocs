@@ -39,7 +39,7 @@ No internal contacts are required. If you can run the CLI, you can use this repo
 2. **Local knowledge store** (`./cex-docs` by default)  
    SQLite + FTS + endpoint records + optional LanceDB semantic index.
 
-3. **Agent skill** (`.claude/skills/cex-api-query/SKILL.md`)  
+3. **Agent skill** (`.claude/skills/xdocs-query/SKILL.md`)  
    A workflow so agents can query docs via natural language with strict citations.
 
 ---
@@ -82,8 +82,8 @@ uv tool install -e .
 Make the skill available globally (Claude Code + Codex):
 ```bash
 mkdir -p ~/.claude/skills ~/.agents/skills
-ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query
-ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
+ln -sf "$(pwd)/.claude/skills/xdocs-query" ~/.claude/skills/xdocs-query
+ln -sf "$(pwd)/.agents/skills/xdocs-query" ~/.agents/skills/xdocs-query
 ```
 
 ### First queries
@@ -101,14 +101,14 @@ xdocs answer "What permissions are required for Binance private balance endpoint
 In a new session at the repo root, prompt:
 
 ```text
-Use cex-api-query skill.
+Use xdocs-query skill.
 Find private balance endpoints for Binance/OKX/Bybit and list auth headers, permissions, and top auth failure codes with citations.
 ```
 
 Bootstrap guard snippet (recommended for every fresh session):
 
 ```text
-Use cex-api-query skill for this CEX API docs query.
+Use xdocs-query skill for this CEX API docs query.
 ```
 
 The skill uses this retrieval strategy for question-style prompts:
@@ -257,9 +257,9 @@ git pull && uv tool install -e . && ./scripts/bootstrap-data.sh
 - `scripts/sync_runtime_repo.py` — sync maintainer repo → runtime repo
 - `schema/schema.sql` — SQLite schema (v6)
 - `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections)
-- `.claude/skills/xdocs/SKILL.md` — maintainer workflow skill
-- `.claude/skills/cex-api-query/SKILL.md` — query/answer agent skill
-- `.claude/skills/cex-discovery/SKILL.md` — exhaustive crawl target discovery skill
+- `.claude/skills/xdocs-maintain/SKILL.md` — maintainer workflow skill
+- `.claude/skills/xdocs-query/SKILL.md` — query/answer agent skill
+- `.claude/skills/xdocs-discovery/SKILL.md` — exhaustive crawl target discovery skill
 
 ---
 

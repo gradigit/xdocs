@@ -1246,7 +1246,7 @@ Option (a) is lowest effort — just track heading stack during chunking. Option
 **Severity**: Medium
 **Found**: 2026-03-10, OKX WebSocket retrieval gap report
 
-The cex-api-query skill (SKILL.md) and CLAUDE.md show `search-error -- -1002` as the example. The `--` is needed because `-1002` starts with a dash (argparse interprets it as a flag). But agents generalize this pattern to ALL error codes, including positive ones like OKX `60029`. Running `search-error -- 60029 --exchange okx --docs-dir ./cex-docs` fails because `--` causes argparse to treat `--exchange` and `--docs-dir` as extra positional arguments.
+The xdocs-query skill (SKILL.md) and CLAUDE.md show `search-error -- -1002` as the example. The `--` is needed because `-1002` starts with a dash (argparse interprets it as a flag). But agents generalize this pattern to ALL error codes, including positive ones like OKX `60029`. Running `search-error -- 60029 --exchange okx --docs-dir ./cex-docs` fails because `--` causes argparse to treat `--exchange` and `--docs-dir` as extra positional arguments.
 
 The skill's gotchas section does say "Use `--` before negative numbers in CLI args", but the only example in the routing table and code blocks uses `--`, so agents cargo-cult the pattern.
 
@@ -1261,13 +1261,13 @@ xdocs search-error 60029 --exchange okx --docs-dir ./cex-docs
 
 Also add an explicit warning in the routing table: "Only use `--` when the error code starts with a dash."
 
-**Key files**: `.claude/skills/cex-api-query/SKILL.md` (routing table + examples), `CLAUDE.md` (commands section), `AGENTS.md` (core commands)
+**Key files**: `.claude/skills/xdocs-query/SKILL.md` (routing table + examples), `CLAUDE.md` (commands section), `AGENTS.md` (core commands)
 
 #### BUG-11: Skill Has No WebSocket Query Routing Guidance
 **Severity**: Medium
 **Found**: 2026-03-10, OKX WebSocket retrieval gap report
 
-The cex-api-query skill routing table covers: error_message, endpoint_path, request_payload, code_snippet, question. There is no guidance for WebSocket channel queries — channel names, WS-specific error codes, WS URL paths, subscription parameters. When an agent asks about "OKX fills channel", it gets classified as "question" → semantic-search, which works when chunking preserves headings but fails when it doesn't (see BUG-9).
+The xdocs-query skill routing table covers: error_message, endpoint_path, request_payload, code_snippet, question. There is no guidance for WebSocket channel queries — channel names, WS-specific error codes, WS URL paths, subscription parameters. When an agent asks about "OKX fills channel", it gets classified as "question" → semantic-search, which works when chunking preserves headings but fails when it doesn't (see BUG-9).
 
 WebSocket channel data exists in the crawled page content for all major exchanges (OKX, Binance, Bybit, Bitget, Gate.io, HTX, KuCoin) but isn't surfaced through any structured query path.
 
@@ -1279,7 +1279,7 @@ WebSocket channel data exists in the crawled page content for all major exchange
 
 This doesn't require any new CLI commands — just skill-level routing guidance for agents.
 
-**Key files**: `.claude/skills/cex-api-query/SKILL.md` (routing table)
+**Key files**: `.claude/skills/xdocs-query/SKILL.md` (routing table)
 
 #### BUG-12: Korean Text Classification Not Supported
 **Severity**: Low

@@ -24,7 +24,7 @@ See dedicated A/B report:
 
 Key takeaways from that file:
 
-- Both runs used cex-api-query skill, but neither executed semantic-search/rerank.
+- Both runs used xdocs-query skill, but neither executed semantic-search/rerank.
 - Post-update run had lower context pressure (65.1%/70.9% vs 89.2%/94.5%).
 - Retrieval remained FTS/raw-scan heavy.
 

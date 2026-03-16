@@ -15,15 +15,15 @@ Both directories are synced from the same source. When creating, updating, or ma
 
 | Skill | Purpose |
 |-------|---------|
-| `cex-api-query` | Answer questions about exchange API documentation with citations |
-| `cex-qa-gapfinder` | Discover bugs, gaps, and quality issues in the knowledge base |
+| `xdocs-query` | Answer questions about exchange API documentation with citations |
+| `xdocs-qa` | Discover bugs, gaps, and quality issues in the knowledge base |
 
 ## Teammate Workflow (Querying)
 
 1. `git pull`
 2. Start fresh agent session
-3. Ask your question — the agent will activate the `cex-api-query` skill automatically
-4. If not auto-activated: `Use cex-api-query skill.`
+3. Ask your question — the agent will activate the `xdocs-query` skill automatically
+4. If not auto-activated: `Use xdocs-query skill.`
 
 ## QA Workflow (Gap Finding)
 
@@ -32,7 +32,7 @@ This is an iterative loop between this runtime repo and the maintainer repo:
 ```
 Runtime agent (here)          Maintainer agent (xdocs)
 ──────────────────────        ───────────────────────────────
-1. Run cex-qa-gapfinder  ──→  2. Read qa-findings.jsonl
+1. Run xdocs-qa  ──→  2. Read qa-findings.jsonl
    Designs own tests              Verify findings
    Generates reports              Fix real issues
                            ──→  3. Sync fixes to runtime
@@ -46,7 +46,7 @@ Runtime agent (here)          Maintainer agent (xdocs)
 ### Running QA
 
 ```
-Use cex-qa-gapfinder skill.
+Use xdocs-qa skill.
 ```
 
 Both Claude Code and Codex CLI will auto-discover the skill from their respective directories.

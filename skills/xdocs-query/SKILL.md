@@ -1,5 +1,5 @@
 ---
-name: cex-api-query
+name: xdocs-query
 description: >
   Answers questions about cryptocurrency exchange APIs using the local xdocs
   SQLite store. Searches endpoints and documentation pages across CEX, perp DEX,
@@ -67,7 +67,7 @@ Skip all pre-checks on subsequent queries in the same session.
 At the beginning of a brand-new session, if the user asks a CEX API docs question, explicitly set routing context first:
 
 ```text
-Use cex-api-query skill for this CEX API docs query.
+Use xdocs-query skill for this CEX API docs query.
 ```
 
 Then run classification and the standard workflow below.
@@ -288,7 +288,7 @@ Expected style:
 
 Add this block before final answer close:
 
-- `skill_used`: `cex-api-query@2.10.0`
+- `skill_used`: `xdocs-query@2.10.0`
 - `search_mode`: `semantic/hybrid` | `fts` | `mixed`
 - `rerank_policy`: `auto` | `always` | `never`
 - `rerank_applied`: `yes/no`

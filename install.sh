@@ -51,8 +51,8 @@ ok "Data ready"
 # --- Skill symlinks ---
 info "Setting up agent skills..."
 mkdir -p "$HOME/.claude/skills" "$HOME/.agents/skills"
-ln -sf "$INSTALL_DIR/.claude/skills/cex-api-query" "$HOME/.claude/skills/cex-api-query"
-ln -sf "$INSTALL_DIR/.agents/skills/cex-api-query" "$HOME/.agents/skills/cex-api-query"
+ln -sf "$INSTALL_DIR/.claude/skills/xdocs-query" "$HOME/.claude/skills/xdocs-query"
+ln -sf "$INSTALL_DIR/.agents/skills/xdocs-query" "$HOME/.agents/skills/xdocs-query"
 ok "Skills available globally (Claude Code + Codex)"
 
 # --- Done ---

@@ -181,7 +181,7 @@ Primary command path:
 - `xdocs search-error`
 - `xdocs answer`
 
-This workflow is also mirrored in [`skills/cex-api-query/SKILL.md`](../../skills/cex-api-query/SKILL.md).
+This workflow is also mirrored in [`skills/xdocs-query/SKILL.md`](../../skills/xdocs-query/SKILL.md).
 
 ## New Exchange Workflow
 
@@ -198,7 +198,7 @@ The intended onboarding path is:
 
 This is spread across:
 
-- [`skills/cex-discovery/SKILL.md`](../../skills/cex-discovery/SKILL.md)
+- [`skills/xdocs-discovery/SKILL.md`](../../skills/xdocs-discovery/SKILL.md)
 - [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md)
 - [`docs/crawl-targets-bible.md`](../../docs/crawl-targets-bible.md)
 

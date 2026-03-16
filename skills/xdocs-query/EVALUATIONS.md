@@ -1,4 +1,4 @@
-# Evaluation Scenarios — cex-api-query
+# Evaluation Scenarios — xdocs-query
 
 ## Scenario 1: Happy Path — Endpoint Lookup
 

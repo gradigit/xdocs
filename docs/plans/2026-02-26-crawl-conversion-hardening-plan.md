@@ -7,7 +7,7 @@ Make crawling/scraping and HTML→markdown conversion production-ready for team 
 
 ## Scope
 - Tooling: `sync`, `inventory`, `fetch-inventory`, `httpfetch`, `page_store`, `markdown`, quality checks.
-- Skill: `.claude/skills/cex-api-query/SKILL.md` routing/output rules.
+- Skill: `.claude/skills/xdocs-query/SKILL.md` routing/output rules.
 - Non-goals: hosted service, auth’d exchange API calls, trading execution.
 
 ---
@@ -173,12 +173,12 @@ Code/table structures are preserved inconsistently for retrieval and citations.
 Ensure fresh sessions consistently use high-quality retrieval path with clear evidence links.
 
 ### Changes
-1. Update `.claude/skills/cex-api-query/SKILL.md`:
+1. Update `.claude/skills/xdocs-query/SKILL.md`:
    - explicit semantic-first route with bounded fallback budget
    - mandatory retrieval audit fields
    - mandatory source link policy
 2. Add startup guard snippet for new sessions:
-   - “use cex-api-query skill for CEX API doc questions”
+   - “use xdocs-query skill for CEX API doc questions”
 3. Add skill eval cases in `EVALUATIONS.md`:
    - ambiguous multi-exchange query
    - permission/rate-limit comparison table
@@ -222,8 +222,8 @@ Ensure fresh sessions consistently use high-quality retrieval path with clear ev
 - `src/xdocs/report.py`
 - `schema/schema.sql`
 - `data/exchanges.yaml`
-- `.claude/skills/cex-api-query/SKILL.md`
-- `.claude/skills/cex-api-query/EVALUATIONS.md`
+- `.claude/skills/xdocs-query/SKILL.md`
+- `.claude/skills/xdocs-query/EVALUATIONS.md`
 - tests: inventory/fetch/markdown/rate-limiter integrations
 
 ---

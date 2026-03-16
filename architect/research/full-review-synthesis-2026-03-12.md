@@ -83,10 +83,10 @@ The code splits cleanly into:
 
 The skill system is meaningful and aligned with the codebase:
 
-- `cex-discovery` -> find sources
+- `xdocs-discovery` -> find sources
 - `xdocs` -> ingest and maintain
-- `cex-api-query` -> answer questions
-- `cex-qa-gapfinder` -> test the result
+- `xdocs-query` -> answer questions
+- `xdocs-qa` -> test the result
 - `agent-browser` -> support rendered-site inspection and automation
 
 The main issue in the skill layer is maintenance drift in examples and counts, not poor structure.

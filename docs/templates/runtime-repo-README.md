@@ -1,7 +1,7 @@
 # CEX Docs Copilot Runtime
 
 ```bash
-git clone https://github.com/gradigit/xdocs.git && cd xdocs && uv tool install -e . && ./scripts/bootstrap-data.sh && mkdir -p ~/.claude/skills ~/.agents/skills && ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query && ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
+git clone https://github.com/gradigit/xdocs.git && cd xdocs && uv tool install -e . && ./scripts/bootstrap-data.sh && mkdir -p ~/.claude/skills ~/.agents/skills && ln -sf "$(pwd)/.claude/skills/xdocs-query" ~/.claude/skills/xdocs-query && ln -sf "$(pwd)/.agents/skills/xdocs-query" ~/.agents/skills/xdocs-query
 ```
 
 Query exchange API documentation from any project, any directory, on both Claude Code and Codex CLI.
@@ -9,7 +9,7 @@ Query exchange API documentation from any project, any directory, on both Claude
 ## What you get
 
 - `xdocs` CLI — globally on PATH, works from anywhere
-- `cex-api-query` skill — available in every project (Claude Code + Codex)
+- `xdocs-query` skill — available in every project (Claude Code + Codex)
 - 10,700+ pages, 4,900+ endpoints across 46 exchanges
 
 Data snapshots (`cex-docs/`) are distributed via GitHub Releases, not git.
@@ -24,8 +24,8 @@ uv tool install -e .
 
 # Make skill available globally (Claude Code + Codex)
 mkdir -p ~/.claude/skills ~/.agents/skills
-ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query
-ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
+ln -sf "$(pwd)/.claude/skills/xdocs-query" ~/.claude/skills/xdocs-query
+ln -sf "$(pwd)/.agents/skills/xdocs-query" ~/.agents/skills/xdocs-query
 ```
 
 ## Update

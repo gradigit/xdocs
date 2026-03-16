@@ -10,9 +10,9 @@ Canonical repo skills live under [`skills/`](../../skills) and are symlinked int
 Current canonical skills:
 
 - [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md)
-- [`skills/cex-api-query/SKILL.md`](../../skills/cex-api-query/SKILL.md)
-- [`skills/cex-discovery/SKILL.md`](../../skills/cex-discovery/SKILL.md)
-- [`skills/cex-qa-gapfinder/SKILL.md`](../../skills/cex-qa-gapfinder/SKILL.md)
+- [`skills/xdocs-query/SKILL.md`](../../skills/xdocs-query/SKILL.md)
+- [`skills/xdocs-discovery/SKILL.md`](../../skills/xdocs-discovery/SKILL.md)
+- [`skills/xdocs-qa/SKILL.md`](../../skills/xdocs-qa/SKILL.md)
 - [`skills/agent-browser/SKILL.md`](../../skills/agent-browser/SKILL.md)
 
 ## Shared Conventions
@@ -53,9 +53,9 @@ Assessment:
 
 - This is the strongest operational skill in the repo and effectively serves as the maintainer runbook.
 
-### 2. `cex-api-query`
+### 2. `xdocs-query`
 
-File: [`skills/cex-api-query/SKILL.md`](../../skills/cex-api-query/SKILL.md)
+File: [`skills/xdocs-query/SKILL.md`](../../skills/xdocs-query/SKILL.md)
 
 Purpose:
 
@@ -80,17 +80,17 @@ Assessment:
 
 Maintenance drift found:
 
-1. Metadata version is `2.11.0`, but the retrieval-audit template still says `skill_used: cex-api-query@2.10.0`.
+1. Metadata version is `2.11.0`, but the retrieval-audit template still says `skill_used: xdocs-query@2.10.0`.
 2. The "What's In The Store" counts are stale versus the current store report. The skill says `10,724 pages` and `4,872 structured endpoints`; the current store report is `10,727 pages` and `4,963 endpoints`.
 3. The endpoint/page coverage examples are stale. For example, Kraken is described as pages-only/no endpoints in the skill section, but the current store report shows `kraken/spot` with `90` endpoints.
 
 Related evaluation drift:
 
-- [`skills/cex-api-query/EVALUATIONS.md`](../../skills/cex-api-query/EVALUATIONS.md) still has a scenario whose expected behavior says "Kraken is not in the store", which is no longer true.
+- [`skills/xdocs-query/EVALUATIONS.md`](../../skills/xdocs-query/EVALUATIONS.md) still has a scenario whose expected behavior says "Kraken is not in the store", which is no longer true.
 
-### 3. `cex-discovery`
+### 3. `xdocs-discovery`
 
-File: [`skills/cex-discovery/SKILL.md`](../../skills/cex-discovery/SKILL.md)
+File: [`skills/xdocs-discovery/SKILL.md`](../../skills/xdocs-discovery/SKILL.md)
 
 Purpose:
 
@@ -114,9 +114,9 @@ Assessment:
 
 - This is effectively the research protocol behind the registry and bible. It is broad, checklist-driven, and intentionally exhaustive.
 
-### 4. `cex-qa-gapfinder`
+### 4. `xdocs-qa`
 
-File: [`skills/cex-qa-gapfinder/SKILL.md`](../../skills/cex-qa-gapfinder/SKILL.md)
+File: [`skills/xdocs-qa/SKILL.md`](../../skills/xdocs-qa/SKILL.md)
 
 Purpose:
 
@@ -169,10 +169,10 @@ Assessment:
 
 The skills form a coherent lifecycle:
 
-1. `cex-discovery` finds sources
+1. `xdocs-discovery` finds sources
 2. `xdocs` ingests, validates, and packages them
-3. `cex-api-query` answers questions from the resulting store
-4. `cex-qa-gapfinder` stress-tests the result
+3. `xdocs-query` answers questions from the resulting store
+4. `xdocs-qa` stress-tests the result
 5. `agent-browser` supports JS-rendered site interaction where static crawling is insufficient
 
 That composition is clear and well-scoped.

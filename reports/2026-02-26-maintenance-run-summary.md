@@ -18,7 +18,7 @@ Added these new sources in `data/exchanges.yaml`:
 
 ### Query routing updates
 - `src/xdocs/classify.py`: added exchange hints for new DEX/CCXT names.
-- `.claude/skills/cex-api-query/SKILL.md`: bumped to **v2.6.1** and expanded trigger list.
+- `.claude/skills/xdocs-query/SKILL.md`: bumped to **v2.6.1** and expanded trigger list.
 
 ## Full maintenance workflow executed
 

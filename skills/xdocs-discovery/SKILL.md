@@ -1,5 +1,5 @@
 ---
-name: cex-discovery
+name: xdocs-discovery
 description: >
   Exhaustive crawl target discovery for cryptocurrency exchanges. Discovers all API documentation,
   sitemaps, OpenAPI/AsyncAPI/Postman specs, changelogs, status pages, GitHub repos, FIX protocol docs,

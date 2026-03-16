@@ -47,7 +47,7 @@ Optional:
 4. Prompt:
 
 ```text
-Use cex-api-query skill.
+Use xdocs-query skill.
 ```
 
 Then ask natural-language exchange API questions.

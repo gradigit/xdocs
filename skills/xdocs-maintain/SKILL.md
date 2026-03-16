@@ -1,5 +1,5 @@
 ---
-name: xdocs
+name: xdocs-maintain
 description: >
   Cite-only CEX API docs knowledge base. Sync official exchange documentation into a local
   SQLite FTS5 store via deterministic inventory+fetch pipeline, extract endpoint JSON with
@@ -134,11 +134,11 @@ python3 scripts/sync_runtime_repo.py \
 
 ### Adding a New Exchange
 
-**Use the `cex-discovery` skill** (`.claude/skills/cex-discovery/SKILL.md`) to run exhaustive discovery before registering. The discovery skill produces a bible entry and a ready-to-paste `exchanges.yaml` config block.
+**Use the `xdocs-discovery` skill** (`.claude/skills/xdocs-discovery/SKILL.md`) to run exhaustive discovery before registering. The discovery skill produces a bible entry and a ready-to-paste `exchanges.yaml` config block.
 
 Summary after discovery is complete:
 
-1. Run the `cex-discovery` skill for the target exchange — produces bible entry + registry YAML
+1. Run the `xdocs-discovery` skill for the target exchange — produces bible entry + registry YAML
 2. Add the bible entry to `docs/crawl-targets-bible.md` (Section 3-5 per exchange type)
 3. Add the registry entry to `data/exchanges.yaml`
 4. `xdocs sync --exchange <id> --docs-dir ./cex-docs --render auto`
@@ -153,9 +153,9 @@ Summary after discovery is complete:
 After any significant store change (new exchange, spec import, crawl gap fix, new CLI command), update these files:
 
 1. **CLAUDE.md** — Commands section, Key Files, Current Phase stats
-2. **cex-api-query SKILL.md** (`.claude/skills/cex-api-query/SKILL.md`) — "What's In The Store" section: endpoint counts per exchange/section, DEX page counts, CCXT stats. Bump `version` in metadata when changing content.
+2. **xdocs-query SKILL.md** (`.claude/skills/xdocs-query/SKILL.md`) — "What's In The Store" section: endpoint counts per exchange/section, DEX page counts, CCXT stats. Bump `version` in metadata when changing content.
 3. **xdocs SKILL.md** (this file) — CLI command reference, workflow steps
-4. **cex-discovery SKILL.md** (`.claude/skills/cex-discovery/SKILL.md`) — exchange list, spec patterns, platform detection (update when new exchange types or doc platforms are encountered)
+4. **xdocs-discovery SKILL.md** (`.claude/skills/xdocs-discovery/SKILL.md`) — exchange list, spec patterns, platform detection (update when new exchange types or doc platforms are encountered)
 5. **README.md** — Exchange counts, project structure, command examples
 6. **AGENTS.md** — Current context stats, command reference
 7. **Bible** (`docs/crawl-targets-bible.md`) — Coverage table (Section 2a), spec status, section counts

@@ -1,5 +1,5 @@
 ---
-name: cex-qa-gapfinder
+name: xdocs-qa
 description: >
   Discover bugs, gaps, and quality issues in the CEX API Docs knowledge base.
   Activates when asked to "find gaps", "run QA", "benchmark the knowledge base",

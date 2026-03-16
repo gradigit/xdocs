@@ -19,13 +19,13 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 | Skill | Purpose |
 |-------|---------|
 | `xdocs` | Maintainer workflow (sync, spec imports, validation, doc updates) |
-| `cex-api-query` | Query/answer (classification → search → cite-only answer) |
-| `cex-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
-| `cex-qa-gapfinder` | QA gap finder (iterative testing loop, runtime repo) |
+| `xdocs-query` | Query/answer (classification → search → cite-only answer) |
+| `xdocs-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
+| `xdocs-qa` | QA gap finder (iterative testing loop, runtime repo) |
 
 When creating, updating, or maintaining skills, edit the canonical file in `skills/<name>/SKILL.md`. The symlinks ensure both Claude Code and Codex CLI discover them automatically. All SKILL.md files must include YAML frontmatter (`name` + `description`) for Codex progressive disclosure.
 
-### cex-api-query routing
+### xdocs-query routing
 
 - Use `--docs-dir ./cex-docs` unless user explicitly asks for another store
 - Execute the classify-first routing flow from the skill
@@ -260,7 +260,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/xdocs/lookup.py` Endpoint path lookup (SQL LIKE) and error code search (FTS5 across endpoints + pages)
 - `src/xdocs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
 - `src/xdocs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 46 exchanges; Binance has richer heuristics)
-- `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + cex-api-query skill)
+- `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + xdocs-query skill)
 - `src/xdocs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
 - `src/xdocs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
 - `src/xdocs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
@@ -290,9 +290,9 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
 - `src/xdocs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
 - `skills/xdocs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
-- `skills/cex-api-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
-- `skills/cex-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
-- `skills/cex-qa-gapfinder/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)
+- `skills/xdocs-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
+- `skills/xdocs-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
+- `skills/xdocs-qa/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)
 
 ## Gotchas
 
