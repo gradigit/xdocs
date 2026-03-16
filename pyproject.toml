@@ -35,7 +35,6 @@ semantic-query = [
   "peft>=0.15.2; sys_platform == 'linux'",
   "huggingface-hub>=0.24",
   "mistune>=3.0",
-  "flashrank>=0.2",
 ]
 semantic = [
   "lancedb>=0.20",
@@ -46,7 +45,6 @@ semantic = [
   "sentence-transformers>=3.0",
   "peft>=0.15.2",
   "mistune>=3.0",
-  "flashrank>=0.2",
 ]
 ccxt = [
   "ccxt>=4.4",
