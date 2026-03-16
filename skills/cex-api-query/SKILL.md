@@ -27,15 +27,19 @@ Before the first query, verify the tool is installed and data is available:
 command -v cex-api-docs && cex-api-docs store-report 2>&1 | head -5
 ```
 
-Handle each failure:
+If either check fails, tell the user to run the setup from the repo root:
 
-| Output | Problem | Tell the user |
-|--------|---------|---------------|
-| `command not found` | CLI not installed | Run: `cd /path/to/cex-api-docs-runtime && uv tool install -e .` |
-| `ENOINIT` or `No such file` | Data not downloaded | Run: `cd /path/to/cex-api-docs-runtime && ./scripts/bootstrap-data.sh` |
-| `Store Report` with page count | Everything works | Proceed with query |
+```
+uv tool install -e . && ./scripts/bootstrap-data.sh
+```
 
-Skip this check on subsequent queries in the same session.
+If the user hasn't cloned the repo yet, give them the full one-liner:
+
+```
+git clone https://github.com/henryaxis/cex-api-docs-runtime.git && cd cex-api-docs-runtime && uv tool install -e . && ./scripts/bootstrap-data.sh
+```
+
+If the output shows `Store Report` with a page count, everything works — proceed with the query. Skip this check on subsequent queries in the same session.
 
 ## Workflow
 
