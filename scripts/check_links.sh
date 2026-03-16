@@ -29,7 +29,7 @@ fi
 export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
 
 echo "[check-links] Running URL reachability check (concurrency=4, delay=0.3s)..."
-"$PY" -m cex_api_docs.cli check-links \
+"$PY" -m xdocs.cli check-links \
   --docs-dir "$DOCS_DIR" \
   --concurrency 4 \
   --delay-s 0.30 \

@@ -3,7 +3,7 @@
 **Date**: 2026-03-06
 **CCXT version**: 4.5.40
 **Store**: 3,399 structured endpoints across 20 CEX exchanges (per xref query)
-**Tool**: `cex_api_docs.ccxt_xref.ccxt_cross_reference()`
+**Tool**: `xdocs.ccxt_xref.ccxt_cross_reference()`
 
 ## Executive Summary
 

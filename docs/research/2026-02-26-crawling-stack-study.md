@@ -24,7 +24,7 @@ Net: the stack is solid, but with targeted changes it can become significantly f
 ## Current Stack (Repository-grounded)
 
 ### Pipeline
-- `sync` orchestration: inventory generation + fetch per section (`src/cex_api_docs/sync.py`).
+- `sync` orchestration: inventory generation + fetch per section (`src/xdocs/sync.py`).
 - Inventory/fetch split with resume/refetch modes (`inventory.py`, `inventory_fetch.py`).
 - Fetchers:
   - HTTP fetch: `requests` + retries + redirect/domain checks (`httpfetch.py`)

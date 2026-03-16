@@ -62,7 +62,7 @@ SHA-256 hashes for deduplication. Identical content shares storage and embedding
 ### 8. LLM Resource Lifecycle
 Models stay loaded, contexts disposed after 5 min inactivity. Reranker context uses 2048 tokens with flash attention (20x VRAM reduction from 11.6GB to 568MB).
 
-## Lessons for cex-api-docs
+## Lessons for xdocs
 
 ### Adopt
 - **Qwen3-Reranker-0.6B in GGUF** — runs on CPU via llama-cpp-python, ~640MB, great quality

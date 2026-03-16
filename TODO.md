@@ -1056,7 +1056,7 @@ Code snippets containing realistic prices/quantities (e.g., `30000` in `create_o
 
 **Reproduction**:
 ```python
-from cex_api_docs.classify import classify_input
+from xdocs.classify import classify_input
 classify_input("import ccxt\nexchange = ccxt.binance()\nexchange.create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)")
 # → input_type=error_message, confidence=0.7
 ```
@@ -1078,7 +1078,7 @@ Auth answer excerpts start with "Skip to main content", language switcher chrome
 
 **Reproduction**:
 ```python
-from cex_api_docs.answer import answer_question
+from xdocs.answer import answer_question
 r = answer_question(docs_dir='./cex-docs', question='How do I authenticate to Binance spot REST API?')
 # First claim text starts with "[coinbase:...] Skip to main content..."
 ```
@@ -1101,7 +1101,7 @@ Literal endpoint paths without exchange names return `status=unknown`, even when
 
 **Reproduction**:
 ```python
-from cex_api_docs.answer import answer_question
+from xdocs.answer import answer_question
 answer_question(docs_dir='./cex-docs', question='GET /api/v5/account/balance')
 # → status=unknown
 answer_question(docs_dir='./cex-docs', question='OKX GET /api/v5/account/balance')
@@ -1123,7 +1123,7 @@ When the direct routing path fires for endpoint_path or error_message queries, c
 
 **Reproduction**:
 ```python
-from cex_api_docs.answer import answer_question
+from xdocs.answer import answer_question
 r = answer_question(docs_dir='./cex-docs', question='OKX GET /api/v5/account/balance')
 # citations[0] has url but no excerpt, excerpt_start, excerpt_end
 ```
@@ -1143,7 +1143,7 @@ When a query explicitly names two exchanges (e.g., "How do Binance and OKX authe
 
 **Reproduction**:
 ```python
-from cex_api_docs.answer import answer_question
+from xdocs.answer import answer_question
 r = answer_question(docs_dir='./cex-docs', question='How do Binance and OKX authenticate?')
 # Returns Binance-only answer, no clarification
 ```
@@ -1175,7 +1175,7 @@ When a query routes correctly and search finds no relevant results, `answer()` r
 
 **Reproduction**:
 ```python
-from cex_api_docs.answer import answer_question
+from xdocs.answer import answer_question
 r = answer_question(docs_dir='./cex-docs', question='Does Gate.io support FIX protocol?')
 # Returns status=unknown — same as for gibberish input
 ```
@@ -1198,7 +1198,7 @@ b) Increase chunk overlap in `chunker.py` so adjacent heading content bleeds int
 c) Add page-level keyword highlights to search results (list of matched terms per page, separate from snippet)
 d) In the coverage test itself, read full page markdown when a relevant page is found (mirrors real agent behavior)
 
-**Key files**: `src/cex_api_docs/semantic.py` (search result formatting), `src/cex_api_docs/chunker.py` (chunk splitting), `test-scripts/test_skill_coverage.py` (coverage test Q4)
+**Key files**: `src/xdocs/semantic.py` (search result formatting), `src/xdocs/chunker.py` (chunk splitting), `test-scripts/test_skill_coverage.py` (coverage test Q4)
 
 #### BUG-8: Blended Score Overrides Reranker Correction at Top Ranks
 **Severity**: Medium
@@ -1219,7 +1219,7 @@ b) Adaptive weighting: when the reranker's top-2 scores are close (within 0.05),
 c) Use rerank_score as primary sort key when reranking is triggered (ignoring retrieval score entirely) — most aggressive, matches what standalone rerankers do
 d) A/B benchmark all options on 200-query golden QA before switching
 
-**Key files**: `src/cex_api_docs/fts_util.py` (`position_aware_blend()` at line 200), `src/cex_api_docs/semantic.py` (caller)
+**Key files**: `src/xdocs/fts_util.py` (`position_aware_blend()` at line 200), `src/xdocs/semantic.py` (caller)
 
 #### BUG-9: Chunk Heading Context Lost on Single-Page Docs (Parent Heading Not Preserved)
 **Severity**: Medium
@@ -1240,7 +1240,7 @@ Option (a) is lowest effort — just track heading stack during chunking. Option
 
 **Affected exchanges**: OKX (1 page, 224K words), Gate.io (1 page, 192K words), HTX (4 pages, 130K total), Crypto.com (1 page, 35K), Phemex (1 page, 53K), Backpack (1 page, 31K), WOO X (1 page, 20K), Bitstamp (1 page, 22K), Korbit (1 page, 25K)
 
-**Key files**: `src/cex_api_docs/chunker.py` (heading-aware splitting), `src/cex_api_docs/semantic.py` (build_index, search result formatting)
+**Key files**: `src/xdocs/chunker.py` (heading-aware splitting), `src/xdocs/semantic.py` (build_index, search result formatting)
 
 #### BUG-10: Skill `search-error` Example Causes Agent Misuse with Positive Error Codes
 **Severity**: Medium
@@ -1294,7 +1294,7 @@ The `classify` command has zero support for Korean text. Korean error messages (
 2. Korean error keywords → `_ERROR_PHRASES` (에러, 오류, 실패, 부족, 인증, 권한)
 3. Korean exchange name → ASCII exchange hint extraction (업비트 → upbit)
 
-**Key files**: `src/cex_api_docs/classify.py` (pattern lists, exchange detection)
+**Key files**: `src/xdocs/classify.py` (pattern lists, exchange detection)
 
 #### BUG-13: Answer Pipeline Ignores Section Hint When Question Mentions Specific Section
 **Severity**: Medium
@@ -1312,7 +1312,7 @@ b) Apply section boost (already tried in M16-M17 and disabled — net negative d
 c) Post-filter: when question contains "spot", demote results from derivatives/futures URLs
 d) Multi-section search: search both with and without section filter, take highest-ranked from section-filtered results if available
 
-**Key files**: `src/cex_api_docs/answer.py` (`_detect_binance_section()`, `_generic_search_answer()`), `src/cex_api_docs/fts_util.py`
+**Key files**: `src/xdocs/answer.py` (`_detect_binance_section()`, `_generic_search_answer()`), `src/xdocs/fts_util.py`
 
 #### BUG-14: Code Snippet Detection Misses Bare API Usage Code
 **Severity**: Low-Medium
@@ -1333,4 +1333,4 @@ The `classify` command's `_CODE_INDICATORS` (17 patterns) require import stateme
 
 **Fix**: Add 5-7 crypto/API patterns to `_CODE_INDICATORS` in classify.py. Test with the HMAC example and also with typical signing code from Binance/OKX docs.
 
-**Key files**: `src/cex_api_docs/classify.py` (`_CODE_INDICATORS` list at line 83)
+**Key files**: `src/xdocs/classify.py` (`_CODE_INDICATORS` list at line 83)

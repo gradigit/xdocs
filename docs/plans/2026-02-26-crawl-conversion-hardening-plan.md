@@ -70,7 +70,7 @@ Heavy cross-section overlap causes redundant crawling, higher block risk, and wa
 1. Registry policy extension in `data/exchanges.yaml`:
    - add explicit section `scope_prefixes` where missing
    - optional `scope_group` and `scope_priority`
-2. Inventory filter hardening in `src/cex_api_docs/inventory.py`:
+2. Inventory filter hardening in `src/xdocs/inventory.py`:
    - apply strict scope filtering before queue expansion
    - add diagnostics (`dropped_out_of_scope`, `dropped_owned_by_other_section`)
 3. Introduce ownership cache table (SQLite) for cross-section URL claims:
@@ -92,10 +92,10 @@ Heavy cross-section overlap causes redundant crawling, higher block risk, and wa
 Refresh runs re-download too much content even when unchanged.
 
 ### Changes
-1. `src/cex_api_docs/httpfetch.py`
+1. `src/xdocs/httpfetch.py`
    - accept optional conditional headers (`If-None-Match`, `If-Modified-Since`)
    - pass through 304 status cleanly
-2. `src/cex_api_docs/inventory_fetch.py`
+2. `src/xdocs/inventory_fetch.py`
    - load stored ETag/Last-Modified for each URL
    - on 304: mark revalidated unchanged, skip markdown rewrite
 3. DB schema additions in `schema/schema.sql` + migration:
@@ -147,10 +147,10 @@ Static delay is too rigid under dynamic server load/ratelimiting.
 Code/table structures are preserved inconsistently for retrieval and citations.
 
 ### Changes
-1. `src/cex_api_docs/markdown.py`
+1. `src/xdocs/markdown.py`
    - add normalization pass to convert `[code]...[/code]` to fenced blocks
    - preserve table structure better (markdown tables or structured fallback blocks)
-2. `src/cex_api_docs/page_store.py`
+2. `src/xdocs/page_store.py`
    - persist optional sidecar metadata for blocks (heading/code/table offsets)
 3. Optional extractor fallback path
    - configurable secondary extractor for pages failing quality thresholds
@@ -213,13 +213,13 @@ Ensure fresh sessions consistently use high-quality retrieval path with clear ev
 
 ## Concrete File Touch Map
 
-- `src/cex_api_docs/inventory.py`
-- `src/cex_api_docs/inventory_fetch.py`
-- `src/cex_api_docs/httpfetch.py`
-- `src/cex_api_docs/markdown.py`
-- `src/cex_api_docs/page_store.py`
-- `src/cex_api_docs/sync.py`
-- `src/cex_api_docs/report.py`
+- `src/xdocs/inventory.py`
+- `src/xdocs/inventory_fetch.py`
+- `src/xdocs/httpfetch.py`
+- `src/xdocs/markdown.py`
+- `src/xdocs/page_store.py`
+- `src/xdocs/sync.py`
+- `src/xdocs/report.py`
 - `schema/schema.sql`
 - `data/exchanges.yaml`
 - `.claude/skills/cex-api-query/SKILL.md`

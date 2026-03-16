@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runtime smoke test — validates a cex-api-docs data snapshot is usable.
+"""Runtime smoke test — validates a xdocs data snapshot is usable.
 
 Usage:
     python scripts/runtime_query_smoke.py [DOCS_DIR]

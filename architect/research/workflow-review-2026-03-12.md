@@ -7,7 +7,7 @@ This repo has two distinct operator contexts:
 1. **Maintainer repo workflow**: crawl, sync, import, validate, benchmark, and package
 2. **Runtime repo workflow**: query the prepared snapshot with minimal local setup
 
-The workflows are documented in both code and repo docs, but the strongest operational instructions live in [`AGENTS.md`](../../AGENTS.md), [`README.md`](../../README.md), [`skills/cex-api-docs/SKILL.md`](../../skills/cex-api-docs/SKILL.md), and [`docs/crawl-targets-bible.md`](../../docs/crawl-targets-bible.md).
+The workflows are documented in both code and repo docs, but the strongest operational instructions live in [`AGENTS.md`](../../AGENTS.md), [`README.md`](../../README.md), [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md), and [`docs/crawl-targets-bible.md`](../../docs/crawl-targets-bible.md).
 
 ## Maintainer Workflow
 
@@ -17,7 +17,7 @@ Primary setup path:
 
 - [`scripts/bootstrap.sh`](../../scripts/bootstrap.sh)
 - `uv pip install -e ".[dev,semantic]"`
-- `cex-api-docs init --docs-dir ./cex-docs`
+- `xdocs init --docs-dir ./cex-docs`
 
 Bootstrap verifies the Python environment, initializes the store, and runs tests.
 
@@ -25,9 +25,9 @@ Bootstrap verifies the Python environment, initializes the store, and runs tests
 
 Primary command surface:
 
-- `cex-api-docs inventory`
-- `cex-api-docs fetch-inventory`
-- `cex-api-docs sync`
+- `xdocs inventory`
+- `xdocs fetch-inventory`
+- `xdocs sync`
 
 Automation wrappers:
 
@@ -56,16 +56,16 @@ Operational intent:
 
 When a section has official specs, the maintainer imports them through:
 
-- `cex-api-docs import-openapi`
-- `cex-api-docs import-postman`
-- `cex-api-docs import-asyncapi`
-- `cex-api-docs link-endpoints`
+- `xdocs import-openapi`
+- `xdocs import-postman`
+- `xdocs import-asyncapi`
+- `xdocs link-endpoints`
 
 Relevant modules:
 
-- [`src/cex_api_docs/openapi_import.py`](../../src/cex_api_docs/openapi_import.py)
-- [`src/cex_api_docs/postman_import.py`](../../src/cex_api_docs/postman_import.py)
-- [`src/cex_api_docs/resolve_docs_urls.py`](../../src/cex_api_docs/resolve_docs_urls.py)
+- [`src/xdocs/openapi_import.py`](../../src/xdocs/openapi_import.py)
+- [`src/xdocs/postman_import.py`](../../src/xdocs/postman_import.py)
+- [`src/xdocs/resolve_docs_urls.py`](../../src/xdocs/resolve_docs_urls.py)
 
 This workflow is how the repo closes endpoint coverage gaps when raw crawled docs are incomplete or harder to parse structurally.
 
@@ -73,21 +73,21 @@ This workflow is how the repo closes endpoint coverage gaps when raw crawled doc
 
 Fast/local checks:
 
-- `cex-api-docs quality-check`
-- `cex-api-docs fsck`
-- `cex-api-docs coverage`
-- `cex-api-docs coverage-gaps`
-- `cex-api-docs detect-stale-citations`
+- `xdocs quality-check`
+- `xdocs fsck`
+- `xdocs coverage`
+- `xdocs coverage-gaps`
+- `xdocs detect-stale-citations`
 
 Network/coverage checks:
 
-- `cex-api-docs validate-registry`
-- `cex-api-docs validate-base-urls`
-- `cex-api-docs validate-sitemaps`
-- `cex-api-docs validate-crawl-targets`
-- `cex-api-docs crawl-coverage`
-- `cex-api-docs check-links`
-- `cex-api-docs audit`
+- `xdocs validate-registry`
+- `xdocs validate-base-urls`
+- `xdocs validate-sitemaps`
+- `xdocs validate-crawl-targets`
+- `xdocs crawl-coverage`
+- `xdocs check-links`
+- `xdocs audit`
 
 The important shape here is that validation is layered:
 
@@ -174,12 +174,12 @@ The end-user query workflow is:
 
 Primary command path:
 
-- `cex-api-docs classify`
-- `cex-api-docs semantic-search`
-- `cex-api-docs search-pages`
-- `cex-api-docs lookup-endpoint`
-- `cex-api-docs search-error`
-- `cex-api-docs answer`
+- `xdocs classify`
+- `xdocs semantic-search`
+- `xdocs search-pages`
+- `xdocs lookup-endpoint`
+- `xdocs search-error`
+- `xdocs answer`
 
 This workflow is also mirrored in [`skills/cex-api-query/SKILL.md`](../../skills/cex-api-query/SKILL.md).
 
@@ -199,7 +199,7 @@ The intended onboarding path is:
 This is spread across:
 
 - [`skills/cex-discovery/SKILL.md`](../../skills/cex-discovery/SKILL.md)
-- [`skills/cex-api-docs/SKILL.md`](../../skills/cex-api-docs/SKILL.md)
+- [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md)
 - [`docs/crawl-targets-bible.md`](../../docs/crawl-targets-bible.md)
 
 ## Operator Checkpoints and Gotchas

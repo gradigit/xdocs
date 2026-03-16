@@ -13,7 +13,7 @@ After reading, verify: current milestone matches FORGE-STATUS.md, current step m
 - **Milestone**: 3/3 — Model Swap + Clean Rebuild
 - **Step**: Code complete, awaiting rebuild + final validation
 - **Status**: IN_PROGRESS
-- **Working files**: `src/cex_api_docs/embeddings.py`, `src/cex_api_docs/semantic.py`
+- **Working files**: `src/xdocs/embeddings.py`, `src/xdocs/semantic.py`
 - **Branch**: main
 
 ## What Was Just Completed

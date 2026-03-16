@@ -84,7 +84,7 @@ The code splits cleanly into:
 The skill system is meaningful and aligned with the codebase:
 
 - `cex-discovery` -> find sources
-- `cex-api-docs` -> ingest and maintain
+- `xdocs` -> ingest and maintain
 - `cex-api-query` -> answer questions
 - `cex-qa-gapfinder` -> test the result
 - `agent-browser` -> support rendered-site inspection and automation

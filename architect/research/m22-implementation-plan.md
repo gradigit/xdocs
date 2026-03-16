@@ -14,7 +14,7 @@ Before ANY code change, enhance the eval framework:
 Acceptance: eval script catches any per-type regression >= 3%
 
 ### Step 1: Lower Auto-Rerank Threshold (1 LOC, VERY LOW risk)
-**File**: `src/cex_api_docs/semantic.py`
+**File**: `src/xdocs/semantic.py`
 **Change**: `_AUTO_RERANK_MIN_CANDIDATES = 12` → `6`
 
 Rationale: 17 golden QA queries on small exchanges currently skip reranking. This is a trivial fix with zero risk of regression on other types.
@@ -22,7 +22,7 @@ Rationale: 17 golden QA queries on small exchanges currently skip reranking. Thi
 A/B: Run eval, compare small-exchange queries specifically.
 
 ### Step 2: BUG-13 Section Hint Enhancement (30 LOC, LOW risk)
-**File**: `src/cex_api_docs/answer.py`
+**File**: `src/xdocs/answer.py`
 
 Currently: `_detect_binance_section()` detects section but only reorders, doesn't filter.
 Fix: When section detected AND confidence high, add URL-prefix filtering to ensure at least 1 result from detected section appears in top-3.
@@ -35,7 +35,7 @@ Approach:
 A/B: Test on the 13 Binance queries with section keywords. Check for regression on remaining Binance queries.
 
 ### Step 3: Page-Type Boost Enhancement (20 LOC, LOW risk)
-**File**: `src/cex_api_docs/answer.py`
+**File**: `src/xdocs/answer.py`
 
 Currently: `_apply_page_type_boost()` uses 1.4x for overview/intro URLs on broad queries.
 Fix:
@@ -48,7 +48,7 @@ Addresses 8 question misses where overview/intro pages lose to specific endpoint
 A/B: Compare 1.4x baseline vs enhanced patterns + higher boost.
 
 ### Step 4: Code-Syntax Stopwords (30 LOC, LOW risk)
-**Files**: `src/cex_api_docs/fts_util.py`, `src/cex_api_docs/answer.py`
+**Files**: `src/xdocs/fts_util.py`, `src/xdocs/answer.py`
 
 Add CODE_STOPWORDS set + BUG-14 patterns (crypto/API patterns) in same change.
 
@@ -57,21 +57,21 @@ Fallback: if ALL terms are stopwords after filtering, keep the 2 most distinctiv
 A/B: Compare code_snippet MRR with/without stopwords.
 
 ### Step 5: Operation-Type Inference (80 LOC, LOW risk)
-**Files**: `src/cex_api_docs/classify.py`, `src/cex_api_docs/answer.py`
+**Files**: `src/xdocs/classify.py`, `src/xdocs/answer.py`
 
 Build `_PAYLOAD_ACTION_MAP` (15 patterns) + fix exchange signature ordering.
 
 A/B: Compare request_payload MRR with/without operation inference.
 
 ### Step 6: Endpoint search_text Enrichment (15 LOC, VERY LOW risk)
-**Files**: `src/cex_api_docs/fts_util.py`, FTS rebuild
+**Files**: `src/xdocs/fts_util.py`, FTS rebuild
 
 Add param names to search_text. Requires FTS rebuild.
 
 A/B: Compare endpoint_path and request_payload after FTS rebuild.
 
 ### Step 7: FTS/Semantic Query Separation (20 LOC, LOW risk)
-**Files**: `src/cex_api_docs/semantic.py`, `src/cex_api_docs/answer.py`
+**Files**: `src/xdocs/semantic.py`, `src/xdocs/answer.py`
 
 Clean "AND" tokens from vector queries.
 

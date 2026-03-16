@@ -10,21 +10,21 @@
 - **Operations**: 98
 - **Section**: `coinbase/prime` (43 pages, 58,327 words, 0 endpoints)
 - **Status**: Official, published by Coinbase
-- **Import command**: `cex-api-docs import-openapi --exchange coinbase --section prime --url https://api.prime.coinbase.com/v1/openapi.yaml --docs-dir ./cex-docs --continue-on-error`
+- **Import command**: `xdocs import-openapi --exchange coinbase --section prime --url https://api.prime.coinbase.com/v1/openapi.yaml --docs-dir ./cex-docs --continue-on-error`
 
 ### Paradex — Official Swagger
 - **URL**: `https://api.prod.paradex.trade/swagger/doc.json`
 - **Operations**: 78 paths
 - **Section**: `paradex/api` (410 pages, 237,243 words, 0 endpoints)
 - **Status**: Official, served from production API
-- **Import command**: `cex-api-docs import-openapi --exchange paradex --section api --url https://api.prod.paradex.trade/swagger/doc.json --docs-dir ./cex-docs --continue-on-error`
+- **Import command**: `xdocs import-openapi --exchange paradex --section api --url https://api.prod.paradex.trade/swagger/doc.json --docs-dir ./cex-docs --continue-on-error`
 
 ### Lighter — SDK OpenAPI
 - **URL**: `https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json`
 - **Operations**: 57 paths
 - **Section**: `lighter/docs` (19 pages, 9,932 words, 0 endpoints)
 - **Status**: In official Python SDK repo
-- **Import command**: `cex-api-docs import-openapi --exchange lighter --section docs --url https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json --docs-dir ./cex-docs --continue-on-error`
+- **Import command**: `xdocs import-openapi --exchange lighter --section docs --url https://raw.githubusercontent.com/elliottech/lighter-python/main/openapi.json --docs-dir ./cex-docs --continue-on-error`
 
 ## Community Specs Worth Attempting (2)
 

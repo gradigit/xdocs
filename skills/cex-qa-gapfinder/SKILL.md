@@ -55,9 +55,9 @@ import os, sys, io
 stderr_capture = io.StringIO()
 old_stderr = sys.stderr
 sys.stderr = stderr_capture
-from cex_api_docs.semantic import semantic_search
+from xdocs.semantic import semantic_search
 from pathlib import Path
-docs_dir = str(Path(__import__('cex_api_docs').__file__).resolve().parents[2] / 'cex-docs')
+docs_dir = str(Path(__import__('xdocs').__file__).resolve().parents[2] / 'cex-docs')
 results = semantic_search(docs_dir=docs_dir, query='test', limit=1, query_type='hybrid', rerank='auto')
 sys.stderr = old_stderr
 log = stderr_capture.getvalue()

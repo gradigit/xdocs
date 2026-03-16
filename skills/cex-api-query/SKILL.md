@@ -173,7 +173,7 @@ When you find the right page but need more than the snippet:
 # Get the markdown file path for a page URL
 python3 -c "
 from pathlib import Path; import sqlite3
-db = Path(__import__('cex_api_docs').__file__).resolve().parents[2] / 'cex-docs/db/docs.db'
+db = Path(__import__('xdocs').__file__).resolve().parents[2] / 'cex-docs/db/docs.db'
 conn = sqlite3.connect(str(db))
 row = conn.execute('SELECT markdown_path, word_count FROM pages WHERE canonical_url = ?', ('URL_HERE',)).fetchone()
 if row: print(row[0], f'({row[1]} words)')

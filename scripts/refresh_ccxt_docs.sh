@@ -25,7 +25,7 @@ fi
 export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
 
 echo "[1/4] Re-syncing CCXT docs (force-refetch)..."
-"$PY" -m cex_api_docs.cli sync --exchange ccxt --force-refetch --docs-dir "$DOCS_DIR" 2>&1 | tee /tmp/ccxt_sync.json
+"$PY" -m xdocs.cli sync --exchange ccxt --force-refetch --docs-dir "$DOCS_DIR" 2>&1 | tee /tmp/ccxt_sync.json
 echo ""
 
 echo "[2/4] Checking for changed pages..."
@@ -45,11 +45,11 @@ except Exception as e:
 echo ""
 
 echo "[3/4] Running CCXT cross-reference (requires pip install ccxt)..."
-"$PY" -m cex_api_docs.cli ccxt-xref --docs-dir "$DOCS_DIR" 2>&1 | head -50
+"$PY" -m xdocs.cli ccxt-xref --docs-dir "$DOCS_DIR" 2>&1 | head -50
 echo ""
 
 echo "[4/4] Checking CCXT page link reachability (sample 50)..."
-"$PY" -m cex_api_docs.cli check-links \
+"$PY" -m xdocs.cli check-links \
   --docs-dir "$DOCS_DIR" \
   --exchange ccxt \
   --sample 50 \

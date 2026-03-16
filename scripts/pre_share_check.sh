@@ -15,15 +15,15 @@ fi
 export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
 
 echo "[1/8] Schema migration dry-run..."
-"$PY" -m cex_api_docs.cli migrate-schema --docs-dir "$DOCS_DIR" >/tmp/cex_migrate_schema.json
+"$PY" -m xdocs.cli migrate-schema --docs-dir "$DOCS_DIR" >/tmp/cex_migrate_schema.json
 jq -r '.result | "schema_user_version=\(.schema_user_version) target=\(.target_schema_user_version) upgrade_required=\(.upgrade_required)"' /tmp/cex_migrate_schema.json
 
 echo "[2/8] Registry/base-url validation smoke..."
-"$PY" -m cex_api_docs.cli validate-base-urls --exchange bitfinex --section v2 --timeout-s 10 --retries 1 >/tmp/cex_baseurl_smoke.json
+"$PY" -m xdocs.cli validate-base-urls --exchange bitfinex --section v2 --timeout-s 10 --retries 1 >/tmp/cex_baseurl_smoke.json
 jq -r '.ok' /tmp/cex_baseurl_smoke.json
 
 echo "[3/8] Retrieval command smoke..."
-"$PY" -m cex_api_docs.cli classify "How do I check API key permissions on Binance?" --docs-dir "$DOCS_DIR" >/tmp/cex_classify_smoke.json
+"$PY" -m xdocs.cli classify "How do I check API key permissions on Binance?" --docs-dir "$DOCS_DIR" >/tmp/cex_classify_smoke.json
 jq -r '.result.input_type' /tmp/cex_classify_smoke.json
 
 echo "[4/8] Sync preset smoke..."
@@ -47,7 +47,7 @@ echo "[7/8] Runtime repo export smoke..."
 tail -n 2 /tmp/cex_runtime_export.log
 
 echo "[8/8] Link reachability spot-check (sample=20)..."
-"$PY" -m cex_api_docs.cli check-links --sample 20 --docs-dir "$DOCS_DIR" >/tmp/cex_link_check.json
+"$PY" -m xdocs.cli check-links --sample 20 --docs-dir "$DOCS_DIR" >/tmp/cex_link_check.json
 jq -r '"checked=\(.result.checked) ok=\(.result.ok) errors=\(.result.client_error + .result.server_error + .result.network_error)"' /tmp/cex_link_check.json
 
 echo "✅ pre_share_check completed"

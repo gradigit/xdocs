@@ -21,7 +21,7 @@ if [[ "$ENTRYPOINT_MODE" == "module" ]]; then
     exit 1
   fi
   export PYTHONPATH="src${PYTHONPATH:+:${PYTHONPATH}}"
-  RUN_CMD=("$PY" -m cex_api_docs.cli)
+  RUN_CMD=("$PY" -m xdocs.cli)
 else
   CLI="${CEX_API_DOCS_CLI:-.venv/bin/xdocs}"
   if [[ ! -x "$CLI" ]]; then

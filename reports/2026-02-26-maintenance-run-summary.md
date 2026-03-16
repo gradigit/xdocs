@@ -17,7 +17,7 @@ Added these new sources in `data/exchanges.yaml`:
   - `ccxt/manual`
 
 ### Query routing updates
-- `src/cex_api_docs/classify.py`: added exchange hints for new DEX/CCXT names.
+- `src/xdocs/classify.py`: added exchange hints for new DEX/CCXT names.
 - `.claude/skills/cex-api-query/SKILL.md`: bumped to **v2.6.1** and expanded trigger list.
 
 ## Full maintenance workflow executed
@@ -86,9 +86,9 @@ Interpretation: current golden QA file is not aligned with the present corpus/UR
 
 - `scripts/pre_share_check.sh ./cex-docs` passed.
 - Runtime sync completed:
-  - `scripts/sync_runtime_repo.py --runtime-root /Users/aaaaa/Projects/cex-api-docs-runtime --docs-dir ./cex-docs --clean`
+  - `scripts/sync_runtime_repo.py --runtime-root /Users/aaaaa/Projects/xdocs-runtime --docs-dir ./cex-docs --clean`
 - Runtime smoke passed:
-  - `/Users/aaaaa/Projects/cex-api-docs-runtime/scripts/runtime_query_smoke.sh`
+  - `/Users/aaaaa/Projects/xdocs-runtime/scripts/runtime_query_smoke.sh`
 
 ## Known operational note
 

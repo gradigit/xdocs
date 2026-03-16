@@ -9,7 +9,7 @@ Canonical repo skills live under [`skills/`](../../skills) and are symlinked int
 
 Current canonical skills:
 
-- [`skills/cex-api-docs/SKILL.md`](../../skills/cex-api-docs/SKILL.md)
+- [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md)
 - [`skills/cex-api-query/SKILL.md`](../../skills/cex-api-query/SKILL.md)
 - [`skills/cex-discovery/SKILL.md`](../../skills/cex-discovery/SKILL.md)
 - [`skills/cex-qa-gapfinder/SKILL.md`](../../skills/cex-qa-gapfinder/SKILL.md)
@@ -28,9 +28,9 @@ The repo’s skill system is not decorative. The skills encode real operating pr
 
 ## Skill-by-Skill Review
 
-### 1. `cex-api-docs`
+### 1. `xdocs`
 
-File: [`skills/cex-api-docs/SKILL.md`](../../skills/cex-api-docs/SKILL.md)
+File: [`skills/xdocs/SKILL.md`](../../skills/xdocs/SKILL.md)
 
 Purpose:
 
@@ -170,7 +170,7 @@ Assessment:
 The skills form a coherent lifecycle:
 
 1. `cex-discovery` finds sources
-2. `cex-api-docs` ingests, validates, and packages them
+2. `xdocs` ingests, validates, and packages them
 3. `cex-api-query` answers questions from the resulting store
 4. `cex-qa-gapfinder` stress-tests the result
 5. `agent-browser` supports JS-rendered site interaction where static crawling is insufficient
