@@ -69,7 +69,9 @@ def main(argv: list[str] | None = None) -> None:
         help="Seconds to wait for exclusive write lock (default: 10)",
     )
 
+    _version = (Path(__file__).resolve().parents[2] / "VERSION").read_text(encoding="utf-8").strip()
     parser = argparse.ArgumentParser(prog="cex-api-docs", parents=[common])
+    parser.add_argument("--version", action="version", version=f"%(prog)s {_version}")
 
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="Initialize store dirs + SQLite schema (idempotent)", parents=[common])

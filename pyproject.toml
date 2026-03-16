@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cex-api-docs"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-only, cite-only CEX API docs knowledge base (crawler + SQLite FTS5 + agent extraction ingest)."
 readme = "README.md"
 requires-python = ">=3.11"

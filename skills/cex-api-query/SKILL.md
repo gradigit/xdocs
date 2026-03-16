@@ -21,25 +21,32 @@ Answer user questions about cryptocurrency exchange APIs. Route input through cl
 
 ## Pre-check (first query in session)
 
-Before the first query, verify the tool is installed and data is available:
+Before the first query, verify the tool is installed, data is available, and check for updates:
 
 ```bash
-command -v cex-api-docs && cex-api-docs store-report 2>&1 | head -5
+command -v cex-api-docs && cex-api-docs --version && cex-api-docs store-report 2>&1 | head -5
 ```
 
-If either check fails, tell the user to run the setup from the repo root:
+If `command not found` or `store-report` fails, tell the user to run setup:
 
 ```
 uv tool install -e . && ./scripts/bootstrap-data.sh
 ```
 
-If the user hasn't cloned the repo yet, give them the full one-liner:
+### Update check
 
-```
-git clone https://github.com/henryaxis/cex-api-docs-runtime.git && cd cex-api-docs-runtime && uv tool install -e . && ./scripts/bootstrap-data.sh
+After confirming the CLI works, check for updates (non-blocking — respond to the user first):
+
+```bash
+LOCAL=$(cex-api-docs --version 2>/dev/null | awk '{print $2}')
+REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/cex-docs/main/VERSION 2>/dev/null | tr -d '[:space:]')
 ```
 
-If the output shows `Store Report` with a page count, everything works — proceed with the query. Skip this check on subsequent queries in the same session.
+- If `REMOTE` is newer than `LOCAL`: tell the user after your response — "Update available (LOCAL → REMOTE). Run: `cd /path/to/repo && git pull && uv tool install -e . && ./scripts/bootstrap-data.sh`"
+- If fetch fails or versions match: continue silently
+- **Never block the user's first query** — answer first, then notify about updates
+
+Skip all pre-checks on subsequent queries in the same session.
 
 ## Workflow
 

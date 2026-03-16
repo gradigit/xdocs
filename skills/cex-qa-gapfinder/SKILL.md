@@ -22,7 +22,7 @@ Use this skill when asked to "find gaps", "run QA", "benchmark the knowledge bas
 Before starting, verify the tool is installed and data is available:
 
 ```bash
-command -v cex-api-docs && cex-api-docs store-report 2>&1 | head -5
+command -v cex-api-docs && cex-api-docs --version && cex-api-docs store-report 2>&1 | head -5
 ```
 
 If either check fails, tell the user to run setup first:
@@ -30,6 +30,15 @@ If either check fails, tell the user to run setup first:
 ```
 uv tool install -e . && ./scripts/bootstrap-data.sh
 ```
+
+### Update check
+
+```bash
+LOCAL=$(cex-api-docs --version 2>/dev/null | awk '{print $2}')
+REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/cex-docs/main/VERSION 2>/dev/null | tr -d '[:space:]')
+```
+
+If `REMOTE` is newer than `LOCAL`: tell the user — "Update available (LOCAL → REMOTE). Run: `cd /path/to/repo && git pull && uv tool install -e . && ./scripts/bootstrap-data.sh`". Do not proceed with stale code — updates may fix bugs that affect QA results.
 
 Then run the smoke test:
 
