@@ -226,7 +226,11 @@ Do not treat the golden QA as infallible — it's a reference, not ground truth.
 
 ## Regression Tracking
 
-If `qa-findings.jsonl` exists from a **previous** QA run:
+Check for previous findings in this order:
+1. Most recent `qa-runs/YYYY-MM-DD/qa-findings.jsonl` directory
+2. Root-level `qa-findings.jsonl` (legacy location)
+
+If previous findings exist:
 
 1. Load the previous findings.
 2. For each previous finding with `reproducible: true`, re-run the test.
@@ -286,9 +290,23 @@ crawled_at: timestamp
 
 ## Report Format
 
+### Output Directory
+
+All output files go in a timestamped directory to preserve history across runs:
+
+```
+qa-runs/YYYY-MM-DD/
+  qa-findings.jsonl
+  QA-REPORT.md
+```
+
+Create the directory at the start of the run. If the directory already exists (second run same day), append a counter: `qa-runs/YYYY-MM-DD.2/`.
+
+Also write `qa-findings.jsonl` and `QA-REPORT.md` at the repo root as symlinks or copies for easy access (the regression tracker reads from the root).
+
 ### 1. Structured findings file
 
-Generate a single JSONL file at `qa-findings.jsonl` where each line is one finding:
+Generate the JSONL file at `qa-runs/YYYY-MM-DD/qa-findings.jsonl` where each line is one finding:
 
 ```json
 {
@@ -308,7 +326,7 @@ Generate a single JSONL file at `qa-findings.jsonl` where each line is one findi
 
 ### 2. Full report
 
-Generate a human-readable summary at `QA-REPORT.md` with:
+Generate a human-readable summary at `qa-runs/YYYY-MM-DD/QA-REPORT.md` with:
 
 1. **Environment** — must include all of the following:
    - Date, platform (OS, arch)
@@ -410,10 +428,11 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 
 ## Version
 
-v2.3.0 — Execution mode control: sequential default, explicit parallel opt-in with RAM guardrails.
+v2.4.0 — Timestamped output directories, regression tracker path discovery.
 
 ### Changelog
 
+- v2.4.0: Output files now go in `qa-runs/YYYY-MM-DD/` directories instead of overwriting root-level files. Preserves run history automatically. Regression tracker checks `qa-runs/` directories first, falls back to root-level `qa-findings.jsonl`.
 - v2.3.0: Added Execution Mode section with sequential (default) and parallel (`--parallel N`) modes. Sequential prevents ML model duplication on RAM-constrained machines. Parallel capped at N=3 with macOS RAM guidance. Agents must not parallelize unless user explicitly requests it.
 - v2.2.0: Added citation schema gate to Citation Quality (fail URL-only citations missing excerpts). Added clean/mixed/fail grading tiers to Answer Correctness. Added benchmark-style miss check (status=ok but wrong page). Added explicit multi-exchange ambiguity test to Edge Cases. Added >30s adversarial threshold with extreme-length note. All changes informed by v2 blind-mode run findings.
 - v2.1.1: Environment section now requires full runtime model stack detection (embedding backend, reranker backend, fusion mode). Added prerequisite code snippet for stack detection via stderr capture. Performance section notes reranker trigger status. JSONL schema includes agent_model field. Report environment expanded to list all runtime backends.
