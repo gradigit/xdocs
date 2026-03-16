@@ -65,6 +65,10 @@ class TestReranker(unittest.TestCase):
         reranked = rerank("testing", results, top_n=3)
         self.assertEqual(len(reranked), 3)
 
+    @unittest.skipUnless(
+        __import__("importlib").util.find_spec("flashrank") is not None,
+        "flashrank not installed",
+    )
     @patch("cex_api_docs.reranker._BACKEND", "flashrank")
     @patch("cex_api_docs.reranker._load_flashrank")
     def test_flashrank_backend(self, mock_load) -> None:
