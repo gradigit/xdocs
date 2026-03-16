@@ -21,15 +21,19 @@ Answer user questions about cryptocurrency exchange APIs. Route input through cl
 
 ## Pre-check (first query in session)
 
-Before the first query, verify the data store exists:
+Before the first query, verify the tool is installed and data is available:
 
 ```bash
-cex-api-docs store-report 2>&1 | head -5
+command -v cex-api-docs && cex-api-docs store-report 2>&1 | head -5
 ```
 
-If this returns `ENOINIT` or "No such file", the data isn't installed. Tell the user:
-- **First-time setup**: `cd /path/to/cex-api-docs-runtime && ./scripts/bootstrap-data.sh`
-- **After a code update**: `git pull && ./scripts/bootstrap-data.sh`
+Handle each failure:
+
+| Output | Problem | Tell the user |
+|--------|---------|---------------|
+| `command not found` | CLI not installed | Run: `cd /path/to/cex-api-docs-runtime && uv tool install -e .` |
+| `ENOINIT` or `No such file` | Data not downloaded | Run: `cd /path/to/cex-api-docs-runtime && ./scripts/bootstrap-data.sh` |
+| `Store Report` with page count | Everything works | Proceed with query |
 
 Skip this check on subsequent queries in the same session.
 
