@@ -1,7 +1,7 @@
 # xdocs
 
 ```bash
-git clone https://github.com/gradigit/xdocs.git && cd xdocs && uv tool install -e . && ./scripts/bootstrap-data.sh
+curl -fsSL https://raw.githubusercontent.com/gradigit/xdocs/main/install.sh | bash
 ```
 
 Local-first, cite-only knowledge base for exchange API documentation (CEX + DEX).
