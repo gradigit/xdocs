@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -7,6 +8,8 @@ from typing import Any
 import yaml
 
 from .errors import CexApiDocsError
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,6 +129,14 @@ def load_registry(registry_path: Path) -> Registry:
                 scope_group=str(pol_raw["scope_group"]).strip() if pol_raw.get("scope_group") else None,
                 scope_priority=int(pol_raw.get("scope_priority") or 100),
             )
+
+            # Warn if scope_prefixes is at section level (should be inside inventory_policy).
+            if sec.get("scope_prefixes") and not pol_raw.get("scope_prefixes"):
+                _log.warning(
+                    "%s/%s: scope_prefixes found at section level, not inside inventory_policy — ignored. "
+                    "Move it into inventory_policy to take effect.",
+                    ex.get("exchange_id", "?"), sec.get("section_id", "?"),
+                )
 
             ro_raw = sec.get("render_options") or {}
             if not isinstance(ro_raw, dict):

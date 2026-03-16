@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
+from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlsplit, urlunsplit
+
+_log = logging.getLogger(__name__)
 
 import requests
 from bs4 import BeautifulSoup
@@ -427,9 +431,6 @@ def create_inventory(
         # Auto link-follow fallback: if sitemaps produced < 5 URLs, supplement
         # with one-hop link extraction from seed pages.
         if len(urls) < 5:
-            import logging
-
-            _log = logging.getLogger(__name__)
             _log.warning(
                 "Sitemaps yielded only %d URLs for %s/%s; running link-follow fallback from seeds.",
                 len(urls),
@@ -457,6 +458,7 @@ def create_inventory(
 
     # 3) Canonicalize + filter by allowlist and scope prefixes.
     urls_canon: list[str] = []
+    scope_dropped: list[str] = []
     for u in urls:
         try:
             c = canonicalize_url(u)
@@ -466,8 +468,24 @@ def create_inventory(
         if allow and h and not (h in allow or any(h.endswith("." + d) for d in allow)):
             continue
         if not _in_scope(c, scope_prefixes=scopes):
+            scope_dropped.append(c)
             continue
         urls_canon.append(c)
+
+    # Log scope drops so silent filtering is visible.
+    if scope_dropped:
+        drop_prefixes: Counter[str] = Counter()
+        for d in scope_dropped:
+            parsed = urlsplit(d)
+            parts = parsed.path.strip("/").split("/")
+            prefix = "/".join(parts[:3]) + "/" if len(parts) >= 3 else parsed.path
+            drop_prefixes[prefix] += 1
+        top = ", ".join(f"{p} ({n})" for p, n in drop_prefixes.most_common(5))
+        _log.warning(
+            "%s/%s: %d of %d sitemap URLs dropped by scope_prefixes %s — top: %s",
+            exchange_id, section_id, len(scope_dropped), len(scope_dropped) + len(urls_canon),
+            scopes, top,
+        )
 
     # Always include the canonicalized seeds.
     for s in seeds:
@@ -593,6 +611,7 @@ def create_inventory(
                     if allow and h and not (h in allow or any(h.endswith("." + d) for d in allow)):
                         continue
                     if not _in_scope(c, scope_prefixes=scopes):
+                        scope_dropped.append(c)
                         continue
                     if c in seen or c in queued:
                         continue
@@ -688,6 +707,7 @@ VALUES (?, ?, 'pending');
             "visited_sitemaps": len(visited_sitemaps),
             "urls_in_sitemaps": len(urls),
             "urls_in_scope": len(urls_final),
+            "urls_dropped_by_scope": len(scope_dropped),
             "link_follow_visited": link_follow_visited,
             "link_follow_discovered": link_follow_discovered,
             "link_follow_skipped_robots": link_follow_skipped_robots,

@@ -105,15 +105,48 @@ exchanges:
       - section_id: v5
         base_urls: ["https://api.bybit.com"]
         seed_urls: ["https://bybit-exchange.github.io/docs/v5/intro"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://bybit-exchange.github.io/docs/v5/"
         doc_sources:
           - kind: sitemap
             url: https://bybit-exchange.github.io/docs/sitemap.xml
       - section_id: websocket
         base_urls: ["wss://stream.bybit.com/v5/public", "wss://stream.bybit.com/v5/private"]
         seed_urls: ["https://bybit-exchange.github.io/docs/v5/ws/connect"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://bybit-exchange.github.io/docs/v5/ws/"
         doc_sources:
           - kind: sitemap
             url: https://bybit-exchange.github.io/docs/sitemap.xml
+      - section_id: p2p
+        base_urls: ["https://api.bybit.com"]
+        seed_urls: ["https://bybit-exchange.github.io/docs/p2p/guide"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://bybit-exchange.github.io/docs/p2p/"
+        doc_sources:
+          - kind: sitemap
+            url: https://bybit-exchange.github.io/docs/sitemap.xml
+      - section_id: tax
+        base_urls: ["https://api.bybit.com"]
+        seed_urls: ["https://bybit-exchange.github.io/docs/tax/report"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://bybit-exchange.github.io/docs/tax/"
+        doc_sources:
+          - kind: sitemap
+            url: https://bybit-exchange.github.io/docs/sitemap.xml
+      - section_id: pay
+        base_urls: ["https://api.bybit.com"]
+        seed_urls: ["https://bybit-exchange.github.io/pay-docs/"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://bybit-exchange.github.io/pay-docs/"
+        doc_sources:
+          - kind: sitemap
+            url: https://bybit-exchange.github.io/pay-docs/sitemap.xml
 
   - exchange_id: bitget
     display_name: Bitget
@@ -130,8 +163,8 @@ exchanges:
           mode: link_follow
           render_mode: auto
           max_pages: 500
-        scope_prefixes:
-          - "https://www.bitget.com/api-doc/"
+          scope_prefixes:
+            - "https://www.bitget.com/api-doc/"
         doc_sources:
           - kind: sitemap
             url: https://www.bitget.com/sitemap.xml
@@ -302,6 +335,10 @@ exchanges:
       - section_id: api
         base_urls: ["https://api.hyperliquid.xyz"]
         seed_urls: ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/"
+            - "https://hyperliquid.gitbook.io/hyperliquid-docs/builder-tools/"
         doc_sources:
           - kind: sitemap
             url: https://hyperliquid.gitbook.io/hyperliquid-docs/sitemap.xml
@@ -521,12 +558,38 @@ exchanges:
         seed_urls:
           - "https://docs.kraken.com/api/docs/guides/global-intro"
           - "https://docs.kraken.com/api/docs/rest-api/get-server-time"
+        inventory_policy:
+          scope_prefixes:
+            - "https://docs.kraken.com/api/docs/guides/"
+            - "https://docs.kraken.com/api/docs/rest-api/"
         doc_sources:
           - kind: sitemap
             url: https://docs.kraken.com/sitemap.xml
       - section_id: futures
         base_urls: ["https://futures.kraken.com"]
         seed_urls: ["https://docs.kraken.com/api/docs/futures-api/trading/send-order"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://docs.kraken.com/api/docs/futures-api/"
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.kraken.com/sitemap.xml
+      - section_id: websocket
+        base_urls: ["wss://ws.kraken.com", "wss://ws-auth.kraken.com"]
+        seed_urls: ["https://docs.kraken.com/api/docs/websocket-v2/add_order"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://docs.kraken.com/api/docs/websocket-v1/"
+            - "https://docs.kraken.com/api/docs/websocket-v2/"
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.kraken.com/sitemap.xml
+      - section_id: fix
+        base_urls: ["https://api.kraken.com"]
+        seed_urls: ["https://docs.kraken.com/api/docs/fix-api/overview"]
+        inventory_policy:
+          scope_prefixes:
+            - "https://docs.kraken.com/api/docs/fix-api/"
         doc_sources:
           - kind: sitemap
             url: https://docs.kraken.com/sitemap.xml
@@ -587,6 +650,18 @@ exchanges:
           scope_prefixes:
             - "https://docs.cdp.coinbase.com/api-reference/prime-api/"
             - "https://docs.cdp.coinbase.com/prime/fix-api/"
+      - section_id: derivatives
+        base_urls: ["https://api.international.coinbase.com"]
+        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/derivatives-api/rest-api/authentication"]
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.cdp.coinbase.com/sitemap.xml
+        inventory_policy:
+          scope_priority: 45
+          render_mode: auto
+          max_pages: 200
+          scope_prefixes:
+            - "https://docs.cdp.coinbase.com/api-reference/derivatives-api/"
       - section_id: derivatives_fix
         base_urls: ["https://api.international.coinbase.com"]
         seed_urls: ["https://docs.cdp.coinbase.com/derivatives/fix/overview"]
