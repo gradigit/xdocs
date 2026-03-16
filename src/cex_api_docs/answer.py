@@ -909,12 +909,12 @@ def _generic_search_answer(
                 break
 
     if not claims:
-        notes.append(f"No crawled pages found for {exchange.exchange_id} matching the question. Run `cex-api-docs sync --exchange {exchange.exchange_id}` first.")
+        notes.append(f"No results found for {exchange.exchange_id} matching the question. The information may not be in the local docs snapshot.")
 
     return {
         "ok": True,
         "schema_version": "v1",
-        "status": "ok" if claims else "unknown",
+        "status": "ok" if claims else "not_found",
         "question": question,
         "normalized_question": norm,
         "clarification": None,
@@ -1159,7 +1159,7 @@ def _binance_answer(
     elif wants_perm and "required_permissions" in missing:
         status = "unknown"
     else:
-        status = "ok" if claims else "unknown"
+        status = "ok" if claims else "not_found"
 
     return {
         "ok": True,
@@ -1592,7 +1592,7 @@ def _augment_with_classification(
         for i, cl in enumerate(all_claims, 1):
             cl["id"] = f"c{i}"
         result["claims"] = all_claims
-        if result.get("status") == "unknown" and augmented_claims:
+        if result.get("status") in ("unknown", "not_found") and augmented_claims:
             result["status"] = "ok"
 
     return result
@@ -1631,6 +1631,27 @@ def answer_question(
         hint = classification.signals.get("exchange_hint")
         if hint:
             matched = [ex for ex in reg.exchanges if ex.exchange_id == hint]
+
+    # BUG-17: For bare endpoint paths (no exchange name), try to detect the
+    # exchange from the path itself by querying the endpoint DB.
+    if not matched and classification.input_type == "endpoint_path":
+        path = classification.signals.get("path", "")
+        if path:
+            _db = Path(docs_dir) / "db" / "docs.db"
+            if _db.exists():
+                try:
+                    _conn = open_db(_db)
+                    clean = re.sub(r"^\{\{\w+\}\}", "", path).split("?", 1)[0]
+                    rows = _conn.execute(
+                        "SELECT DISTINCT exchange FROM endpoints WHERE path LIKE ? LIMIT 5;",
+                        (f"%{clean}%",),
+                    ).fetchall()
+                    _conn.close()
+                    if rows:
+                        ex_ids = [r[0] for r in rows]
+                        matched = [ex for ex in reg.exchanges if ex.exchange_id in ex_ids]
+                except Exception:
+                    pass
 
     if not matched:
         available = sorted(ex.exchange_id for ex in reg.exchanges)
