@@ -19,10 +19,22 @@ Use this skill when asked to "find gaps", "run QA", "benchmark the knowledge bas
 
 ## Prerequisites
 
-Before starting, verify the environment:
+Before starting, verify the tool is installed and data is available:
 
 ```bash
-python3 scripts/runtime_query_smoke.py
+command -v cex-api-docs && cex-api-docs store-report 2>&1 | head -5
+```
+
+If either check fails, tell the user to run setup first:
+
+```
+uv tool install -e . && ./scripts/bootstrap-data.sh
+```
+
+Then run the smoke test:
+
+```bash
+cex-api-docs store-report 2>/dev/null | head -1 && python3 scripts/runtime_query_smoke.py
 ```
 
 If the smoke test fails, stop and report the failure. Do not proceed with QA on a broken store.
