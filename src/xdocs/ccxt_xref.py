@@ -15,7 +15,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .store import require_store_db
 
 
@@ -76,14 +76,14 @@ def _load_ccxt_exchange(ccxt_id: str) -> Any:
     try:
         import ccxt  # type: ignore[import-untyped]
     except ImportError:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOCCXT",
             message="ccxt package not installed. Install with: pip install ccxt",
         )
 
     cls = getattr(ccxt, ccxt_id, None)
     if cls is None:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOCCXT",
             message=f"CCXT exchange class not found: {ccxt_id}",
             details={"ccxt_id": ccxt_id},
@@ -239,7 +239,7 @@ def ccxt_cross_reference(
     try:
         import ccxt  # type: ignore[import-untyped]
     except ImportError:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOCCXT",
             message="ccxt package not installed. Install with: pip install ccxt",
         )
@@ -251,7 +251,7 @@ def ccxt_cross_reference(
         exchanges_to_check: list[str] = []
         if exchange:
             if exchange not in CCXT_EXCHANGE_MAP:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENOREG",
                     message=f"Exchange {exchange!r} not in CCXT mapping.",
                     details={"exchange": exchange, "known": sorted(CCXT_EXCHANGE_MAP.keys())},

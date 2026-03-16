@@ -6,7 +6,7 @@ import sqlite3
 from typing import Any
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .store import require_store_db
 
 

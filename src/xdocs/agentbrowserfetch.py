@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import FetchResult, _host_allowed, _is_http_url
 from .urlutil import url_host as _host
 
@@ -27,13 +27,13 @@ def _run(
             timeout=timeout,
         )
     except subprocess.TimeoutExpired as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ETIMEOUT",
             message="agent-browser command timed out.",
             details={"args": args, "timeout": timeout},
         ) from e
     except FileNotFoundError as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOAGENTBROWSER",
             message="agent-browser CLI not found on PATH.",
             details={"error": str(e)},
@@ -57,7 +57,7 @@ class AgentBrowserFetcher:
     def open(self) -> "AgentBrowserFetcher":
         bin_path = shutil.which("agent-browser")
         if bin_path is None:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOAGENTBROWSER",
                 message="agent-browser CLI not found on PATH.",
             )
@@ -94,13 +94,13 @@ class AgentBrowserFetcher:
         expand_accordions: bool = False,
     ) -> FetchResult:
         if not _is_http_url(url):
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="EBADURL",
                 message="Only http/https URLs are supported.",
                 details={"url": url},
             )
         if not self._open or not self._bin:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOAGENTBROWSER",
                 message="AgentBrowserFetcher not initialized. Call open() first.",
             )
@@ -119,7 +119,7 @@ class AgentBrowserFetcher:
                     scroll_full_page=scroll_full_page,
                     expand_accordions=expand_accordions,
                 )
-            except CexApiDocsError:
+            except XDocsError:
                 raise
             except Exception as e:
                 if attempt < retries:
@@ -127,7 +127,7 @@ class AgentBrowserFetcher:
                     time.sleep(backoff)
                     attempt += 1
                     continue
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENET",
                     message="agent-browser render failure.",
                     details={"url": url, "error": f"{type(e).__name__}: {e}"},
@@ -242,7 +242,7 @@ class AgentBrowserFetcher:
             open_args.extend(["--allowed-domains", allowed_csv])
         result = _run(open_args, timeout=subprocess_timeout)
         if result.returncode != 0:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENET",
                 message="agent-browser open failed.",
                 details={"url": url, "stderr": result.stderr.strip()[:500]},
@@ -298,7 +298,7 @@ class AgentBrowserFetcher:
         # 5. Validate final URL host.
         fh = _host(final_url)
         if fh and not _host_allowed(fh, self.allowed_domains):
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="EDOMAIN",
                 message="Final URL host is outside allowed domain scope.",
                 details={
@@ -320,7 +320,7 @@ class AgentBrowserFetcher:
         if html_result.returncode != 0 or not html_result.stdout.strip():
             html_result = _run([self._bin, "get", "html", "body"], timeout=subprocess_timeout)
             if html_result.returncode != 0:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENET",
                     message="agent-browser get html failed.",
                     details={"url": url, "stderr": html_result.stderr.strip()[:500]},
@@ -330,7 +330,7 @@ class AgentBrowserFetcher:
 
         # 7. Enforce max_bytes.
         if len(body) > max_bytes:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ETOOBIG",
                 message="Rendered HTML exceeded max_bytes limit.",
                 details={"url": url, "max_bytes": max_bytes, "received_bytes": len(body)},

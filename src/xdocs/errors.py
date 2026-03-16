@@ -5,7 +5,7 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-class CexApiDocsError(Exception):
+class XDocsError(Exception):
     code: str
     message: str
     details: dict[str, Any] | None = None

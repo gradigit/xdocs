@@ -9,7 +9,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .fts_util import sanitize_fts_query, endpoint_search_text
 from .fs import atomic_write_text
 from .hashing import sha256_hex_text
@@ -90,13 +90,13 @@ def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
     excerpt = str(citation.get("excerpt", ""))
 
     if end <= start:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADCITE",
             message="Invalid citation excerpt offsets (end must be > start).",
             details={"canonical_url": canonical, "excerpt_start": start, "excerpt_end": end},
         )
     if len(excerpt) > HARD_MAX_EXCERPT_CHARS:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADCITE",
             message="Citation excerpt exceeds hard max length.",
             details={"canonical_url": canonical, "excerpt_len": len(excerpt), "hard_max": HARD_MAX_EXCERPT_CHARS},
@@ -107,16 +107,16 @@ def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
         (canonical,),
     ).fetchone()
     if row is None:
-        raise CexApiDocsError(code="ESOURCE", message="Citation URL not found in local store.", details={"canonical_url": canonical})
+        raise XDocsError(code="ESOURCE", message="Citation URL not found in local store.", details={"canonical_url": canonical})
 
     if want_path_hash and str(row["path_hash"]) != want_path_hash:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESOURCE",
             message="Citation path_hash does not match stored page.",
             details={"canonical_url": canonical, "want": want_path_hash, "got": row["path_hash"]},
         )
     if want_content_hash and str(row["content_hash"]) != want_content_hash:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESOURCE",
             message="Citation content_hash does not match stored page.",
             details={"canonical_url": canonical, "want": want_content_hash, "got": row["content_hash"]},
@@ -124,11 +124,11 @@ def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
 
     md_path = Path(row["markdown_path"]) if row["markdown_path"] else None
     if not md_path or not md_path.exists():
-        raise CexApiDocsError(code="ESOURCE", message="Citation page has no stored markdown.", details={"canonical_url": canonical})
+        raise XDocsError(code="ESOURCE", message="Citation page has no stored markdown.", details={"canonical_url": canonical})
 
     md = md_path.read_text(encoding="utf-8")
     if end > len(md):
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADCITE",
             message="Citation excerpt_end is out of bounds for stored markdown.",
             details={"canonical_url": canonical, "excerpt_end": end, "markdown_len": len(md)},
@@ -136,7 +136,7 @@ def _verify_citation_against_store(*, conn, citation: dict[str, Any]) -> None:
 
     got = md[start:end]
     if got != excerpt:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADCITE",
             message="Citation excerpt does not match stored markdown at provided offsets.",
             details={"canonical_url": canonical, "excerpt_start": start, "excerpt_end": end},
@@ -155,7 +155,7 @@ def save_endpoint(
 
     record = _load_json(endpoint_json_path)
     if not isinstance(record, dict):
-        raise CexApiDocsError(code="EBADJSON", message="Endpoint JSON must be an object.", details={"path": str(endpoint_json_path)})
+        raise XDocsError(code="EBADJSON", message="Endpoint JSON must be an object.", details={"path": str(endpoint_json_path)})
 
     validator = load_endpoint_schema(schema_path)
     _validate_endpoint_record_schema(validator=validator, record=record, path=str(endpoint_json_path))
@@ -163,7 +163,7 @@ def save_endpoint(
     computed_id = compute_endpoint_id(record)
     provided_id = str(record.get("endpoint_id", ""))
     if provided_id != computed_id:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EIDMISMATCH",
             message="endpoint_id does not match computed identity.",
             details={"provided": provided_id, "computed": computed_id},
@@ -183,18 +183,18 @@ def save_endpoint(
 
     sources = record.get("sources") or []
     if not isinstance(sources, list):
-        raise CexApiDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
+        raise XDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
 
     field_status = record.get("field_status")
     if not isinstance(field_status, dict):
-        raise CexApiDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
+        raise XDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
 
     if protocol == "http":
         if not isinstance(record.get("http"), dict):
-            raise CexApiDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
+            raise XDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
         missing = [k for k in REQUIRED_HTTP_FIELD_STATUS_KEYS if k not in field_status]
         if missing:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="EBADFIELDSTATUS",
                 message="field_status{} is missing required keys for protocol=http.",
                 details={"endpoint_id": computed_id, "missing_keys": missing},
@@ -256,14 +256,14 @@ def save_endpoints_bulk(
             for i, record in enumerate(records):
                 try:
                     if not isinstance(record, dict):
-                        raise CexApiDocsError(code="EBADJSON", message="Endpoint record must be an object.", details={"index": i})
+                        raise XDocsError(code="EBADJSON", message="Endpoint record must be an object.", details={"index": i})
 
                     _validate_endpoint_record_schema(validator=validator, record=record, path=f"<bulk:{i}>")
 
                     computed_id = compute_endpoint_id(record)
                     provided_id = str(record.get("endpoint_id", ""))
                     if provided_id != computed_id:
-                        raise CexApiDocsError(
+                        raise XDocsError(
                             code="EIDMISMATCH",
                             message="endpoint_id does not match computed identity.",
                             details={"index": i, "provided": provided_id, "computed": computed_id},
@@ -284,18 +284,18 @@ def save_endpoints_bulk(
 
                     sources = record.get("sources") or []
                     if not isinstance(sources, list):
-                        raise CexApiDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
+                        raise XDocsError(code="EBADSRC", message="Endpoint record sources[] must be a list.")
 
                     field_status = record.get("field_status")
                     if not isinstance(field_status, dict):
-                        raise CexApiDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
+                        raise XDocsError(code="EBADFIELDSTATUS", message="Endpoint record must include field_status{} object.")
 
                     if protocol == "http":
                         if not isinstance(record.get("http"), dict):
-                            raise CexApiDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
+                            raise XDocsError(code="EBADHTTP", message="HTTP endpoints must include http{} object.")
                         missing = [k for k in REQUIRED_HTTP_FIELD_STATUS_KEYS if k not in field_status]
                         if missing:
-                            raise CexApiDocsError(
+                            raise XDocsError(
                                 code="EBADFIELDSTATUS",
                                 message="field_status{} is missing required keys for protocol=http.",
                                 details={"endpoint_id": computed_id, "missing_keys": missing},
@@ -324,7 +324,7 @@ def save_endpoints_bulk(
                     counts["ok"] += 1
                 except Exception as e:
                     counts["errors"] += 1
-                    if isinstance(e, CexApiDocsError):
+                    if isinstance(e, XDocsError):
                         errors.append({"index": i, "code": e.code, "message": e.message, "details": e.details})
                     else:
                         errors.append({"index": i, "code": "EUNEXPECTED", "message": str(e), "details": {}})
@@ -341,7 +341,7 @@ def save_endpoints_bulk(
 def _validate_endpoint_record_schema(*, validator: Draft202012Validator, record: dict[str, Any], path: str) -> None:
     errors = sorted(validator.iter_errors(record), key=lambda e: e.path)
     if errors:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESCHEMA",
             message="Endpoint JSON failed schema validation.",
             details={"path": path, "errors": [e.message for e in errors[:10]]},
@@ -380,7 +380,7 @@ def _save_endpoint_record(
     # Verify citations against the local store.
     for c in sources:
         if not isinstance(c, dict):
-            raise CexApiDocsError(code="EBADSRC", message="sources[] must contain objects.")
+            raise XDocsError(code="EBADSRC", message="sources[] must contain objects.")
         _verify_citation_against_store(conn=conn, citation=c)
 
     documented_fields = [str(k) for k, v in field_status.items() if str(v) == "documented"]
@@ -388,7 +388,7 @@ def _save_endpoint_record(
 
     missing_citations = sorted([f for f in documented_fields if f not in source_fields])
     if missing_citations:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADCITE",
             message="Documented fields are missing required citations.",
             details={"endpoint_id": computed_id, "missing_field_names": missing_citations},
@@ -402,7 +402,7 @@ def _save_endpoint_record(
         elif isinstance(v, str) and not v.strip():
             missing_values.append(f)
     if missing_values:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADFIELDSTATUS",
             message="Documented fields must have non-empty values.",
             details={"endpoint_id": computed_id, "missing_values": sorted(missing_values)},
@@ -548,7 +548,7 @@ def get_endpoint(
             (endpoint_id,),
         ).fetchone()
         if row is None:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOTFOUND",
                 message="Endpoint not found.",
                 details={"endpoint_id": endpoint_id},
@@ -703,7 +703,7 @@ def review_show(*, docs_dir: str, review_id: int) -> dict[str, Any]:
     try:
         row = conn.execute("SELECT * FROM review_queue WHERE id = ?;", (int(review_id),)).fetchone()
         if row is None:
-            raise CexApiDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
+            raise XDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
         return dict(row)
     finally:
         conn.close()
@@ -719,7 +719,7 @@ def review_resolve(*, docs_dir: str, lock_timeout_s: float, review_id: int, reso
             with conn:
                 row = conn.execute("SELECT id, details_json FROM review_queue WHERE id = ?;", (int(review_id),)).fetchone()
                 if row is None:
-                    raise CexApiDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
+                    raise XDocsError(code="ENOTFOUND", message="Review item not found.", details={"id": review_id})
                 details = {}
                 if row["details_json"]:
                     try:

@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 import requests
 from bs4 import BeautifulSoup
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import fetch
 from .urlutil import url_host as _host
 
@@ -142,10 +142,10 @@ def discover_sources(
     retries: int = 1,
 ) -> dict[str, Any]:
     if not exchange or not section:
-        raise CexApiDocsError(code="EBADARG", message="Missing exchange/section.")
+        raise XDocsError(code="EBADARG", message="Missing exchange/section.")
     seeds = [s for s in (seed_urls or []) if s]
     if not seeds:
-        raise CexApiDocsError(code="EBADARG", message="No seed_urls provided.", details={"exchange": exchange, "section": section})
+        raise XDocsError(code="EBADARG", message="No seed_urls provided.", details={"exchange": exchange, "section": section})
 
     allowed = {d.lower() for d in allowed_domains if d}
     cfg = DiscoverConfig(

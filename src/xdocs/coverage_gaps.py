@@ -7,7 +7,7 @@ from typing import Any
 
 from .db import open_db
 from .endpoints import REQUIRED_HTTP_FIELD_STATUS_KEYS
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .lock import acquire_write_lock
 from .store import require_store_db
 from .timeutil import now_iso_utc

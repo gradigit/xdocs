@@ -9,7 +9,7 @@ import time
 import unittest
 from pathlib import Path
 
-from xdocs.errors import CexApiDocsError
+from xdocs.errors import XDocsError
 from xdocs.lock import acquire_write_lock
 from xdocs.store import ensure_store_schema, init_store, migrate_store_schema
 
@@ -77,7 +77,7 @@ with acquire_write_lock(lock_path, timeout_s=0.0):
             )
             try:
                 time.sleep(0.3)
-                with self.assertRaises(CexApiDocsError) as ctx:
+                with self.assertRaises(XDocsError) as ctx:
                     with acquire_write_lock(lock_path, timeout_s=0.2):
                         pass
                 self.assertEqual(ctx.exception.code, "ELOCKED")

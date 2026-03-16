@@ -9,7 +9,7 @@ import signal
 import sys
 from typing import Any
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .answer import answer_question
 from .base_urls_validate import validate_base_urls
 from .crawler import crawl_store
@@ -533,7 +533,7 @@ def main(argv: list[str] | None = None) -> None:
             seeds = _dedupe_preserve_order([s for s in seeds if s])
 
             if not seeds:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="EBADARG",
                     message="No seed URLs provided. Use --exchange/--section or --url.",
                 )
@@ -638,7 +638,7 @@ def main(argv: list[str] | None = None) -> None:
             if inv_id is None:
                 inv_id = latest_inventory_id(docs_dir=args.docs_dir, exchange_id=ex.exchange_id, section_id=sec.section_id)
             if inv_id is None:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENOINV",
                     message="No inventory exists yet for exchange/section. Run `xdocs inventory` first.",
                     details={"exchange_id": ex.exchange_id, "section_id": sec.section_id},
@@ -725,7 +725,7 @@ def main(argv: list[str] | None = None) -> None:
                 # Accept a full CLI JSON envelope.
                 data = data["result"]
             if not isinstance(data, dict):
-                raise CexApiDocsError(code="EBADJSON", message="Report input must be a JSON object.")
+                raise XDocsError(code="EBADJSON", message="Report input must be a JSON object.")
             md = render_sync_markdown(sync_result=data, max_errors=int(args.max_errors))
             out_path = str(args.output)
             if out_path == "-" or out_path == "":
@@ -1324,7 +1324,7 @@ def main(argv: list[str] | None = None) -> None:
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})
         raise SystemExit(2)
-    except CexApiDocsError as e:
+    except XDocsError as e:
         _print_json({"ok": False, "schema_version": "v1", "error": e.to_json()})
         raise SystemExit(2)
     except Exception as e:  # pragma: no cover

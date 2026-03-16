@@ -9,16 +9,16 @@ from pathlib import Path
 def _pairs(repo_root: Path) -> list[tuple[Path, Path]]:
     return [
         (
-            repo_root / ".claude" / "skills" / "cex-api-query" / "SKILL.md",
-            Path(".claude/skills/cex-api-query/SKILL.md"),
+            repo_root / ".claude" / "skills" / "xdocs-query" / "SKILL.md",
+            Path(".claude/skills/xdocs-query/SKILL.md"),
         ),
         (
-            repo_root / ".claude" / "skills" / "cex-api-query" / "EVALUATIONS.md",
-            Path(".claude/skills/cex-api-query/EVALUATIONS.md"),
+            repo_root / ".claude" / "skills" / "xdocs-query" / "EVALUATIONS.md",
+            Path(".claude/skills/xdocs-query/EVALUATIONS.md"),
         ),
         (
-            repo_root / ".claude" / "skills" / "xdocs" / "SKILL.md",
-            Path(".claude/skills/xdocs/SKILL.md"),
+            repo_root / ".claude" / "skills" / "xdocs-maintain" / "SKILL.md",
+            Path(".claude/skills/xdocs-maintain/SKILL.md"),
         ),
     ]
 

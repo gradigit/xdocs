@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from xdocs.errors import CexApiDocsError
+from xdocs.errors import XDocsError
 from xdocs.nodepwfetch import (
     NodePlaywrightFetcher,
     _find_node_pw_module,
@@ -30,7 +30,7 @@ class TestFindNodePwModule(unittest.TestCase):
             mock_run.return_value = subprocess.CompletedProcess(
                 args=[], returncode=1, stdout="", stderr=""
             )
-            with self.assertRaises(CexApiDocsError) as ctx:
+            with self.assertRaises(XDocsError) as ctx:
                 _find_node_pw_module()
             self.assertEqual(ctx.exception.code, "ENOPLAYWRIGHT")
 
@@ -87,13 +87,13 @@ class TestNodePlaywrightFetcherFetch(unittest.TestCase):
 
     def test_fetch_rejects_non_http_url(self) -> None:
         fetcher = self._make_fetcher({})
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="ftp://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "EBADURL")
 
     def test_fetch_raises_if_not_open(self) -> None:
         fetcher = NodePlaywrightFetcher(allowed_domains={"example.com"})
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENOPLAYWRIGHT")
 
@@ -125,7 +125,7 @@ class TestNodePlaywrightFetcherFetch(unittest.TestCase):
             "html": "<html></html>",
         }
         fetcher = self._make_fetcher(resp)
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com/page", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "EDOMAIN")
 
@@ -139,14 +139,14 @@ class TestNodePlaywrightFetcherFetch(unittest.TestCase):
             "html": "x" * 2000,
         }
         fetcher = self._make_fetcher(resp)
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com/big", timeout_s=10, max_bytes=100, retries=0)
         self.assertEqual(ctx.exception.code, "ETOOBIG")
 
     def test_fetch_node_error(self) -> None:
         resp = {"url": "https://example.com/fail", "error": "Navigation timeout"}
         fetcher = self._make_fetcher(resp)
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com/fail", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENET")
 
@@ -155,7 +155,7 @@ class TestNodePlaywrightFetcherFetch(unittest.TestCase):
         mock_proc = MagicMock()
         mock_proc.poll.return_value = 1  # Process exited
         fetcher._proc = mock_proc
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENOPLAYWRIGHT")
 
@@ -182,7 +182,7 @@ class TestNodePlaywrightFetcherFetch(unittest.TestCase):
         mock_proc.stdout.readline.return_value = ""  # EOF
         fetcher._proc = mock_proc
         fetcher._pw_module = Path("/opt/pw")
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENET")
 

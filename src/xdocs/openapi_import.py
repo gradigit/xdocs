@@ -10,7 +10,7 @@ import requests
 import yaml
 
 from .endpoints import compute_endpoint_id, save_endpoints_bulk
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import fetch
 from .ingest_page import ingest_page
 from .markdown import normalize_markdown
@@ -99,7 +99,7 @@ def _parse_openapi(text: str) -> dict[str, Any]:
     else:
         obj = yaml.safe_load(text)
     if not isinstance(obj, dict):
-        raise CexApiDocsError(code="EBADOPENAPI", message="OpenAPI spec must parse to an object.")
+        raise XDocsError(code="EBADOPENAPI", message="OpenAPI spec must parse to an object.")
     return obj
 
 
@@ -181,9 +181,9 @@ def import_openapi(
     continue_on_error: bool = True,
 ) -> dict[str, Any]:
     if not _is_http_url(url):
-        raise CexApiDocsError(code="EBADARG", message="import-openapi requires an http(s) URL.", details={"url": url})
+        raise XDocsError(code="EBADARG", message="import-openapi requires an http(s) URL.", details={"url": url})
     if not exchange or not section:
-        raise CexApiDocsError(code="EBADARG", message="Missing exchange/section.", details={"exchange": exchange, "section": section})
+        raise XDocsError(code="EBADARG", message="Missing exchange/section.", details={"exchange": exchange, "section": section})
 
     cfg = OpenApiImportConfig(
         exchange=str(exchange),
@@ -209,7 +209,7 @@ def import_openapi(
         allowed_domains=None,
     )
     if int(fr.http_status) >= 400:
-        raise CexApiDocsError(code="EOPENAPIHTTP", message="Failed to fetch OpenAPI spec.", details={"url": url, "http_status": fr.http_status})
+        raise XDocsError(code="EOPENAPIHTTP", message="Failed to fetch OpenAPI spec.", details={"url": url, "http_status": fr.http_status})
 
     text_raw = _decode_body(fr.body)
     md_norm = normalize_markdown(text_raw)
@@ -240,7 +240,7 @@ def import_openapi(
     effective_base_url = cfg.base_url or server_url
 
     if not effective_base_url:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADOPENAPI",
             message="OpenAPI spec has no servers[].url and no --base-url was provided.",
             details={"url": url},
@@ -252,7 +252,7 @@ def import_openapi(
 
     paths = spec.get("paths")
     if not isinstance(paths, dict):
-        raise CexApiDocsError(code="EBADOPENAPI", message="OpenAPI spec missing paths{}.", details={"url": url})
+        raise XDocsError(code="EBADOPENAPI", message="OpenAPI spec missing paths{}.", details={"url": url})
 
     # Gate: resolve $refs if the spec has a definitions/components section.
     # OpenAPI 3.x uses "components", Swagger 2.0 uses "definitions".

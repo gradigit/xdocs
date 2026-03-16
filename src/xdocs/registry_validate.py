@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 import requests
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import FetchResult, fetch
 from .markdown import html_to_markdown, normalize_markdown
 from .playwrightfetch import PlaywrightFetcher
@@ -31,7 +31,7 @@ def _get_render_backend(allowed_domains: set[str]):
         backend = NodePlaywrightFetcher(allowed_domains=allowed_domains)
         log.info("render backend: node-playwright")
         return backend
-    except (ImportError, CexApiDocsError):
+    except (ImportError, XDocsError):
         pass
     log.info("render backend: python-playwright")
     return PlaywrightFetcher(allowed_domains=allowed_domains)
@@ -78,7 +78,7 @@ def validate_registry(
     render_mode: str = "http",
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
-        raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
+        raise XDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
 
     reg = load_registry(registry_path)
     session = requests.Session()
@@ -162,7 +162,7 @@ def validate_registry(
                                 md_norm, wc, meta_refresh, suspected_stub = md_pw, wc_pw, meta_refresh_pw, suspected_stub_pw
 
                     if fr is None:  # pragma: no cover
-                        raise CexApiDocsError(code="ENET", message="No fetch result produced.", details={"seed": seed})
+                        raise XDocsError(code="ENET", message="No fetch result produced.", details={"seed": seed})
 
                     rec.update(
                         {
@@ -180,7 +180,7 @@ def validate_registry(
                             "suspected_redirect_stub": suspected_stub,
                         }
                     )
-                except CexApiDocsError as e:
+                except XDocsError as e:
                     rec["error"] = e.to_json()
                 results.append(rec)
 

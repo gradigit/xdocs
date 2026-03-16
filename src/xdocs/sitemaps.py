@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import Iterable
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,10 +108,10 @@ def parse_sitemap_bytes(*, data: bytes, url: str) -> SitemapParseResult:
                 kind = "urlset"
 
         return SitemapParseResult(kind=kind, locs=locs, entries=entries)
-    except CexApiDocsError:
+    except XDocsError:
         raise
     except Exception as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESITEMAP",
             message="Failed parsing sitemap XML.",
             details={"url": url, "error": f"{type(e).__name__}: {e}"},

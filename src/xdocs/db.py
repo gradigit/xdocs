@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +158,7 @@ def _check_fts5(conn: sqlite3.Connection) -> None:
         conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS __fts5_check USING fts5(content);")
         conn.execute("DROP TABLE IF EXISTS __fts5_check;")
     except sqlite3.OperationalError as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EFTS5",
             message="SQLite FTS5 is required but not available in this build.",
             details={"sqlite_error": str(e)},
@@ -204,7 +204,7 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
     """
     current = _get_user_version(conn)
     if current > expected_user_version:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESCHEMAVER",
             message="Database schema is newer than this code supports.",
             details={"current_user_version": current, "expected_user_version": expected_user_version},
@@ -215,7 +215,7 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
     try:
         conn.executescript(schema_sql)
     except sqlite3.OperationalError as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ESCHEMA",
             message="Failed applying schema/schema.sql to SQLite database.",
             details={"sqlite_error": str(e), "schema_sql_path": str(schema_sql_path)},
@@ -233,7 +233,7 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
         while v < expected_user_version:
             key = (v, v + 1)
             if key not in MIGRATIONS:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ESCHEMAVER",
                     message=f"No migration path from schema v{v} to v{v + 1}.",
                     details={"current_user_version": v, "expected_user_version": expected_user_version},
@@ -245,7 +245,7 @@ def apply_schema(conn: sqlite3.Connection, schema_sql_path: Path, expected_user_
                     else:
                         conn.executescript(step)
                 except sqlite3.OperationalError as e:
-                    raise CexApiDocsError(
+                    raise XDocsError(
                         code="ESCHEMA",
                         message=f"Migration v{v}->v{v + 1} failed.",
                         details={"sqlite_error": str(e), "migration": key},

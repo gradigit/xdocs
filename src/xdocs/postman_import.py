@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 import requests
 
 from .endpoints import compute_endpoint_id, save_endpoints_bulk
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import fetch
 from .ingest_page import ingest_page
 from .markdown import normalize_markdown
@@ -169,9 +169,9 @@ def import_postman(
     continue_on_error: bool = True,
 ) -> dict[str, Any]:
     if not _is_http_url(url):
-        raise CexApiDocsError(code="EBADARG", message="import-postman requires an http(s) URL.", details={"url": url})
+        raise XDocsError(code="EBADARG", message="import-postman requires an http(s) URL.", details={"url": url})
     if not exchange or not section:
-        raise CexApiDocsError(code="EBADARG", message="Missing exchange/section.", details={"exchange": exchange, "section": section})
+        raise XDocsError(code="EBADARG", message="Missing exchange/section.", details={"exchange": exchange, "section": section})
 
     cfg = PostmanImportConfig(
         exchange=str(exchange),
@@ -197,12 +197,12 @@ def import_postman(
         allowed_domains=None,
     )
     if int(fr.http_status) >= 400:
-        raise CexApiDocsError(code="EPOSTMANHTTP", message="Failed to fetch Postman collection.", details={"url": url, "http_status": fr.http_status})
+        raise XDocsError(code="EPOSTMANHTTP", message="Failed to fetch Postman collection.", details={"url": url, "http_status": fr.http_status})
 
     raw_text = _decode_body(fr.body)
     coll = json.loads(raw_text)
     if not isinstance(coll, dict):
-        raise CexApiDocsError(code="EBADPOSTMAN", message="Postman collection must parse to an object.", details={"url": url})
+        raise XDocsError(code="EBADPOSTMAN", message="Postman collection must parse to an object.", details={"url": url})
 
     # Canonicalize to a stable JSON string for ingestion/citations.
     md_norm = normalize_markdown(json.dumps(coll, sort_keys=True, ensure_ascii=False, indent=2) + "\n")

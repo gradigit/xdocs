@@ -16,7 +16,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .hashing import sha256_hex_text
 from .httpfetch import fetch
 from .lock import acquire_write_lock
@@ -312,7 +312,7 @@ def _walk_sitemaps(
                     q.append(child)
             else:
                 urls.extend(locs)
-        except CexApiDocsError as e:
+        except XDocsError as e:
             errors.append({"url": sm, "error": e.to_json()})
         except Exception as e:  # pragma: no cover
             errors.append({"url": sm, "error": {"code": "ESITEMAP", "message": "Unexpected sitemap fetch error", "details": {"error": f"{type(e).__name__}: {e}"}}})
@@ -404,7 +404,7 @@ def create_inventory(
     candidates: list[str] = []
 
     if pol.mode not in ("inventory", "link_follow"):
-        raise CexApiDocsError(code="EBADARG", message="Invalid inventory_policy.mode.", details={"mode": pol.mode})
+        raise XDocsError(code="EBADARG", message="Invalid inventory_policy.mode.", details={"mode": pol.mode})
 
     if pol.mode == "inventory":
         # 1) Discover sitemap candidates.
@@ -514,7 +514,7 @@ def create_inventory(
 
         render_mode = (pol.render_mode or cfg.default_render_mode or "http").strip()
         if render_mode not in ("http", "playwright", "auto"):
-            raise CexApiDocsError(code="EBADARG", message="Invalid inventory_policy.render_mode.", details={"render_mode": render_mode})
+            raise XDocsError(code="EBADARG", message="Invalid inventory_policy.render_mode.", details={"render_mode": render_mode})
 
         import heapq
 
@@ -596,7 +596,7 @@ def create_inventory(
                             if fr is None or _needs_pw(int(fr.http_status), links) or len(links_pw) > len(links):
                                 fr = fr_pw
                                 links = links_pw
-                        except CexApiDocsError:
+                        except XDocsError:
                             # If Playwright is unavailable or fails, keep the HTTP result.
                             pass
 

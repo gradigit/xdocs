@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import FetchResult, _host_allowed, _is_http_url
 from .urlutil import url_host as _host
 
@@ -143,7 +143,7 @@ def _find_node_pw_module() -> Path:
     except Exception:
         pass
 
-    raise CexApiDocsError(
+    raise XDocsError(
         code="ENOPLAYWRIGHT",
         message="Node.js playwright module not found. Install: npm install -g @playwright/cli",
     )
@@ -173,18 +173,18 @@ const pw = require('{pw_module}');
             env={**os.environ, "PW_MODULE": str(pw_module)},
         )
         if result.returncode != 0:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOPLAYWRIGHT",
                 message="Playwright Chromium browser not installed. Run: npx playwright install chromium",
                 details={"stderr": result.stderr.strip()[:500]},
             )
     except subprocess.TimeoutExpired as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ETIMEOUT",
             message="Chromium browser check timed out.",
         ) from e
     except FileNotFoundError as e:
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOPLAYWRIGHT",
             message="Node.js not found on PATH.",
             details={"error": str(e)},
@@ -251,13 +251,13 @@ class NodePlaywrightFetcher:
         wait_for_text_s: float = 15.0,
     ) -> FetchResult:
         if not _is_http_url(url):
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="EBADURL",
                 message="Only http/https URLs are supported.",
                 details={"url": url},
             )
         if self._proc is None or self._proc.poll() is not None:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOPLAYWRIGHT",
                 message="NodePlaywrightFetcher not initialized. Call open() first.",
             )
@@ -272,7 +272,7 @@ class NodePlaywrightFetcher:
                     wait_for_text_min=wait_for_text_min,
                     wait_for_text_s=wait_for_text_s,
                 )
-            except CexApiDocsError:
+            except XDocsError:
                 raise
             except Exception as e:
                 if attempt < retries:
@@ -280,7 +280,7 @@ class NodePlaywrightFetcher:
                     time.sleep(backoff)
                     attempt += 1
                     continue
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENET",
                     message="Node.js playwright render failure.",
                     details={"url": url, "error": f"{type(e).__name__}: {e}"},
@@ -313,7 +313,7 @@ class NodePlaywrightFetcher:
         # We use a simple blocking read since the Node process responds per-request.
         line = self._proc.stdout.readline()
         if not line:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENET",
                 message="Node.js playwright subprocess closed unexpectedly.",
                 details={"url": url},
@@ -322,7 +322,7 @@ class NodePlaywrightFetcher:
         resp = json.loads(line.strip())
 
         if "error" in resp:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENET",
                 message="Node.js playwright page error.",
                 details={"url": url, "node_error": resp["error"]},
@@ -337,7 +337,7 @@ class NodePlaywrightFetcher:
         # Validate final URL host.
         fh = _host(final_url)
         if fh and not _host_allowed(fh, self.allowed_domains):
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="EDOMAIN",
                 message="Final URL host is outside allowed domain scope.",
                 details={
@@ -350,7 +350,7 @@ class NodePlaywrightFetcher:
 
         body = html.encode("utf-8", errors="replace")
         if len(body) > max_bytes:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ETOOBIG",
                 message="Rendered HTML exceeded max_bytes limit.",
                 details={"url": url, "max_bytes": max_bytes, "received_bytes": len(body)},

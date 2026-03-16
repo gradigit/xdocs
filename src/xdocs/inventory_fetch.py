@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 import requests
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .extraction_verify import verify_extraction
 from .httpfetch import FetchResult, fetch
 from .lock import acquire_write_lock
@@ -52,7 +52,7 @@ def _get_render_backend(allowed_domains: set[str]):
         backend = NodePlaywrightFetcher(allowed_domains=allowed_domains)
         log.info("render backend: node-playwright")
         return backend
-    except (ImportError, CexApiDocsError):
+    except (ImportError, XDocsError):
         pass
 
     # 3. Python playwright (tertiary — raises ENOPLAYWRIGHT if unavailable).
@@ -263,9 +263,9 @@ def fetch_inventory(
     scope_priority: int = 100,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
-        raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
+        raise XDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
     if resume and force_refetch:
-        raise CexApiDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
+        raise XDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
 
     ensure_store_schema(docs_dir=docs_dir, lock_timeout_s=lock_timeout_s)
     db_path = require_store_db(docs_dir)
@@ -507,7 +507,7 @@ WHERE id = ?;
                         )
             _claim_scope_ownership(url)
 
-        def _record_error_cex(ent_id: int, url: str, e: CexApiDocsError) -> None:
+        def _record_error_cex(ent_id: int, url: str, e: XDocsError) -> None:
             errors.append({"url": url, "error": e.to_json()})
             with acquire_write_lock(lock_path, timeout_s=lock_timeout_s):
                 with conn:
@@ -801,11 +801,11 @@ WHERE id = ?;
                                 _html = _html_pw
 
                     if fr is None:  # pragma: no cover
-                        raise CexApiDocsError(code="ENET", message="No fetch result produced.", details={"url": url})
+                        raise XDocsError(code="ENET", message="No fetch result produced.", details={"url": url})
 
                     _store_result(ent_id, url, fr, used_render, title, md_norm, wc)
 
-                except CexApiDocsError as e:
+                except XDocsError as e:
                     _record_error_cex(ent_id, url, e)
                 except Exception as e:  # pragma: no cover
                     _record_error_generic(ent_id, url, e)
@@ -879,7 +879,7 @@ WHERE id = ?;
                                 pw_queue.append({"ent": ent, "http_fr": fr, "http_title": title, "http_md": md_norm, "http_wc": wc})
                                 continue
                             _store_result(ent_id, url, fr, "http", title, md_norm, wc)
-                        except CexApiDocsError as e:
+                        except XDocsError as e:
                             _record_error_cex(ent_id, url, e)
                         except Exception as e:  # pragma: no cover
                             _record_error_generic(ent_id, url, e)
@@ -920,7 +920,7 @@ WHERE id = ?;
                             _store_result(ent_id, url, fr_pw, "playwright", title_pw, md_pw, wc_pw)
                         else:
                             _store_result(ent_id, url, http_fr, "http", item.get("http_title"), http_md, http_wc)
-                    except CexApiDocsError as e:
+                    except XDocsError as e:
                         _record_error_cex(ent_id, url, e)
                     except Exception as e:  # pragma: no cover
                         _record_error_generic(ent_id, url, e)

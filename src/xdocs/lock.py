@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Iterator
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .timeutil import now_iso_utc
 
 
@@ -66,7 +66,7 @@ def acquire_write_lock(lock_path: Path, timeout_s: float) -> Iterator[WriteLock]
                 break
 
             if time.monotonic() - start >= timeout_s:
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ELOCKED",
                     message="Store is locked for writes by another process.",
                     details={"lock_path": str(lock_path), "timeout_s": timeout_s},

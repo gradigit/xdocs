@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlsplit
 
 import requests
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .robots import USER_AGENT
 from .urlutil import url_host as _host
 
@@ -91,7 +91,7 @@ def fetch(
     conditional_headers: dict[str, str] | None = None,
 ) -> FetchResult:
     if not _is_http_url(url):
-        raise CexApiDocsError(code="EBADURL", message="Only http/https URLs are supported.", details={"url": url})
+        raise XDocsError(code="EBADURL", message="Only http/https URLs are supported.", details={"url": url})
 
     attempt = 0
     while True:
@@ -106,7 +106,7 @@ def fetch(
                 if allowed_domains is not None:
                     h = _host(current_url)
                     if not _host_allowed(h, allowed_domains):
-                        raise CexApiDocsError(
+                        raise XDocsError(
                             code="EDOMAIN",
                             message="URL host is outside allowed domain scope.",
                             details={"url": current_url, "host": h, "allowed_domains": sorted(allowed_domains)},
@@ -114,7 +114,7 @@ def fetch(
 
                 # Avoid infinite loops even if max_redirects is large.
                 if current_url in seen:
-                    raise CexApiDocsError(
+                    raise XDocsError(
                         code="EREDIRECT",
                         message="Redirect loop detected.",
                         details={"url": url, "loop_at": current_url, "redirect_chain": redirect_chain},
@@ -165,7 +165,7 @@ def fetch(
                             resp.close()
                         except Exception:
                             pass
-                        raise CexApiDocsError(
+                        raise XDocsError(
                             code="EREDIRECT",
                             message="Too many redirects.",
                             details={"url": url, "max_redirects": max_redirects, "redirect_chain": redirect_chain},
@@ -180,7 +180,7 @@ def fetch(
                             resp.close()
                         except Exception:
                             pass
-                        raise CexApiDocsError(
+                        raise XDocsError(
                             code="EREDIRECT",
                             message="Redirect target scheme is not supported.",
                             details={"url": current_url, "location": location, "next_url": next_url},
@@ -193,7 +193,7 @@ def fetch(
                                 resp.close()
                             except Exception:
                                 pass
-                            raise CexApiDocsError(
+                            raise XDocsError(
                                 code="EDOMAIN",
                                 message="Redirect target host is outside allowed domain scope.",
                                 details={
@@ -217,7 +217,7 @@ def fetch(
                 # Terminal response (or a redirect without location).
                 break
 
-        except CexApiDocsError:
+        except XDocsError:
             raise
         except Exception as e:
             if attempt < retries:
@@ -225,7 +225,7 @@ def fetch(
                 time.sleep(backoff)
                 attempt += 1
                 continue
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENET",
                 message="Network error fetching URL.",
                 details={"url": url, "error": f"{type(e).__name__}: {e}"},
@@ -248,7 +248,7 @@ def fetch(
                 chunks.append(chunk)
                 total += len(chunk)
                 if total > max_bytes:
-                    raise CexApiDocsError(
+                    raise XDocsError(
                         code="ETOOBIG",
                         message="Response exceeded max_bytes limit.",
                         details={"url": url, "max_bytes": max_bytes, "received_bytes": total},

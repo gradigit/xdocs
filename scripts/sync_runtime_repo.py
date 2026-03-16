@@ -343,8 +343,8 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     # Source: skills/<name>/ (canonical, agent-agnostic)
     # Targets: .claude/skills/<name>/ (Claude Code) + .agents/skills/<name>/ (Codex CLI)
     _runtime_skills: list[tuple[str, list[str]]] = [
-        ("cex-api-query", ["SKILL.md", "EVALUATIONS.md"]),
-        ("cex-qa-gapfinder", ["SKILL.md"]),
+        ("xdocs-query", ["SKILL.md", "EVALUATIONS.md"]),
+        ("xdocs-qa", ["SKILL.md"]),
     ]
     for skill_name, files in _runtime_skills:
         src_dir = repo_root / "skills" / skill_name
@@ -500,12 +500,12 @@ def _build_manifest(repo_root: Path, cfg: SyncConfig) -> dict[str, Any]:
     runtime_rel_paths = [
         "pyproject.toml",
         "src",
-        ".claude/skills/cex-api-query/SKILL.md",
-        ".claude/skills/cex-api-query/EVALUATIONS.md",
-        ".claude/skills/cex-qa-gapfinder/SKILL.md",
-        ".agents/skills/cex-api-query/SKILL.md",
-        ".agents/skills/cex-api-query/EVALUATIONS.md",
-        ".agents/skills/cex-qa-gapfinder/SKILL.md",
+        ".claude/skills/xdocs-query/SKILL.md",
+        ".claude/skills/xdocs-query/EVALUATIONS.md",
+        ".claude/skills/xdocs-qa/SKILL.md",
+        ".agents/skills/xdocs-query/SKILL.md",
+        ".agents/skills/xdocs-query/EVALUATIONS.md",
+        ".agents/skills/xdocs-qa/SKILL.md",
         "README.md",
         "AGENTS.md",
         "scripts/runtime_query_smoke.py",

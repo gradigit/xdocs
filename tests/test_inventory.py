@@ -225,9 +225,9 @@ class TestInventory(unittest.TestCase):
                     ignore_robots=False,
                 )
 
-                from xdocs.errors import CexApiDocsError
+                from xdocs.errors import XDocsError
 
-                with self.assertRaises(CexApiDocsError) as ctx:
+                with self.assertRaises(XDocsError) as ctx:
                     fetch_inventory(
                         docs_dir=str(docs_dir),
                         lock_timeout_s=1.0,

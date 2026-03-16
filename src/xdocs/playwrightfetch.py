@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlsplit
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import FetchResult, _host_allowed, _is_http_url
 from .urlutil import url_host as _host
 
@@ -63,7 +63,7 @@ def _try_import_playwright_sync():
         from playwright.sync_api import TimeoutError as PlaywrightTimeoutError  # type: ignore
         from playwright.sync_api import sync_playwright  # type: ignore
     except Exception as e:  # pragma: no cover
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOPLAYWRIGHT",
             message="Playwright is not installed. Install optional deps: `pip install -e '.[playwright]'` and then run `python -m playwright install chromium`.",
             details={"error": f"{type(e).__name__}: {e}"},
@@ -137,9 +137,9 @@ class PlaywrightFetcher:
         wait_for_text_s: float = 15.0,
     ) -> FetchResult:
         if not _is_http_url(url):
-            raise CexApiDocsError(code="EBADURL", message="Only http/https URLs are supported.", details={"url": url})
+            raise XDocsError(code="EBADURL", message="Only http/https URLs are supported.", details={"url": url})
         if self._context is None:
-            raise CexApiDocsError(code="EPLAYWRIGHT", message="Playwright fetcher not initialized.")
+            raise XDocsError(code="EPLAYWRIGHT", message="Playwright fetcher not initialized.")
 
         attempt = 0
         while True:
@@ -208,7 +208,7 @@ class PlaywrightFetcher:
                 # Use the earliest stable signal and rely on our own readiness wait.
                 resp = page.goto(url, wait_until="commit")
                 if resp is None:
-                    raise CexApiDocsError(code="ENET", message="No response for navigation.", details={"url": url})
+                    raise XDocsError(code="ENET", message="No response for navigation.", details={"url": url})
 
                 status = int(resp.status)
                 headers = resp.headers or {}
@@ -228,7 +228,7 @@ class PlaywrightFetcher:
                 html = page.content()
                 body = html.encode("utf-8", errors="replace")
                 if len(body) > int(max_bytes):
-                    raise CexApiDocsError(
+                    raise XDocsError(
                         code="ETOOBIG",
                         message="Rendered HTML exceeded max_bytes limit.",
                         details={"url": url, "max_bytes": max_bytes, "received_bytes": len(body)},
@@ -246,7 +246,7 @@ class PlaywrightFetcher:
                 # Enforce final host allowlist.
                 fh = _host(final_url)
                 if not _host_allowed(fh, self.allowed_domains):
-                    raise CexApiDocsError(
+                    raise XDocsError(
                         code="EDOMAIN",
                         message="Final URL host is outside allowed domain scope.",
                         details={"url": url, "final_url": final_url, "final_host": fh, "allowed_domains": sorted(self.allowed_domains)},
@@ -261,7 +261,7 @@ class PlaywrightFetcher:
                     headers=_selected_headers_from_dict(headers),
                     body=body,
                 )
-            except CexApiDocsError:
+            except XDocsError:
                 raise
             except self._PlaywrightTimeoutError as e:
                 if attempt < retries:
@@ -269,7 +269,7 @@ class PlaywrightFetcher:
                     time.sleep(backoff)
                     attempt += 1
                     continue
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ETIMEOUT",
                     message="Timeout rendering URL with Playwright.",
                     details={"url": url, "timeout_s": timeout_s, "error": str(e)},
@@ -280,7 +280,7 @@ class PlaywrightFetcher:
                     time.sleep(backoff)
                     attempt += 1
                     continue
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="ENET",
                     message="Playwright error rendering URL.",
                     details={"url": url, "error": str(e)},
@@ -291,7 +291,7 @@ class PlaywrightFetcher:
                     time.sleep(backoff)
                     attempt += 1
                     continue
-                raise CexApiDocsError(
+                raise XDocsError(
                     code="EPLAYWRIGHT",
                     message="Unexpected Playwright render failure.",
                     details={"url": url, "error": f"{type(e).__name__}: {e}"},

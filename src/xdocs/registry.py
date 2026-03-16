@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 
 _log = logging.getLogger(__name__)
 
@@ -68,14 +68,14 @@ class Registry:
         for ex in self.exchanges:
             if ex.exchange_id == exchange_id:
                 return ex
-        raise CexApiDocsError(code="ENOREG", message="Unknown exchange_id in registry.", details={"exchange_id": exchange_id})
+        raise XDocsError(code="ENOREG", message="Unknown exchange_id in registry.", details={"exchange_id": exchange_id})
 
     def get_section(self, exchange_id: str, section_id: str) -> ExchangeSection:
         ex = self.get_exchange(exchange_id)
         for sec in ex.sections:
             if sec.section_id == section_id:
                 return sec
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOREG",
             message="Unknown section_id for exchange in registry.",
             details={"exchange_id": exchange_id, "section_id": section_id},
@@ -85,11 +85,11 @@ class Registry:
 def load_registry(registry_path: Path) -> Registry:
     data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or "exchanges" not in data:
-        raise CexApiDocsError(code="EBADREG", message="Invalid exchanges.yaml (missing exchanges).", details={"path": str(registry_path)})
+        raise XDocsError(code="EBADREG", message="Invalid exchanges.yaml (missing exchanges).", details={"path": str(registry_path)})
 
     exchanges_raw = data["exchanges"]
     if not isinstance(exchanges_raw, list):
-        raise CexApiDocsError(code="EBADREG", message="Invalid exchanges.yaml (exchanges must be list).", details={"path": str(registry_path)})
+        raise XDocsError(code="EBADREG", message="Invalid exchanges.yaml (exchanges must be list).", details={"path": str(registry_path)})
 
     exchanges: list[Exchange] = []
     for ex in exchanges_raw:

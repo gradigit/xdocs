@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .db import SCHEMA_USER_VERSION, DbInitResult, apply_schema, init_db, open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .lock import acquire_write_lock
 
 
@@ -32,7 +32,7 @@ def require_store_db(docs_dir: str) -> Path:
     """Return the DB path, raising ENOINIT if the store hasn't been initialized."""
     db_path = Path(docs_dir) / "db" / "docs.db"
     if not db_path.exists():
-        raise CexApiDocsError(
+        raise XDocsError(
             code="ENOINIT",
             message="Store not initialized. Run `xdocs init` first.",
             details={"docs_dir": docs_dir},

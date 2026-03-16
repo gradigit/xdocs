@@ -18,7 +18,7 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 
 | Skill | Purpose |
 |-------|---------|
-| `xdocs` | Maintainer workflow (sync, spec imports, validation, doc updates) |
+| `xdocs-maintain` | Maintainer workflow (sync, spec imports, validation, doc updates) |
 | `xdocs-query` | Query/answer (classification → search → cite-only answer) |
 | `xdocs-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
 | `xdocs-qa` | QA gap finder (iterative testing loop, runtime repo) |
@@ -237,14 +237,14 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - Deterministic code: crawling, storage, indexing, querying, diffing.
 - Agent boundary: agent does interpretation and extraction; code does deterministic I/O and validation.
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
-- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update AGENTS.md, README.md, all SKILL.md files, and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/xdocs/SKILL.md` for the full checklist.
+- **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update AGENTS.md, README.md, all SKILL.md files, and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/xdocs-maintain/SKILL.md` for the full checklist.
 
 ## Key Files
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs
 - `schema/schema.sql` SQLite schema (pages, endpoints, FTS5, review queue, inventories, coverage_gaps)
 - `src/xdocs/cli.py` CLI entrypoint (51 subcommands)
-- `src/xdocs/errors.py` `CexApiDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
+- `src/xdocs/errors.py` `XDocsError` dataclass -- all errors use structured codes (ENOINIT, EBADARG, EFTS5, ESCHEMAVER, etc.)
 - `src/xdocs/db.py` SQLite connection helper (WAL mode, FTS5 check, schema versioning via PRAGMA user_version, forward migration support)
 - `src/xdocs/urlutil.py` Shared `url_host()` utility (used by 7+ modules for hostname extraction)
 - `src/xdocs/store.py` Store init + `require_store_db` helper (shared across all modules)
@@ -289,7 +289,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - `src/xdocs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
 - `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
 - `src/xdocs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
-- `skills/xdocs/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
+- `skills/xdocs-maintain/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
 - `skills/xdocs-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
 - `skills/xdocs-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
 - `skills/xdocs-qa/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)

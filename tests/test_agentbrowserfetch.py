@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from xdocs.agentbrowserfetch import AgentBrowserFetcher, _run
-from xdocs.errors import CexApiDocsError
+from xdocs.errors import XDocsError
 
 
 class TestAgentBrowserFetcherInit(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestAgentBrowserFetcherInit(unittest.TestCase):
     def test_open_raises_if_not_on_path(self) -> None:
         with patch.object(shutil, "which", return_value=None):
             fetcher = AgentBrowserFetcher(allowed_domains={"example.com"})
-            with self.assertRaises(CexApiDocsError) as ctx:
+            with self.assertRaises(XDocsError) as ctx:
                 fetcher.open()
             self.assertEqual(ctx.exception.code, "ENOAGENTBROWSER")
 
@@ -75,13 +75,13 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
 
     def test_fetch_rejects_non_http_url(self) -> None:
         fetcher = self._make_fetcher()
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="ftp://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "EBADURL")
 
     def test_fetch_raises_if_not_open(self) -> None:
         fetcher = AgentBrowserFetcher(allowed_domains={"example.com"})
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "ENOAGENTBROWSER")
 
@@ -102,7 +102,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
         """Final URL on a different domain should raise EDOMAIN."""
         mock_run.side_effect = _mock_side_effect(final_url="https://evil.com/phish", html_body="<html></html>")
         fetcher = self._make_fetcher()
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com/page", timeout_s=10, max_bytes=1000000, retries=0)
         self.assertEqual(ctx.exception.code, "EDOMAIN")
 
@@ -111,7 +111,7 @@ class TestAgentBrowserFetcherFetch(unittest.TestCase):
         big_body = "x" * 2000
         mock_run.side_effect = _mock_side_effect(final_url="https://example.com/big", html_body=big_body)
         fetcher = self._make_fetcher()
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             fetcher.fetch(url="https://example.com/big", timeout_s=10, max_bytes=100, retries=0)
         self.assertEqual(ctx.exception.code, "ETOOBIG")
 
@@ -133,13 +133,13 @@ class TestRunHelper(unittest.TestCase):
 
     @patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="test", timeout=10))
     def test_timeout_raises_etimeout(self, mock_subrun) -> None:
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             _run(["agent-browser", "open", "https://example.com"], timeout=10)
         self.assertEqual(ctx.exception.code, "ETIMEOUT")
 
     @patch("subprocess.run", side_effect=FileNotFoundError("not found"))
     def test_missing_binary_raises_enoagentbrowser(self, mock_subrun) -> None:
-        with self.assertRaises(CexApiDocsError) as ctx:
+        with self.assertRaises(XDocsError) as ctx:
             _run(["agent-browser", "open", "https://example.com"], timeout=10)
         self.assertEqual(ctx.exception.code, "ENOAGENTBROWSER")
 

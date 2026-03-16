@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import FetchResult
 from .lock import acquire_write_lock
 from .markdown import extractor_info_v1, normalize_markdown
@@ -36,9 +36,9 @@ def ingest_page(
     notes: str | None = None,
 ) -> dict[str, Any]:
     if not url:
-        raise CexApiDocsError(code="EBADARG", message="Missing --url for ingest-page.")
+        raise XDocsError(code="EBADARG", message="Missing --url for ingest-page.")
     if (html_path is None and markdown_path is None) or (html_path is not None and markdown_path is not None):
-        raise CexApiDocsError(
+        raise XDocsError(
             code="EBADARG",
             message="Provide exactly one of --html-path or --markdown-path.",
             details={"html_path": str(html_path) if html_path else None, "markdown_path": str(markdown_path) if markdown_path else None},

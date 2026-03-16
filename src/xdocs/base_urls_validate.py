@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 
 import requests
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .registry import load_registry
 from .timeutil import now_iso_utc
 

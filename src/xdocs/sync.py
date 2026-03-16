@@ -8,7 +8,7 @@ from typing import Any
 
 from .coverage_gaps import compute_and_persist_coverage_gaps
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .inventory import create_inventory, latest_inventory_id
 from .inventory_fetch import fetch_inventory
 from .quality import quality_check
@@ -95,7 +95,7 @@ def _load_inventory_from_db(
             (int(inventory_id),),
         ).fetchone()
         if row is None:
-            raise CexApiDocsError(
+            raise XDocsError(
                 code="ENOINV",
                 message="Inventory not found.",
                 details={"inventory_id": inventory_id},
@@ -141,13 +141,13 @@ def run_sync(
     scope_dedupe: bool = True,
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
-        raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
+        raise XDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
 
     started_at = now_iso_utc()
     reg = load_registry(registry_path)
 
     if resume and force_refetch:
-        raise CexApiDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
+        raise XDocsError(code="EBADARG", message="Cannot use both --resume and --force-refetch.", details={})
 
     cfg = SyncConfig(
         exchange=exchange,
@@ -324,7 +324,7 @@ def run_sync(
             section=cfg.section,
             limit_samples=5,
         )
-    except CexApiDocsError as e:
+    except XDocsError as e:
         post["coverage_gaps_error"] = e.to_json()
 
     try:
@@ -336,12 +336,12 @@ def run_sync(
             dry_run=False,
             limit=None,
         )
-    except CexApiDocsError as e:
+    except XDocsError as e:
         post["stale_citations_error"] = e.to_json()
 
     try:
         post["quality_check"] = quality_check(docs_dir=docs_dir)
-    except CexApiDocsError as e:
+    except XDocsError as e:
         post["quality_check_error"] = e.to_json()
 
     return {

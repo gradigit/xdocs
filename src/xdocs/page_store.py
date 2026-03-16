@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .fs import atomic_write_bytes, atomic_write_text
 from .hashing import sha256_hex_bytes, sha256_hex_text
 from .httpfetch import FetchResult
@@ -92,7 +92,7 @@ def store_page(
     Caller is responsible for holding the write lock and committing/ending crawl_runs.
     """
     if crawl_run_id <= 0:
-        raise CexApiDocsError(code="EBADARG", message="crawl_run_id must be > 0")
+        raise XDocsError(code="EBADARG", message="crawl_run_id must be > 0")
 
     final_url = fr.final_url
     canonical_url = canonicalize_url(final_url)

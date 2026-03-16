@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .fts_util import endpoint_search_text, sanitize_fts_query
 from .lock import acquire_write_lock
 from .store import require_store_db
@@ -73,7 +73,7 @@ WHERE canonical_url = ?;
             (canonical,),
         ).fetchone()
         if row is None:
-            raise CexApiDocsError(code="ENOTFOUND", message="Page not found in store.", details={"canonical_url": canonical})
+            raise XDocsError(code="ENOTFOUND", message="Page not found in store.", details={"canonical_url": canonical})
 
         meta_path = Path(row["meta_path"])
         md_path = Path(row["markdown_path"]) if row["markdown_path"] else None
@@ -109,7 +109,7 @@ def diff_pages(*, docs_dir: str, crawl_run_id: int | None = None, limit: int = 5
             row = conn.execute("SELECT max(id) AS id FROM crawl_runs;").fetchone()
             crawl_run_id = int(row["id"]) if row and row["id"] is not None else None
         if crawl_run_id is None:
-            raise CexApiDocsError(code="ENODIFF", message="No crawl runs recorded yet.", details={"docs_dir": docs_dir})
+            raise XDocsError(code="ENODIFF", message="No crawl runs recorded yet.", details={"docs_dir": docs_dir})
 
         run_id = int(crawl_run_id)
 

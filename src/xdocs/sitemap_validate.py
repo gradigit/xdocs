@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .httpfetch import fetch
 from .registry import load_registry
 from .sitemaps import SitemapEntry, parse_sitemap_bytes
@@ -79,7 +79,7 @@ def _check_sitemap(
             retries=1,
             allowed_domains=None,
         )
-    except CexApiDocsError as e:
+    except XDocsError as e:
         return SitemapHealth(
             url=url,
             reachable=False,
@@ -114,7 +114,7 @@ def _check_sitemap(
 
     try:
         parsed = parse_sitemap_bytes(data=fr.body, url=fr.final_url)
-    except CexApiDocsError as e:
+    except XDocsError as e:
         return SitemapHealth(
             url=url,
             reachable=True,

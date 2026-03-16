@@ -245,8 +245,8 @@ class TestGetEndpoint(unittest.TestCase):
             _setup_store_with_endpoints(docs_dir)
 
             from xdocs.endpoints import get_endpoint
-            from xdocs.errors import CexApiDocsError
-            with self.assertRaises(CexApiDocsError) as ctx:
+            from xdocs.errors import XDocsError
+            with self.assertRaises(XDocsError) as ctx:
                 get_endpoint(docs_dir=str(docs_dir), endpoint_id="nonexistent")
             self.assertEqual(ctx.exception.code, "ENOTFOUND")
 

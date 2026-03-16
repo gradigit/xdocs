@@ -208,9 +208,9 @@ class TestCcxtCrossReference(unittest.TestCase):
             docs_dir = Path(tmp) / "cex-docs"
             _setup_store_with_endpoints(docs_dir)
 
-            from xdocs.errors import CexApiDocsError
+            from xdocs.errors import XDocsError
 
-            with self.assertRaises((CexApiDocsError, ImportError)):
+            with self.assertRaises((XDocsError, ImportError)):
                 ccxt_cross_reference(docs_dir=str(docs_dir), exchange="binance")
 
     def test_cross_reference_single_exchange(self) -> None:

@@ -14,7 +14,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .db import open_db
-from .errors import CexApiDocsError
+from .errors import XDocsError
 from .fs import atomic_write_bytes, atomic_write_text
 from .hashing import sha256_hex_bytes, sha256_hex_text
 from .httpfetch import FetchResult, fetch
@@ -118,12 +118,12 @@ def crawl_store(
     render_mode: str = "http",
 ) -> dict[str, Any]:
     if render_mode not in ("http", "playwright", "auto"):
-        raise CexApiDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
+        raise XDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
 
     root = Path(docs_dir)
     db_path = root / "db" / "docs.db"
     if not db_path.exists():
-        raise CexApiDocsError(code="ENOINIT", message="Store not initialized. Run `xdocs init` first.", details={"docs_dir": docs_dir})
+        raise XDocsError(code="ENOINIT", message="Store not initialized. Run `xdocs init` first.", details={"docs_dir": docs_dir})
 
     lock_path = root / "db" / ".write.lock"
 
@@ -266,8 +266,8 @@ def crawl_store(
                                 html, title, markdown_norm, word_count = html_pw, title_pw, md_pw, wc_pw
 
                     if fr is None:  # pragma: no cover
-                        raise CexApiDocsError(code="ENET", message="No fetch result produced.", details={"url": url})
-                except CexApiDocsError as e:
+                        raise XDocsError(code="ENET", message="No fetch result produced.", details={"url": url})
+                except XDocsError as e:
                     errors.append({"url": url, "error": e.to_json()})
                     continue
 
