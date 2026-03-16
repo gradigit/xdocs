@@ -35,7 +35,7 @@ uv tool install -e . && ./scripts/bootstrap-data.sh
 
 ```bash
 LOCAL=$(cex-api-docs --version 2>/dev/null | awk '{print $2}')
-REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/cex-docs/main/VERSION 2>/dev/null | tr -d '[:space:]')
+REMOTE=$(curl -sf https://raw.githubusercontent.com/gradigit/xdocs/main/VERSION 2>/dev/null | tr -d '[:space:]')
 ```
 
 If `REMOTE` is newer than `LOCAL`: tell the user — "Update available (LOCAL → REMOTE). Run: `cd /path/to/repo && git pull && uv tool install -e . && ./scripts/bootstrap-data.sh`". Do not proceed with stale code — updates may fix bugs that affect QA results.

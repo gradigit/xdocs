@@ -1,7 +1,7 @@
 # CEX Docs Copilot Runtime
 
 ```bash
-git clone https://github.com/henryaxis/cex-api-docs-runtime.git && cd cex-api-docs-runtime && uv tool install -e . && ./scripts/bootstrap-data.sh && mkdir -p ~/.claude/skills ~/.agents/skills && ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query && ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
+git clone https://github.com/gradigit/xdocs.git && cd xdocs && uv tool install -e . && ./scripts/bootstrap-data.sh && mkdir -p ~/.claude/skills ~/.agents/skills && ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query && ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
 ```
 
 Query exchange API documentation from any project, any directory, on both Claude Code and Codex CLI.
@@ -17,8 +17,8 @@ Data snapshots (`cex-docs/`) are distributed via GitHub Releases, not git.
 ## Step-by-step install
 
 ```bash
-git clone https://github.com/henryaxis/cex-api-docs-runtime.git
-cd cex-api-docs-runtime
+git clone https://github.com/gradigit/xdocs.git
+cd xdocs
 uv tool install -e .
 ./scripts/bootstrap-data.sh
 

@@ -1,8 +1,12 @@
-# cex-api-docs
+# xdocs
 
-Local-first, cite-only knowledge base for centralized exchange (CEX) API docs.
+```bash
+git clone https://github.com/gradigit/xdocs.git && cd xdocs && uv tool install -e . && ./scripts/bootstrap-data.sh
+```
 
-This project lets your team ask natural-language questions like:
+Local-first, cite-only knowledge base for exchange API documentation (CEX + DEX).
+
+Ask natural-language questions like:
 
 - “What permission does this private endpoint need?”
 - “Why is this auth request failing on OKX/Bybit/Bitget?”
@@ -66,40 +70,23 @@ With this project, the workflow is:
 
 ---
 
-## Quick start (new user, zero context)
-
-### 1) Install
-
-Requires Python 3.11+.
+## Quick start
 
 ```bash
-uv venv .venv
-source .venv/bin/activate
-uv pip install -e ".[dev,semantic]"
+git clone https://github.com/gradigit/xdocs.git
+cd xdocs
+uv tool install -e .
+./scripts/bootstrap-data.sh
 ```
 
-Lightweight query-only install (Mac, no PyTorch):
-
+Make the skill available globally (Claude Code + Codex):
 ```bash
-uv pip install -e ".[semantic-query]"
+mkdir -p ~/.claude/skills ~/.agents/skills
+ln -sf "$(pwd)/.claude/skills/cex-api-query" ~/.claude/skills/cex-api-query
+ln -sf "$(pwd)/.agents/skills/cex-api-query" ~/.agents/skills/cex-api-query
 ```
 
-
-### 2) Use an existing team snapshot (recommended)
-
-If your team already shared a prepared `cex-docs/` folder, you can start querying immediately.
-
-### 3) If no snapshot exists, build locally
-
-```bash
-cex-api-docs init --docs-dir ./cex-docs
-cex-api-docs validate-registry
-cex-api-docs sync --docs-dir ./cex-docs
-cex-api-docs build-index --docs-dir ./cex-docs
-cex-api-docs compact-index --docs-dir ./cex-docs
-```
-
-### 4) First queries
+### First queries
 
 ```bash
 cex-api-docs search-pages "rate limit OR weight" --docs-dir ./cex-docs
@@ -239,58 +226,11 @@ Use two roles:
 
 This keeps day-to-day usage fast and consistent.
 
-### Recommended production split (two repos)
-
-- **Maintainer repo**: crawling/sync/index/validation/publishing.
-- **Runtime repo (team-facing)**: query CLI + query skill + prebuilt `cex-docs` snapshot.
-
-Generate/update runtime repo from maintainer repo:
+### Update
 
 ```bash
-python3 scripts/sync_runtime_repo.py \
-  --runtime-root /path/to/cex-api-docs-runtime \
-  --docs-dir ./cex-docs \
-  --clean --hash-tree --strip-maintenance
+git pull && uv tool install -e . && ./scripts/bootstrap-data.sh
 ```
-
-Split-architecture guide:
-
-- `docs/ops/maintainer-vs-runtime-repo-split.md`
-
----
-
-## Background refresh presets (daytime vs overnight)
-
-```bash
-# Fast daytime resume
-scripts/run_sync_preset.sh fast-daytime ./cex-docs
-
-# Overnight safe full refresh
-scripts/run_sync_preset.sh overnight-safe ./cex-docs
-```
-
-launchd sample and setup guide:
-
-- `docs/ops/background-sync-launchd.md`
-- `ops/launchd/com.cexapidocs.sync.overnight.plist`
-
-### Keep demo workspace skills in sync
-
-```bash
-python3 scripts/sync_demo_skills.py --demo-root /path/to/cex-api-docs-demo-workspace
-```
-
-If the demo workspace path does not exist yet, clone/create it first, then rerun the sync command.
-
-### Pre-share production check
-
-```bash
-scripts/pre_share_check.sh ./cex-docs
-```
-
-Production rollout guide:
-
-- `docs/ops/production-readiness-and-rollout.md`
 
 ---
 
@@ -334,11 +274,10 @@ Production rollout guide:
 
 ## Troubleshooting
 
-- If semantic commands fail, make sure semantic extras are installed:
-  - Full (Mac or PC/CUDA): `uv pip install -e ".[semantic]"`
-  - Query-only (Mac, no PyTorch): `uv pip install -e ".[semantic-query]"`
-- If long-running sync was interrupted:
-  - re-run with `--resume`.
+- `command not found`: run `uv tool install -e .` from the repo root
+- `ENOINIT`: run `./scripts/bootstrap-data.sh` to download data
+- Semantic search fails with ImportError: install extras `uv pip install -e ".[semantic]"`
+- Interrupted sync: re-run with `--resume`
 
 ---
 

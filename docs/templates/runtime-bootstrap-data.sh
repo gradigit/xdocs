@@ -8,7 +8,7 @@
 # Requires: gh (GitHub CLI), zstd
 set -euo pipefail
 
-REPO="henryaxis/cex-api-docs-runtime"
+REPO="gradigit/xdocs"
 TAG="${1:-latest}"
 TMPFILE="$(mktemp)"
 

@@ -755,7 +755,7 @@ def _publish_data_release(
         tag_base = f"data-{today}"
         # Check for existing tags
         result = subprocess.run(
-            ["gh", "release", "list", "--repo", "henryaxis/cex-api-docs-runtime", "--limit", "100"],
+            ["gh", "release", "list", "--repo", "gradigit/xdocs", "--limit", "100"],
             capture_output=True, text=True,
         )
         existing = [line.split("\t")[0] for line in result.stdout.strip().split("\n") if line]
@@ -853,7 +853,7 @@ def _publish_data_release(
             [
                 "gh", "release", "create", tag_name,
                 str(tarball),
-                "--repo", "henryaxis/cex-api-docs-runtime",
+                "--repo", "gradigit/xdocs",
                 "--title", f"Data {tag_name.removeprefix('data-')}",
                 "--notes", release_notes,
             ],

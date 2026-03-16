@@ -32,46 +32,21 @@ When creating, updating, or maintaining skills, edit the canonical file in `skil
 - For natural-language questions, prefer `semantic-search --mode hybrid --rerank-policy auto` first, then targeted endpoint/page fetch
 - Keep retrieval bounded (avoid broad markdown scans unless retrieval fails)
 
-## Two-Repo Architecture
+## Repository
 
-This project uses two repositories. **Every push to the maintainer repo must be followed by a runtime repo sync + push.**
+- **Remote**: `github.com/gradigit/xdocs`
+- **Dev install**: `uv pip install -e ".[dev,semantic]"`
+- **User install**: `uv tool install -e .` (global CLI, no venv needed)
+- Data is distributed via GitHub Releases as a zstd-compressed tarball. Users run `./scripts/bootstrap-data.sh` to download and extract.
 
-### Maintainer Repo (this repo)
+### Publishing a data release
 
-- **Path**: `/home/lechat/Projects/cex-api-docs`
-- **Remote**: `github.com/henryaxis/cex-api-docs`
-- **Platform**: Linux (CUDA for index builds, full dev tooling)
-- **Install**: `uv pip install -e ".[dev,semantic]"`
-- **Purpose**: Crawling, syncing, indexing, spec imports, validation, benchmarks, all development
-- **Contains**: Full source, tests, scripts, schemas, skills, research artifacts
-
-### Runtime Repo (team-facing)
-
-- **Path**: `/home/lechat/Projects/cex-api-docs-runtime`
-- **Remote**: `github.com/henryaxis/cex-api-docs-runtime`
-- **Platform**: macOS (MacBook, MLX for embeddings/reranking)
-- **Install**: `uv pip install -e .` (semantic-query deps are base dependencies in runtime pyproject.toml)
-- **Purpose**: Query-only CLI + prebuilt `cex-docs/` snapshot (SQLite + LanceDB index via GitHub Releases tarball)
-- **Contains**: Query modules only, no crawl/sync/import code, no tests
-
-### Sync Protocol
-
-After any code change or data update in the maintainer repo:
+After crawling new pages or rebuilding the index:
 
 ```bash
-# From maintainer repo root:
-source /home/lechat/Projects/.venv/bin/activate
 python scripts/sync_runtime_repo.py \
-  --runtime-root /home/lechat/Projects/cex-api-docs-runtime \
-  --docs-dir ./cex-docs --strip-maintenance
-
-# Then commit and push the runtime repo:
-cd /home/lechat/Projects/cex-api-docs-runtime
-git add -A && git commit -m "sync: <description>" && git push
-cd /home/lechat/Projects/cex-api-docs
+  --runtime-root . --docs-dir ./cex-docs --publish
 ```
-
-Data is distributed via GitHub Releases as a zstd-compressed tarball (~556 MB). Runtime users run `./scripts/bootstrap-data.sh` to download and extract.
 
 ## Environment
 
