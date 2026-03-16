@@ -12,7 +12,7 @@ description: >
   Aster, ApeX, GRVT, or Paradex API documentation. Also activates when user pastes
   API errors, endpoint paths, request payloads, or code snippets related to exchange APIs.
 metadata:
-  version: "2.12.0"
+  version: "2.13.0"
 ---
 
 # CEX API Query v2
@@ -225,7 +225,11 @@ When the user asks "Does exchange X support feature Y?" and local retrieval find
 1. Check structured endpoints for protocol/feature keywords (e.g., `SELECT count(*) FROM endpoints WHERE exchange=? AND lower(protocol) LIKE '%fix%'`).
 2. Grep stored markdown for the feature name.
 3. If both are negative, this is a valid local answer: **"Not found in the local docs snapshot."** Do not escalate to web search just because local retrieval is empty — absence of evidence in the store is useful information.
-4. Distinguish from "undocumented" (exchange exists but feature not mentioned) and "unknown" (can't route the query at all).
+4. The answer pipeline returns distinct statuses for these cases:
+   - `not_found` — routing succeeded, search ran, nothing relevant found
+   - `undocumented` — exchange recognized, specific endpoint/error code not in DB
+   - `unknown` — could not route the query at all (no exchange detected)
+   - `needs_clarification` — multiple exchanges detected, user must disambiguate
 5. Only browse live if the user explicitly asks for current verification or if you need to confirm a time-sensitive claim.
 
 **Third-party vendor questions:**
@@ -338,22 +342,12 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 
 ## What's In The Store
 
-SQLite database at `cex-docs/db/docs.db` with FTS5 indexes on pages and endpoints. **10,724 pages, 16.73M words, 4,872 structured endpoints** across 46 exchanges.
+Run `cex-api-docs store-report` for current page/endpoint counts. The pre-check already does this on first query.
 
-```bash
-cex-api-docs store-report```
-
-**CEX with structured endpoints (21):** Binance (spot 703, futures_usdm 192, futures_coinm 130, portfolio_margin 225, margin_trading 59, options 46, wallet 47, copy_trading 2, portfolio_margin_pro 21), OKX (rest 313), Gate.io (v4 363), HTX (spot 87, dm 82, coin_margined_swap 72, usdt_swap 131), Bybit (v5 129), Bitget (v2 102, copy_trading 45, margin 45, earn 27, broker 14), Bitstamp (rest 82), Bitfinex (v2 81), KuCoin (spot 250, futures 54), Crypto.com (exchange 63), Upbit (rest_en 44), Bithumb (rest 36), Korbit (rest 32), Coinone (rest 22), Coinbase (intx 49, prime 97, exchange 45), BitMEX (rest 95), BitMart (spot 48, futures 46), WhiteBIT (v4 137), Mercado Bitcoin (v4 31).
-
-**DEX with structured endpoints (4):** dYdX (docs 83), Hyperliquid (api 75), Paradex (api 97), Lighter (docs 58).
-
-**CEX with pages but no endpoints yet:** Kraken (spot 58p, futures 39p), Bitbank (rest 195p).
-
-**DEX with pages but no endpoints yet:** Aevo (144p), Drift (135p), GMX (201p), Gains (196p), Kwenta (89p), Aster (171p), ApeX (5p), GRVT (271p), Perpetual Protocol (36p, DEFUNCT).
-
-**CCXT reference docs:** 2,073 wiki pages + docs.ccxt.com. Used for cross-reference validation via `ccxt-xref` command.
-
-**Other sections (pages only):** OKX (websocket, broker, changelog), Bybit (websocket), Upbit (rest_ko 60p), Coinbase (derivatives_fix 8p), Bitstamp (fix 1p, websocket 1p).
+The store covers 46 exchanges (CEX, perp DEX, CCXT reference) with:
+- SQLite FTS5 indexes on pages and endpoints
+- LanceDB vector index for semantic/hybrid search
+- Structured endpoint records from OpenAPI/Postman spec imports
 
 **Single-page doc sites:** OKX, Gate.io, HTX, Crypto.com, Bitstamp, Korbit serve their entire API reference from 1-4 large HTML pages (up to 325K words each). When reading these, search within the file — don't print all of it.
 
@@ -361,7 +355,7 @@ cex-api-docs store-report```
 
 - **CLI auto-discovers data:** `--docs-dir` is resolved from the package install location. No flags or env vars needed if installed via `uv tool install -e .` or `uv sync`.
 - `{{url}}`** in paths:** Some Postman-imported endpoints have `{{url}}/sapi/v1/...` paths. `lookup-endpoint` handles this automatically.
-- **Korean exchanges:** Upbit, Bithumb, Coinone, Korbit docs are partially in Korean.
+- **Korean exchanges:** Upbit, Bithumb, Coinone docs are partially/fully in Korean. Korbit is in English. Endpoint paths and parameter names are in English and searchable via FTS5. Upbit English docs lag Korean by ~3 minor versions.
 - **Unresolved **`$ref`**:** OpenAPI-imported request/response schemas may contain `$ref` pointers. If you need the referenced definition, search for the component name in the source page.
 - **Negative error codes:** Use `--` before negative numbers in CLI args: `search-error -- -1002`. Do NOT use `--` for positive codes like `search-error 60029` — it breaks flag parsing.
 - **Semantic search requires **`[semantic]`** extra:** If `semantic-search` fails with ImportError, fall back to FTS5.
@@ -375,9 +369,10 @@ Update this skill when:
 3. **Better retrieval patterns discovered** — add to routing table or query patterns
 4. **Agent fails to find known information** — add the successful search strategy as a pattern
 
-Current version: 2.12.0
+Current version: 2.13.0
 
 ### Changelog
 
+- v2.13.0: Replaced hardcoded store stats with dynamic `store-report` (no more stale numbers). Added `not_found`, `needs_clarification` status documentation. Expanded Korean exchange notes. Removed flashrank from reranker (Jina v3 only).
 - v2.12.0: Removed all `--docs-dir ./cex-docs` flags and `source .venv/bin/activate` prefixes. CLI now auto-discovers data via `__file__` resolution. Skill works globally when installed via `uv tool install -e .` and symlinked to `~/.claude/skills/` or `~/.agents/skills/`.
 - v2.11.0: Added Step 5c — negative-evidence answer guidance (don't escalate to web for empty local results) and third-party vendor split (answer official-exchange portion from store, label vendors as out-of-corpus).
