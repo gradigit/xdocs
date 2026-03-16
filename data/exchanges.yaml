@@ -117,6 +117,7 @@ exchanges:
         inventory_policy:
           scope_prefixes:
             - "https://bybit-exchange.github.io/docs/v5/ws/"
+            - "https://bybit-exchange.github.io/docs/v5/websocket/"
         doc_sources:
           - kind: sitemap
             url: https://bybit-exchange.github.io/docs/sitemap.xml
@@ -868,9 +869,11 @@ exchanges:
       - section_id: api
         base_urls: ["https://www.deribit.com/api/v2"]
         seed_urls: ["https://docs.deribit.com/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.deribit.com/sitemap.xml
         inventory_policy:
           mode: inventory
-          sitemap_urls: ["https://docs.deribit.com/sitemap.xml"]
           render_mode: auto  # Mintlify platform
           max_pages: 1100
           scope_prefixes:
@@ -938,9 +941,11 @@ exchanges:
       - section_id: api
         base_urls: ["https://api.gemini.com"]
         seed_urls: ["https://docs.gemini.com/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.gemini.com/sitemap.xml
         inventory_policy:
           mode: inventory
-          sitemap_urls: ["https://docs.gemini.com/sitemap.xml"]
           render_mode: auto  # Mintlify-like, JS redirect
           max_pages: 200
           scope_prefixes:
@@ -954,9 +959,11 @@ exchanges:
       - section_id: docs
         base_urls: ["https://api.orderly.org"]
         seed_urls: ["https://orderly.network/docs/introduction"]
+        doc_sources:
+          - kind: sitemap
+            url: https://orderly.network/docs/sitemap.xml
         inventory_policy:
           mode: inventory
-          sitemap_urls: ["https://orderly.network/docs/sitemap.xml"]
           render_mode: http
           max_pages: 900
           scope_prefixes:
@@ -985,9 +992,11 @@ exchanges:
       - section_id: docs
         base_urls: ["https://api.nado.xyz"]
         seed_urls: ["https://docs.nado.xyz/"]
+        doc_sources:
+          - kind: sitemap
+            url: https://docs.nado.xyz/sitemap-pages.xml
         inventory_policy:
           mode: inventory
-          sitemap_urls: ["https://docs.nado.xyz/sitemap-pages.xml"]
           render_mode: http  # GitBook
           max_pages: 250
           scope_prefixes:
