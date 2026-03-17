@@ -788,7 +788,7 @@ def generate_report(results: list[TestResult], run_dir: Path) -> str:
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Test cex-api-query skill coverage")
+    parser = argparse.ArgumentParser(description="Test xdocs-query skill coverage")
     parser.add_argument("--docs-dir", default="./cex-docs",
                         help="Path to cex-docs directory (default: ./cex-docs)")
     parser.add_argument("--run-dir", default=None,

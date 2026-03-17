@@ -1,5 +1,5 @@
 # Exchange-specific error code formats and common codes.
-# Used by classify.py and the cex-api-query skill for quick error routing.
+# Used by classify.py and the xdocs-query skill for quick error routing.
 
 binance:
   format: "negative integer (e.g. -1002)"
