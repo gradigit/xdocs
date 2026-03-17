@@ -24,7 +24,7 @@ if ! command -v uv &>/dev/null; then
 fi
 
 if ! command -v gh &>/dev/null; then
-  fail "gh (GitHub CLI) is required for data download. Install: https://cli.github.com"
+  fail "gh (GitHub CLI) is required for data download. Install: https://cli.github.com — then run: gh auth login"
 fi
 
 # --- Clone ---

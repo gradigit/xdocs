@@ -89,9 +89,9 @@ ln -sf "$(pwd)/.agents/skills/xdocs-query" ~/.agents/skills/xdocs-query
 ### First queries
 
 ```bash
-xdocs search-pages "rate limit OR weight" --docs-dir ./cex-docs
-xdocs semantic-search "binance api key permissions" --exchange binance --mode hybrid --docs-dir ./cex-docs
-xdocs answer "What permissions are required for Binance private balance endpoints?" --docs-dir ./cex-docs
+xdocs search-pages "rate limit OR weight"
+xdocs semantic-search "binance api key permissions" --exchange binance --mode hybrid
+xdocs answer "What permissions are required for Binance private balance endpoints?"
 ```
 
 ---
@@ -137,50 +137,47 @@ Registry currently includes 46 exchanges (29 CEX, 16 DEX, 1 reference):
 ### Ingestion / sync
 
 ```bash
-xdocs sync --docs-dir ./cex-docs
-xdocs sync --docs-dir ./cex-docs --resume --concurrency 4
-xdocs store-report --docs-dir ./cex-docs
+xdocs sync
+xdocs sync --resume --concurrency 4
+xdocs store-report
 ```
 
 ### Retrieval
 
 ```bash
-xdocs search-pages "jwt verification" --docs-dir ./cex-docs
-xdocs search-endpoints "wallet balance" --exchange bybit --docs-dir ./cex-docs
-xdocs semantic-search "how to sign okx request" --exchange okx --mode hybrid --docs-dir ./cex-docs
+xdocs search-pages "jwt verification"
+xdocs search-endpoints "wallet balance" --exchange bybit
+xdocs semantic-search "how to sign okx request" --exchange okx --mode hybrid
 ```
 
 ### Answer assembly
 
 ```bash
-xdocs answer "Explain Upbit private account auth requirements with citations" --docs-dir ./cex-docs
+xdocs answer "Explain Upbit private account auth requirements with citations"
 ```
 
 ### Endpoint import
 
 ```bash
-xdocs import-openapi --exchange kucoin --section spot --url <spec-url> --base-url https://api.kucoin.com --docs-dir ./cex-docs --continue-on-error
-xdocs import-postman --exchange bitmart --section spot --url <collection-url> --docs-dir ./cex-docs --continue-on-error
-xdocs link-endpoints --docs-dir ./cex-docs    # resolve docs_url for imported endpoints
-xdocs ccxt-xref --docs-dir ./cex-docs          # cross-reference against CCXT
+xdocs import-openapi --exchange kucoin --section spot --url <spec-url> --base-url https://api.kucoin.com --continue-on-error
+xdocs import-postman --exchange bitmart --section spot --url <collection-url> --continue-on-error
+xdocs link-endpoints         # resolve docs_url for imported endpoints
+xdocs ccxt-xref              # cross-reference against CCXT
 ```
 
 ### Validation / quality
 
 ```bash
 xdocs validate-base-urls
-xdocs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./cex-docs
-xdocs fsck --docs-dir ./cex-docs
-xdocs migrate-schema --docs-dir ./cex-docs          # dry-run
-xdocs migrate-schema --docs-dir ./cex-docs --apply  # apply pending DB migrations
-xdocs quality-check --docs-dir ./cex-docs
-xdocs coverage --docs-dir ./cex-docs
-xdocs detect-stale-citations --docs-dir ./cex-docs
-
-# Crawl validation
-xdocs sanitize-check --docs-dir ./cex-docs
-xdocs crawl-coverage --exchange binance --docs-dir ./cex-docs
-xdocs check-links --sample 50 --docs-dir ./cex-docs
+xdocs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5
+xdocs fsck
+xdocs migrate-schema               # dry-run
+xdocs migrate-schema --apply       # apply pending DB migrations
+xdocs quality-check
+xdocs coverage
+xdocs detect-stale-citations
+xdocs crawl-coverage --exchange binance
+xdocs check-links --sample 50
 ```
 
 ---
@@ -197,7 +194,7 @@ xdocs check-links --sample 50 --docs-dir ./cex-docs
 Example:
 
 ```bash
-xdocs semantic-search "binance api key permissions" --exchange binance --mode hybrid --rerank-policy auto --docs-dir ./cex-docs
+xdocs semantic-search "binance api key permissions" --exchange binance --mode hybrid --rerank-policy auto
 ```
 
 CLI output includes rerank audit fields:
@@ -254,7 +251,7 @@ git pull && uv tool install -e . && ./scripts/bootstrap-data.sh
 - `src/xdocs/changelog.py` — changelog extraction for API drift detection
 - `src/xdocs/validate.py` — golden QA retrieval evaluation
 - `src/xdocs/embeddings.py` — embedding backend selection (Jina MLX / SentenceTransformers)
-- `scripts/sync_runtime_repo.py` — sync maintainer repo → runtime repo
+- `scripts/sync_runtime_repo.py` — data release publisher (`--publish`)
 - `schema/schema.sql` — SQLite schema (v6)
 - `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections)
 - `.claude/skills/xdocs-maintain/SKILL.md` — maintainer workflow skill
