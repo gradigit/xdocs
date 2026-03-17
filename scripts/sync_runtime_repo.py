@@ -332,12 +332,11 @@ def _copy_runtime_core(repo_root: Path, runtime_root: Path, *, clean: bool) -> l
     copied: list[str] = []
     pairs: list[tuple[Path, Path]] = [
         (repo_root / "src", runtime_root / "src"),
-        (repo_root / "docs" / "templates" / "runtime-repo-README.md", runtime_root / "README.md"),
-        (repo_root / "docs" / "templates" / "runtime-AGENTS.md", runtime_root / "AGENTS.md"),
     ]
     for src, dst in pairs:
-        _copy_path(src, dst, clean=clean)
-        copied.append(str(dst))
+        if src.exists():
+            _copy_path(src, dst, clean=clean)
+            copied.append(str(dst))
 
     # Copy runtime skills from canonical skills/ dir to both platform directories.
     # Source: skills/<name>/ (canonical, agent-agnostic)

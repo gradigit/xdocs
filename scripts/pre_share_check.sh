@@ -48,6 +48,6 @@ tail -n 2 /tmp/cex_runtime_export.log
 
 echo "[8/8] Link reachability spot-check (sample=20)..."
 "$PY" -m xdocs.cli check-links --sample 20 --docs-dir "$DOCS_DIR" >/tmp/cex_link_check.json
-jq -r '"checked=\(.result.checked) ok=\(.result.ok) errors=\(.result.client_error + .result.server_error + .result.network_error)"' /tmp/cex_link_check.json
+jq -r '"checked=\(.result.checked) ok=\(.result.ok) errors=\((.result.client_error // 0) + (.result.server_error // 0) + (.result.network_error // 0))"' /tmp/cex_link_check.json
 
 echo "✅ pre_share_check completed"

@@ -4,6 +4,14 @@
 # This replaces 2,213 endpoints with unresolved $ref schemas.
 set -euo pipefail
 
+# Activate venv if not already active
+if [ -z "${VIRTUAL_ENV:-}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  if [ -f "$SCRIPT_DIR/../.venv/bin/activate" ]; then
+    source "$SCRIPT_DIR/../.venv/bin/activate"
+  fi
+fi
+
 DOCS_DIR="${DOCS_DIR:-./cex-docs}"
 CMD="xdocs import-openapi --docs-dir $DOCS_DIR --continue-on-error"
 TOTAL=0
