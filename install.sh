@@ -40,7 +40,11 @@ cd "$INSTALL_DIR"
 
 # --- Install CLI ---
 info "Installing xdocs CLI globally..."
-uv tool install -e . --force 2>&1 | tail -1
+if [[ "$(uname)" == "Darwin" ]]; then
+  uv tool install -e ".[semantic-query]" --force 2>&1 | tail -1
+else
+  uv tool install -e ".[semantic]" --force 2>&1 | tail -1
+fi
 ok "xdocs CLI installed ($(xdocs --version 2>/dev/null || echo 'check PATH'))"
 
 # --- Download data ---
