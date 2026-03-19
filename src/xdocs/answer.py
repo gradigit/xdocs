@@ -584,7 +584,8 @@ def _search_pages_with_semantic(
             "code_snippet": 0.35,      # vector-favoring
             "request_payload": 0.65,   # BM25-favoring — exact param names
         }
-        alpha = _CC_ALPHA.get(query_type_hint, 0.5)
+        _alpha_override = os.getenv("CEX_CC_ALPHA_OVERRIDE")
+        alpha = float(_alpha_override) if _alpha_override else _CC_ALPHA.get(query_type_hint, 0.5)
         fused = cc_fuse(fts_results, sem_results_raw, alpha=alpha, key="canonical_url")
     else:
         # Legacy RRF fusion (rank-only, no score magnitudes).

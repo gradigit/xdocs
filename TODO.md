@@ -774,19 +774,21 @@ Each item below was identified via deep online research + codebase analysis (M17
 - `listen key` ↔ `user data stream`
 - Increase `max_expansions` from 3 to 5
 
-#### OPT-13: Score-Aware Fusion Replacing RRF
+#### OPT-13: Score-Aware Fusion Replacing RRF — A/B'd and REJECTED (2026-03-20)
 **Priority**: 3 (MEDIUM effort, MEDIUM impact)
 **Target**: nDCG@5 +3-5% across all query types
 **Effort**: Medium (~40 LOC)
 **Source**: TopK blog (BEIR benchmarks show +4.58% nDCG@10 over RRF)
+**Status**: REJECTED — CC fusion loses to RRF on our domain. Already implemented (`cc_fuse()` in fts_util.py, `CEX_FUSION_MODE=cc` env var), but RRF remains default.
 
-**Why**: RRF discards score magnitude — a rank-1 result with score 0.99 gets the same RRF contribution as rank-1 with score 0.51. Score-aware fusion preserves this signal.
-
-**What**: Add `score_fusion()` to fts_util.py: `alpha * sem_score + (1-alpha) * bm25_score` after max-normalization. Replace `rrf_fuse` call in `_search_pages_with_semantic`. Alpha per query type (like current RRF weights).
+**A/B Results (206 queries)**:
+- CC per-type alphas: MRR -0.9%, question MRR -1.7% (code_snippet +2.6%)
+- CC global α=0.45: MRR -0.6%, question MRR -1.8% (error_message +2.4%)
+- RRF wins on dominant question type (56% of queries). Our BM25 with porter stemming + domain synonyms is strong enough that rank-based fusion outperforms score-based fusion.
 
 **Pre-work needed**:
-- [ ] Build: Implement `score_fusion()` function with max-norm
-- [ ] A/B: Compare against RRF on 200-query golden QA before switching default
+- [x] Build: `cc_fuse()` implemented in fts_util.py with MinMax normalization
+- [x] A/B: Compared against RRF on 206-query golden QA — RRF wins
 - [ ] Risk: Score distributions vary per query; fixed alpha may be suboptimal
 
 #### OPT-14: GTE-Reranker-ModernBERT-Base as Reranker Upgrade
