@@ -49,4 +49,11 @@ else
   echo "WARNING: $DB not found" >&2
 fi
 
+# Record which tag was downloaded
+ACTUAL_TAG="$TAG"
+if [ "$TAG" = "latest" ]; then
+  ACTUAL_TAG=$(gh release view --repo "$REPO" --json tagName -q .tagName 2>/dev/null || echo "latest")
+fi
+echo "$ACTUAL_TAG" > cex-docs/.data-tag
+
 echo "Done. Run 'xdocs store-report' to verify."

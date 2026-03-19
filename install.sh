@@ -48,12 +48,32 @@ fi
 ok "xdocs CLI installed ($(xdocs --version 2>/dev/null || echo 'check PATH'))"
 
 # --- Download data ---
-if [ -f "cex-docs/db/docs.db" ]; then
-  ok "Data already present ($(python3 -c "import sqlite3; print(sqlite3.connect('cex-docs/db/docs.db').execute('SELECT count(*) FROM pages').fetchone()[0])" 2>/dev/null || echo '?') pages)"
+GH_REPO="gradigit/xdocs"
+LATEST_TAG=$(gh release view --repo "$GH_REPO" --json tagName -q .tagName 2>/dev/null || echo "")
+LOCAL_TAG=""
+if [ -f "cex-docs/.data-tag" ]; then
+  LOCAL_TAG=$(cat cex-docs/.data-tag)
+fi
+
+if [ -z "$LATEST_TAG" ]; then
+  if [ -f "cex-docs/db/docs.db" ]; then
+    ok "Data present (couldn't check for updates — gh release view failed)"
+  else
+    info "Downloading data snapshot..."
+    ./scripts/bootstrap-data.sh
+    ok "Data ready"
+  fi
+elif [ "$LATEST_TAG" = "$LOCAL_TAG" ]; then
+  ok "Data up to date ($LOCAL_TAG)"
 else
-  info "Downloading data snapshot..."
+  if [ -n "$LOCAL_TAG" ]; then
+    info "Updating data ($LOCAL_TAG → $LATEST_TAG)..."
+  else
+    info "Downloading data snapshot ($LATEST_TAG)..."
+  fi
   ./scripts/bootstrap-data.sh
-  ok "Data ready"
+  echo "$LATEST_TAG" > cex-docs/.data-tag
+  ok "Data ready ($LATEST_TAG)"
 fi
 
 # --- Skill symlinks ---
