@@ -534,6 +534,7 @@ def _search_pages_with_semantic(
                 limit=limit * 2,
                 query_type="vector",  # NOT "hybrid" — avoids double-RRF
                 rerank="auto",
+                query_type_hint=query_type_hint,
             )
             suppress_testnet = "testnet" not in query.lower()
             for sr in sem_hits:

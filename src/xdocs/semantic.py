@@ -512,6 +512,7 @@ def semantic_search(
     rerank: bool | str = True,
     include_meta: bool = False,
     keep_text: bool = False,
+    query_type_hint: str | None = None,
 ) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
     """Run semantic (vector), FTS, or hybrid search against the LanceDB index.
 
@@ -671,7 +672,7 @@ def semantic_search(
     if rerank_applied and raw_results:
         try:
             from .fts_util import position_aware_blend
-            raw_results = position_aware_blend(raw_results, retrieval_score_key="score")
+            raw_results = position_aware_blend(raw_results, retrieval_score_key="score", query_type_hint=query_type_hint)
         except Exception:
             pass  # non-critical; fall through to default ordering
 

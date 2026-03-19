@@ -311,6 +311,7 @@ def position_aware_blend(
     *,
     retrieval_score_key: str = "rrf_score",
     reranker_score_key: str = "rerank_score",
+    query_type_hint: str | None = None,
 ) -> list[dict]:
     """Blend retrieval and reranker scores with position-aware weights.
 
@@ -318,6 +319,11 @@ def position_aware_blend(
     - Ranks 1-3: 75% retrieval, 25% reranker
     - Ranks 4-10: 60% retrieval, 40% reranker
     - Ranks 11+: 40% retrieval, 60% reranker
+
+    The query_type_hint parameter is accepted but currently unused —
+    A/B testing (M29, M30) showed both global and per-type weight changes
+    regressed endpoint_path MRR. The default schedule works best across
+    all query types.
 
     Both RRF and reranker scores are normalized to [0,1] before blending
     to ensure the weight schedule has its intended effect. RRF scores are

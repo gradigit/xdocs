@@ -286,6 +286,31 @@ class TestPositionAwareBlend(unittest.TestCase):
         # Reranker score for item 2 is very high, should be reordered to top.
         self.assertEqual(len(result), 2)
 
+    # M30: query_type_hint parameter acceptance tests
+    def test_query_type_hint_accepted(self) -> None:
+        """query_type_hint parameter is accepted without error."""
+        from xdocs.fts_util import position_aware_blend
+        items = [
+            {"rrf_score": 0.5, "rerank_score": 1.0},
+        ]
+        for hint in ("endpoint_path", "question", "error_message", "code_snippet", "request_payload", None):
+            result = position_aware_blend(items, query_type_hint=hint)
+            self.assertEqual(len(result), 1)
+            self.assertIn("blended_score", result[0])
+
+    def test_all_hints_produce_same_weights(self) -> None:
+        """All query_type_hint values currently use same default weights.
+        A/B testing (M29, M30) showed per-type weights regress endpoint_path."""
+        from xdocs.fts_util import position_aware_blend
+        items = [
+            {"rrf_score": 0.5, "rerank_score": 1.0},
+        ]
+        scores = set()
+        for hint in ("endpoint_path", "question", None):
+            result = position_aware_blend(items, query_type_hint=hint)
+            scores.add(round(result[0]["blended_score"], 10))
+        self.assertEqual(len(scores), 1, "All hints should produce same score (uniform weights)")
+
 
 class TestShouldSkipVectorSearch(unittest.TestCase):
     """Test strong-signal BM25 shortcut."""
