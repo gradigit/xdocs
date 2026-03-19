@@ -1432,5 +1432,97 @@ class TestCodeIndicatorPatternsBug14(unittest.TestCase):
         self.assertEqual(result.input_type, "question")
 
 
+class TestBug1SpecUrlFiltering(unittest.TestCase):
+    """BUG-1: Spec URLs (OpenAPI JSON) must not appear in search results."""
+
+    def test_spec_url_filtered_from_endpoint_citation(self) -> None:
+        """Endpoint with a spec URL as docs_url should not return it."""
+        from xdocs.answer import _resolve_endpoint_citation_url
+        from xdocs.registry import load_registry
+
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+            conn = open_db(docs_dir / "db" / "docs.db")
+            try:
+                # Insert endpoint with spec URL as docs_url.
+                _insert_endpoint(docs_dir, conn, endpoint={
+                    "endpoint_id": "deribit-get-instrument",
+                    "exchange": "deribit",
+                    "section": "api",
+                    "protocol": "http",
+                    "http": {"method": "GET", "path": "/public/get_instrument", "base_url": "https://docs.deribit.com"},
+                    "description": "Get instrument details",
+                    "docs_url": "https://docs.deribit.com/specifications/deribit_openapi.json",
+                })
+                reg = load_registry(REPO_ROOT / "data" / "exchanges.yaml")
+                ex = reg.get_exchange("deribit")
+                ep = {"endpoint_id": "deribit-get-instrument", "exchange": "deribit", "record": {}}
+                result = _resolve_endpoint_citation_url(conn, ep=ep, exchange=ex)
+                # Should NOT return the spec URL.
+                self.assertIsNone(result)
+            finally:
+                conn.close()
+
+    def test_spec_url_filtered_from_page_candidates(self) -> None:
+        """Pages with spec URLs should be excluded from search results."""
+        from xdocs.resolve_docs_urls import _is_spec_url
+
+        spec_urls = [
+            "https://docs.deribit.com/specifications/deribit_openapi.json",
+            "https://raw.githubusercontent.com/user/repo/main/openapi.yaml",
+            "https://example.com/swagger.json",
+        ]
+        for url in spec_urls:
+            self.assertTrue(_is_spec_url(url), f"Expected {url} to be a spec URL")
+
+        non_spec_urls = [
+            "https://docs.deribit.com/api-reference/market-data/public-get_instruments",
+            "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints",
+        ]
+        for url in non_spec_urls:
+            self.assertFalse(_is_spec_url(url), f"Expected {url} to NOT be a spec URL")
+
+
+class TestBug13SectionHintRouting(unittest.TestCase):
+    """BUG-13: Section detection should influence result ordering."""
+
+    def test_detect_binance_spot_section(self) -> None:
+        from xdocs.answer import _detect_binance_section
+
+        self.assertEqual(_detect_binance_section("binance spot order"), "spot")
+        self.assertEqual(_detect_binance_section("binance api key spot trading"), "spot")
+        # "derivatives" or "futures" maps to the futures section ID.
+        result = _detect_binance_section("binance derivatives futures")
+        self.assertIn(result, ("usds_margined_futures", "futures_usdm"))
+
+    def test_spot_not_overridden_by_derivatives(self) -> None:
+        from xdocs.answer import _detect_binance_section
+
+        # "spot order" should detect spot, not be confused by generic terms
+        result = _detect_binance_section("what permissions does the binance api key need to place a spot order")
+        self.assertEqual(result, "spot")
+
+
+class TestBug19MultiExchangeComparison(unittest.TestCase):
+    """BUG-19: Queries comparing multiple exchanges should return results
+    from all mentioned exchanges, not just the first one."""
+
+    def test_comparison_detected(self) -> None:
+        """Queries with 'and', 'vs' between exchange names should trigger comparison mode."""
+        import re
+
+        _compare_pats = [r"\band\b", r"\bvs\.?\b", r"\bversus\b", r"\bcompare\b", r"\bcomparison\b", r"\bboth\b"]
+        test_cases = [
+            ("how do binance and okx authenticate", True),
+            ("binance vs bybit rate limits", True),
+            ("compare binance and kraken fees", True),
+            ("what is binance rate limit", False),
+        ]
+        for query, expected in test_cases:
+            is_comp = any(re.search(p, query, re.IGNORECASE) for p in _compare_pats)
+            self.assertEqual(is_comp, expected, f"Query: {query}")
+
+
 if __name__ == "__main__":
     unittest.main()

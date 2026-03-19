@@ -677,7 +677,7 @@ def _resolve_endpoint_citation_url(
             "SELECT docs_url FROM endpoints WHERE endpoint_id = ?;",
             (ep["endpoint_id"],),
         ).fetchone()
-        if row and row["docs_url"]:
+        if row and row["docs_url"] and not _is_spec_url(row["docs_url"]):
             return row["docs_url"]
     except sqlite3.OperationalError:
         pass  # Column may not exist yet (pre-migration).
@@ -822,7 +822,7 @@ def _generic_search_answer(
         candidates = _search_pages_with_semantic(conn, query=fts_query, url_prefix=prefix, limit=section_limit, docs_dir=docs_dir, exchange=exchange.exchange_id, query_type_hint=query_type_hint)
         for cand in candidates:
             curl = cand.get("canonical_url", "")
-            if curl in seen_section_urls:
+            if curl in seen_section_urls or _is_spec_url(curl):
                 continue
             seen_section_urls.add(curl)
             all_section_candidates.append((section_id, cand))
@@ -840,18 +840,14 @@ def _generic_search_answer(
     all_section_candidates = [(url_to_section.get(cand.get("canonical_url"), ""), cand) for cand in page_type_boosted]
 
     # Section-aware promotion: when a section is detected from query keywords,
-    # ensure at least 1 result from that section appears in the top-3.
-    # This addresses BUG-13 (section hint ignored in result ranking).
+    # sort section-matching results before non-matching ones while preserving
+    # relative order within each group. This addresses BUG-13 (section hint
+    # ignored in result ranking — e.g., "spot" query returning derivatives).
     if detected_section:
-        top3_sections = {sid for sid, _ in all_section_candidates[:3]}
-        if detected_section not in top3_sections:
-            # Find the best result from the detected section.
-            for idx, (sid, cand) in enumerate(all_section_candidates):
-                if sid == detected_section and idx >= 3:
-                    # Promote it to position 2 (after current top-1).
-                    promoted = all_section_candidates.pop(idx)
-                    all_section_candidates.insert(min(2, len(all_section_candidates)), promoted)
-                    break
+        section_match = [(sid, cand) for sid, cand in all_section_candidates if sid == detected_section]
+        section_other = [(sid, cand) for sid, cand in all_section_candidates if sid != detected_section]
+        if section_match:
+            all_section_candidates = section_match + section_other
 
     for section_id, cand in all_section_candidates:
         if c > max_claims:
@@ -885,7 +881,7 @@ def _generic_search_answer(
         candidates = _apply_section_boost(candidates, section_prefix=boost_prefix)
         candidates = _apply_page_type_boost(candidates, norm=norm)
         for cand in candidates:
-            if cand["canonical_url"] in seen_urls:
+            if cand["canonical_url"] in seen_urls or _is_spec_url(cand["canonical_url"]):
                 continue
             md_path = Path(cand["markdown_path"]) if cand.get("markdown_path") else None
             if not md_path or not md_path.exists():
@@ -1083,13 +1079,17 @@ def _binance_answer(
     # Part 2: API key permissions (only if the question asks).
     if wants_perm:
         pm_prefix = seed_prefixes.get("portfolio_margin")
+        spot_prefix = seed_prefixes.get("spot")
         prefixes: list[str] = []
+        # When section hint is "spot", search spot first to avoid derivatives
+        # pages dominating results (BUG-13).
+        if detected_section == "spot" and spot_prefix:
+            prefixes.append(spot_prefix)
         if pm_prefix:
             prefixes.append(pm_prefix)
         # Portfolio margin key permissions are often described in general derivatives onboarding docs.
         prefixes.append("https://developers.binance.com/docs/derivatives/")
-        spot_prefix = seed_prefixes.get("spot")
-        if spot_prefix:
+        if spot_prefix and spot_prefix not in prefixes:
             prefixes.append(spot_prefix)
 
         # De-dupe while preserving order.
@@ -1496,6 +1496,37 @@ def _augment_with_classification(
                     logger.debug("Payload page search failed", exc_info=True)
 
     elif classification.input_type == "code_snippet":
+        # OPT-2: If code contains an API URL, extract the path and do direct lookup.
+        api_path = classification.signals.get("api_path")
+        if api_path:
+            try:
+                from .lookup import lookup_endpoint
+                ep_hits = lookup_endpoint(
+                    docs_dir=docs_dir,
+                    path=api_path,
+                    exchange=exchange.exchange_id,
+                    method=None,
+                )
+                for record in ep_hits[:2]:
+                    ep_id = record.get("endpoint_id", "")
+                    if ep_id in existing_ids:
+                        continue
+                    existing_ids.add(ep_id)
+                    http = record.get("http", {})
+                    docs_url = record.get("docs_url", "")
+                    if docs_url and _is_spec_url(docs_url):
+                        docs_url = ""
+                    augmented_claims.append({
+                        "id": f"c{c_start}",
+                        "kind": "ENDPOINT",
+                        "text": f"[{exchange.exchange_id}:{record.get('section', '')}] {http.get('method', '')} {http.get('path', '')} — {record.get('description', '')}",
+                        "citations": [{"url": docs_url}] if docs_url else [],
+                        "endpoint_id": ep_id,
+                    })
+                    c_start += 1
+            except Exception:
+                logger.debug("Code api_path lookup failed", exc_info=True)
+
         # Search based on extracted method topics and exchange.
         code_methods = classification.signals.get("code_methods", [])
         if code_methods:
@@ -1671,7 +1702,38 @@ def answer_question(
         }
 
     if len(matched) > 1:
-        # Multiple exchanges mentioned — try classification hint to disambiguate.
+        # Check if query explicitly compares exchanges ("Binance and OKX", "Binance vs Bybit").
+        _compare_pats = [r"\band\b", r"\bvs\.?\b", r"\bversus\b", r"\bcompare\b", r"\bcomparison\b", r"\bboth\b"]
+        is_comparison = any(re.search(p, norm, re.IGNORECASE) for p in _compare_pats)
+
+        if is_comparison and len(matched) <= 4:
+            # Multi-exchange query: search each exchange and combine results.
+            _conn = open_db(db_path)
+            all_claims: list[dict[str, Any]] = []
+            all_notes: list[str] = []
+            for ex in matched:
+                sub = _generic_search_answer(
+                    _conn, exchange=ex, question=question, norm=norm,
+                    docs_dir=docs_dir, query_type_hint="question",
+                )
+                all_claims.extend(sub.get("claims", []))
+                all_notes.extend(sub.get("notes", []))
+            _conn.close()
+            # Re-number claims.
+            for i, cl in enumerate(all_claims, 1):
+                cl["id"] = f"c{i}"
+            return {
+                "ok": True,
+                "schema_version": "v1",
+                "status": "ok" if all_claims else "not_found",
+                "question": question,
+                "normalized_question": norm,
+                "clarification": None,
+                "claims": all_claims[:15],
+                "notes": all_notes or [],
+            }
+
+        # Not a comparison — try classification hint to disambiguate.
         classification = classify_input(question)
         hint = classification.signals.get("exchange_hint")
         if hint and hint != "ccxt":

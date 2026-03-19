@@ -598,10 +598,11 @@ Each item below was identified via deep online research + codebase analysis (M17
 - [ ] Design: Jaccard vs weighted overlap vs TF-IDF weighted matching
 - [ ] Prerequisite: Fix `$ref` resolution in openapi_import.py and param extraction in postman_import.py
 
-#### OPT-2: Code Snippet URL/Path Extraction for Direct Endpoint Routing
+#### OPT-2: Code Snippet URL/Path Extraction for Direct Endpoint Routing ✓ (2026-03-19)
 **Priority**: 2
 **Target**: code_snippet MRR 0.224 → 0.37-0.42
 **Effort**: Low (~50 LOC)
+**Status**: DONE — api_path extraction in classify.py + lookup_endpoint in answer.py code_snippet handler
 
 **Why**: Code snippets frequently contain literal API URLs (e.g., `requests.get('https://api.bybit.com/v5/market/tickers', ...)`). The current classify.py extracts exchange hints from these URLs (lines 180-195) but does NOT extract the API path (`/v5/market/tickers`). If it did, it could use `lookup_endpoint_by_path()` for a direct match instead of relying on the topic-based FTS fallback which produced MRR=0.224.
 
@@ -754,10 +755,11 @@ Each item below was identified via deep online research + codebase analysis (M17
 - [ ] Build: Expand `_CODE_METHOD_TOPICS` from 20 to 40+ entries
 - [ ] Build: Insert query reformulation before `_generic_search_answer` call in `answer_question()`
 
-#### OPT-12: Expand Synonym Map with API-Domain Terms
+#### OPT-12: Expand Synonym Map with API-Domain Terms ✓ (2026-03-19)
 **Priority**: 2 (LOW effort, MEDIUM impact)
 **Target**: question prefix hit +2-3%, MRR +0.01-0.02
 **Effort**: Low (~20 LOC)
+**Status**: DONE — 14 new synonym groups added (leverage/margin, pnl/profit, fee/commission, wallet/account, etc.)
 
 **Why**: `_SYNONYM_MAP` in fts_util.py has 30+ entries but misses many API-domain terms. Golden QA analysis shows queries for "leverage", "pnl", "funding", "fee", "transfer" get no synonym expansion.
 
@@ -966,6 +968,29 @@ Improvements to the test itself:
 5. Each phase individually A/B benchmarked ✓ (7 A/B tests, reports in reports/m22-*.json)
 6. All tests pass ✓ (547 tests, +18 new)
 
+### M29: Batch Bug Fixes & Optimizations ✓ (2026-03-19)
+A/B validated batch of bug fixes and query optimizations.
+
+**Fixes applied (6 accepted):**
+- [x] BUG-1: Deribit spec URL bypass — `_is_spec_url()` filter in endpoint citations + page search candidates
+- [x] BUG-14: Code snippet detection — added dict assignment + `.encode()` patterns to `_CODE_INDICATORS`
+- [x] OPT-2: Code URL extraction — `api_path` from API URLs in code → `lookup_endpoint` before topic FTS
+- [x] OPT-12: Synonym expansion — 14 new API-domain synonym groups (leverage/margin, pnl/profit, fee/commission, wallet/account, etc.)
+- [x] BUG-13: Section hint routing — section-matching results promoted, Binance perm search respects `detected_section`
+- [x] BUG-19: Multi-exchange comparison — "Binance and OKX" returns combined results from both exchanges
+
+**Reverted (1):**
+- [x] BUG-8: Blend weights 75/25→50/50 — REVERTED (-3.4% endpoint_path MRR, no net benefit)
+
+**Eval results (206 queries):**
+- MRR: 0.6350 → 0.6341 (flat)
+- PFX: 76.19% → 77.25% (+1.06pp)
+- Latency: 3.93s → 3.52s (-10.4% faster)
+- error_message MRR: 0.625 → 0.648 (+3.7%)
+- request_payload nDCG: 0.993 → 1.013 (+2.1%)
+- endpoint_path MRR: 0.500 → 0.483 (-3.4%, from BUG-1 spec URL filter — correct behavior, needs link-endpoints re-run)
+- 574 tests pass, 0 regressions
+
 ---
 
 ### M23: Structured Endpoint Extraction from Crawled Docs
@@ -1034,13 +1059,13 @@ See "Bugs Found in Spot Checks" section above for BUG-1 through BUG-6.
 Priority order:
 1. ~~BUG-10 (Skill search-error `--` misuse)~~ — **FIXED** (2026-03-10, commit 85a6a87)
 2. ~~BUG-11 (Skill no WebSocket routing)~~ — **FIXED** (2026-03-10, commit 85a6a87)
-3. BUG-13 (Answer cites wrong section) — medium, answer pipeline ignores section hint from question text
-4. BUG-8 (Blend score overrides reranker) — medium, affects ranking quality across all exchanges
-5. BUG-9 (Chunk heading context lost) — medium, affects all single-page doc exchanges (9 exchanges)
-6. BUG-14 (Code snippet detection gap) — low-medium, bare API code without imports classified as question
+3. ~~BUG-13 (Answer cites wrong section)~~ — **FIXED** (2026-03-19, section-aware promotion in `_generic_search_answer` + Binance perm search order)
+4. BUG-8 (Blend score overrides reranker) — medium, A/B tested (50/50 weights) → REVERTED (-3.4% endpoint_path MRR). Needs query-type-aware weights.
+5. BUG-9 (Chunk heading context lost) — medium, requires index rebuild (~100 min GPU). Deferred.
+6. ~~BUG-14 (Code snippet detection gap)~~ — **FIXED** (2026-03-19, added dict assignment + .encode() patterns)
 7. BUG-7 (Snippet depth too narrow) — medium, affects multi-detail queries
 8. BUG-12 (Korean text classification) — low, affects 4 Korean exchanges
-9. BUG-1 (Deribit spec URL bypass) — medium, affects question queries for Deribit
+9. ~~BUG-1 (Deribit spec URL bypass)~~ — **FIXED** (2026-03-19, `_is_spec_url()` filter in endpoint citations + page candidates)
 10. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
 11. BUG-5 (Coinbase nav sidebar FTS) — medium, affects nav-heavy sites
 12. BUG-4 (Orderly SDK outranks REST) — low, workaround via endpoint_path query
@@ -1134,10 +1159,11 @@ Reproduces for: OKX/Binance/Upbit endpoint paths, OKX/Bybit/KuCoin error codes.
 
 **Fix**: In the direct routing code path, after resolving docs_url, read the page markdown and call `_make_excerpt()` with the endpoint path/description as search terms. Attach the result to the citation dict. ~15 LOC.
 
-#### BUG-19: Multi-Exchange Ambiguity Silently Picks First Exchange
+#### BUG-19: Multi-Exchange Ambiguity Silently Picks First Exchange — **FIXED** (2026-03-19)
 **Severity**: Medium
 **Found**: 2026-03-12, gapfinder v2 run (blind mode)
 **Source**: qa-findings.jsonl finding #7
+**Status**: FIXED — comparison queries ("Binance and OKX", "X vs Y") now search each exchange and return combined results.
 
 When a query explicitly names two exchanges (e.g., "How do Binance and OKX authenticate?"), the answer pipeline silently picks the first detected exchange and returns results for it. No `clarification` field, no `conflict` status.
 

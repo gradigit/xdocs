@@ -138,6 +138,31 @@ class TestExpandSynonyms(unittest.TestCase):
         result = expand_synonyms(["foobar"])
         self.assertEqual(result, ["foobar"])
 
+    # OPT-12: API-domain synonym tests
+    def test_leverage_margin(self) -> None:
+        result = expand_synonyms(["leverage"])
+        self.assertIn("margin", result)
+
+    def test_fee_commission(self) -> None:
+        result = expand_synonyms(["fee"])
+        self.assertIn("commission", result)
+
+    def test_wallet_account(self) -> None:
+        result = expand_synonyms(["wallet"])
+        self.assertIn("account", result)
+
+    def test_pnl_profit(self) -> None:
+        result = expand_synonyms(["pnl"])
+        self.assertIn("profit", result)
+
+    def test_position_positions(self) -> None:
+        result = expand_synonyms(["position"])
+        self.assertIn("positions", result)
+
+    def test_listen_key_user_data_stream(self) -> None:
+        result = expand_synonyms(["listen-key"])
+        self.assertIn("user-data-stream", result)
+
 
 class TestEndpointSearchText(unittest.TestCase):
     def test_values_only(self) -> None:

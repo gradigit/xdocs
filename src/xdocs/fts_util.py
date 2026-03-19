@@ -65,6 +65,26 @@ _SYNONYM_MAP: dict[str, list[str]] = {
     "symbol": ["symbols"],
     "trade": ["trades", "trading"],
     "trading": ["trade", "trades"],
+    # Financial terms
+    "leverage": ["margin"],
+    "margin": ["leverage"],
+    "pnl": ["profit", "unrealized"],
+    "profit": ["pnl"],
+    "funding": ["funding-rate"],
+    "funding-rate": ["funding"],
+    "fee": ["commission"],
+    "commission": ["fee"],
+    "transfer": ["internal-transfer"],
+    "position": ["positions"],
+    "positions": ["position"],
+    # API structure terms
+    "listen-key": ["user-data-stream"],
+    "user-data-stream": ["listen-key"],
+    "market": ["exchange-info", "symbols"],
+    "account": ["wallet"],
+    "wallet": ["account"],
+    "order": ["orders"],
+    "orders": ["order"],
 }
 
 

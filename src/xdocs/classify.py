@@ -105,6 +105,10 @@ _CODE_INDICATORS: list[re.Pattern[str]] = [
     re.compile(r"\bbase64\.\w+"),
     re.compile(r"\burllib\.parse\b"),
     re.compile(r"\bcrypto\.create\w+", re.IGNORECASE),  # Node.js crypto
+    # Dict/object assignment with string keys (API payload construction).
+    re.compile(r"^\s*\w+\s*=\s*\{['\"]", re.MULTILINE),
+    # .encode() calls (common in signing code).
+    re.compile(r"\.encode\s*\(['\"]"),
 ]
 
 
@@ -200,6 +204,23 @@ def _extract_code_context(text: str) -> dict[str, Any]:
                 context["exchange_hint"] = exch
                 context["code_source"] = "url"
                 break
+
+    # Extract API path from URL in code (any recognized exchange API URL).
+    url_match = re.search(
+        r"(https?://(?:api\.\w+\.(?:com|io|ws)|www\.okx\.com|stream\.\w+\.com)/[^\s'\"`,\)\]]+)",
+        text,
+    )
+    if url_match:
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(url_match.group(1))
+            api_path = parsed.path.rstrip("/")
+            if api_path and len(api_path) > 1:
+                api_path = re.sub(r"\{[^}]+\}", "", api_path).rstrip("/")
+                if api_path:
+                    context["api_path"] = api_path
+        except Exception:
+            pass
 
     # Extract method names for topic mapping
     methods_found = []
@@ -310,6 +331,8 @@ def classify_input(text: str) -> InputClassification:
             signals["code_source"] = code_ctx.get("code_source", "")
         if code_ctx.get("code_methods"):
             signals["code_methods"] = code_ctx["code_methods"]
+        if code_ctx.get("api_path"):
+            signals["api_path"] = code_ctx["api_path"]
 
     # --- Exchange hint detection (skip if already set by payload/code detection) ---
     if "exchange_hint" not in signals:

@@ -325,6 +325,7 @@ Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections 
 
 Latest:
 
+- **M29 batch bug fixes (2026-03-19)** — 6 fixes accepted, 1 reverted. BUG-1 (Deribit spec URL bypass), BUG-13 (section hint routing), BUG-14 (code detection), BUG-19 (multi-exchange comparison), OPT-2 (code URL extraction), OPT-12 (synonym expansion). BUG-8 (blend weights) reverted after A/B showed -3.4% endpoint_path MRR. Pipeline: PFX +1.06pp, error_msg MRR +3.7%, latency -10.4%. 574 tests.
 - **OpenAPI $ref resolution** — Recursive resolver for internal JSON Pointer refs (`#/components/schemas/...` and `#/definitions/...`). Re-imported all 25 remote OpenAPI/Swagger specs. 2,213 → 236 unresolved $refs (89% resolved). Endpoint schemas now contain full type definitions, enums, constraints instead of raw $ref pointers. 4,963 total endpoints (+46 from re-import).
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
 - **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).

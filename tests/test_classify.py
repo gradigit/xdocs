@@ -205,6 +205,73 @@ class TestBug15GenericErrorCodeFloor(unittest.TestCase):
             self.assertFalse(has_specific)
 
 
+class TestBug14CryptoCodePatterns(unittest.TestCase):
+    """BUG-14: Bare API usage code (hmac, hashlib, dict assignment) must be
+    classified as code_snippet, not question."""
+
+    def test_hmac_signing_code(self) -> None:
+        code = 'signature = hmac.new(secret, query_string, hashlib.sha256).hexdigest()'
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_dict_assignment_with_string_keys(self) -> None:
+        code = 'payload = {"symbol": "BTCUSDT", "side": "BUY", "type": "LIMIT"}'
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_encode_call(self) -> None:
+        code = 'msg = query_string.encode("utf-8")'
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_base64_encoding(self) -> None:
+        code = 'sig = base64.b64encode(hmac_obj.digest())'
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_nodejs_crypto(self) -> None:
+        code = 'const sig = crypto.createHmac("sha256", secret).update(msg).digest("hex");'
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_question_not_affected(self) -> None:
+        """Regression guard: plain questions must stay as question."""
+        result = classify_input("What rate limits does Binance have?")
+        self.assertEqual(result.input_type, "question")
+
+
+class TestOpt2ApiPathExtraction(unittest.TestCase):
+    """OPT-2: Extract API path from URLs in code snippets."""
+
+    def test_bybit_url_in_requests_get(self) -> None:
+        code = "import requests\nresponse = requests.get('https://api.bybit.com/v5/market/tickers', params={'category': 'spot'})"
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+        self.assertEqual(result.signals.get("api_path"), "/v5/market/tickers")
+
+    def test_binance_url_in_curl(self) -> None:
+        code = "curl -X GET 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'"
+        result = classify_input(code)
+        self.assertEqual(result.input_type, "code_snippet")
+        self.assertEqual(result.signals.get("api_path"), "/api/v3/ticker/price")
+
+    def test_okx_url_extraction(self) -> None:
+        code = "fetch('https://www.okx.com/api/v5/account/balance')"
+        result = classify_input(code)
+        self.assertEqual(result.signals.get("api_path"), "/api/v5/account/balance")
+
+    def test_no_url_no_api_path(self) -> None:
+        code = "import ccxt\nexchange = ccxt.okx()\nexchange.fetch_balance()"
+        result = classify_input(code)
+        self.assertIsNone(result.signals.get("api_path"))
+
+    def test_exchange_hint_from_url(self) -> None:
+        code = "requests.get('https://api.kucoin.com/api/v1/market/allTickers')"
+        result = classify_input(code)
+        self.assertEqual(result.signals.get("exchange_hint"), "kucoin")
+        self.assertEqual(result.signals.get("api_path"), "/api/v1/market/allTickers")
+
+
 class TestClassifyEdgeCases(unittest.TestCase):
     def test_empty_input(self) -> None:
         result = classify_input("")
