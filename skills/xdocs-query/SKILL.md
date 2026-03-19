@@ -288,7 +288,7 @@ Expected style:
 
 Add this block before final answer close:
 
-- `skill_used`: `xdocs-query@2.10.0`
+- `skill_used`: `xdocs-query@2.13.0`
 - `search_mode`: `semantic/hybrid` | `fts` | `mixed`
 - `rerank_policy`: `auto` | `always` | `never`
 - `rerank_applied`: `yes/no`

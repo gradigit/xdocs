@@ -257,6 +257,7 @@ git pull && uv tool install -e . && ./scripts/bootstrap-data.sh
 - `.claude/skills/xdocs-maintain/SKILL.md` — maintainer workflow skill
 - `.claude/skills/xdocs-query/SKILL.md` — query/answer agent skill
 - `.claude/skills/xdocs-discovery/SKILL.md` — exhaustive crawl target discovery skill
+- `.claude/skills/xdocs-qa/SKILL.md` — QA gap finder skill
 
 ---
 

@@ -21,13 +21,13 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 | `xdocs-maintain` | Maintainer workflow (sync, spec imports, validation, doc updates) |
 | `xdocs-query` | Query/answer (classification → search → cite-only answer) |
 | `xdocs-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
-| `xdocs-qa` | QA gap finder (iterative testing loop, runtime repo) |
+| `xdocs-qa` | QA gap finder (iterative testing loop) |
 
 When creating, updating, or maintaining skills, edit the canonical file in `skills/<name>/SKILL.md`. The symlinks ensure both Claude Code and Codex CLI discover them automatically. All SKILL.md files must include YAML frontmatter (`name` + `description`) for Codex progressive disclosure.
 
 ### xdocs-query routing
 
-- Use `--docs-dir ./cex-docs` unless user explicitly asks for another store
+- CLI auto-discovers the data store. Only pass `--docs-dir` to override.
 - Execute the classify-first routing flow from the skill
 - For natural-language questions, prefer `semantic-search --mode hybrid --rerank-policy auto` first, then targeted endpoint/page fetch
 - Keep retrieval bounded (avoid broad markdown scans unless retrieval fails)

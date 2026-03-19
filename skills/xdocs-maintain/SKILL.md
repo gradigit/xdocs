@@ -38,7 +38,7 @@ If you are starting a new session with no prior context, follow these steps befo
 5. **Assess current store state**:
 
 ```bash
-source .venv/bin/activate && xdocs store-report --docs-dir ./cex-docs
+xdocs store-report --docs-dir ./cex-docs
 ```
 
 6. **Determine what phase to start from**:
@@ -51,7 +51,7 @@ source .venv/bin/activate && xdocs store-report --docs-dir ./cex-docs
 7. **Check for pending inventory entries** (decides `--resume` vs fresh sync):
 
 ```bash
-source .venv/bin/activate && python3 -c "
+python3 -c "
 import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
 for r in conn.execute('''
     SELECT i.exchange_id, i.section_id, ie.status, COUNT(*)
@@ -124,12 +124,9 @@ Before pushing the runtime repo or sharing the store snapshot:
 # Full pre-share gate: schema check, smoke syncs, tests, link spot-check
 bash scripts/pre_share_check.sh [./cex-docs]
 
-# Export query-only runtime (strips maintenance tables, writes manifest)
+# Publish data release
 python3 scripts/sync_runtime_repo.py \
-  --runtime-root ../xdocs-runtime \
-  --docs-dir ./cex-docs \
-  --strip-maintenance \
-  --clean
+  --runtime-root . --docs-dir ./cex-docs --publish
 ```
 
 ### Adding a New Exchange
@@ -167,7 +164,7 @@ After any significant store change (new exchange, spec import, crawl gap fix, ne
 xdocs store-report --docs-dir ./cex-docs
 
 # Cross-check endpoints in query skill against DB
-source .venv/bin/activate && python3 -c "
+python3 -c "
 import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
 for r in conn.execute('SELECT exchange, section, COUNT(*) FROM endpoints GROUP BY exchange, section ORDER BY exchange, section'):
     print(f'{r[0]:20s} {r[1]:25s} {r[2]:5d}')
@@ -191,7 +188,7 @@ xdocs store-report --docs-dir ./cex-docs
 4. **Inventory state check** — identify pending/error entries (decides `--resume` vs fresh):
 
 ```bash
-source .venv/bin/activate && python3 -c "
+python3 -c "
 import sqlite3; conn = sqlite3.connect('cex-docs/db/docs.db')
 for r in conn.execute('''
     SELECT i.exchange_id, i.section_id, ie.status, COUNT(*)
@@ -458,7 +455,7 @@ If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drif
 2. Try `cloudscraper` if crawl4ai is unavailable (handles Cloudflare challenges)
 3. Try headed browser (`headless=False`) for CAPTCHA or headless detection
 4. Use Agent Browser for login-gated or interactive sites
-5. See `docs/solutions/integration-issues/ua-403-exchange-docs-crawler-tooling-20260210.md`
+5. Check `docs/ops/` for operational guides on handling blocked crawls
 
 ### Crawl Tool Availability
 
