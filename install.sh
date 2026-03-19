@@ -48,9 +48,13 @@ fi
 ok "xdocs CLI installed ($(xdocs --version 2>/dev/null || echo 'check PATH'))"
 
 # --- Download data ---
-info "Downloading data snapshot..."
-./scripts/bootstrap-data.sh
-ok "Data ready"
+if [ -f "cex-docs/db/docs.db" ]; then
+  ok "Data already present ($(python3 -c "import sqlite3; print(sqlite3.connect('cex-docs/db/docs.db').execute('SELECT count(*) FROM pages').fetchone()[0])" 2>/dev/null || echo '?') pages)"
+else
+  info "Downloading data snapshot..."
+  ./scripts/bootstrap-data.sh
+  ok "Data ready"
+fi
 
 # --- Skill symlinks ---
 info "Setting up agent skills..."
