@@ -1504,6 +1504,27 @@ class TestBug13SectionHintRouting(unittest.TestCase):
         self.assertEqual(result, "spot")
 
 
+class TestM33ErrorCodeValidation(unittest.TestCase):
+    """M33: Fake error codes should not match incidental numbers in docs."""
+
+    def test_word_boundary_regex_rejects_brackets(self) -> None:
+        """Error code '9999' should NOT match '[9999]' in markdown."""
+        import re
+        code = "9999"
+        _code_re = re.compile(r"(?<![\d\[.])" + re.escape(code) + r"(?![\d\].])")
+        self.assertIsNone(_code_re.search("[9999]"))
+        self.assertIsNone(_code_re.search("9.9999"))
+        self.assertIsNotNone(_code_re.search("error 9999 happened"))
+        self.assertIsNotNone(_code_re.search("code: 9999,"))
+
+    def test_negative_code_boundary(self) -> None:
+        import re
+        code = "-9999"
+        _code_re = re.compile(r"(?<![\d\[.])" + re.escape(code) + r"(?![\d\].])")
+        self.assertIsNone(_code_re.search("253402300799000"))  # timestamp
+        self.assertIsNotNone(_code_re.search("error -9999"))
+
+
 class TestBug19MultiExchangeComparison(unittest.TestCase):
     """BUG-19: Queries comparing multiple exchanges should return results
     from all mentioned exchanges, not just the first one."""
