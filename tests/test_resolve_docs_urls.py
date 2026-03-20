@@ -274,5 +274,60 @@ class TestLinkEndpointsBulk(unittest.TestCase):
                 conn.close()
 
 
+class TestFaqDemotion(unittest.TestCase):
+    """BUG-2: FAQ pages should be demoted in docs_url resolution scoring."""
+
+    def test_faq_url_demoted(self) -> None:
+        from xdocs.resolve_docs_urls import _FAQ_INDICATORS
+
+        faq_urls = [
+            "https://example.com/docs/faqs/order-faq",
+            "https://example.com/docs/FAQ/common-issues",
+            "https://example.com/docs/troubleshoot/auth",
+        ]
+        for url in faq_urls:
+            url_lower = url.lower()
+            is_faq = any(ind in url_lower for ind in _FAQ_INDICATORS)
+            self.assertTrue(is_faq, f"Expected {url} to be detected as FAQ")
+
+    def test_non_faq_url_not_demoted(self) -> None:
+        from xdocs.resolve_docs_urls import _FAQ_INDICATORS
+
+        normal_urls = [
+            "https://example.com/docs/rest-api/new-order",
+            "https://example.com/docs/trading/place-order",
+        ]
+        for url in normal_urls:
+            url_lower = url.lower()
+            is_faq = any(ind in url_lower for ind in _FAQ_INDICATORS)
+            self.assertFalse(is_faq, f"Expected {url} to NOT be FAQ")
+
+    def test_faq_scores_lower_than_endpoint_page(self) -> None:
+        """A FAQ page should score lower than the actual endpoint page."""
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir, conn = _setup_store(tmp)
+            try:
+                endpoint_md = "# New Order\n\nPOST /api/v3/order\n\nPlace a new order.\n\nParameters:\n- symbol\n- side"
+                faq_md = "# FAQ: Order Amendment\n\n/api/v3/order\n\nQ: How do I amend an order?\nA: Use PUT /api/v3/order/amend."
+
+                _add_page(conn, docs_dir,
+                          url="https://developers.example.com/docs/rest-api/new-order",
+                          title="New Order", markdown=endpoint_md)
+                _add_page(conn, docs_dir,
+                          url="https://developers.example.com/docs/faqs/order-amend",
+                          title="FAQ: Order Amendment", markdown=faq_md)
+
+                result = resolve_docs_url(
+                    conn, path="/api/v3/order", exchange="binance",
+                    allowed_domains=["developers.example.com"],
+                )
+                # Should pick the endpoint page, not the FAQ.
+                self.assertIsNotNone(result)
+                self.assertIn("new-order", result)
+                self.assertNotIn("faq", result)
+            finally:
+                conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

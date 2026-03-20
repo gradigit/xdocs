@@ -41,6 +41,12 @@ _DEPRIORITIZE_INDICATORS = (
     "/quick-start", "/overview/", "/testnet/", "/sandbox/",
 )
 
+# URL substrings indicating FAQ/support pages (strong demotion — these mention many
+# endpoints by name but are never the right citation target for a specific endpoint).
+_FAQ_INDICATORS = (
+    "/faq", "/FAQ", "frequently-asked", "troubleshoot",
+)
+
 
 def _is_spec_url(url: str) -> bool:
     """Return True if *url* looks like a raw spec rather than an official docs page."""
@@ -161,6 +167,10 @@ def resolve_docs_url(
                 # Deprioritize non-English, demo, testnet pages.
                 if any(ind in url_lower for ind in _DEPRIORITIZE_INDICATORS):
                     score -= 20
+                # Strongly demote FAQ pages — they mention endpoints by name
+                # but aren't the right citation target (BUG-2).
+                if any(ind in url_lower for ind in _FAQ_INDICATORS):
+                    score -= 40
                 # Prefer more specific URLs (more path segments = more specific).
                 score += url.count("/")
 
