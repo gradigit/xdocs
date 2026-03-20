@@ -660,8 +660,8 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
     4. Threshold lowered from 55% to 40%
     """
 
-    def test_all_nav_matches_use_prefix_fallback(self):
-        """When every match is in a nav region, excerpt should be page prefix."""
+    def test_all_nav_matches_use_content_fallback(self):
+        """When every match is in a nav region, excerpt should skip to content heading."""
         import re
         from xdocs.answer import _make_excerpt
 
@@ -673,8 +673,9 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
         md = nav + content
         needle = re.compile(r"orders", re.IGNORECASE)
         excerpt, start, end = _make_excerpt(md, needle_re=needle)
-        # Should get page prefix (Introduction) not nav chrome
-        self.assertEqual(start, 0, "All-nav fallback should start at 0")
+        # M34: should skip past nav to the first heading (## Introduction)
+        self.assertIn("Introduction", excerpt)
+        self.assertNotIn("[Orders page", excerpt)
 
     def test_skip_link_detected_as_nav(self):
         """Anchor-only skip links like [Skip to content](#main) are nav (caught by link-only-line branch)."""
@@ -733,6 +734,112 @@ class TestBug16NavChromeInExcerpts(unittest.TestCase):
             lines.append(f"This is substantive content line {i} with enough words to be real text.")
         md = "\n".join(lines)
         self.assertFalse(_is_nav_region(md, len(md) // 2))
+
+
+class TestM34NavChromeFromQA(unittest.TestCase):
+    """M34: Tests derived from QA report finding #1 — nav chrome in excerpts.
+
+    These test the specific failure patterns identified across 8+ exchanges:
+    Bitget (100% nav), Bithumb (80% nav), Coinone, Binance, Coinbase, Kraken,
+    Deribit, Upbit. All have excerpt_start near 0 and nav boilerplate text.
+    """
+
+    def test_skip_to_main_content_is_nav(self) -> None:
+        """'Skip to main content' at page start must be detected as nav."""
+        from xdocs.answer import _is_nav_region
+
+        md = (
+            "Skip to main content\n"
+            "\n"
+            "[Home](/) [API Reference](/api) [Changelog](/changelog)\n"
+            "\n"
+            "English | 中文 | 日本語\n"
+            "\n"
+            "v2 | v1 (deprecated)\n"
+            "\n"
+            "## REST API\n"
+            "\n"
+            "Base URL: https://api.example.com\n"
+        )
+        # Position 0 (start of page) should be detected as nav
+        self.assertTrue(_is_nav_region(md, 0))
+
+    def test_skip_link_variants(self) -> None:
+        """Various skip-link patterns used by real exchanges."""
+        from xdocs.answer import _is_nav_region
+
+        for skip_text in [
+            "Skip to main content",
+            "Skip to content",
+            "Jump to Content",
+            "Skip navigation",
+        ]:
+            md = f"{skip_text}\n" + "\n".join(
+                f"* [{f'Link {i}'!s}](/page/{i})" for i in range(8)
+            )
+            self.assertTrue(
+                _is_nav_region(md, 0),
+                f"Skip-link '{skip_text}' not detected as nav",
+            )
+
+    def test_excerpt_avoids_page_start_nav(self) -> None:
+        """When page starts with nav, excerpt should skip past it to content."""
+        import re
+        from xdocs.answer import _make_excerpt
+
+        nav = (
+            "Skip to main content\n"
+            "[Home](/) | [API](/api) | [Docs](/docs)\n"
+            "* [REST API](#rest)\n"
+            "* [WebSocket](#ws)\n"
+            "* [Authentication](#auth)\n"
+            "* [Rate Limits](#limits)\n"
+            "* [Error Codes](#errors)\n"
+            "* [Endpoints](#endpoints)\n"
+        )
+        content = (
+            "\n## Authentication\n\n"
+            "All private endpoints require authentication using API keys. "
+            "Generate your API key from the dashboard. Include the key in "
+            "the X-API-KEY header for all authenticated requests.\n\n"
+            "Rate limits apply per API key.\n"
+        )
+        md = nav + content
+        needle = re.compile(r"authentication|api.key", re.IGNORECASE)
+        excerpt, start, _end = _make_excerpt(md, needle_re=needle)
+        # Excerpt should contain actual auth content, not nav
+        self.assertNotIn("Skip to main content", excerpt)
+        self.assertIn("API key", excerpt)
+
+    def test_language_switcher_is_nav(self) -> None:
+        """Language switcher lines (EN | 中文) at page top are nav."""
+        from xdocs.answer import _is_nav_region
+
+        md = (
+            "Skip to main content\n"
+            "English | 한국어 | 中文\n"
+            "[Home](/) [API](/api) [SDK](/sdk)\n"
+            "* [Spot](/spot)\n"
+            "* [Futures](/futures)\n"
+            "* [Margin](/margin)\n"
+            "* [Options](/options)\n"
+        )
+        self.assertTrue(_is_nav_region(md, 0))
+
+    def test_bitget_nav_pattern(self) -> None:
+        """Bitget-style sidebar nav: dense bullet links at page start."""
+        from xdocs.answer import _is_nav_region
+
+        # Simulating Bitget's pattern: many short bullet links
+        lines = [f"* [{name}](/api-doc/{slug})" for name, slug in [
+            ("Common", "common"), ("Spot", "spot"), ("Futures", "contract"),
+            ("Copy Trading", "copytrading"), ("Broker", "broker"),
+            ("Introduction", "common/intro"), ("Signature", "common/signature"),
+            ("Rate Limits", "common/rate-limit"), ("Error Codes", "common/error-codes"),
+            ("WebSocket", "common/websocket-intro"),
+        ]]
+        md = "\n".join(lines)
+        self.assertTrue(_is_nav_region(md, 0))
 
 
 class TestMakeExcerptEdgeCases(unittest.TestCase):

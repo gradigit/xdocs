@@ -344,6 +344,24 @@ Spot-check 5% of pages with `crawl4ai`. If content differs >20% from stored mark
 
 Follow the "Updating Skills & Documentation" checklist above. This is NOT optional — every sync that changes page/endpoint counts must update all 6 doc files.
 
+### Query Pipeline Change Protocol
+
+**Every change to the answer/search pipeline MUST follow this protocol.** See CLAUDE.md "Change Validation Protocol" for the full spec. Summary:
+
+1. **Design tests first** — create new golden QA entries + unit tests covering the exact fix BEFORE coding.
+2. **Capture baseline** — `python3 tests/eval_answer_pipeline.py --qa-file tests/golden_qa.jsonl --save reports/<milestone>-baseline.json`
+3. **Implement the fix** — one change at a time, feature-flagged if testing multiple options.
+4. **Run full eval** — `--compare reports/<milestone>-baseline.json`. Check per-path breakdown.
+5. **Regression gate** — no classification path may regress >3% MRR. If it does: investigate, fix, or revert.
+6. **Grow the suite** — commit new golden QA entries, unit tests, and regression guards with the fix.
+
+The test suite must grow monotonically. Each milestone adds:
+- Unit tests for the specific fix logic
+- Golden QA entries that would have caught the original bug
+- Regression guards preventing recurrence
+
+Current suite: 600+ unit tests, 206+ golden QA queries across 37 exchanges, 17 negative test cases.
+
 ### Sync Pipeline Render Modes
 
 The `sync` command supports three render modes via `--render`:

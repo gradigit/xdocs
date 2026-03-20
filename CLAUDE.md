@@ -239,6 +239,68 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 - JSON-first CLI: machine-readable output to stdout; logs to stderr.
 - **Skills and docs stay in sync with the store.** After any significant change (new exchange, spec import, crawl gap fix, new CLI command), update AGENTS.md, README.md, all SKILL.md files, and the bible. Run `store-report` for current numbers. See "Updating Skills & Documentation" in `skills/xdocs-maintain/SKILL.md` for the full checklist.
 
+## Change Validation Protocol
+
+Every code change to the query/answer pipeline MUST follow this protocol. No exceptions.
+
+### Before implementing
+
+1. **Design targeted test cases** for the specific fix. Don't rely solely on existing golden QA — create new entries that exercise the exact behavior being changed.
+   - Add golden QA entries to `tests/golden_qa.jsonl` covering the fix scenario (positive + negative).
+   - Add unit tests in `tests/` that verify the fix at the function level (not just end-to-end).
+   - For classification changes: add cases to `tests/test_classify.py`.
+   - For answer pipeline changes: add cases to `tests/test_answer_enhanced.py`.
+   - For FTS/scoring changes: add cases to `tests/test_fts_util.py`.
+
+2. **Capture baseline** before any code change:
+   ```bash
+   python3 tests/eval_answer_pipeline.py --qa-file tests/golden_qa.jsonl --save reports/<milestone>-baseline.json
+   ```
+
+### After implementing
+
+3. **Run unit tests** — all must pass, zero regressions:
+   ```bash
+   pytest -q --tb=short
+   ```
+
+4. **Run full pipeline eval** with comparison:
+   ```bash
+   python3 tests/eval_answer_pipeline.py --qa-file tests/golden_qa.jsonl --save reports/<milestone>-post.json --compare reports/<milestone>-baseline.json
+   ```
+
+5. **Check per-path regression** — no classification path may regress >3% MRR without explicit justification:
+   - `question`, `endpoint_path`, `error_message`, `code_snippet`, `request_payload`
+   - If a path regresses: investigate, fix, or revert. Document in TODO.md.
+
+6. **If A/B testing multiple options** — use env var toggles (e.g., `CEX_FUSION_MODE`, `CEX_SECTION_BOOST`) or file-level reverts (`scripts/ab_test_m20.py` pattern). Never test multiple changes simultaneously.
+
+### Test suite growth
+
+Each milestone MUST grow the test suite:
+- **Unit tests**: Cover the specific fix logic (e.g., regex patterns, scoring functions, routing decisions).
+- **Golden QA entries**: Add queries that would have caught the bug being fixed. Include both positive (should match) and negative (should not match) cases.
+- **Regression guards**: Add tests that prevent the specific failure mode from recurring.
+
+The test suite is cumulative — tests from M1 through current milestone all run on every commit. Never delete passing tests without justification.
+
+### Eval reports
+
+All eval reports go in `reports/` with naming convention `<milestone>-<variant>.json`. Key reports:
+- `baseline-pre-forge.json` — M29 starting point
+- `m32-post.json` — current best (MRR=0.6394, PFX=77.78%)
+
+### Infrastructure
+
+| File | Purpose |
+|------|---------|
+| `tests/golden_qa.jsonl` | 206+ query benchmark (TREC 0-3 graded, 5 classification paths, 17 negatives) |
+| `tests/eval_answer_pipeline.py` | Full pipeline eval: MRR, nDCG@5, per-path breakdown, --compare |
+| `tests/test_canary_qa.py` | CI-fast canary (FTS-only, <10s) |
+| `scripts/ab_test_m20.py` | File-level revert A/B pattern |
+| `scripts/benchmark_rerankers.py` | Isolated reranker benchmark (fixed candidate set, bootstrap CI) |
+| `scripts/benchmark_embeddings.py` | Isolated embedding benchmark (Hit@k, MRR, bootstrap CI) |
+
 ## Key Files
 
 - `data/exchanges.yaml` Registry of exchanges/sections, doc seeds, allowlists, and base URLs

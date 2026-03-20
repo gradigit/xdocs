@@ -287,6 +287,12 @@ LIMIT 1;
 
 _MULTI_LINK_RE = re.compile(r"\[.*?\]\(.*?\)")
 
+# Skip-link phrases that signal navigation boilerplate (M34).
+_SKIP_LINK_PHRASES = (
+    "skip to main content", "skip to content", "jump to content",
+    "skip navigation", "jump to navigation",
+)
+
 
 def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
     """Return True if *pos* falls in a navigation / table-of-contents region.
@@ -301,6 +307,12 @@ def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
     start = max(0, pos - window // 2)
     end = min(len(md), pos + window // 2)
     region = md[start:end]
+
+    # M34: fast check — skip-link phrases are definitive nav markers.
+    region_lower = region.lower()
+    if any(phrase in region_lower for phrase in _SKIP_LINK_PHRASES):
+        return True
+
     lines = [ln for ln in region.split("\n") if ln.strip()]
     if len(lines) < 4:
         return False
@@ -315,6 +327,9 @@ def _is_nav_region(md: str, pos: int, window: int = 1000) -> bool:
             nav += 1
         # Multi-link lines: [Foo](url1) | [Bar](url2) or similar separators
         elif len(_MULTI_LINK_RE.findall(s)) >= 2 and len(s) < 200:
+            nav += 1
+        # Language switcher lines (EN | 中文 | 日本語) — exclude markdown tables
+        elif "|" in s and len(s) < 80 and not s.startswith("#") and not s.startswith("|"):
             nav += 1
     return nav / len(lines) > 0.40
 
@@ -333,12 +348,17 @@ def _make_excerpt(md: str, *, needle_re: re.Pattern[str], target_len: int = 400,
 
     if not best_match or all_nav:
         # No matches at all, or every match is inside a nav region.
-        # Use the page prefix as the excerpt (more informative than nav
-        # chrome).
-        end = min(len(md), target_len)
+        # Skip past nav chrome at page start to find real content (M34).
+        content_start = 0
+        if _is_nav_region(md, 0):
+            # Find the first heading or substantial paragraph after the nav.
+            heading_m = re.search(r"\n##?\s+\w", md)
+            if heading_m:
+                content_start = heading_m.start() + 1  # skip the leading newline
+        end = min(len(md), content_start + target_len)
         end = _snap_end_forward(md, end)
-        excerpt = _clean_excerpt(md[:end])
-        return excerpt, 0, end
+        excerpt = _clean_excerpt(md[content_start:end])
+        return excerpt, content_start, end
 
     idx = best_match.start()
     start = max(0, idx - target_len // 2)
