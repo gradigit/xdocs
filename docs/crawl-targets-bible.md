@@ -257,28 +257,39 @@ Note: ReadMe.io and GitBook platforms auto-generate llms.txt. Content quality va
 
 ### 2g. Changelog / RSS Feed Availability (verified live)
 
-| Exchange | Changelog URL | RSS/Atom Feed | Verified |
-|----------|--------------|---------------|----------|
-| Binance | `developers.binance.com/docs/.../CHANGELOG` | `dev.binance.vision/latest.rss` (forum) | — |
-| OKX | `okx.com/docs-v5/log_en/` | None | — |
-| Bybit | `bybit-exchange.github.io/docs/changelog/v5` | None | — |
-| Bitget | `bitget.com/api-doc/common/changelog` | None | — |
-| Gate.io | Embedded in docs + `gate.com/announcements/apiupdates` | None | — |
-| KuCoin | `kucoin.com/docs-new/change-log` | None | — |
-| HTX | `htx.com/en-us/opend/` | None | — |
-| Bitfinex | `docs.bitfinex.com/docs/changelog` | None (RSS 404) | YES |
-| Crypto.com | Embedded in exchange-docs | None | — |
-| Kraken | `docs.kraken.com/api/docs/change-log/` | None | YES |
-| Coinbase | 6 separate changelogs per product | None | — |
-| BitMEX | `bitmex.com/app/apiChangelog` | `bitmex.com/api_announcement/feed` | YES |
-| Upbit EN | `global-docs.upbit.com/changelog` | `global-docs.upbit.com/changelog.rss` | YES |
-| Upbit KR | `docs.upbit.com/ko/changelog` | `docs.upbit.com/kr/changelog.rss` | YES |
-| Bithumb | `apidocs.bithumb.com/changelog` | `apidocs.bithumb.com/changelog.rss` | YES |
-| Coinone | `docs.coinone.co.kr/changelog` | `docs.coinone.co.kr/changelog.rss` | YES |
-| WhiteBIT | `docs.whitebit.com/changelog/` | `changelog.json` in GitHub repo | YES |
-| Bitbank | GitHub CHANGELOG.md | `/commits/master.atom` | — |
-| dYdX | GitHub releases | `dydxprotocol/v4-chain/releases.atom` | — |
-| CCXT | GitHub releases | `ccxt/ccxt/releases.atom` | — |
+| Exchange | Changelog URL | RSS/Atom Feed | Extracted | Entries | Date Format |
+|----------|--------------|---------------|-----------|---------|-------------|
+| Binance | `developers.binance.com/docs/.../CHANGELOG` | `dev.binance.vision/latest.rss` (forum) | YES | 697 | `### YYYY-MM-DD` |
+| OKX | `okx.com/docs-v5/log_en/` | None | — | 0 | Embedded in SPA |
+| Bybit | `bybit-exchange.github.io/docs/changelog/v5` | None | YES | 15 | `### YYYY-MM-DD` |
+| Bitget | `bitget.com/api-doc/common/changelog` | None | YES | 1 | Inline ISO |
+| Gate.io | Embedded in docs + `gate.com/announcements/apiupdates` | None | — | 0 | SPA |
+| KuCoin | `kucoin.com/docs-new/change-log` | None | YES | 2 | Inline ISO |
+| HTX | `htx.com/en-us/opend/` | None | — | 0 | No changelog page |
+| Bitfinex | `docs.bitfinex.com/docs/changelog` | None (RSS 404) | — | 0 | Not crawled |
+| Crypto.com | Embedded in exchange-docs | None | — | 0 | SPA |
+| Kraken | `docs.kraken.com/api/docs/change-log/` | None | — | 0 | Docusaurus CSR |
+| Coinbase | 6 separate changelogs per product | None | YES | 4 | Inline ISO |
+| BitMEX | `bitmex.com/app/apiChangelog` | `bitmex.com/api_announcement/feed` | — | 0 | Not crawled |
+| Upbit EN | `global-docs.upbit.com/changelog` | `global-docs.upbit.com/changelog.rss` | YES | 189 | Per-page URL |
+| Upbit KR | `docs.upbit.com/ko/changelog` | `docs.upbit.com/kr/changelog.rss` | — | 0 | Korean text |
+| Bithumb | `apidocs.bithumb.com/changelog` | `apidocs.bithumb.com/changelog.rss` | YES | 80 | Mixed |
+| Coinone | `docs.coinone.co.kr/changelog` | `docs.coinone.co.kr/changelog.rss` | YES | 23 | Per-page URL |
+| WhiteBIT | `docs.whitebit.com/changelog/` | `changelog.json` in GitHub repo | — | 0 | Not crawled |
+| Bitbank | GitHub CHANGELOG.md | `/commits/master.atom` | YES | 91 | `### YYYY-MM-DD` |
+| dYdX | GitHub releases | `dydxprotocol/v4-chain/releases.atom` | — | 0 | — |
+| CCXT | GitHub releases | `ccxt/ccxt/releases.atom` | — | 0 | — |
+| Paradex | `docs.paradex.trade/changelog` | None | YES | 98 | Per-page URL |
+| CoinEx | `docs.coinex.com/api/v2/changelog` | None | YES | 31 | Prose dates |
+| Orderly | `orderly.network/docs/changelog` | None | YES | 5 | Prose dates |
+| Bluefin | `bluefin-exchange.readme.io/changelog` | None | YES | 6 | Inline ISO |
+| Gemini | `docs.gemini.com/changelog/revision-history` | None | YES | 1 | Inline ISO |
+| MEXC | `mexc.com/api-docs/spot-v3/change-log` | None | YES | 1 | Inline ISO |
+| Nado | `docs.nado.xyz/.../api-changelog` | None | YES | 1 | Prose dates |
+| Gains | `docs.gains.trade/.../changelog` | None | YES | 8 | Per-page URL |
+| GMX | `docs.gmx.io/.../changelog` | None | YES | 2 | Per-page URL |
+
+**Totals**: 1,255 entries across 18 exchanges. Classification: `classify-changelogs` command applies 8-category regex taxonomy (endpoint_removed, breaking_change, endpoint_deprecated, rate_limit_change, parameter_change, endpoint_added, field_added, informational). 31.5% of entries have extractable API endpoint paths.
 
 ### 2h. Status Page Availability (verified live)
 

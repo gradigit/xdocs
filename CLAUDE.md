@@ -154,6 +154,10 @@ xdocs migrate-schema --docs-dir ./cex-docs --apply
 # Diff pages between crawl runs
 xdocs diff --docs-dir ./cex-docs
 
+# Classify changelog entries by impact type
+xdocs classify-changelogs --docs-dir ./cex-docs
+xdocs classify-changelogs --exchange binance --since 2026-01-01 --severity err --docs-dir ./cex-docs
+
 # Discover sitemap/spec URLs from registry seeds
 xdocs discover-sources --docs-dir ./cex-docs
 
@@ -341,7 +345,8 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `src/xdocs/fts_util.py` Shared FTS5 query utilities (sanitize, build, extract terms, BM25 normalization, RRF fusion, position-aware blend, strong-signal shortcut)
 - `src/xdocs/reranker.py` Backend-agnostic reranking (auto | cross-encoder | qwen3 | jina-v3 | jina-v3-mlx | flashrank). OS auto-detection: macOS+MLX→jina-v3-mlx→jina-v3→cross-encoder→flashrank, Linux→jina-v3→cross-encoder→flashrank. M10 benchmark (163 queries): Jina v3 MRR=0.556 (+15.6% over MiniLM, p=0.0014), 218ms/query.
 - `scripts/sync_runtime_repo.py` Sync maintainer repo → query-only runtime repo (compaction, strip-maintenance, manifest)
-- `src/xdocs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs)
+- `src/xdocs/changelog.py` Changelog extraction from stored pages (extract-changelogs, list-changelogs) — supports ISO + prose date formats, 18 exchanges, 1,255 entries
+- `src/xdocs/changelog_classify.py` Changelog impact classification (8-category regex taxonomy: endpoint_removed, breaking_change, deprecated, rate_limit, parameter, added, field_added, informational)
 - `src/xdocs/audit.py` Consolidated audit runner (combines quality, coverage, crawl-coverage, link-check)
 - `src/xdocs/coverage.py` Endpoint field_status coverage aggregation
 - `src/xdocs/coverage_gaps.py` Endpoint completeness gap computation + persistence
