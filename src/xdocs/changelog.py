@@ -1,8 +1,9 @@
 """Structured changelog extraction from stored doc pages.
 
 Parses changelog pages into dated entries for drift detection.
-Supports Binance-style (### YYYY-MM-DD headings), single-entry pages
-(Bithumb, Coinone), and Coinbase-style (## heading with dates inline).
+Supports Binance-style (### YYYY-MM-DD headings), prose date headings
+(Orderly-style "December 23rd, 2025"), single-entry pages (Bithumb,
+Coinone), and Coinbase-style (## heading with dates inline).
 
 Extracted entries are stored in the changelog_entries table. Running
 extract-changelogs again is idempotent — duplicates are skipped via
@@ -24,10 +25,65 @@ log = logging.getLogger(__name__)
 
 # Matches ### 2026-02-24, ## 2025-12-01, etc.
 _HEADING_DATE_RE = re.compile(r"^#{1,4}\s+(\d{4}-\d{2}-\d{2})", re.MULTILINE)
+# Matches headings with prose dates: ## December 23, 2025 or ##\u200b\nDecember 23rd, 2025
+_PROSE_HEADING_RE = re.compile(
+    r"^#{1,4}\s*[\u200b\u200c]?\s*\n?"
+    r"((?:January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})",
+    re.MULTILINE | re.IGNORECASE,
+)
 # Matches a bare ISO date at the start of a heading: ### YYYY-MM-DD ...
 _HEADING_RE = re.compile(r"^(#{1,4}\s+.+)$", re.MULTILINE)
 # ISO date anywhere in text
 _ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+
+# Month name → number mapping for prose date parsing (no dateutil dependency).
+_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4,
+    "may": 5, "june": 6, "july": 7, "august": 8,
+    "september": 9, "october": 10, "november": 11, "december": 12,
+}
+_PROSE_DATE_RE = re.compile(
+    r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})",
+    re.IGNORECASE,
+)
+_PROSE_MONTH_YEAR_RE = re.compile(
+    r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+(\d{4})",
+    re.IGNORECASE,
+)
+
+
+def _parse_prose_date(text: str) -> str | None:
+    """Parse a prose date string into ISO format (YYYY-MM-DD).
+
+    Handles: "December 23rd, 2025", "January 15, 2026", "February 2026",
+    "2025-12-23" (passthrough), and "December 23rd, 2025 - Major Update".
+    Returns None if no date found.
+    """
+    if not text:
+        return None
+    # ISO passthrough
+    m = _ISO_DATE_RE.search(text)
+    if m:
+        return m.group(1)
+    # Full prose date: Month Day, Year
+    m = _PROSE_DATE_RE.search(text)
+    if m:
+        month = _MONTHS.get(m.group(1).lower())
+        day = int(m.group(2))
+        year = int(m.group(3))
+        if month and 1 <= day <= 31 and 2000 <= year <= 2099:
+            return f"{year:04d}-{month:02d}-{day:02d}"
+    # Month + Year only
+    m = _PROSE_MONTH_YEAR_RE.search(text)
+    if m:
+        month = _MONTHS.get(m.group(1).lower())
+        year = int(m.group(2))
+        if month and 2000 <= year <= 2099:
+            return f"{year:04d}-{month:02d}-01"
+    return None
 
 
 def _sha256(text: str) -> str:
@@ -53,23 +109,44 @@ def _read_markdown(docs_dir: Path, markdown_path: str) -> str | None:
 
 def _split_by_date_headings(markdown: str) -> list[tuple[str | None, str]]:
     """
-    Split a markdown document into (date, text) chunks at ### YYYY-MM-DD headings.
+    Split a markdown document into (date, text) chunks at dated headings.
+
+    Supports both ISO (### 2026-01-15) and prose (## December 23, 2025)
+    date formats, including zero-width-space headings (Orderly).
 
     Returns a list of (date_str_or_None, chunk_text) pairs. The first chunk
     may have no date if there is preamble before the first dated heading.
     """
+    # Try ISO headings first (most common, most reliable).
     positions = list(_HEADING_DATE_RE.finditer(markdown))
-    if not positions:
-        return [(None, markdown.strip())]
+    if positions:
+        return _split_at_positions(markdown, positions, iso=True)
 
+    # Fallback: try prose date headings (M36: Orderly, CoinEx, Nado, etc.).
+    prose_positions = list(_PROSE_HEADING_RE.finditer(markdown))
+    if prose_positions:
+        return _split_at_positions(markdown, prose_positions, iso=False)
+
+    return [(None, markdown.strip())]
+
+
+def _split_at_positions(
+    markdown: str,
+    positions: list[re.Match],
+    *,
+    iso: bool,
+) -> list[tuple[str | None, str]]:
+    """Split markdown at matched heading positions."""
     chunks: list[tuple[str | None, str]] = []
-    # Preamble before first dated heading (skip if empty)
     preamble = markdown[: positions[0].start()].strip()
     if preamble:
         chunks.append((None, preamble))
 
     for i, m in enumerate(positions):
-        date_str = m.group(1)
+        if iso:
+            date_str = m.group(1)
+        else:
+            date_str = _parse_prose_date(m.group(1))
         start = m.start()
         end = positions[i + 1].start() if i + 1 < len(positions) else len(markdown)
         chunk = markdown[start:end].strip()
@@ -82,17 +159,18 @@ def _split_by_date_headings(markdown: str) -> list[tuple[str | None, str]]:
 def _extract_date_from_page(url: str, markdown: str) -> str | None:
     """
     For single-entry pages (Bithumb, Coinone), extract the best date.
-    Tries: URL slug, first ISO date in markdown, first heading text.
+    Tries: URL slug ISO date, markdown ISO date, prose date in markdown.
     """
     # Try URL slug
     m = _ISO_DATE_RE.search(url)
     if m:
         return m.group(1)
-    # Try markdown content
+    # Try markdown ISO date
     m = _ISO_DATE_RE.search(markdown)
     if m:
         return m.group(1)
-    return None
+    # M36: try prose date in markdown (e.g., "March 12, 2024")
+    return _parse_prose_date(markdown[:500])
 
 
 def _entries_from_page(
@@ -152,9 +230,9 @@ def extract_changelogs(
         FROM pages p
         LEFT JOIN inventory_scope_ownership iso ON iso.canonical_url = p.canonical_url
         WHERE (p.canonical_url LIKE '%changelog%' OR p.canonical_url LIKE '%change-log%'
-               OR p.canonical_url LIKE '%changes%')
+               OR p.canonical_url LIKE '%release-note%' OR p.canonical_url LIKE '%release_note%')
           AND p.markdown_path IS NOT NULL
-          AND p.word_count > 20
+          AND p.word_count > 50
     """
     params: list[Any] = []
     if exchange is not None:

@@ -297,6 +297,12 @@ def main(argv: list[str] | None = None) -> None:
     lc.add_argument("--since", default=None, help="Only entries >= this ISO date (YYYY-MM-DD)")
     lc.add_argument("--limit", type=int, default=50, help="Max entries to return (default: 50)")
 
+    ca = sub.add_parser("classify-changelogs", help="Classify changelog entries by impact type (breaking, deprecated, new, etc.)", parents=[common])
+    ca.add_argument("--exchange", default=None, help="Filter by exchange_id")
+    ca.add_argument("--since", default=None, help="Only entries >= this ISO date (YYYY-MM-DD)")
+    ca.add_argument("--severity", default=None, help="Filter by severity: err, warn, info")
+    ca.add_argument("--limit", type=int, default=100, help="Max entries to classify (default: 100)")
+
     bi = sub.add_parser("build-index", help="Build LanceDB semantic search index from stored pages (requires [semantic])", parents=[common])
     bi.add_argument("--limit", type=int, default=0, help="Max pages to embed (0=all)")
     bi.add_argument("--exchange", default=None, help="Filter by exchange domain pattern")
@@ -811,6 +817,49 @@ def main(argv: list[str] | None = None) -> None:
                 limit=int(args.limit),
             )
             _print_json(r)
+            return
+
+        if args.cmd == "classify-changelogs":
+            from .changelog_classify import classify_entry, extract_endpoint_paths, max_severity
+            from .db import open_db
+            from .store import require_store_db
+            db_path = require_store_db(docs_dir=args.docs_dir)
+            conn = open_db(db_path)
+            where: list[str] = []
+            params: list = []
+            if args.exchange:
+                where.append("exchange_id = ?")
+                params.append(args.exchange)
+            if args.since:
+                where.append("entry_date >= ?")
+                params.append(args.since)
+            where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+            params.append(int(args.limit))
+            rows = conn.execute(
+                f"SELECT id, exchange_id, section_id, entry_date, entry_text, source_url FROM changelog_entries {where_sql} ORDER BY entry_date DESC NULLS LAST LIMIT ?",
+                params,
+            ).fetchall()
+            results = []
+            for row in rows:
+                text = row["entry_text"][:3000]
+                classes = classify_entry(text)
+                paths = extract_endpoint_paths(text)
+                sev = max_severity(classes)
+                if args.severity and sev != args.severity:
+                    continue
+                results.append({
+                    "entry_id": row["id"],
+                    "exchange": row["exchange_id"],
+                    "section": row["section_id"],
+                    "date": row["entry_date"],
+                    "severity": sev,
+                    "classifications": [c["impact_type"] for c in classes],
+                    "affected_paths": [f"{m or '?'} {p}" for m, p in paths],
+                    "source_url": row["source_url"],
+                    "preview": text[:200],
+                })
+            conn.close()
+            _print_json({"ok": True, "total": len(results), "entries": results, "schema_version": "v1"})
             return
 
         if args.cmd == "build-index":
