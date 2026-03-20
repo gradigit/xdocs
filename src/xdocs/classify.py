@@ -28,6 +28,9 @@ def _get_exchange_names() -> list[str]:
         for ex_id, alias in alias_map.items():
             if ex_id in names and alias not in names:
                 names.append(alias)
+        # Add underscore variants of IDs that users might type.
+        if "cryptocom" in names and "crypto_com" not in names:
+            names.append("crypto_com")
         # Add legacy names.
         if "htx" in names and "huobi" not in names:
             names.append("huobi")
@@ -37,7 +40,7 @@ def _get_exchange_names() -> list[str]:
         # Fallback to hardcoded list if registry loading fails.
         _exchange_names = [
             "binance", "okx", "bybit", "bitget", "kucoin", "gate.io", "gateio",
-            "htx", "huobi", "crypto.com", "bitstamp", "bitfinex", "dydx",
+            "htx", "huobi", "crypto.com", "crypto_com", "bitstamp", "bitfinex", "dydx",
             "hyperliquid", "gmx", "drift", "aevo", "perp", "perpetual protocol",
             "gains", "gains network", "kwenta", "lighter", "ccxt",
             "upbit", "bithumb", "coinone", "korbit",
@@ -58,8 +61,15 @@ _ERROR_CODE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("binance", re.compile(r"-\d{4}\b")),
     # OKX: 5-digit codes like 50004, 58237
     ("okx", re.compile(r"\b5\d{4}\b")),
-    # Generic HTTP status
+    # Generic HTTP status (both "HTTP 400" and "400 Bad Request" forms)
     ("http", re.compile(r"\bHTTP\s+[45]\d{2}\b", re.IGNORECASE)),
+    ("http", re.compile(r"\b[45]\d{2}\s+(?:Bad Request|Unauthorized|Forbidden|Not Found|Method Not Allowed|Conflict|Gone|Too Many Requests|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout)\b", re.IGNORECASE)),
+    # Bybit: 5-digit codes starting with 1 (10001, 10002, 110001)
+    ("bybit", re.compile(r"\b1[01]\d{3,4}\b")),
+    # KuCoin: 6-digit codes starting with 2 or 4 (200004, 400100)
+    ("kucoin", re.compile(r"\b[24]00\d{3}\b")),
+    # Bitget: 5-digit codes starting with 4 (40018, 43011)
+    ("bitget", re.compile(r"\b4[0-9]\d{3}\b")),
     # Generic numeric error codes (4-6 digits)
     ("generic", re.compile(r"\b\d{5,6}\b")),
 ]
@@ -293,6 +303,14 @@ def classify_input(text: str) -> InputClassification:
             )
             if has_specific_match:
                 scores["error_message"] = max(scores["error_message"], 0.7)
+                # M35.1: propagate exchange hint from error code pattern to
+                # top-level signals so bare error codes (e.g., "-1002" alone)
+                # can be routed to the correct exchange by the answer pipeline.
+                if "exchange_hint" not in signals:
+                    for ec in error_codes:
+                        if ec["exchange_hint"] not in ("generic", "http"):
+                            signals["exchange_hint"] = ec["exchange_hint"]
+                            break
 
     # --- Endpoint path detection ---
     path_match = re.search(
@@ -343,7 +361,7 @@ def classify_input(text: str) -> InputClassification:
                 # Normalize aliases to canonical exchange_id.
                 alias_to_id = {
                     "gate.io": "gateio", "huobi": "htx",
-                    "crypto.com": "cryptocom",
+                    "crypto.com": "cryptocom", "crypto_com": "cryptocom",
                     "mercado bitcoin": "mercadobitcoin",
                     "perpetual protocol": "perp", "gains network": "gains",
                 }

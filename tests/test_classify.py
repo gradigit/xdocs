@@ -272,6 +272,80 @@ class TestOpt2ApiPathExtraction(unittest.TestCase):
         self.assertEqual(result.signals.get("api_path"), "/api/v1/market/allTickers")
 
 
+class TestM35BareErrorCodeExchangeHint(unittest.TestCase):
+    """M35.1: Bare error codes should propagate exchange_hint from error_codes signal."""
+
+    def test_bare_binance_error_propagates_hint(self) -> None:
+        result = classify_input("-1002")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertEqual(result.signals.get("exchange_hint"), "binance")
+
+    def test_bare_okx_error_propagates_hint(self) -> None:
+        result = classify_input("50111")
+        self.assertEqual(result.input_type, "error_message")
+        self.assertEqual(result.signals.get("exchange_hint"), "okx")
+
+    def test_bare_bybit_error_propagates_hint(self) -> None:
+        result = classify_input("10001")
+        self.assertEqual(result.input_type, "error_message")
+        # 10001 matches Bybit pattern
+        self.assertIn(result.signals.get("exchange_hint"), ("bybit", "generic"))
+
+    def test_explicit_exchange_overrides(self) -> None:
+        """When exchange name is in the text, it should take priority."""
+        result = classify_input("Binance error -1002")
+        self.assertEqual(result.signals.get("exchange_hint"), "binance")
+
+    def test_generic_only_no_hint(self) -> None:
+        """Generic-only error codes should NOT propagate exchange_hint."""
+        result = classify_input("error 12345")
+        # 12345 only matches generic pattern
+        if result.signals.get("exchange_hint"):
+            self.assertNotIn(result.signals["exchange_hint"],
+                             ("binance", "okx", "bybit", "kucoin", "bitget"))
+
+
+class TestM35HttpStatusClassification(unittest.TestCase):
+    """M35.2: HTTP status codes with status text should be classified as error_message."""
+
+    def test_400_bad_request(self) -> None:
+        result = classify_input("400 Bad Request")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_401_unauthorized(self) -> None:
+        result = classify_input("401 Unauthorized")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_403_forbidden(self) -> None:
+        result = classify_input("403 Forbidden")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_429_too_many_requests(self) -> None:
+        result = classify_input("429 Too Many Requests")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_500_internal_server_error(self) -> None:
+        result = classify_input("500 Internal Server Error")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_plain_question_not_affected(self) -> None:
+        """Regression guard: normal questions must stay as question."""
+        result = classify_input("How to handle rate limits?")
+        self.assertEqual(result.input_type, "question")
+
+
+class TestM35CryptoComAlias(unittest.TestCase):
+    """M35.3: Internal exchange IDs (underscore form) should be recognized."""
+
+    def test_crypto_com_underscore(self) -> None:
+        result = classify_input("crypto_com rate limits")
+        self.assertEqual(result.signals.get("exchange_hint"), "cryptocom")
+
+    def test_crypto_dot_com(self) -> None:
+        result = classify_input("Crypto.com rate limits")
+        self.assertEqual(result.signals.get("exchange_hint"), "cryptocom")
+
+
 class TestClassifyEdgeCases(unittest.TestCase):
     def test_empty_input(self) -> None:
         result = classify_input("")
