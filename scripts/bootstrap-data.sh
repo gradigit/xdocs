@@ -37,7 +37,7 @@ echo "Downloaded $SIZE compressed."
 # Extract (overwrites existing cex-docs/)
 echo "Extracting..."
 rm -rf cex-docs/
-tar xf "$TMPFILE" --zstd
+zstd -d "$TMPFILE" --stdout | tar xf -
 echo "Extracted to cex-docs/ ($(du -sh cex-docs/ | cut -f1))"
 
 # Quick sanity check

@@ -75,7 +75,10 @@ With this project, the workflow is:
 ```bash
 git clone https://github.com/gradigit/xdocs.git
 cd xdocs
-uv tool install -e .
+# macOS (Apple Silicon — uses MLX for embeddings/reranker):
+uv tool install -e ".[semantic-query]"
+# Linux (CUDA/CPU — uses PyTorch):
+uv tool install -e ".[semantic]"
 ./scripts/bootstrap-data.sh
 ```
 
@@ -226,7 +229,7 @@ This keeps day-to-day usage fast and consistent.
 ### Update
 
 ```bash
-git pull && uv tool install -e . && ./scripts/bootstrap-data.sh
+git pull && uv tool install -e ".[semantic-query]" --force && ./scripts/bootstrap-data.sh
 ```
 
 ---

@@ -2,7 +2,7 @@
 
 **Generated**: 2026-03-12T22:00:00+09:00
 **Command**: `/handoff-fresh`
-**Source path**: `/home/lechat/Projects/cex-api-docs`
+**Source path**: `/home/lechat/Projects/xdocs`
 
 ## Bundle Files
 
@@ -60,7 +60,7 @@ a4b04ba feat: M22 clinical query optimization
 
 ```
 Branch: main
-Remote: origin https://github.com/henryaxis/cex-api-docs.git
+Remote: origin https://github.com/gradigit/xdocs.git
 Working tree: clean (git-excluded artifacts only)
 Tests: 559 pass (557 unit + 2 canary)
 Schema: v6

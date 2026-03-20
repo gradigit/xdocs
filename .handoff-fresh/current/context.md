@@ -10,8 +10,8 @@ Local-only, cite-only CEX API documentation knowledge base. Crawls official exch
 
 | | Maintainer | Runtime |
 |---|---|---|
-| Path | `/home/lechat/Projects/cex-api-docs` | `/home/lechat/Projects/cex-api-docs-runtime` |
-| Remote | `github.com/henryaxis/cex-api-docs` | `github.com/henryaxis/cex-api-docs-runtime` |
+| Path | `/home/lechat/Projects/xdocs` | `/home/lechat/Projects/xdocs-runtime` |
+| Remote | `github.com/gradigit/xdocs` | `github.com/gradigit/xdocs-runtime` |
 | Platform | Linux (CUDA, full dev) | macOS (MLX, query-only) |
 | Install | `uv pip install -e ".[dev,semantic]"` | `uv pip install -e .` |
 | Purpose | Crawl, sync, index, test, benchmark | Query CLI + prebuilt snapshot |
@@ -43,7 +43,7 @@ Registry (`exchanges.yaml`) → Inventory (sitemaps/link-follow) → Fetch (HTTP
 
 | Skill | Purpose | Version |
 |-------|---------|---------|
-| `cex-api-docs` | Maintainer workflow (sync, import, validate) | in SKILL.md |
+| `xdocs` | Maintainer workflow (sync, import, validate) | in SKILL.md |
 | `cex-api-query` | Query/answer (classify → search → cite) | v2.11.0 |
 | `cex-qa-gapfinder` | QA discovery (blind mode, adversarial, regression) | v2.2.0 |
 

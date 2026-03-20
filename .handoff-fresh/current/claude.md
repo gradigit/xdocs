@@ -10,8 +10,8 @@ Local-only, cite-only CEX API documentation knowledge base (library + CLI + agen
 
 ## Two-Repo Architecture
 
-- **Maintainer** (`/home/lechat/Projects/cex-api-docs`): Linux, full dev. `uv pip install -e ".[dev,semantic]"`
-- **Runtime** (`/home/lechat/Projects/cex-api-docs-runtime`): macOS, query-only. `uv pip install -e .`
+- **Maintainer** (`/home/lechat/Projects/xdocs`): Linux, full dev. `uv pip install -e ".[dev,semantic]"`
+- **Runtime** (`/home/lechat/Projects/xdocs-runtime`): macOS, query-only. `uv pip install -e .`
 - **Every push to maintainer MUST be followed by runtime sync + push** via `scripts/sync_runtime_repo.py`
 
 ## Quick Start
@@ -19,7 +19,7 @@ Local-only, cite-only CEX API documentation knowledge base (library + CLI + agen
 ```bash
 source /home/lechat/Projects/.venv/bin/activate  # shared venv
 pytest tests/ -x -q                               # 559 tests, ~90s
-cex-api-docs --help                                # 51 subcommands
+xdocs --help                                # 51 subcommands
 ```
 
 ## Key Files
@@ -28,10 +28,10 @@ cex-api-docs --help                                # 51 subcommands
 - `TODO.md` — all milestones (M1-M22b done) + open bugs (BUG-15 through BUG-21)
 - `data/exchanges.yaml` — registry of 46 exchanges, 78 sections
 - `schema/schema.sql` — SQLite DDL (schema v6)
-- `src/cex_api_docs/answer.py` — cite-only answer assembly (main query pipeline)
-- `src/cex_api_docs/classify.py` — input classification (error/endpoint/payload/code/question)
-- `src/cex_api_docs/fts_util.py` — FTS5 utilities (sanitize, BM25, RRF, blend)
-- `src/cex_api_docs/semantic.py` — LanceDB vector/hybrid search
+- `src/xdocs/answer.py` — cite-only answer assembly (main query pipeline)
+- `src/xdocs/classify.py` — input classification (error/endpoint/payload/code/question)
+- `src/xdocs/fts_util.py` — FTS5 utilities (sanitize, BM25, RRF, blend)
+- `src/xdocs/semantic.py` — LanceDB vector/hybrid search
 - `tests/golden_qa.jsonl` — 206-query benchmark across 37 exchanges
 - `tests/eval_answer_pipeline.py` — pipeline evaluation (MRR, nDCG@5)
 

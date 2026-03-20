@@ -3,15 +3,15 @@
 ## Git
 
 - **Branch**: `main`
-- **Remote**: `origin https://github.com/henryaxis/cex-api-docs.git`
+- **Remote**: `origin https://github.com/gradigit/xdocs.git`
 - **Last commit**: `5687003 fix: FTS5 crash on single quotes in search_pages (BUG-21)`
 - **Working tree**: Clean (only git-excluded handoff artifacts)
 - **Up to date**: Yes
 
 ## Runtime Repo
 
-- **Path**: `/home/lechat/Projects/cex-api-docs-runtime`
-- **Remote**: `origin https://github.com/henryaxis/cex-api-docs-runtime`
+- **Path**: `/home/lechat/Projects/xdocs-runtime`
+- **Remote**: `origin https://github.com/gradigit/xdocs-runtime`
 - **Last commit**: `390fbfc3 sync: fix FTS5 crash on single quotes (BUG-21)`
 - **In sync**: Yes
 

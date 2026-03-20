@@ -289,6 +289,7 @@ The test suite is cumulative — tests from M1 through current milestone all run
 All eval reports go in `reports/` with naming convention `<milestone>-<variant>.json`. Key reports:
 - `baseline-pre-forge.json` — M29 starting point
 - `m32-post.json` — current best (MRR=0.6394, PFX=77.78%)
+- `m35-post.json` — latest (MRR=0.6434, PFX=77.78%)
 
 ### Infrastructure
 
@@ -383,10 +384,14 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,963 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,941 pages, 16.93M words, 4,963 structured endpoints**. Store is at `cex-docs/`. Pipeline: **MRR=0.6434, PFX=77.78%, 621 tests**.
 
 Latest:
 
+- **M35 classification improvements (2026-03-20)** — Bare error codes propagate exchange_hint from error pattern (e.g., `-1002` → Binance). HTTP status text patterns added (`400 Bad Request`, `429 Too Many Requests`). Bybit/KuCoin/Bitget error code patterns. `crypto_com` underscore alias. MRR +0.63%, error_msg MRR +3.6%. 621 tests.
+- **M34 nav chrome detection (2026-03-20)** — Skip-link phrases ("Skip to main content") as definitive nav markers. Fallback excerpt skips past page-start nav to first heading. Language switcher line detection. 5 new QA-derived tests.
+- **M32 FAQ URL demotion (2026-03-20)** — FAQ pages get -40 score penalty in docs_url resolver. Re-resolved docs_urls for 7 exchanges. endpoint_path MRR +7.1%.
+- **M31 CC fusion A/B (2026-03-20)** — Convex Combination fusion tested against RRF. CC loses on question MRR (-1.7%). RRF retained as default. CC available via `CEX_FUSION_MODE=cc`.
 - **M29 batch bug fixes (2026-03-19)** — 6 fixes accepted, 1 reverted. BUG-1 (Deribit spec URL bypass), BUG-13 (section hint routing), BUG-14 (code detection), BUG-19 (multi-exchange comparison), OPT-2 (code URL extraction), OPT-12 (synonym expansion). BUG-8 (blend weights) reverted after A/B showed -3.4% endpoint_path MRR. Pipeline: PFX +1.06pp, error_msg MRR +3.7%, latency -10.4%. 574 tests.
 - **OpenAPI $ref resolution** — Recursive resolver for internal JSON Pointer refs (`#/components/schemas/...` and `#/definitions/...`). Re-imported all 25 remote OpenAPI/Swagger specs. 2,213 → 236 unresolved $refs (89% resolved). Endpoint schemas now contain full type definitions, enums, constraints instead of raw $ref pointers. 4,963 total endpoints (+46 from re-import).
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
@@ -427,7 +432,7 @@ Research completed (docs/research/ and architect/research/):
 - Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches. Score-aware linear fusion (TopK benchmark) beats RRF by +4.58% nDCG@10 on BEIR — future migration candidate.
 - Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
 
-Next (see TODO.md M23-M24): M23 structured endpoint extraction from crawled docs (reduce Postman/spec dependency). M24 content quality — Paradex URL drift, dYdX/Kraken thin pages, Bluefin login-gated, KuCoin nav pollution. M22 deferred: score-aware CC fusion (only if MRR 0.65 target needed), param FTS enrichment (needs selective approach). Runtime repo needs sync after M22. Pacifica re-evaluation when docs mature.
+Next (see TODO.md): M23 structured endpoint extraction from crawled docs (reduce Postman/spec dependency). M24 content quality — Paradex URL drift, dYdX/Kraken thin pages, Bluefin login-gated. BUG-9 chunk heading context (needs index rebuild). CC fusion tested and rejected (M31). Param FTS enrichment tested and rejected (M22). Pacifica re-evaluation when docs mature.
 
 ## Non-Goals / Safety
 
