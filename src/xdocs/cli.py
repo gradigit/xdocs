@@ -460,9 +460,11 @@ def main(argv: list[str] | None = None) -> None:
     rs = sub.add_parser("review-show", help="Show a review queue item", parents=[common])
     rs.add_argument("id", type=int)
 
-    rr = sub.add_parser("review-resolve", help="Resolve a review queue item", parents=[common])
-    rr.add_argument("id", type=int)
+    rr = sub.add_parser("review-resolve", help="Resolve a review queue item (or --auto-stale for bulk)", parents=[common])
+    rr.add_argument("id", type=int, nargs="?", default=None)
     rr.add_argument("--resolution", default=None)
+    rr.add_argument("--auto-stale", action="store_true", help="Bulk-resolve stale review items")
+    rr.add_argument("--dry-run", action="store_true", help="Show counts without resolving")
 
     ap = sub.add_parser("answer", help="Assemble cite-only answers from local store", parents=[common])
     ap.add_argument("question")
@@ -1254,6 +1256,39 @@ def main(argv: list[str] | None = None) -> None:
             return
 
         if args.cmd == "review-resolve":
+            if getattr(args, "auto_stale", False):
+                # Bulk-resolve stale review queue items.
+                from .db import open_db
+                from .store import require_store_db
+                db_path = require_store_db(docs_dir=args.docs_dir)
+                conn = open_db(db_path)
+                dry = getattr(args, "dry_run", False)
+                # Count by kind before
+                before = dict(conn.execute(
+                    "SELECT kind, COUNT(*) FROM review_queue WHERE status = 'open' GROUP BY kind"
+                ).fetchall())
+                # Auto-resolve: source_changed older than 7 days
+                if dry:
+                    sc = conn.execute(
+                        "SELECT COUNT(*) FROM review_queue WHERE status = 'open' AND kind = 'source_changed' AND created_at < datetime('now', '-7 days')"
+                    ).fetchone()[0]
+                    st = conn.execute(
+                        "SELECT COUNT(*) FROM review_queue WHERE status = 'open' AND kind = 'stale_citation' AND created_at < datetime('now', '-7 days')"
+                    ).fetchone()[0]
+                else:
+                    sc = conn.execute(
+                        "UPDATE review_queue SET status = 'resolved', resolved_at = datetime('now'), reason = 'auto-stale' WHERE status = 'open' AND kind = 'source_changed' AND created_at < datetime('now', '-7 days')"
+                    ).rowcount
+                    st = conn.execute(
+                        "UPDATE review_queue SET status = 'resolved', resolved_at = datetime('now'), reason = 'auto-stale' WHERE status = 'open' AND kind = 'stale_citation' AND created_at < datetime('now', '-7 days')"
+                    ).rowcount
+                    conn.commit()
+                conn.close()
+                _print_json({"ok": True, "schema_version": "v1", "dry_run": dry, "resolved": {"source_changed": sc, "stale_citation": st}, "before": before})
+                return
+            if args.id is None:
+                _print_json({"ok": False, "error": "Provide a review ID or --auto-stale"})
+                return
             item = review_resolve(
                 docs_dir=args.docs_dir,
                 lock_timeout_s=float(args.lock_timeout_s),

@@ -171,6 +171,51 @@ class TestBusyTimeout(unittest.TestCase):
             conn.close()
 
 
+class TestStaleLockCleanup(unittest.TestCase):
+    """M38.1: Stale lock files from dead processes must be auto-cleaned."""
+
+    def test_cleanup_removes_dead_pid_lock(self) -> None:
+        import tempfile, json
+        from pathlib import Path
+        from xdocs.lock import cleanup_stale_lock
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / ".write.lock"
+            # Write a lock with a PID that definitely doesn't exist
+            lock.write_text(json.dumps({"pid": 99999999, "acquired_at": "2026-01-01T00:00:00Z"}))
+            self.assertTrue(lock.exists())
+            cleaned = cleanup_stale_lock(lock)
+            self.assertTrue(cleaned)
+            self.assertFalse(lock.exists())
+
+    def test_cleanup_keeps_alive_pid_lock(self) -> None:
+        import tempfile, json, os
+        from pathlib import Path
+        from xdocs.lock import cleanup_stale_lock
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / ".write.lock"
+            # Write a lock with our own PID (alive)
+            lock.write_text(json.dumps({"pid": os.getpid(), "acquired_at": "2026-01-01T00:00:00Z"}))
+            cleaned = cleanup_stale_lock(lock)
+            self.assertFalse(cleaned)
+            self.assertTrue(lock.exists())
+
+    def test_cleanup_handles_missing_file(self) -> None:
+        from pathlib import Path
+        from xdocs.lock import cleanup_stale_lock
+        cleaned = cleanup_stale_lock(Path("/nonexistent/.write.lock"))
+        self.assertFalse(cleaned)
+
+    def test_cleanup_handles_corrupt_json(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from xdocs.lock import cleanup_stale_lock
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / ".write.lock"
+            lock.write_text("not json")
+            cleaned = cleanup_stale_lock(lock)
+            self.assertFalse(cleaned)  # corrupt but not cleaned (conservative)
+
+
 class TestTwoPhaseSync(unittest.TestCase):
     """M37.2: Sync should create inventories sequentially then fetch in parallel."""
 
