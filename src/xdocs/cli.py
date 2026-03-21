@@ -158,8 +158,8 @@ def main(argv: list[str] | None = None) -> None:
     fi_p.add_argument(
         "--concurrency",
         type=int,
-        default=1,
-        help="Number of concurrent HTTP fetch workers (default: 1, sequential)",
+        default=8,
+        help="Number of concurrent HTTP fetch workers (default: 8; per-domain rate limiting is independent)",
     )
     fi_p.add_argument(
         "--conditional",
@@ -224,8 +224,8 @@ def main(argv: list[str] | None = None) -> None:
     sync_p.add_argument(
         "--concurrency",
         type=int,
-        default=1,
-        help="Number of concurrent HTTP fetch workers per section (default: 1, sequential)",
+        default=8,
+        help="Number of concurrent HTTP fetch workers (default: 8; per-domain rate limiting is independent)",
     )
     sync_p.add_argument(
         "--conditional",
