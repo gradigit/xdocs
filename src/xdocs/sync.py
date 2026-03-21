@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +18,8 @@ from .registry import load_registry
 from .stale_citations import detect_stale_citations
 from .store import require_store_db
 from .timeutil import now_iso_utc
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,6 +190,8 @@ def run_sync(
         "retry_after_applied": 0,
     }
 
+    # ── Phase 1: Create inventories (sequential — scope dedup order matters) ──
+    inv_tasks: list[dict[str, Any]] = []
     for ex in reg.exchanges:
         if exchange and ex.exchange_id != exchange:
             continue
@@ -199,7 +205,6 @@ def run_sync(
             if section and sec.section_id != section:
                 continue
 
-            # Resume/force-refetch mode: reuse the latest existing inventory instead of creating a new one.
             inv = None
             inv_resumed = False
             if cfg.resume or cfg.force_refetch:
@@ -253,12 +258,38 @@ def run_sync(
                 inv_errors = inv.errors
                 inv_samples = inv.samples
 
+            inv_tasks.append({
+                "exchange": ex,
+                "section": sec,
+                "inv_resumed": inv_resumed,
+                "inv_id": use_inv_id,
+                "inv_url_count": inv_url_count,
+                "inv_generated_at": inv_generated_at,
+                "inv_hash": inv_hash,
+                "inv_diff": inv_diff,
+                "inv_counts": inv_counts,
+                "inv_errors": inv_errors,
+                "inv_samples": inv_samples,
+            })
+
+    _log.info("Phase 1 complete: %d section inventories created", len(inv_tasks))
+
+    # ── Phase 2: Fetch all sections in parallel ──
+    # Each section gets cfg.concurrency workers internally, so total workers
+    # ≈ parallel_sections × concurrency. The per-domain rate limiter inside
+    # each fetch_inventory call prevents hammering any single domain.
+    parallel_sections = min(len(inv_tasks), 8)  # Cap at 8 concurrent sections
+
+    def _fetch_section(task: dict[str, Any]) -> dict[str, Any]:
+        ex = task["exchange"]
+        sec = task["section"]
+        try:
             fetch_res = fetch_inventory(
                 docs_dir=docs_dir,
                 lock_timeout_s=float(lock_timeout_s),
                 exchange_id=ex.exchange_id,
                 section_id=sec.section_id,
-                inventory_id=use_inv_id,
+                inventory_id=task["inv_id"],
                 allowed_domains=ex.allowed_domains,
                 delay_s=float(delay_s),
                 timeout_s=float(timeout_s),
@@ -278,39 +309,77 @@ def run_sync(
                 scope_group=(sec.inventory_policy.scope_group or ex.exchange_id),
                 scope_priority=int(sec.inventory_policy.scope_priority),
             )
+            return {**task, "fetch_res": fetch_res, "error": None}
+        except Exception as e:
+            _log.error("Fetch failed for %s/%s: %s", ex.exchange_id, sec.section_id, e)
+            return {**task, "fetch_res": None, "error": str(e)}
 
+    if parallel_sections > 1 and len(inv_tasks) > 1:
+        _log.info("Phase 2: fetching %d sections with %d parallel slots (×%d workers each = ~%d total workers)",
+                  len(inv_tasks), parallel_sections, cfg.concurrency, parallel_sections * cfg.concurrency)
+        with ThreadPoolExecutor(max_workers=parallel_sections) as pool:
+            futures = {pool.submit(_fetch_section, t): t for t in inv_tasks}
+            completed_tasks = []
+            for future in as_completed(futures):
+                result = future.result()
+                completed_tasks.append(result)
+                ex_id = result["exchange"].exchange_id
+                sec_id = result["section"].section_id
+                if result["error"]:
+                    _log.warning("  %s/%s: FAILED — %s", ex_id, sec_id, result["error"])
+                else:
+                    fc = result["fetch_res"]["counts"]
+                    _log.info("  %s/%s: done — %d fetched, %d stored, %d skipped",
+                              ex_id, sec_id, fc["fetched"], fc["stored"], fc["skipped"])
+    else:
+        # Single section or sequential mode
+        completed_tasks = [_fetch_section(t) for t in inv_tasks]
+
+    # ── Aggregate results ──
+    for task in completed_tasks:
+        fetch_res = task.get("fetch_res")
+        if fetch_res is None:
             totals["inventories"] += 1
-            totals["inventory_urls"] += inv_url_count
-            totals["fetched"] += int(fetch_res["counts"]["fetched"])
-            totals["stored"] += int(fetch_res["counts"]["stored"])
-            totals["skipped"] += int(fetch_res["counts"]["skipped"])
-            totals["dedupe_skipped"] += int(fetch_res["counts"].get("dedupe_skipped") or 0)
-            totals["new_pages"] += int(fetch_res["counts"].get("new_pages") or 0)
-            totals["updated_pages"] += int(fetch_res["counts"].get("updated_pages") or 0)
-            totals["unchanged_pages"] += int(fetch_res["counts"].get("unchanged_pages") or 0)
-            totals["revalidated_unchanged"] += int(fetch_res["counts"].get("revalidated_unchanged") or 0)
-            totals["retry_after_applied"] += int(fetch_res["counts"].get("retry_after_applied") or 0)
-            inv_error_count = int(inv_counts.get("errors", 0)) if isinstance(inv_counts, dict) else 0
-            totals["errors"] += int(fetch_res["counts"]["errors"]) + inv_error_count
+            totals["errors"] += 1
+            sections_run.append({
+                "exchange_id": task["exchange"].exchange_id,
+                "section_id": task["section"].section_id,
+                "resumed": task["inv_resumed"],
+                "error": task["error"],
+            })
+            continue
 
-            sections_run.append(
-                {
-                    "exchange_id": ex.exchange_id,
-                    "section_id": sec.section_id,
-                    "resumed": inv_resumed,
-                    "inventory": {
-                        "inventory_id": use_inv_id,
-                        "generated_at": inv_generated_at,
-                        "url_count": inv_url_count,
-                        "inventory_hash": inv_hash,
-                        "diff": inv_diff,
-                        "counts": inv_counts,
-                        "errors": inv_errors,
-                        "samples": inv_samples,
-                    },
-                    "fetch": fetch_res,
-                }
-            )
+        totals["inventories"] += 1
+        totals["inventory_urls"] += task["inv_url_count"]
+        totals["fetched"] += int(fetch_res["counts"]["fetched"])
+        totals["stored"] += int(fetch_res["counts"]["stored"])
+        totals["skipped"] += int(fetch_res["counts"]["skipped"])
+        totals["dedupe_skipped"] += int(fetch_res["counts"].get("dedupe_skipped") or 0)
+        totals["new_pages"] += int(fetch_res["counts"].get("new_pages") or 0)
+        totals["updated_pages"] += int(fetch_res["counts"].get("updated_pages") or 0)
+        totals["unchanged_pages"] += int(fetch_res["counts"].get("unchanged_pages") or 0)
+        totals["revalidated_unchanged"] += int(fetch_res["counts"].get("revalidated_unchanged") or 0)
+        totals["retry_after_applied"] += int(fetch_res["counts"].get("retry_after_applied") or 0)
+        inv_counts = task["inv_counts"]
+        inv_error_count = int(inv_counts.get("errors", 0)) if isinstance(inv_counts, dict) else 0
+        totals["errors"] += int(fetch_res["counts"]["errors"]) + inv_error_count
+
+        sections_run.append({
+            "exchange_id": task["exchange"].exchange_id,
+            "section_id": task["section"].section_id,
+            "resumed": task["inv_resumed"],
+            "inventory": {
+                "inventory_id": task["inv_id"],
+                "generated_at": task["inv_generated_at"],
+                "url_count": task["inv_url_count"],
+                "inventory_hash": task["inv_hash"],
+                "diff": task["inv_diff"],
+                "counts": inv_counts,
+                "errors": task["inv_errors"],
+                "samples": task["inv_samples"],
+            },
+            "fetch": fetch_res,
+        })
 
     ended_at = now_iso_utc()
     post: dict[str, Any] = {}
