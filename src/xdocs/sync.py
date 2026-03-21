@@ -336,7 +336,10 @@ def run_sync(
         """Run all sections for one exchange sequentially."""
         return [_process_section(t) for t in tasks]
 
-    parallel_exchanges = min(len(by_exchange), 16)
+    # SQLite write lock limits effective parallelism — all sections write to
+    # the same docs.db. With WAL mode + 3-phase locking in fetch_inventory,
+    # 4 concurrent exchanges works reliably. Higher values cause lock timeouts.
+    parallel_exchanges = min(len(by_exchange), 4)
     _log.info("Running %d exchanges in parallel (up to %d slots, %d workers each)",
               len(by_exchange), parallel_exchanges, cfg.concurrency)
 
