@@ -75,15 +75,18 @@ exchanges:
       - section_id: rest
         base_urls: ["https://www.okx.com"]
         seed_urls: ["https://www.okx.com/docs-v5/en/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.okx.com/sitemap.xml
+        # OKX docs is a single-page SPA (224K words). No sitemap needed —
+        # www.okx.com/sitemap.xml has 5M+ entries (entire site, all languages)
+        # and caused OOM during parallel sync (65GB VM). Seed URL is sufficient.
+        inventory_policy:
+          mode: link_follow
+          max_pages: 10
       - section_id: websocket
         base_urls: ["wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/private", "wss://ws.okx.com:8443/ws/v5/business"]
         seed_urls: ["https://www.okx.com/docs-v5/en/#websocket-api"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.okx.com/sitemap.xml
+        inventory_policy:
+          mode: link_follow
+          max_pages: 10
       - section_id: broker
         base_urls: ["https://www.okx.com"]
         seed_urls: ["https://www.okx.com/docs-v5/broker_en/"]
