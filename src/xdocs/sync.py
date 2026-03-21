@@ -190,8 +190,8 @@ def run_sync(
         "retry_after_applied": 0,
     }
 
-    # ── Phase 1: Create inventories (sequential — scope dedup order matters) ──
-    inv_tasks: list[dict[str, Any]] = []
+    # ── Build section task list ──
+    section_tasks: list[dict[str, Any]] = []
     for ex in reg.exchanges:
         if exchange and ex.exchange_id != exchange:
             continue
@@ -204,7 +204,20 @@ def run_sync(
         for sec in sections_sorted:
             if section and sec.section_id != section:
                 continue
+            section_tasks.append({"exchange": ex, "section": sec})
 
+    _log.info("Sync: %d sections to process", len(section_tasks))
+
+    # ── Full pipeline per section (inventory + fetch) ──
+    # Runs in parallel across exchanges. Each exchange's sections still run
+    # in priority order (scope dedup), but different exchanges run concurrently.
+    # Per-domain rate limiting inside fetch_inventory prevents hammering.
+    def _process_section(task: dict[str, Any]) -> dict[str, Any]:
+        ex = task["exchange"]
+        sec = task["section"]
+        label = f"{ex.exchange_id}/{sec.section_id}"
+        try:
+            # Inventory phase
             inv = None
             inv_resumed = False
             if cfg.resume or cfg.force_refetch:
@@ -258,38 +271,15 @@ def run_sync(
                 inv_errors = inv.errors
                 inv_samples = inv.samples
 
-            inv_tasks.append({
-                "exchange": ex,
-                "section": sec,
-                "inv_resumed": inv_resumed,
-                "inv_id": use_inv_id,
-                "inv_url_count": inv_url_count,
-                "inv_generated_at": inv_generated_at,
-                "inv_hash": inv_hash,
-                "inv_diff": inv_diff,
-                "inv_counts": inv_counts,
-                "inv_errors": inv_errors,
-                "inv_samples": inv_samples,
-            })
+            _log.info("  %s: inventory ready (%d URLs, resumed=%s)", label, inv_url_count, inv_resumed)
 
-    _log.info("Phase 1 complete: %d section inventories created", len(inv_tasks))
-
-    # ── Phase 2: Fetch all sections in parallel ──
-    # Each section gets cfg.concurrency workers internally, so total workers
-    # ≈ parallel_sections × concurrency. The per-domain rate limiter inside
-    # each fetch_inventory call prevents hammering any single domain.
-    parallel_sections = min(len(inv_tasks), 8)  # Cap at 8 concurrent sections
-
-    def _fetch_section(task: dict[str, Any]) -> dict[str, Any]:
-        ex = task["exchange"]
-        sec = task["section"]
-        try:
+            # Fetch phase
             fetch_res = fetch_inventory(
                 docs_dir=docs_dir,
                 lock_timeout_s=float(lock_timeout_s),
                 exchange_id=ex.exchange_id,
                 section_id=sec.section_id,
-                inventory_id=task["inv_id"],
+                inventory_id=use_inv_id,
                 allowed_domains=ex.allowed_domains,
                 delay_s=float(delay_s),
                 timeout_s=float(timeout_s),
@@ -309,31 +299,59 @@ def run_sync(
                 scope_group=(sec.inventory_policy.scope_group or ex.exchange_id),
                 scope_priority=int(sec.inventory_policy.scope_priority),
             )
-            return {**task, "fetch_res": fetch_res, "error": None}
-        except Exception as e:
-            _log.error("Fetch failed for %s/%s: %s", ex.exchange_id, sec.section_id, e)
-            return {**task, "fetch_res": None, "error": str(e)}
 
-    if parallel_sections > 1 and len(inv_tasks) > 1:
-        _log.info("Phase 2: fetching %d sections with %d parallel slots (×%d workers each = ~%d total workers)",
-                  len(inv_tasks), parallel_sections, cfg.concurrency, parallel_sections * cfg.concurrency)
-        with ThreadPoolExecutor(max_workers=parallel_sections) as pool:
-            futures = {pool.submit(_fetch_section, t): t for t in inv_tasks}
-            completed_tasks = []
+            fc = fetch_res["counts"]
+            _log.info("  %s: done — %d fetched, %d stored, %d skipped, %d errors",
+                      label, fc["fetched"], fc["stored"], fc["skipped"], fc["errors"])
+
+            return {
+                "exchange": ex, "section": sec,
+                "inv_resumed": inv_resumed,
+                "inv_id": use_inv_id, "inv_url_count": inv_url_count,
+                "inv_generated_at": inv_generated_at, "inv_hash": inv_hash,
+                "inv_diff": inv_diff, "inv_counts": inv_counts,
+                "inv_errors": inv_errors, "inv_samples": inv_samples,
+                "fetch_res": fetch_res, "error": None,
+            }
+        except Exception as e:
+            _log.error("  %s: FAILED — %s", label, e)
+            return {
+                "exchange": ex, "section": sec,
+                "inv_resumed": False,
+                "inv_id": 0, "inv_url_count": 0,
+                "inv_generated_at": "", "inv_hash": "",
+                "inv_diff": {}, "inv_counts": {},
+                "inv_errors": [], "inv_samples": {},
+                "fetch_res": None, "error": str(e),
+            }
+
+    # Group sections by exchange so same-exchange sections run sequentially
+    # (preserves scope dedup order) while different exchanges run in parallel.
+    from collections import defaultdict
+    by_exchange: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for task in section_tasks:
+        by_exchange[task["exchange"].exchange_id].append(task)
+
+    def _process_exchange_sections(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Run all sections for one exchange sequentially."""
+        return [_process_section(t) for t in tasks]
+
+    parallel_exchanges = min(len(by_exchange), 16)
+    _log.info("Running %d exchanges in parallel (up to %d slots, %d workers each)",
+              len(by_exchange), parallel_exchanges, cfg.concurrency)
+
+    completed_tasks: list[dict[str, Any]] = []
+    if parallel_exchanges > 1 and len(by_exchange) > 1:
+        with ThreadPoolExecutor(max_workers=parallel_exchanges) as pool:
+            futures = {
+                pool.submit(_process_exchange_sections, tasks): ex_id
+                for ex_id, tasks in by_exchange.items()
+            }
             for future in as_completed(futures):
-                result = future.result()
-                completed_tasks.append(result)
-                ex_id = result["exchange"].exchange_id
-                sec_id = result["section"].section_id
-                if result["error"]:
-                    _log.warning("  %s/%s: FAILED — %s", ex_id, sec_id, result["error"])
-                else:
-                    fc = result["fetch_res"]["counts"]
-                    _log.info("  %s/%s: done — %d fetched, %d stored, %d skipped",
-                              ex_id, sec_id, fc["fetched"], fc["stored"], fc["skipped"])
+                completed_tasks.extend(future.result())
     else:
-        # Single section or sequential mode
-        completed_tasks = [_fetch_section(t) for t in inv_tasks]
+        for tasks in by_exchange.values():
+            completed_tasks.extend(_process_exchange_sections(tasks))
 
     # ── Aggregate results ──
     for task in completed_tasks:
