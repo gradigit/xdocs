@@ -145,6 +145,32 @@ class TestSyncTelemetryOutput(unittest.TestCase):
         self.assertTrue(expected_keys.issubset(set(entry.keys())), f"Missing keys: {expected_keys - set(entry.keys())}")
 
 
+class TestBusyTimeout(unittest.TestCase):
+    """M37: SQLite busy_timeout must be set for concurrent write safety."""
+
+    def test_open_db_sets_busy_timeout(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from xdocs.db import open_db
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "test.db"
+            conn = open_db(db_path)
+            row = conn.execute("PRAGMA busy_timeout;").fetchone()
+            self.assertEqual(row[0], 120000)
+            conn.close()
+
+    def test_custom_busy_timeout(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from xdocs.db import open_db
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "test.db"
+            conn = open_db(db_path, busy_timeout_ms=5000)
+            row = conn.execute("PRAGMA busy_timeout;").fetchone()
+            self.assertEqual(row[0], 5000)
+            conn.close()
+
+
 class TestTwoPhaseSync(unittest.TestCase):
     """M37.2: Sync should create inventories sequentially then fetch in parallel."""
 

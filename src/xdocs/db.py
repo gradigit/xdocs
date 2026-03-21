@@ -143,13 +143,16 @@ class DbInitResult:
     fts5_available: bool
 
 
-def open_db(db_path: Path) -> sqlite3.Connection:
+def open_db(db_path: Path, *, busy_timeout_ms: int = 120_000) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     # WAL helps concurrent readers; still single-writer at the app level.
     conn.execute("PRAGMA journal_mode = WAL;")
+    # Allow writers to retry for up to busy_timeout_ms when the DB is locked
+    # by another thread/process. Critical for parallel sync (M37).
+    conn.execute(f"PRAGMA busy_timeout = {int(busy_timeout_ms)};")
     return conn
 
 
