@@ -340,10 +340,11 @@ def run_sync(
         """Run all sections for one exchange sequentially."""
         return [_process_section(t) for t in tasks]
 
-    # All exchanges write to the same docs.db. With WAL mode + 3-phase locking,
-    # concurrent writes queue on the file lock. We scale the lock timeout with
-    # parallelism to prevent timeouts when many exchanges compete for writes.
-    parallel_exchanges = min(len(by_exchange), 12)
+    # Parallelism is limited by memory (each exchange holds HTTP responses +
+    # sitemap parsing in memory) and SQLite write contention. OOM observed at
+    # 12 parallel (65GB VM, 3.6GB RSS) due to OKX's 5M-entry sitemap.
+    # 4 concurrent exchanges balances speed vs memory safety.
+    parallel_exchanges = min(len(by_exchange), 4)
     _log.info("Running %d exchanges in parallel (up to %d slots, %d workers each)",
               len(by_exchange), parallel_exchanges, cfg.concurrency)
 
