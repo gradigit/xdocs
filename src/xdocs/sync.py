@@ -216,6 +216,10 @@ def run_sync(
         ex = task["exchange"]
         sec = task["section"]
         label = f"{ex.exchange_id}/{sec.section_id}"
+        # Scale lock timeout with parallelism — more concurrent writers need
+        # longer waits. Each 3-phase lock hold is ~1-5s, so N writers need
+        # ~N*5s worst case.
+        parallel_lock_timeout = max(float(lock_timeout_s), float(parallel_exchanges) * 10.0)
         try:
             # Inventory phase
             inv = None
@@ -229,7 +233,7 @@ def run_sync(
             if not inv_resumed:
                 inv = create_inventory(
                     docs_dir=docs_dir,
-                    lock_timeout_s=float(lock_timeout_s),
+                    lock_timeout_s=parallel_lock_timeout,
                     exchange_id=ex.exchange_id,
                     section_id=sec.section_id,
                     allowed_domains=ex.allowed_domains,
@@ -276,7 +280,7 @@ def run_sync(
             # Fetch phase
             fetch_res = fetch_inventory(
                 docs_dir=docs_dir,
-                lock_timeout_s=float(lock_timeout_s),
+                lock_timeout_s=parallel_lock_timeout,
                 exchange_id=ex.exchange_id,
                 section_id=sec.section_id,
                 inventory_id=use_inv_id,
@@ -336,10 +340,10 @@ def run_sync(
         """Run all sections for one exchange sequentially."""
         return [_process_section(t) for t in tasks]
 
-    # SQLite write lock limits effective parallelism — all sections write to
-    # the same docs.db. With WAL mode + 3-phase locking in fetch_inventory,
-    # 4 concurrent exchanges works reliably. Higher values cause lock timeouts.
-    parallel_exchanges = min(len(by_exchange), 4)
+    # All exchanges write to the same docs.db. With WAL mode + 3-phase locking,
+    # concurrent writes queue on the file lock. We scale the lock timeout with
+    # parallelism to prevent timeouts when many exchanges compete for writes.
+    parallel_exchanges = min(len(by_exchange), 12)
     _log.info("Running %d exchanges in parallel (up to %d slots, %d workers each)",
               len(by_exchange), parallel_exchanges, cfg.concurrency)
 
