@@ -172,10 +172,19 @@ class _DomainRateLimiter:
             if retry_after_s is not None:
                 next_delay = max(next_delay, retry_after_s)
             self._domain_delay_s[domain] = min(self._max_domain_delay_s, next_delay)
+            log.warning(
+                "rate-limited by %s (429) — backoff %.1fs→%.1fs (event #%d)",
+                domain, current_delay, self._domain_delay_s[domain],
+                self._throttle_events[domain],
+            )
         elif status >= 500:
             self._throttle_events[domain] = int(self._throttle_events.get(domain, 0)) + 1
             next_delay = max(self._base_delay_s, current_delay * 1.5)
             self._domain_delay_s[domain] = min(self._max_domain_delay_s, next_delay)
+            log.warning(
+                "server error from %s (%d) — backoff %.1fs→%.1fs",
+                domain, status, current_delay, self._domain_delay_s[domain],
+            )
         else:
             if current_delay <= self._base_delay_s:
                 self._domain_delay_s[domain] = self._base_delay_s
