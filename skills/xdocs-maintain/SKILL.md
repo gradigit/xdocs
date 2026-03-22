@@ -366,11 +366,11 @@ Current suite: 600+ unit tests, 206+ golden QA queries across 37 exchanges, 17 n
 
 The `sync` command supports three render modes via `--render`:
 
-- **`http`** (default) — `requests` library, fast, works for static HTML
-- **`auto`** — tries `requests` first, falls back to Playwright for thin/failed pages
-- **`playwright`** — headless Chromium for JS-rendered SPAs
+- **`auto`** (default) — tries `requests` first, falls back to Playwright for pages with <50 words or HTTP errors
+- **`http`** — `requests` only, no Playwright fallback (faster but misses JS-rendered SPAs)
+- **`playwright`** — headless Chromium for all pages (slowest, most thorough)
 
-Use `--render auto` for most exchanges. Use `--render playwright` for sites like Bithumb EN and MercadoBitcoin.
+Default is `auto`. Use `--render http` only when you know all target pages are static HTML. Playwright must be installed for `auto` and `playwright` modes (`uv pip install playwright && playwright install chromium`).
 
 ### Post-Sync Validation (Multi-Method)
 

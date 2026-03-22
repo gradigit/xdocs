@@ -433,7 +433,9 @@ WHERE scope_group = ?;
         def _needs_playwright(fr0: FetchResult, wc0: int) -> bool:
             if int(fr0.http_status) >= 400:
                 return True
-            if wc0 <= 0:
+            # Align with quality gate threshold — pages <50 words are "thin"
+            # and likely JS-rendered SPAs that returned only nav chrome.
+            if wc0 < 50:
                 return True
             return False
 
@@ -899,8 +901,18 @@ WHERE id = ?;
 
             # Playwright fallback: serial (not thread-safe).
             if pw_queue:
-                if pw is None:
-                    pw = _get_render_backend(allow_hosts).open()
+                try:
+                    if pw is None:
+                        pw = _get_render_backend(allow_hosts).open()
+                except XDocsError as e:
+                    # Playwright not installed — record all queued pages as errors
+                    # instead of silently dropping them and skipping Phase C.
+                    log.warning("Playwright unavailable (%s) — %d pages cannot be rendered", e.code, len(pw_queue))
+                    for item in pw_queue:
+                        ent_id = int(item["ent"]["id"])
+                        url = item["ent"]["canonical_url"]
+                        _record_error_cex(ent_id, url, e)
+                    pw_queue = []  # Clear queue so the loop below is skipped
                 for item in pw_queue:
                     ent = item["ent"]
                     url = ent["canonical_url"]

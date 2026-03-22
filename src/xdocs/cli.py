@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> None:
     fi_p.add_argument("--max-redirects", type=int, default=5)
     fi_p.add_argument("--retries", type=int, default=2)
     fi_p.add_argument("--ignore-robots", action="store_true")
-    fi_p.add_argument("--render", default="http", choices=["http", "playwright", "auto"])
+    fi_p.add_argument("--render", default="auto", choices=["http", "playwright", "auto"])
     fi_p.add_argument(
         "--resume",
         action="store_true",

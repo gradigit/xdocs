@@ -127,7 +127,7 @@ def run_sync(
     registry_path: Path,
     exchange: str | None = None,
     section: str | None = None,
-    render_mode: str = "http",
+    render_mode: str = "auto",
     ignore_robots: bool = False,
     timeout_s: float = 20.0,
     max_bytes: int = 10_000_000,
@@ -438,6 +438,17 @@ def run_sync(
         post["quality_check"] = quality_check(docs_dir=docs_dir)
     except XDocsError as e:
         post["quality_check_error"] = e.to_json()
+
+    # Changelog extraction — detect new changelog entries from crawled pages.
+    try:
+        from .changelog import extract_changelogs
+        cl_result = extract_changelogs(docs_dir=docs_dir, exchange=cfg.exchange)
+        post["changelog_extraction"] = {
+            "entries_new": cl_result.get("entries_new", 0),
+            "pages_processed": cl_result.get("pages_processed", 0),
+        }
+    except Exception as e:
+        post["changelog_extraction_error"] = str(e)
 
     # Incremental semantic index build — index new/changed pages.
     # Only runs if the [semantic] extra is installed (lancedb available).

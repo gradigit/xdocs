@@ -73,8 +73,8 @@ xdocs --help
 # Initialize a local store (idempotent)
 xdocs init --docs-dir ./cex-docs
 
-# Deterministic sync (inventory -> fetch); use --render auto for JS-heavy docs
-xdocs sync --docs-dir ./cex-docs --render auto
+# Deterministic sync (inventory -> fetch, render default: auto)
+xdocs sync --docs-dir ./cex-docs
 
 # Resume an interrupted sync (reuse existing inventories, fetch only pending/error entries)
 xdocs sync --docs-dir ./cex-docs --resume
@@ -370,9 +370,9 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 
 - `cex-docs/`, `cex-docs-*/`, and `poc-binance-full/` are local data and must never be committed (gitignored).
 - CLI JSON is printed at the end of a command; if you redirect stdout to a file, it may stay empty until completion.
-- Prefer deterministic fetch first; use `--render auto` when a docs site requires JS rendering.
+- Default render mode is `auto` (HTTP first, Playwright fallback for pages <50 words or HTTP errors). Use `--render http` to skip Playwright.
 - **FTS5 required**: SQLite must be built with FTS5 support; the app raises `EFTS5` at init if missing. macOS system Python and Homebrew Python both include FTS5. Some minimal Docker images do not.
-- **Playwright is optional**: install with `uv pip install -e ".[playwright]"`. Without it, `--render playwright` and `--render auto` will fail at runtime.
+- **Playwright required for default sync**: `auto` render mode needs Playwright. Install with `uv pip install -e ".[playwright]"`. Without it, thin/JS-rendered pages are recorded as errors instead of crashing the sync.
 - **Semantic search model**: `jina-embeddings-v5-text-small` (1024 dims, Qwen3-0.6B-Base backbone). Upgraded from v5-text-nano (768 dims, EuroBERT backbone) — +27.3% MRR, +22.3% Hit@5 on 163-query benchmark. MLX path: Jina's own loader (`jinaai/jina-embeddings-v5-text-small-mlx`), not mlx-embeddings. Query-only install: `uv pip install -e ".[semantic-query]"` (Mac). Full install: `uv pip install -e ".[semantic]"` (Mac or PC/CUDA). Primary build: PC (CUDA via sentence-transformers). Fallback build: MacBook (Jina MLX loader). Env overrides: `CEX_EMBEDDING_BACKEND` (auto|jina-mlx|sentence-transformers), `CEX_EMBEDDING_MODEL` (jina-mlx repo ID), `CEX_EMBEDDING_FALLBACK_MODEL` (ST model name), `CEX_JINA_MLX_REVISION` (pin HF revision). First run downloads model from HuggingFace (cached after that). LanceDB index: 334,935 rows, 1024d, 2.3 GB compacted, stored at `cex-docs/lancedb-index/`. Build: ~100 min at batch_size=64 on RTX 4070 Ti SUPER (CUDA). Extreme pages (>50K words) may OOM at batch_size=64 — use incremental batch_size=1 to add them. batch_size=16 is 15x slower — avoid.
 - **LanceDB compaction**: Use `table.optimize(cleanup_older_than=timedelta(days=0))` not the deprecated `compact_files()` + `cleanup_old_versions()`. The CLI `compact-index` command wraps this. Run periodically after large index builds to reduce fragment count and disk usage.
 - **Write lock contention**: all DB writes acquire an exclusive file lock (`cex-docs/db/.write.lock`). `--lock-timeout-s` (default 10s) controls how long a command waits. Concurrent writers will queue; long fetches hold the lock in short bursts (3-phase locking in `inventory_fetch.py`).
