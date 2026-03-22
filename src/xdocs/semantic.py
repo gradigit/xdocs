@@ -447,16 +447,42 @@ WHERE p.word_count > 0 AND p.markdown_path IS NOT NULL
     except ImportError:
         pass
 
+    def _embed_batch(batch: list[dict]) -> None:
+        """Embed a batch and add to table. On OOM, retry one-by-one."""
+        try:
+            vectors = embedder.embed_texts([r["text"] for r in batch])
+            for row, vec in zip(batch, vectors):
+                row["vector"] = vec
+            table.add(batch)
+        except (RuntimeError, Exception) as e:
+            if "out of memory" not in str(e).lower() and "CUDA" not in str(e):
+                raise
+            # OOM — clear cache and retry each item individually.
+            logger.warning("OOM on batch of %d — retrying one-by-one", len(batch))
+            if _has_cuda:
+                torch.cuda.empty_cache()
+            for row in batch:
+                row.pop("vector", None)
+            for row in batch:
+                try:
+                    vecs = embedder.embed_texts([row["text"]])
+                    row["vector"] = vecs[0]
+                    table.add([row])
+                except (RuntimeError, Exception) as e2:
+                    if "out of memory" in str(e2).lower() or "CUDA" in str(e2):
+                        logger.warning("OOM on single chunk (page_id=%s, %d chars) — skipping",
+                                       row.get("page_id"), len(row.get("text", "")))
+                        if _has_cuda:
+                            torch.cuda.empty_cache()
+                    else:
+                        raise
+        finally:
+            for row in batch:
+                row.pop("vector", None)
+
     for i in range(0, len(all_chunks), batch_size):
         batch = all_chunks[i : i + batch_size]
-        vectors = embedder.embed_texts([r["text"] for r in batch])
-        for row, vec in zip(batch, vectors):
-            row["vector"] = vec
-        table.add(batch)
-        # Free vector data after writing to LanceDB to prevent memory accumulation.
-        # Without this, 335K chunks × 1024d = ~10 GB of Python heap for v5-small.
-        for row in batch:
-            row.pop("vector", None)
+        _embed_batch(batch)
         chunks_embedded += len(batch)
 
         # Log progress with throughput every ~500 chunks.
