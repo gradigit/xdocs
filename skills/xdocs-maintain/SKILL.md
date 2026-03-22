@@ -377,14 +377,10 @@ Use `--render auto` for most exchanges. Use `--render playwright` for sites like
 `requests` fails on ~40% of exchanges (SPAs, Cloudflare, WAF). After sync, validate output:
 
 1. **`crawl4ai`** (primary validation) — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot
-2. **`cloudscraper`** (alternative) — when crawl4ai is unavailable or rate-limited
-3. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
-4. **Agent Browser** — login-gated, infinite scroll, complex interaction
+2. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
+3. **Agent Browser** — login-gated, infinite scroll, complex interaction
 
 ```bash
-# Quick test with cloudscraper
-python3 -c "import cloudscraper; s=cloudscraper.create_scraper(); r=s.get('URL'); print(r.status_code, len(r.text))"
-
 # Test with crawl4ai
 python3 -c "
 import asyncio
@@ -470,16 +466,13 @@ xdocs validate-base-urls
 If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift:
 
 1. Try `crawl4ai` (default — handles JS rendering, anti-bot, returns clean markdown)
-2. Try `cloudscraper` if crawl4ai is unavailable (handles Cloudflare challenges)
-3. Try headed browser (`headless=False`) for CAPTCHA or headless detection
-4. Use Agent Browser for login-gated or interactive sites
-5. Check `docs/ops/` for operational guides on handling blocked crawls
+2. Try headed browser (`headless=False`) for CAPTCHA or headless detection
+3. Use Agent Browser for login-gated or interactive sites
 
 ### Crawl Tool Availability
 
 | Tool | Install | Use Case |
 |------|---------|----------|
-| `cloudscraper` | `uv pip install cloudscraper` | Cloudflare bypass |
 | `crawl4ai` | `uv pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown, best all-around |
 | Playwright | `uv pip install playwright && playwright install chromium` | JS rendering |
 | Agent Browser | `.claude/skills/agent-browser/` | Interactive crawling |

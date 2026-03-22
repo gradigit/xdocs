@@ -355,7 +355,7 @@ Dependency: None (parallel with M12).
 
 - [x] 13a. Run 10 random queries across diverse exchanges
 - [x] 13b. For each top result, compare stored markdown against live site
-  (use crawl4ai or cloudscraper, depending on site requirements)
+  (use crawl4ai or crawl4ai, depending on site requirements)
 - [x] 13c. Verify: key API details (endpoints, params, descriptions) match
 - [x] 13d. Flag any pages with >20% content drift for re-crawl
 - [x] 13e. Check 5 recently-added exchanges (Deribit, MEXC, Backpack, CoinEx, Orderly)

@@ -401,7 +401,7 @@ Latest:
 - **OpenAPI $ref resolution** — Recursive resolver for internal JSON Pointer refs (`#/components/schemas/...` and `#/definitions/...`). Re-imported all 25 remote OpenAPI/Swagger specs. 2,213 → 236 unresolved $refs (89% resolved). Endpoint schemas now contain full type definitions, enums, constraints instead of raw $ref pointers. 4,963 total endpoints (+46 from re-import).
 - **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
 - **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).
-- **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → `cloudscraper` → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, cloudscraper 1.2.71, Playwright 1.58.0.
+- **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, Playwright 1.58.0.
 - **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
 - **Kraken endpoint gap closed** — 45 REST endpoints imported via community OpenAPI spec (`Roukii/kraken-go`, OpenAPI 3.0, v1.1.0). 36/45 docs_urls resolved. Crawled pages still thin (Docusaurus client-side rendering), but endpoint DB compensates. MRR +0.5%.
 - **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.

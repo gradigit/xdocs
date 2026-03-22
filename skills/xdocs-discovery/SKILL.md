@@ -26,7 +26,7 @@ Every discoverable source must be found. If a source type exists for the exchang
 
 - Active Python venv with `xdocs` installed
 - Web access for URL probing and search
-- `crawl4ai`, `cloudscraper`, Playwright installed for crawl testing
+- `crawl4ai`, Playwright installed for crawl testing
 - CCXT installed for cross-reference (`uv pip install ccxt`)
 - Read `docs/crawl-targets-bible.md` in full before starting — check if the exchange already has a bible entry or is listed in Section 6 (Missing Exchanges) or Section 11 (Confirmed Non-Existent Sources)
 
@@ -281,14 +281,7 @@ import requests
 r = requests.get('DOCS_URL', timeout=30, headers={'User-Agent': 'Mozilla/5.0 (compatible)'})
 print(f'requests: status={r.status_code}, length={len(r.text)}, words={len(r.text.split())}')"
 
-# Method 2: cloudscraper
-python3 -c "
-import cloudscraper
-s = cloudscraper.create_scraper()
-r = s.get('DOCS_URL')
-print(f'cloudscraper: status={r.status_code}, length={len(r.text)}, words={len(r.text.split())}')"
-
-# Method 3: crawl4ai (primary validation tool)
+# Method 2: crawl4ai (primary validation tool)
 python3 -c "
 import asyncio
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
@@ -311,7 +304,6 @@ Compare results:
 | Method | Status | Content Length | Words | Usable? |
 |--------|--------|---------------|-------|---------|
 | requests | ___ | ___ | ___ | ___ |
-| cloudscraper | ___ | ___ | ___ | ___ |
 | crawl4ai | ___ | ___ | ___ | ___ |
 
 ### Step 6: CCXT Cross-Reference
@@ -547,7 +539,7 @@ Include comments explaining any non-obvious choices (scope_priority, render_mode
 
 - [ ] Platform detected → ___
 - [ ] `requests` test → status: ___, words: ___
-- [ ] `cloudscraper` test → status: ___, words: ___
+- [ ] 
 - [ ] `crawl4ai` test → success: ___, words: ___
 - [ ] Render mode determined → ___
 

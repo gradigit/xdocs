@@ -20,7 +20,7 @@ Keep under 3,000 tokens via aggressive deduplication.
 - [2026-03-06] Postman imports store {{url}}/{{host}} variable prefixes in endpoint paths. _normalize_path must strip all {{...}} patterns, not just {{url}}.
 - [2026-03-06] NodePlaywrightFetcher.__init__ doesn't validate Node.js availability — cascade must call _find_node_pw_module() at selection time.
 - [2026-03-06] revalidated_unchanged check in inventory_fetch.py short-circuits Playwright fallback — empty pages with matching hash won't get re-rendered.
-- [2026-03-06] crawl4ai IS Playwright (hard dependency). cloudscraper can't render JS. No lightweight JS rendering alternative exists.
+- [2026-03-06] crawl4ai IS Playwright (hard dependency). crawl4ai can't render JS. No lightweight JS rendering alternative exists.
 - [2026-03-06] LanceDB compaction: `compact_files()` + deprecated `cleanup_old_versions()` doesn't reduce fragments. Use `table.optimize(cleanup_older_than=timedelta(days=0))` instead — combines compact + prune + index optimize in one call. Reduced 3,568 → 9 fragments, 2.4GB → 908MB.
 - [2026-03-08] _DOMAIN_MAP in semantic.py must be updated when new exchanges are registered. 11 exchanges were invisible to semantic search until domains were added. Always check after registering a new exchange.
 - [2026-03-08] Incremental build with `--exchange` filter: stale detection must be scoped to the filtered exchange's pages only, or it deletes all other exchanges' chunks.

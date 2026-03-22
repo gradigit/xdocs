@@ -36,7 +36,7 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 3. **Specs drift from reality.** OpenAPI, Postman, AsyncAPI, and llms.txt files are maintained on separate release cycles from official API docs pages. They may be ahead (documenting unreleased endpoints) or behind (missing recent additions). **Official API docs pages are the closest thing to ground truth.** Specs are supplementary — import them, but always cross-reference against crawled doc pages.
 
-4. **Reliability-first crawling.** No single crawl method works for all sites. The default should be the most reliable tool, with lighter tools as optimizations for known-safe sites. `requests` fails on ~40% of our exchanges (SPAs, Cloudflare, WAF). `cloudscraper` fails on Gate.io and all JS SPAs. Starting with unreliable tools means re-crawling nearly half the registry — no time saved.
+4. **Reliability-first crawling.** No single crawl method works for all sites. The default should be the most reliable tool, with lighter tools as optimizations for known-safe sites. `requests` fails on ~40% of our exchanges (SPAs, Cloudflare, WAF). `crawl4ai` fails on Gate.io and all JS SPAs. Starting with unreliable tools means re-crawling nearly half the registry — no time saved.
 
    **Pipeline render modes** (what `xdocs sync --render` supports):
    - `http` (default): `requests` library — fast, works for static HTML (~60% of exchanges)
@@ -44,8 +44,8 @@ This document catalogs ALL known crawlable API documentation sources for every e
    - `playwright`: headless Chromium — for JS-rendered SPAs
 
    **Validation/spot-check cascade** (manual tools for verifying crawl output):
-   - **Primary**: `crawl4ai` — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot (1.58MB from Gate.io vs 403 from requests/cloudscraper). Use for spot-checking and validating pipeline output.
-   - **Alternative**: `cloudscraper` — Cloudflare bypass. ~70% success rate.
+   - **Primary**: `crawl4ai` — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot (1.58MB from Gate.io vs 403 from requests). Use for spot-checking and validating pipeline output.
+   - **Alternative**: 
    - **Fallback**: Headed browser (Playwright/crawl4ai with `headless=False`) — CAPTCHA solving, headless detection bypass
    - **Last resort**: Agent Browser — login-gated, infinite scroll, complex navigation
 
@@ -58,7 +58,6 @@ This document catalogs ALL known crawlable API documentation sources for every e
 | Tool | Type | Gate.io (403 site) | BitMart (SPA) | Bitstamp (WAF) | Best For |
 |------|------|-------------------|---------------|----------------|----------|
 | `requests` | HTTP lib | FAIL (403) | 200 but thin HTML | FAIL (WAF) | Static HTML, APIs, GitHub |
-| `cloudscraper` | CF bypass | FAIL (403) | 200, 548KB content | 200, 1.87MB w/ Swagger | Cloudflare-protected sites |
 | Playwright | Browser | OK (JS render) | OK (full SPA) | OK (bypasses WAF) | JS-rendered SPAs |
 | `crawl4ai` | Browser+AI | OK (1.58MB markdown) | OK (full content) | OK | Best all-around for LLM-ready output |
 | Headed browser | Playwright/crawl4ai `headless=False` | OK (visible) | OK (visible) | OK (visible) | CAPTCHA solving, headless detection bypass, debugging |
@@ -71,7 +70,7 @@ This document catalogs ALL known crawlable API documentation sources for every e
 
 **Post-sync validation cascade (manual)**:
 1. Spot-check 5% of pages with `crawl4ai` — compare word count and content against stored markdown
-2. If crawl4ai unavailable → use `cloudscraper` for comparison
+2. If crawl4ai unavailable → use headed Playwright browser
 3. On CAPTCHA / headless detection → try headed browser (`headless=False`)
 4. On complex interaction (login, scroll, multi-step) → use Agent Browser
 5. If discrepancy > 20%, flag exchange for full re-crawl with `--render auto`
@@ -79,7 +78,7 @@ This document catalogs ALL known crawlable API documentation sources for every e
 **Known-static sites (safe for `requests` fast path)**:
 GitHub Markdown (bitbank, grvt, ccxt), Docusaurus with static export (bybit, kraken, bitmex, whitebit), raw spec files (openapi.json/yaml), RSS/Atom feeds
 
-**Must use `crawl4ai` or browser** (requests/cloudscraper produce bad data):
+**Must use `crawl4ai` or browser** (requests produce bad data):
 OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBitcoin
 
 ### 1c. Known Crawl Failure Modes
@@ -88,7 +87,7 @@ OKX, Gate.io, HTX, Crypto.com, BitMart, KuCoin, Bitstamp, Bithumb EN, MercadoBit
 |-------------|-------------------|-----------|-----|
 | Cloudflare 403 | Gate.io | HTTP status 403 | Use crawl4ai or Playwright |
 | Thin HTML (SPA shell) | OKX, BitMart, HTX, Crypto.com | word_count < 100 on known-large pages | Use `--render auto` |
-| WAF blocking | Bitstamp, Gate.io | 403 or CAPTCHA page | Use cloudscraper or crawl4ai |
+| WAF blocking | Bitstamp, Gate.io | 403 or CAPTCHA page | Use crawl4ai |
 | Sitemap incomplete | Binance (404), Kraken (missing REST pages) | Compare sitemap URLs vs link-follow discovery | Run both methods, union results |
 | Scope filtering too aggressive | Coinbase (FIX docs excluded) | Pages exist at domain but outside scope_prefixes | Widen scope_prefixes |
 | Rate limiting after sync | Gate.io | 403 on subsequent requests | Increase delays, use `--concurrency 1` |
@@ -424,7 +423,7 @@ Bybit, OKX, and BitMEX do NOT have official FIX APIs. OKX/BitMEX FIX access is o
 | **Sections** | 1 (v4) |
 | **Pages/Words/Endpoints** | 2 / 315K / 363 |
 | **CCXT endpoints** | 280 |
-| **Crawl note** | Rate-limits aggressively (403). `requests` and `cloudscraper` both fail. Use `crawl4ai` (1.58MB markdown) or Playwright. |
+| **Crawl note** | Rate-limits aggressively (403). `requests` and `crawl4ai` both fail. Use `crawl4ai` (1.58MB markdown) or Playwright. |
 
 ### KuCoin
 
@@ -469,7 +468,7 @@ Bybit, OKX, and BitMEX do NOT have official FIX APIs. OKX/BitMEX FIX access is o
 | **Platform** | Swagger/Redoc |
 | **Pages/Words/Endpoints** | 1 / 37K / 82 |
 | **CCXT endpoints** | 255 (gap inflated — CCXT counts v1 legacy paths) |
-| **OpenAPI** | Inline in page (WAF blocks direct download; cloudscraper returns 1.87MB with Swagger data) |
+| **OpenAPI** | Inline in page (WAF blocks direct download; needs crawl4ai for WAF bypass) |
 | **FIX docs** | bitstamp.net/fix/v2/ (NOT currently crawled) |
 | **WebSocket docs** | bitstamp.net/websocket/v2/ (NOT currently crawled) |
 | **PSD2 docs** | bitstamp.net/api-psd2/ (EU Open Banking, low trading value) |
@@ -1033,7 +1032,6 @@ Use this checklist when adding a new exchange to the registry.
 ```
 ### Multi-Method Verification
 - [ ] Method 1 (requests): status ___, word count ___
-- [ ] Method 2 (cloudscraper): status ___, word count ___
 - [ ] Method 3 (Playwright/crawl4ai): status ___, word count ___
 - [ ] Content comparison: methods agree? ___
 - [ ] Spot-checked 5% of pages with alternate method? ___
@@ -1164,13 +1162,10 @@ After any sync, the maintainer workflow should:
 | **Any unknown/new site** | `crawl4ai` | — |
 | Known-static HTML (GitHub, Docusaurus) | `crawl4ai` (or `requests` fast path) | `requests` (~100x faster) |
 | JS-rendered SPA | `crawl4ai` | Playwright (`--render auto`) |
-| Cloudflare-protected | `crawl4ai` | `cloudscraper` (if crawl4ai unavailable) |
-| WAF-blocked | `crawl4ai` | `cloudscraper` |
 | Heavy anti-bot (403 from all) | `crawl4ai` | Headed browser, then Agent Browser |
 | Headless detection / CAPTCHA | Headed browser (`headless=False`) | Agent Browser (manual solve) |
 | Login-gated / infinite scroll | Agent Browser | Headed browser with manual steps |
 | Bulk re-crawl (8,000+ pages) | `crawl4ai` with concurrency limits | `requests` for static subset, `crawl4ai` for rest |
-| Raw spec files (JSON/YAML) | `requests` | `cloudscraper` |
 | Rate-limited after sync | `crawl4ai` (with delays) | wait + retry |
 
 ### 10e. Installed Crawl Tools
@@ -1178,7 +1173,6 @@ After any sync, the maintainer workflow should:
 | Tool | Version | Install | Capabilities |
 |------|---------|---------|-------------|
 | `requests` | (stdlib) | Built-in | Plain HTTP, fastest, no JS |
-| `cloudscraper` | 1.2.71 | `pip install cloudscraper` | Cloudflare bypass, JS challenge solving |
 | Playwright | 1.58.0 | `pip install playwright && playwright install chromium` | Full browser, JS rendering, stealth mode |
 | `crawl4ai` | 0.8.0 | `pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown extraction, best all-around |
 | Agent Browser | (skill) | `.claude/skills/agent-browser/` | Interactive browser automation for complex cases |
