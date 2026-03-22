@@ -439,6 +439,28 @@ def run_sync(
     except XDocsError as e:
         post["quality_check_error"] = e.to_json()
 
+    # Incremental semantic index build — index new/changed pages.
+    # Only runs if the [semantic] extra is installed (lancedb available).
+    if totals.get("new_pages", 0) > 0 or totals.get("updated_pages", 0) > 0:
+        try:
+            from .semantic import build_index
+            idx_result = build_index(
+                docs_dir=docs_dir,
+                incremental=True,
+                exchange=cfg.exchange,
+            )
+            post["build_index"] = {
+                "chunks_added": idx_result.get("chunks_added", 0),
+                "pages_processed": idx_result.get("pages_processed", 0),
+            }
+            _log.info("Post-sync index build: %d chunks from %d pages",
+                      idx_result.get("chunks_added", 0), idx_result.get("pages_processed", 0))
+        except ImportError:
+            post["build_index"] = {"skipped": "semantic extras not installed"}
+        except Exception as e:
+            post["build_index_error"] = str(e)
+            _log.warning("Post-sync index build failed: %s", e)
+
     return {
         "cmd": "sync",
         "schema_version": "v1",
