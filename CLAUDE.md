@@ -22,6 +22,8 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 | `xdocs-query` | Query/answer (classification → search → cite-only answer) |
 | `xdocs-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
 | `xdocs-qa` | QA gap finder (iterative testing loop) |
+| `xdocs-bugreport` | Structured bug report generation (environment, reproduction, root cause classification) |
+| `xdocs-triage` | Bug report triage and fix (independent reproduction, severity challenge, A/B validated fix) |
 
 When creating, updating, or maintaining skills, edit the canonical file in `skills/<name>/SKILL.md`. The symlinks ensure both Claude Code and Codex CLI discover them automatically. All SKILL.md files must include YAML frontmatter (`name` + `description`) for Codex progressive disclosure.
 
@@ -361,6 +363,8 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `skills/xdocs-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
 - `skills/xdocs-discovery/SKILL.md` Exhaustive crawl target discovery skill (new exchange onboarding)
 - `skills/xdocs-qa/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)
+- `skills/xdocs-bugreport/SKILL.md` Bug report generation skill (structured, objective, shareable)
+- `skills/xdocs-triage/SKILL.md` Bug report triage and fix skill (reproduce, challenge, implement)
 
 ## Gotchas
 

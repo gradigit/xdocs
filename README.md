@@ -85,8 +85,10 @@ uv tool install -e ".[semantic]"
 Make the skill available globally (Claude Code + Codex):
 ```bash
 mkdir -p ~/.claude/skills ~/.agents/skills
-ln -sf "$(pwd)/.claude/skills/xdocs-query" ~/.claude/skills/xdocs-query
-ln -sf "$(pwd)/.agents/skills/xdocs-query" ~/.agents/skills/xdocs-query
+for skill in xdocs-query xdocs-bugreport; do
+  ln -sf "$(pwd)/.claude/skills/$skill" ~/.claude/skills/$skill
+  ln -sf "$(pwd)/.agents/skills/$skill" ~/.agents/skills/$skill
+done
 ```
 
 ### First queries
@@ -261,6 +263,8 @@ git pull && uv tool install -e ".[semantic-query]" --force && ./scripts/bootstra
 - `.claude/skills/xdocs-query/SKILL.md` — query/answer agent skill
 - `.claude/skills/xdocs-discovery/SKILL.md` — exhaustive crawl target discovery skill
 - `.claude/skills/xdocs-qa/SKILL.md` — QA gap finder skill
+- `.claude/skills/xdocs-bugreport/SKILL.md` — structured bug report generation
+- `.claude/skills/xdocs-triage/SKILL.md` — bug report triage and fix (maintainer)
 
 ---
 

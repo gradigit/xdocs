@@ -53,7 +53,13 @@ xdocs --version
 python3 --version
 uname -s -m
 cat cex-docs/.data-tag 2>/dev/null || echo "no data tag"
-xdocs store-report 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); r=d.get('result',d); print(f'Pages: {r.get(\"total_pages\",\"?\")}, Endpoints: {r.get(\"total_endpoints\",\"?\")}, Schema: v{r.get(\"schema_version\",\"?\")}')" 2>/dev/null || echo "store-report failed"
+git rev-parse --short HEAD 2>/dev/null || echo "not a git checkout"
+python3 -c "
+from xdocs.report import store_report
+d = store_report(docs_dir='./cex-docs')
+print(f'Pages: {d[\"pages\"][\"count\"]}, Endpoints: {d[\"endpoints\"][\"total\"]}')
+" 2>/dev/null || echo "store-report failed"
+python3 -c "import sqlite3; print('Schema: v' + str(sqlite3.connect('cex-docs/db/docs.db').execute('PRAGMA user_version').fetchone()[0]))" 2>/dev/null
 ```
 
 ### Step 2: Reproduce the Issue
@@ -98,6 +104,7 @@ Output a file at `bug-reports/BUG-YYYY-MM-DD-<slug>.md` with this format:
 ## Environment
 
 - xdocs version: X.Y.Z
+- Git commit: <short hash or "not a git checkout">
 - Python: X.Y.Z
 - Platform: <os> <arch>
 - Data tag: <tag or "none">

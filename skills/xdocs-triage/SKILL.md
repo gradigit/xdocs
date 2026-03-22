@@ -119,10 +119,14 @@ Reporters often generalize from 1 failure to "all queries are broken." Verify sc
 
 Follow the Change Validation Protocol (CLAUDE.md):
 
-1. **Design new test cases FIRST** — golden QA entries + unit tests for the specific bug.
+1. **Design new test cases FIRST** — see CLAUDE.md "Change Validation Protocol" for test file routing:
+   - Classification changes → `tests/test_classify.py`
+   - Answer pipeline changes → `tests/test_answer_enhanced.py`
+   - FTS/scoring changes → `tests/test_fts_util.py`
+   - Add both positive (should match) and negative (should not match) golden QA entries.
 2. **Capture baseline** — `python3 tests/eval_answer_pipeline.py --qa-file tests/golden_qa.jsonl --save reports/<bug-id>-baseline.json`
 3. **Write the fix plan** — which files, what changes, estimated risk.
-4. If the fix is non-trivial, invoke `/forge` to orchestrate research → plan → build → review.
+4. For non-trivial fixes, use the forge-orchestrator workflow: create a milestone entry in FORGE-STATUS.md, follow the research → plan → build → review phasing from CLAUDE.md.
 
 ### Phase 5: Implement & Validate
 
@@ -136,7 +140,7 @@ Follow the forge-orchestrator workflow:
 
 ### Phase 6: Close the Report
 
-Write a triage summary appended to the original report or as a separate file:
+Write a triage summary. If the report is a file in `bug-reports/`, append the Triage Result section to it. Otherwise, write `bug-reports/TRIAGE-YYYY-MM-DD-<slug>.md`:
 
 ```markdown
 ## Triage Result

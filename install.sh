@@ -79,9 +79,11 @@ fi
 # --- Skill symlinks ---
 info "Setting up agent skills..."
 mkdir -p "$HOME/.claude/skills" "$HOME/.agents/skills"
-ln -sf "$INSTALL_DIR/.claude/skills/xdocs-query" "$HOME/.claude/skills/xdocs-query"
-ln -sf "$INSTALL_DIR/.agents/skills/xdocs-query" "$HOME/.agents/skills/xdocs-query"
-ok "Skills available globally (Claude Code + Codex)"
+for skill in xdocs-query xdocs-bugreport; do
+  ln -sf "$INSTALL_DIR/.claude/skills/$skill" "$HOME/.claude/skills/$skill"
+  ln -sf "$INSTALL_DIR/.agents/skills/$skill" "$HOME/.agents/skills/$skill"
+done
+ok "Skills available globally: xdocs-query, xdocs-bugreport (Claude Code + Codex)"
 
 # --- Done ---
 echo ""
