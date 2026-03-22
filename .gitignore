@@ -18,3 +18,6 @@ cex-docs-*/
 # POC output data (large, regenerable)
 poc-binance-full/
 poc-*.jpeg
+# Bug reports are local artifacts, not committed
+bug-reports/*.md
+!bug-reports/README.md
