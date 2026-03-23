@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 import requests
 
 from .errors import XDocsError
-from .httpfetch import FetchResult, fetch
+from .httpfetch import FetchResult, fetch, create_session
 from .markdown import html_to_markdown, normalize_markdown
 from .playwrightfetch import PlaywrightFetcher
 from .registry import load_registry
@@ -81,7 +81,7 @@ def validate_registry(
         raise XDocsError(code="EBADARG", message="Invalid render_mode.", details={"render_mode": render_mode})
 
     reg = load_registry(registry_path)
-    session = requests.Session()
+    session = create_session()
     pw: PlaywrightFetcher | None = None
 
     results: list[dict[str, Any]] = []

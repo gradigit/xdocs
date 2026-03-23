@@ -11,6 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .db import open_db
+from .httpfetch import create_session
 from .inventory import _walk_sitemaps, _common_sitemap_candidates, _robot_sitemaps, _in_scope, scope_prefixes_from_seeds
 from .nav_extract import extract_nav_urls
 from .registry import load_registry
@@ -322,7 +323,7 @@ def discover_crawl_targets(
     scope_prefixes = scope_prefixes_from_seeds(seed_urls)
     doc_sources = [{"kind": ds.kind, "url": ds.url} for ds in section.doc_sources]
 
-    session = requests.Session()
+    session = create_session()
 
     # Track per-method results.
     url_sets: dict[str, set[str]] = {}

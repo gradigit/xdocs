@@ -8,7 +8,7 @@ from typing import Any
 import requests
 
 from .errors import XDocsError
-from .httpfetch import fetch
+from .httpfetch import fetch, create_session
 from .registry import load_registry
 from .sitemaps import SitemapEntry, parse_sitemap_bytes
 
@@ -181,7 +181,7 @@ def validate_sitemaps(
     if not sitemap_urls:
         warnings.append(f"No sitemap doc_sources configured for {exchange_id}/{section_id}.")
 
-    session = requests.Session()
+    session = create_session()
     health_results: list[SitemapHealth] = []
     for sm_url in sitemap_urls:
         h = _check_sitemap(session, url=sm_url, timeout_s=timeout_s)

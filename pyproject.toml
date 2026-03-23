@@ -13,6 +13,7 @@ authors = [{ name = "Internal" }]
 dependencies = [
   "PyYAML>=6.0.1",
   "requests>=2.32",
+  "curl-cffi>=0.14",
   "beautifulsoup4>=4.12.3",
   "html2text>=2024.2.26",
   "jsonschema>=4.23.0",

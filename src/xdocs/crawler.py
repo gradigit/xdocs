@@ -17,7 +17,7 @@ from .db import open_db
 from .errors import XDocsError
 from .fs import atomic_write_bytes, atomic_write_text
 from .hashing import sha256_hex_bytes, sha256_hex_text
-from .httpfetch import FetchResult, fetch
+from .httpfetch import FetchResult, fetch, create_session
 from .lock import acquire_write_lock
 from .markdown import extractor_info_v1, html_to_markdown, normalize_markdown
 from .playwrightfetch import PlaywrightFetcher
@@ -154,7 +154,7 @@ def crawl_store(
             crawl_run_id = int(cur.lastrowid)
             conn.commit()
 
-            session = requests.Session()
+            session = create_session()
             allow_hosts = {d.lower() for d in allowed_domains}
             pw: PlaywrightFetcher | None = None
 

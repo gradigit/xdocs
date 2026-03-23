@@ -21,7 +21,7 @@ import requests
 from .db import open_db
 from .errors import XDocsError
 from .extraction_verify import verify_extraction
-from .httpfetch import FetchResult, fetch
+from .httpfetch import FetchResult, fetch, create_session
 from .lock import acquire_write_lock
 from .markdown import extractor_info_v1
 from .page_store import extract_page_markdown, store_page
@@ -375,7 +375,7 @@ ORDER BY canonical_url ASC;
         if cfg.limit is not None:
             entries = entries[: int(cfg.limit)]
 
-        session = requests.Session()
+        session = create_session()
         robots_cache: dict[str, Any] = {}
         robots_lock = threading.Lock()
 
@@ -841,7 +841,7 @@ WHERE id = ?;
                 url = str(ent["canonical_url"])
                 domain = _host(url)
                 # Each thread gets its own session for thread safety.
-                thread_session = requests.Session()
+                thread_session = create_session()
                 try:
                     with rate_limiter.fetch_turn(domain):
                         fr = fetch(

@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 from .db import open_db
 from .errors import XDocsError
 from .hashing import sha256_hex_text
-from .httpfetch import fetch
+from .httpfetch import fetch, create_session
 from .lock import acquire_write_lock
 from .playwrightfetch import PlaywrightFetcher
 from .robots import fetch_robots_policy
@@ -352,7 +352,7 @@ def create_inventory(
     """
     db_path = require_store_db(docs_dir)
     lock_path = Path(docs_dir) / "db" / ".write.lock"
-    session = requests.Session()
+    session = create_session()
 
     allow = {d.lower() for d in (allowed_domains or []) if d}
     seeds = [s for s in (seed_urls or []) if s]

@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 import requests
 
 from .errors import XDocsError
+from .httpfetch import create_session
 from .registry import load_registry
 from .timeutil import now_iso_utc
 
@@ -43,7 +44,7 @@ def validate_base_urls(
     - We do NOT call authenticated/private endpoints.
     """
     reg = load_registry(registry_path)
-    session = requests.Session()
+    session = create_session()
     checked_at = now_iso_utc()
 
     results: list[dict[str, Any]] = []

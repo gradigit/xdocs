@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 import time
 from dataclasses import dataclass
@@ -11,6 +12,30 @@ import requests
 from .errors import XDocsError
 from .robots import USER_AGENT
 from .urlutil import url_host as _host
+
+_log = logging.getLogger(__name__)
+
+# Try curl-cffi first — TLS fingerprint impersonation bypasses WAFs
+# (Cloudflare, Akamai) that block standard requests/urllib3 fingerprints.
+_USE_CURL_CFFI = False
+try:
+    from curl_cffi import requests as _cffi_requests  # type: ignore[import-untyped]
+    _USE_CURL_CFFI = True
+    _log.debug("Using curl-cffi for HTTP requests (TLS fingerprint impersonation)")
+except ImportError:
+    _log.debug("curl-cffi not available, using standard requests")
+
+
+def create_session() -> requests.Session:
+    """Create an HTTP session — curl-cffi with TLS impersonation if available,
+    standard requests otherwise.
+
+    curl-cffi impersonates Chrome's TLS fingerprint, bypassing WAFs on
+    Gate.io, MEXC, Bitget, and other Cloudflare/Akamai-protected sites.
+    """
+    if _USE_CURL_CFFI:
+        return _cffi_requests.Session(impersonate="chrome")  # type: ignore[return-value]
+    return requests.Session()
 
 
 # Some doc sites block unknown/bot UA strings, while others block browser-like UAs.

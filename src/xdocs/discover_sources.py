@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .errors import XDocsError
-from .httpfetch import fetch
+from .httpfetch import fetch, create_session
 from .urlutil import url_host as _host
 
 
@@ -159,7 +159,7 @@ def discover_sources(
         retries=int(retries),
     )
 
-    session = requests.Session()
+    session = create_session()
     candidates: dict[str, dict[str, Any]] = {}
 
     # Robots.txt sitemap hints.

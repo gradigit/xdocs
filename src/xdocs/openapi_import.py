@@ -11,7 +11,7 @@ import yaml
 
 from .endpoints import compute_endpoint_id, save_endpoints_bulk
 from .errors import XDocsError
-from .httpfetch import fetch
+from .httpfetch import fetch, create_session
 from .ingest_page import ingest_page
 from .markdown import normalize_markdown
 
@@ -198,7 +198,7 @@ def import_openapi(
         continue_on_error=bool(continue_on_error),
     )
 
-    session = requests.Session()
+    session = create_session()
     fr = fetch(
         session,
         url=url,
