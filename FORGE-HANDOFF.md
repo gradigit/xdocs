@@ -20,7 +20,7 @@
 
 ## Key Context
 - Store: 17,422 pages, 5,034 endpoints, 672 tests, MRR 0.6368
-- dYdX llms.txt DOES NOT EXIST (docs.dydx.trade returns SPA HTML shell)
+- dYdX llms-full.txt EXISTS at docs.dydx.xyz (80,860 words) — ingested. Earlier wrong conclusion checked wrong domains (docs.dydx.trade/docs.dydx.exchange instead of docs.dydx.xyz)
 - MercadoBitcoin www.mercadobitcoin.com.br/api is MARKETING page, not API docs
 - Semantic index needs rebuild before publish (new CCXT/BingX/Bluefin pages)
 
