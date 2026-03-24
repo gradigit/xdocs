@@ -8,6 +8,7 @@ from pathlib import Path
 from xdocs.coverage import endpoint_coverage
 from xdocs.endpoints import get_endpoint, search_endpoints
 from xdocs.openapi_import import (
+    _parse_openapi,
     _resolve_ref,
     _resolve_refs,
     import_openapi,
@@ -578,6 +579,36 @@ class TestImportOpenApiWithRefs(unittest.TestCase):
             self.assertIn("price", body_schema["properties"])
             self.assertIn("quantity", body_schema["properties"])
             self.assertEqual(body_schema["required"], ["price", "quantity"])
+
+
+class TestParseOpenapi(unittest.TestCase):
+    """Unit tests for _parse_openapi."""
+
+    def test_yaml_with_tabs(self) -> None:
+        """YAML containing tab characters should parse correctly."""
+        yaml_text = (
+            "openapi: '3.0.3'\n"
+            "info:\n"
+            "  title: Test\n"
+            "  version: '1.0'\n"
+            "paths:\n"
+            "  /test:\n"
+            "    get:\n"
+            "      summary: Test endpoint\n"
+            "      parameters:\n"
+            "        - name: foo\n"
+            "          description: \tA tab-containing description\n"
+            "          in: query\n"
+        )
+        result = _parse_openapi(yaml_text)
+        self.assertEqual(result["openapi"], "3.0.3")
+        param = result["paths"]["/test"]["get"]["parameters"][0]
+        self.assertIn("tab-containing", param["description"])
+
+    def test_json_spec(self) -> None:
+        """JSON specs parse correctly."""
+        result = _parse_openapi('{"openapi": "3.0.0", "info": {"title": "T", "version": "1"}, "paths": {}}')
+        self.assertEqual(result["openapi"], "3.0.0")
 
 
 if __name__ == "__main__":

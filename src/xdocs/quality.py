@@ -17,6 +17,76 @@ _AUTH_GATE_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+# Indicators that a page contains only navigation chrome, not real documentation content.
+_NAV_CHROME_PATTERNS = re.compile(
+    r"skip\s+to\s+(main\s+)?content|"
+    r"toggle\s+(sidebar|navigation|menu)|"
+    r"search\s+docs|"
+    r"language\s+switcher|"
+    r"select\s+language",
+    re.IGNORECASE,
+)
+
+# SPA shell indicators: empty content wrappers left by JS frameworks.
+_SPA_SHELL_PATTERNS = re.compile(
+    r'<div\s+id=["\'](?:app|root|__next|__nuxt|gatsby-focus-wrapper)["\']>\s*</div>|'
+    r'<noscript>.*?enable\s+javascript.*?</noscript>|'
+    r'window\.__(?:NEXT_DATA|NUXT|INITIAL_STATE)__\s*=',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def classify_source_type(url: str) -> str:
+    """Classify a page URL into a source type for provenance tracking.
+
+    Returns one of: official_docs, spec, github_repo, llms_txt, ccxt_ref, community, ingest.
+    """
+    lower = url.lower()
+    if "openapi" in lower or "swagger" in lower or (url.endswith((".yaml", ".json")) and any(k in lower for k in ("spec", "api", "rest"))):
+        return "spec"
+    if "github.com/" in url or "raw.githubusercontent.com/" in url:
+        return "github_repo"
+    if "llms.txt" in url or "llms-full.txt" in url:
+        return "llms_txt"
+    if "docs.ccxt.com/" in url:
+        return "ccxt_ref"
+    if "readme.io/reference/" in url:
+        return "official_docs"
+    return "official_docs"
+
+
+def detect_content_flags(
+    *, markdown: str, html: str | None = None, word_count: int = 0
+) -> list[str]:
+    """Detect content quality flags for a page.
+
+    Returns a list of flag strings (empty list = clean page).
+    Flags: nav_chrome, spa_shell, thin, empty.
+    """
+    flags: list[str] = []
+
+    if word_count == 0:
+        flags.append("empty")
+    elif word_count < 50:
+        flags.append("thin")
+
+    if markdown:
+        lines = markdown.split("\n")
+        # Nav chrome: more short link-like lines than prose lines
+        nav_lines = sum(1 for l in lines if len(l.strip()) < 50 and l.strip().startswith(("*", "-", "[")))
+        prose_lines = sum(1 for l in lines if len(l.strip()) > 60)
+        if nav_lines > 5 and nav_lines > prose_lines * 2 and word_count < 200:
+            flags.append("nav_chrome")
+        if _NAV_CHROME_PATTERNS.search(markdown) and word_count < 100:
+            if "nav_chrome" not in flags:
+                flags.append("nav_chrome")
+
+    if html:
+        if _SPA_SHELL_PATTERNS.search(html) and word_count < 50:
+            flags.append("spa_shell")
+
+    return flags
+
 
 def quality_check(*, docs_dir: str) -> dict[str, Any]:
     """Check stored pages for content quality issues.

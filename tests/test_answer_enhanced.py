@@ -305,7 +305,7 @@ class TestSchemaVersion6Migration(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "test.db"
             result = init_db(db_path, REPO_ROOT / "schema" / "schema.sql")
-            self.assertEqual(result.schema_user_version, 6)
+            self.assertEqual(result.schema_user_version, 7)
 
     def test_v5_migrates_to_v6(self) -> None:
         import sqlite3

@@ -12,7 +12,7 @@ from .errors import XDocsError
 logger = logging.getLogger(__name__)
 
 
-SCHEMA_USER_VERSION = 6
+SCHEMA_USER_VERSION = 7
 
 
 def _migrate_4_to_5(conn: sqlite3.Connection) -> None:
@@ -48,6 +48,15 @@ CREATE VIRTUAL TABLE endpoints_fts USING fts5(
 """)
 
     _configure_fts_rank_weights(conn)
+
+
+def _migrate_6_to_7(conn: sqlite3.Connection) -> None:
+    """Add source_type and content_flags columns to pages (idempotent)."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(pages);").fetchall()}
+    if "source_type" not in cols:
+        conn.execute("ALTER TABLE pages ADD COLUMN source_type TEXT;")
+    if "content_flags" not in cols:
+        conn.execute("ALTER TABLE pages ADD COLUMN content_flags TEXT;")
 
 
 def _migrate_5_to_6(conn: sqlite3.Connection) -> None:
@@ -133,6 +142,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS changelog_entries_fts
     ],
     (4, 5): [_migrate_4_to_5],
     (5, 6): [_migrate_5_to_6],
+    (6, 7): [_migrate_6_to_7],
 }
 
 

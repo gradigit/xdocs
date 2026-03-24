@@ -97,7 +97,9 @@ def _parse_openapi(text: str) -> dict[str, Any]:
     if t.startswith("{"):
         obj = json.loads(text)
     else:
-        obj = yaml.safe_load(text)
+        # Some specs contain literal tab characters which are invalid in YAML.
+        # Replace with spaces before parsing.
+        obj = yaml.safe_load(text.replace("\t", "    "))
     if not isinstance(obj, dict):
         raise XDocsError(code="EBADOPENAPI", message="OpenAPI spec must parse to an object.")
     return obj

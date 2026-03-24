@@ -332,7 +332,7 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `src/xdocs/classify.py` Deterministic input classification (error_message, endpoint_path, request_payload, code_snippet, question)
 - `src/xdocs/answer.py` Cite-only answer assembly with endpoint integration + semantic fallback (generalized to all 46 exchanges; Binance has richer heuristics)
 - `data/error_code_patterns.yaml` Exchange-specific error code formats and common codes (used by classify + xdocs-query skill)
-- `src/xdocs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync)
+- `src/xdocs/quality.py` Content quality gate (empty/thin/tiny_html detection, integrated into post-sync), source validation (`classify_source_type`, `detect_content_flags`)
 - `src/xdocs/semantic.py` LanceDB semantic search (build_index, semantic_search, fts5_search) — optional `[semantic]` dependency
 - `src/xdocs/fsck.py` Store consistency checker (DB/file mismatches, orphan detection)
 - `src/xdocs/url_sanitize.py` URL sanitization filter (template artifacts, CDN paths, bad schemes)
@@ -395,55 +395,36 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,941 pages, 16.93M words, 4,963 structured endpoints**. Store is at `cex-docs/`. Pipeline: **MRR=0.6434, PFX=77.78%, 621 tests**.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,422 pages, 18.05M words, 5,034 structured endpoints**. Store is at `cex-docs/`. Pipeline: **MRR=0.6368, PFX=78.31%, 672 tests**. Schema: v7.
 
 Latest:
 
-- **M35 classification improvements (2026-03-20)** — Bare error codes propagate exchange_hint from error pattern (e.g., `-1002` → Binance). HTTP status text patterns added (`400 Bad Request`, `429 Too Many Requests`). Bybit/KuCoin/Bitget error code patterns. `crypto_com` underscore alias. MRR +0.63%, error_msg MRR +3.6%. 621 tests.
-- **M34 nav chrome detection (2026-03-20)** — Skip-link phrases ("Skip to main content") as definitive nav markers. Fallback excerpt skips past page-start nav to first heading. Language switcher line detection. 5 new QA-derived tests.
-- **M32 FAQ URL demotion (2026-03-20)** — FAQ pages get -40 score penalty in docs_url resolver. Re-resolved docs_urls for 7 exchanges. endpoint_path MRR +7.1%.
-- **M31 CC fusion A/B (2026-03-20)** — Convex Combination fusion tested against RRF. CC loses on question MRR (-1.7%). RRF retained as default. CC available via `CEX_FUSION_MODE=cc`.
-- **M29 batch bug fixes (2026-03-19)** — 6 fixes accepted, 1 reverted. BUG-1 (Deribit spec URL bypass), BUG-13 (section hint routing), BUG-14 (code detection), BUG-19 (multi-exchange comparison), OPT-2 (code URL extraction), OPT-12 (synonym expansion). BUG-8 (blend weights) reverted after A/B showed -3.4% endpoint_path MRR. Pipeline: PFX +1.06pp, error_msg MRR +3.7%, latency -10.4%. 574 tests.
-- **OpenAPI $ref resolution** — Recursive resolver for internal JSON Pointer refs (`#/components/schemas/...` and `#/definitions/...`). Re-imported all 25 remote OpenAPI/Swagger specs. 2,213 → 236 unresolved $refs (89% resolved). Endpoint schemas now contain full type definitions, enums, constraints instead of raw $ref pointers. 4,963 total endpoints (+46 from re-import).
-- **Crawl targets bible v2** (`docs/crawl-targets-bible.md`, 1,175 lines) — exhaustive reference with crawl methodology, source trust framework, and 8 missing exchange candidates.
-- **CCXT cross-reference fixed** — dict-of-dicts bug, per-section base URLs, dydx+hyperliquid mapping, crypto_com alias, Postman `{{variable}}` stripping, suffix-based version matching. 15 exchanges went from 0→3,945 CCXT endpoints. Match rate: 32.9% (1,698/5,160).
-- **Multi-method crawl cascade** — Pipeline: `--render auto` (requests + Playwright fallback). Validation: `crawl4ai` (primary, ~95% sites) → headed browser → Agent Browser. Installed: crawl4ai 0.8.0, Playwright 1.58.0.
-- **WhiteBIT spec discovery** — 7 OpenAPI + 19 AsyncAPI specs found via `docs.whitebit.com/llms.txt` (currently 0 endpoints).
-- **Kraken endpoint gap closed** — 45 REST endpoints imported via community OpenAPI spec (`Roukii/kraken-go`, OpenAPI 3.0, v1.1.0). 36/45 docs_urls resolved. Crawled pages still thin (Docusaurus client-side rendering), but endpoint DB compensates. MRR +0.5%.
-- **Coinbase scope gap** — FIX docs for 4 products outside `scope_prefixes`.
-- **llms.txt mapped** — 13 of 46 exchanges have it (ReadMe.io / GitBook auto-generate).
-- **11 new exchanges registered** — MEXC (21p, 114ep), BingX (1p), Deribit (530p, 173ep), Backpack (1p, 22ep), CoinEx (489p), WOO X (1p), Phemex (1p), Gemini (135p), Orderly (527p, 203ep), Bluefin (62p), Nado (192p). Pacifica deferred (insufficient docs).
-- **4 new OpenAPI spec imports** — Deribit (173 ops), Orderly (203 ops), Backpack (22 ops), Kraken (45 ops, community spec).
-- **Crawl validation pipeline** (10 phases: sanitization, extraction verification, sitemap health, nav extraction, multi-method URL discovery, live validation, coverage audit, gap backfill, link reachability checks).
-- **API Assistant v2** — input classification (`classify.py`), endpoint path lookup (`lookup.py`), error code search, and enhanced answer assembly with endpoint integration + semantic fallback.
-- **Verification fixes** — Semantic FTS cold-start (14.1s → 1.0s via deferred embedder loading), render cascade validation (`_find_node_pw_module()` at selection time), LanceDB compaction (3,568 → 9 fragments, 2.4GB → 908MB via `table.optimize()`).
-- **Query pipeline overhaul (M2)** — 18 quality issues fixed across 4 phases: shared `fts_util.py` (FTS5 sanitization, hyphen/colon quoting, AND/OR query logic), values-only `search_text` (no JSON key pollution), porter stemming + BM25 column weights on FTS5 tables (schema v4→v5), classification augmentation in answer pipeline, pages-first error code search with URL boost, directory prefix matching, FlashRank reranker (ms-marco-MiniLM-L-12-v2, 302ms/20 docs on CPU), BM25 score normalization, excerpt boundary snapping, word-boundary exchange detection.
-- **Score fusion & routing (M5)** — RRF k=60 fusion (replaces interleaved merge), query_type="vector" to avoid double-RRF with LanceDB, strong-signal BM25 shortcut, position-aware reranker blending (max-normalized RRF + sigmoid reranker, 75/25→60/40→40/60), direct routing for high-confidence endpoint_path/error_message (>= 0.7), Binance section keyword detection, multi-section routing, LanceDB SQL injection prevention, spec URL suppression, schema v5→v6 (changelog FTS porter stemming). 415 tests.
-- **Production benchmark suite (M6)** — 180-query golden QA (88 question, 28 endpoint_path, 30 error_message, 14 code_snippet, 15 request_payload, 5 cross-section), graded relevance (TREC 0-3), 17 negative test cases, CI-fast canary tests, nDCG@5/MRR/per-path eval, pre/post comparison with regression alerts.
-- **Model benchmarks (M9-M10)** — Reranker: Jina v3 winner (MRR=0.556, +15.6% over MiniLM, p=0.0014). Auto cascade: jina-v3 → cross-encoder → flashrank (Linux), jina-v3-mlx first (macOS). Embedding: v5-small +12.5% Hit@5 over v5-nano. Benchmark harnesses: `scripts/benchmark_embeddings.py`, `scripts/benchmark_rerankers.py`, `scripts/benchmark_mlx.py`. Bootstrap BCa CI + paired permutation tests.
-- **Pre-rebuild confidence (M11)** — 4 bugs fixed (embeddings defaults, _DOMAIN_MAP, incremental build scope, vector memory), benchmark metrics corrected (negative dilution), golden QA URLs fixed (90% match rate), schema v6 migrated.
-- **Classification routing (M12)** — request_payload routing (0%→73% ok, 40% URL hit), code_snippet routing (50%→100% ok, 29% URL hit), exchange detection from payload parameter signatures and ccxt code patterns, multi-exchange disambiguation (CCXT reference exchange auto-dropped). Pipeline eval: MRR 0.543→0.580 (+6.8%), OK rate 82.78%→92.78% (+10pp), domain hit 86.50%→96.93% (+10.4pp), nDCG@5 1.218→1.358 (+11.5%).
-- **Query quality refinement (M15)** — Domain synonym expansion (30+ terms, ws→websocket, auth→authentication, ohlc→candlestick etc.), FTS5 AND-first with OR fallback, Binance section routing pass-through to generic search, multi-exchange section keywords (8 exchanges), docs_url resolver overhaul (changelog filtering, path-in-URL scoring, language deprioritization, 4,358 endpoints resolved), undocumented gate for nonexistent endpoint_path/error_message queries (segment-level DB validation), position-aware blend wired into semantic.py. Pipeline eval: MRR 0.599 (+3.3% from M12), nDCG@5 1.329, negative FP 29.41% (was 41.18%). 428 tests.
-- **Excerpt quality + A/B benchmarks (M16-M17)** — Nav region detection (`_is_nav_region()`, skips ToC/sidebar on OKX/Gate.io/HTX), page-type boost (`_apply_page_type_boost()`, promotes overview/intro pages for broad queries, +0.7% PFX), section boost A/B'd and disabled (net negative), URL deduplication across overlapping section prefixes. Incremental benchmark methodology: 6 configs tested (FlashRank/Jina v3 × section boost/page-type boost). Jina v3 confirmed as default reranker (41% faster, +20% request_payload MRR vs FlashRank). Golden QA expanded 180→200 queries across 37 exchanges. Pipeline eval: MRR=0.618, PFX=73.2%, URL=62.8%, nDCG@5=1.319. 491 tests (489 unit + 2 canary).
-- **Runtime repo sync workflow (M18)** — `scripts/sync_runtime_repo.py`: automated smoke test (7-check shell template), diff check (`_compare_manifests` with SHA256 + size fallback), `--push`/`--commit`/`--tag` flags, WAL checkpoint before copy, CalVer tagging (`data-YYYY.MM.DD[.N]`). 3 review bugs fixed (manifest comparison without `--hash-tree`, CalVer `.1` skip, empty query guard in `pages.py`).
-- **Binance coverage investigation (M19)** — Proved NOT a regression. 5 root causes: peg params not in upstream spec, Postman import didn't extract params, FTS5 crash on hyphenated terms, semantic-search text field missing. Fixed: `sanitize_fts_query` in `search_pages`, `_extract_request_schema` in `postman_import.py` (4 body modes). 10 new tests.
-- **Answer pipeline bug fixes (M20)** — 4 bugs fixed: (1) `_search_pages` called with `exchange=` not `url_prefix=` in augmentation (silent TypeError), (2) `query_type_hint` hardcoded to "question" (RRF weights dead code), (3) BM25 shortcut included "question" type (questions now use vector), (4) `position_aware_blend` was no-op in semantic.py (key mismatch "rrf_score" vs "score"). RRF weights tuned for request_payload. Pipeline eval: MRR=0.620, code_snippet MRR 0.224→0.332 (+48%). 527 tests.
-- **A/B testing + weight retuning (M21)** — Post-hoc A/B test isolated each M20 change: wrote `scripts/ab_test_m20.py` (6 eval runs, file-level reverts). Found bug2 (query_type_hint) was net negative (-0.66% MRR) because endpoint_path RRF weights [1.5,0.5] were untested. Fixed: endpoint_path [0.7,1.3] (+5.2% MRR), code_snippet removed from BM25 shortcut (+3.5% MRR). Deep research: 3 parallel agents (web research, spot checks 6/8 match, codebase analysis 12 findings). Pipeline eval: MRR=0.6308, nDCG@5=1.347, URL=64%, PFX=74%. 529 tests.
-- **Clinical query optimization (M22)** — 7 optimizations A/B tested, 3 accepted, 2 rejected, 2 neutral-kept. Accepted: (1) broadened `_BROAD_QUESTION_PATTERNS` (6 new patterns: how many, endpoints, best practice, sandbox, API docs, trailing API), (2) `CODE_STOPWORDS` frozenset (40 programming tokens stripped from code_snippet FTS queries, +18.1% code MRR), (3) `_PAYLOAD_ACTION_MAP` operation inference (14 param→action patterns for request_payload, +14.1% payload PFX). Rejected via A/B: param names in endpoint FTS (-12.6% payload MRR), stripping AND from vector queries (-3.5% question MRR). Per-path regression detection added to `eval_answer_pipeline.py`. Pipeline eval: MRR=0.644, nDCG@5=1.343, URL=65%, PFX=78%. 547 tests.
+- **M39 gap fixes + source validation (2026-03-24)** — Gemini 71 endpoints (rest.yaml), BingX 47 AI skill pages, CCXT 110 raw markdown files (665K words), Bluefin 40 reference pages, Bitstamp WebSocket docs, Bitget 7/8 thin pages fixed, Kraken thin 30→11, Paradex 404 cleaned. Schema v7 adds `source_type` and `content_flags` columns. `_parse_openapi` handles YAML tabs. `classify_source_type()` and `detect_content_flags()` in quality.py.
+- **M36-M38 pipeline health (2026-03-22)** — curl-cffi as default HTTP client (TLS fingerprint bypass), parallel sync (4 concurrent), changelog intelligence (18 exchanges, 1,255 entries), stale lock cleanup, review queue auto-resolve.
+- **M29-M35 query optimization (2026-03-19–20)** — Batch bug fixes, FAQ URL demotion, CC fusion A/B (rejected), nav chrome detection, classification improvements. MRR 0.635→0.644.
 
-Research completed (docs/research/ and architect/research/):
+Research decisions (archived in docs/research/): LanceDB validated, LlamaIndex rejected, Jina v3 reranker (MRR=0.556), jina-v5-text-small embeddings (+12.5% Hit@5), RRF k=60 fusion, 206-query golden QA with TREC graded relevance.
 
-- LanceDB: Validated via POC — clear value as supplementary semantic index alongside SQLite FTS5.
-- LlamaIndex: Not recommended — LLM-based retrieval conflicts with deterministic cite-only design.
-- CEX OpenAPI specs: Mapped all 16 original exchanges; all viable imports completed.
-- CCXT as cross-reference: Built `ccxt_xref.py` — 33 exchanges mapped (korbit/orderly/bluefin/nado have no CCXT class, mercadobitcoin remaps to `mercado`, dydx/backpack removed in ccxt 4.x).
-- DEX expansion: 4 Tier 1 perp DEXes added (Aster, ApeX, GRVT, Paradex). edgeX deferred (stub docs only).
-- Reranker survey: Jina Reranker v3 winner (MRR=0.556, +15.6% over CrossEncoder MiniLM, p=0.0014 on 163 queries). Auto cascade: jina-v3 → cross-encoder → flashrank (Linux), jina-v3-mlx first (macOS). CEX_RERANKER_BACKEND env var selects backend.
-- Embedding models: jina-embeddings-v5-text-small (1024d) confirmed +12.5% Hit@5 over v5-text-nano (768d). Index rebuild required for dimension change. ColBERT deferred (17.5 GB storage, not justified).
-- Score fusion: RRF k=60 industry standard. Position-aware blending from qmd. Strong-signal shortcut for keyword matches. Score-aware linear fusion (TopK benchmark) beats RRF by +4.58% nDCG@10 on BEIR — future migration candidate.
-- Benchmark design: 200-query target, TREC graded relevance, ranx for nDCG, two-tier CI (canary + full).
+Next (see TODO.md): Semantic index rebuild (new pages not yet indexed). Score-aware fusion (TopK benchmark +4.58% nDCG@10 on BEIR). Structured endpoint extraction from crawled docs.
 
-Next (see TODO.md): M23 structured endpoint extraction from crawled docs (reduce Postman/spec dependency). M24 content quality — Paradex URL drift, dYdX/Kraken thin pages, Bluefin login-gated. BUG-9 chunk heading context (needs index rebuild). CC fusion tested and rejected (M31). Param FTS enrichment tested and rejected (M22). Pacifica re-evaluation when docs mature.
+## Source Validation
+
+Pages in the store have `source_type` and `content_flags` columns (schema v7).
+
+**Source types** (trust hierarchy, highest first):
+1. `official_docs` — exchange's own documentation site
+2. `spec` — OpenAPI/Swagger/AsyncAPI spec files
+3. `github_repo` — GitHub-hosted docs (e.g., BingX api-ai-skills)
+4. `ccxt_ref` — CCXT community documentation (docs.ccxt.com raw markdown)
+5. `llms_txt` — LLM discovery files (auto-generated by ReadMe.io/GitBook)
+
+**Content flags** (comma-separated, empty string = clean):
+- `empty` — word_count = 0
+- `thin` — word_count < 50
+- `nav_chrome` — page contains only navigation links, not documentation content
+- `spa_shell` — page is an empty SPA wrapper (JS not rendered)
+
+After ingesting alternative sources (GitHub repos, CCXT, llms.txt), cross-reference key claims against official docs. Endpoints from non-official sources should be flagged as unverified until confirmed.
 
 ## Non-Goals / Safety
 

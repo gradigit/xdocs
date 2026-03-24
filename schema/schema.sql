@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS pages (
   extractor_version TEXT,
   extractor_config_json TEXT,
   extractor_config_hash TEXT,
-  last_crawl_run_id INTEGER REFERENCES crawl_runs(id)
+  last_crawl_run_id INTEGER REFERENCES crawl_runs(id),
+  source_type TEXT,
+  content_flags TEXT
 );
 
 CREATE INDEX IF NOT EXISTS pages_domain_idx ON pages(domain);

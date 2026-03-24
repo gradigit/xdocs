@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from xdocs.db import open_db
-from xdocs.quality import quality_check
+from xdocs.quality import classify_source_type, detect_content_flags, quality_check
 from xdocs.store import init_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -84,6 +84,57 @@ class TestQualityCheck(unittest.TestCase):
             self.assertEqual(result["counts"]["thin"], 0)
             self.assertEqual(result["counts"]["tiny_html"], 0)
             self.assertEqual(len(result["issues"]), 0)
+
+
+class TestClassifySourceType(unittest.TestCase):
+    def test_official_docs(self) -> None:
+        self.assertEqual(classify_source_type("https://developers.binance.com/docs/spot"), "official_docs")
+
+    def test_spec_url(self) -> None:
+        self.assertEqual(classify_source_type("https://docs.gemini.com/rest.yaml"), "spec")
+
+    def test_github_repo(self) -> None:
+        self.assertEqual(classify_source_type("https://github.com/BingX-API/api-ai-skills/blob/main/SKILL.md"), "github_repo")
+
+    def test_ccxt_ref(self) -> None:
+        self.assertEqual(classify_source_type("https://docs.ccxt.com/exchanges/binance.md"), "ccxt_ref")
+        self.assertEqual(classify_source_type("https://docs.ccxt.com/Manual.md"), "ccxt_ref")
+
+    def test_readme_reference(self) -> None:
+        self.assertEqual(classify_source_type("https://bluefin-exchange.readme.io/reference/getaccountdetails"), "official_docs")
+
+
+class TestDetectContentFlags(unittest.TestCase):
+    def test_empty_page(self) -> None:
+        flags = detect_content_flags(markdown="", word_count=0)
+        self.assertIn("empty", flags)
+
+    def test_thin_page(self) -> None:
+        flags = detect_content_flags(markdown="Some thin content", word_count=10)
+        self.assertIn("thin", flags)
+
+    def test_nav_chrome(self) -> None:
+        nav_md = "\n".join([
+            "* [Home](/)",
+            "* [API Reference](/api)",
+            "* [Guides](/guides)",
+            "* [WebSocket](/ws)",
+            "* [REST API](/rest)",
+            "* [Rate Limits](/limits)",
+            "* [Authentication](/auth)",
+        ])
+        flags = detect_content_flags(markdown=nav_md, word_count=14)
+        self.assertIn("nav_chrome", flags)
+
+    def test_spa_shell(self) -> None:
+        html = '<html><body><div id="app"></div><script>window.__NEXT_DATA__ = {};</script></body></html>'
+        flags = detect_content_flags(markdown="", html=html, word_count=0)
+        self.assertIn("spa_shell", flags)
+
+    def test_normal_page(self) -> None:
+        prose = "This is a normal documentation page with plenty of content. " * 20
+        flags = detect_content_flags(markdown=prose, word_count=200)
+        self.assertEqual(flags, [])
 
 
 if __name__ == "__main__":
