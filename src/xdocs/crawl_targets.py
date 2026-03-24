@@ -16,6 +16,8 @@ from .inventory import _walk_sitemaps, _common_sitemap_candidates, _robot_sitema
 from .nav_extract import extract_nav_urls
 from .registry import load_registry
 from .store import require_store_db
+
+_log = logging.getLogger(__name__)
 from .url_sanitize import sanitize_url
 from .urlcanon import canonicalize_url
 from .urlutil import url_host as _host
@@ -322,6 +324,24 @@ def discover_crawl_targets(
     seed_urls = section.seed_urls
     scope_prefixes = scope_prefixes_from_seeds(seed_urls)
     doc_sources = [{"kind": ds.kind, "url": ds.url} for ds in section.doc_sources]
+
+    # Log known_sources availability for observability.
+    ks_urls = exchange.known_sources.all_urls()
+    if ks_urls:
+        _log.info(
+            "%s/%s: %d known_sources cataloged (%s)",
+            exchange_id, section_id, len(ks_urls), ", ".join(ks_urls.keys()),
+        )
+    elif exchange.known_sources.confirmed_absent:
+        _log.info(
+            "%s/%s: no known_sources URLs, %d confirmed absent",
+            exchange_id, section_id, len(exchange.known_sources.confirmed_absent),
+        )
+    else:
+        _log.warning(
+            "%s/%s: no known_sources populated — discovery results cannot be cross-checked",
+            exchange_id, section_id,
+        )
 
     session = create_session()
 
