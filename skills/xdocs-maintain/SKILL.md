@@ -41,7 +41,13 @@ If you are starting a new session with no prior context, follow these steps befo
 xdocs store-report --docs-dir ./cex-docs
 ```
 
-6. **Determine what phase to start from**:
+6. **Check known sources** before probing any live URLs:
+```bash
+xdocs known-sources --exchange {id}
+```
+Use returned URLs directly. Check `confirmed_absent` to avoid re-probing known dead ends. Only probe live for source types not already documented.
+
+7. **Determine what phase to start from**:
    - Store empty or missing → Phase 0 (full workflow from scratch)
    - Store exists but outdated → Phase 0 (readiness check) then Phase 2 (sync)
    - Store current but specs not imported → Phase 3 (spec imports)

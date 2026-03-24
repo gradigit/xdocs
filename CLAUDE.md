@@ -139,6 +139,12 @@ xdocs semantic-search "funding rate" --exchange okx --mode vector --docs-dir ./c
 # Cite-only answer from local store
 xdocs answer "What permissions does the Binance API key need?" --docs-dir ./cex-docs
 
+# Known sources lookup and validation
+xdocs known-sources --exchange dydx
+xdocs known-sources --exchange dydx --source-type llms_full_txt
+xdocs validate-known-sources --exchange dydx
+xdocs validate-known-sources  # all exchanges
+
 # Crawl target validation
 xdocs sanitize-check --docs-dir ./cex-docs
 xdocs validate-sitemaps [--exchange X] --docs-dir ./cex-docs
@@ -207,7 +213,7 @@ Note: The legacy `crawl` command still works but emits a deprecation warning. Us
 - `tests/` Pytest test suite (mirrors source modules; uses `http_server.py` fixture for network tests).
 - `schema/schema.sql` Authoritative SQLite DDL (pages, endpoints, inventories, FTS5, review queue, coverage_gaps).
 - `schemas/` JSON Schema files used for validation (`endpoint.schema.json`, `page_meta.schema.json`).
-- `data/exchanges.yaml` Registry of all 46 exchanges (78 sections): seeds, allowed domains, base URLs, doc sources.
+- `data/exchanges.yaml` Registry of all 46 exchanges (78 sections): seeds, allowed domains, base URLs, doc sources, known_sources (llms.txt, GitHub, status pages).
 - `scripts/` Automation helpers (`sync_runtime_repo.py`, `run_sync_preset.sh`, benchmarks).
 - `skills/` Agent-agnostic skill definitions (canonical source). `.claude/skills/` and `.agents/skills/` are symlinks for platform auto-discovery.
 
@@ -359,7 +365,8 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `src/xdocs/asyncapi_import.py` AsyncAPI spec import (stub — no CEX specs implemented yet)
 - `src/xdocs/ingest_page.py` Manual page ingestion from browser capture (HTML or markdown input)
 - `src/xdocs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
-- `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects)
+- `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects, includes KnownSources)
+- `src/xdocs/known_sources.py` Content-aware validation of known_sources URLs (SPA shell detection, format checks)
 - `src/xdocs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
 - `skills/xdocs-maintain/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
 - `skills/xdocs-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
@@ -425,6 +432,13 @@ Pages in the store have `source_type` and `content_flags` columns (schema v7).
 - `spa_shell` — page is an empty SPA wrapper (JS not rendered)
 
 After ingesting alternative sources (GitHub repos, CCXT, llms.txt), cross-reference key claims against official docs. Endpoints from non-official sources should be flagged as unverified until confirmed.
+
+**Known sources registry** (`data/exchanges.yaml` → `known_sources` field):
+- Exchange-level discovery URLs: `llms_txt`, `llms_full_txt`, `github_org`, `status_page`, `changelog`, `rss_feed`, `fix_docs`, `websocket_docs`.
+- `confirmed_absent` list: source types confirmed not to exist (prevents re-probing dead ends).
+- `last_verified`: ISO date of last `validate-known-sources` run.
+- **Rule**: Always run `xdocs known-sources --exchange <id>` before probing live URLs. Do not guess domain variants.
+- **Validation**: `xdocs validate-known-sources` does content-aware checks — SPA shell detection for llms.txt, XML format check for RSS, redirect detection.
 
 ## Non-Goals / Safety
 

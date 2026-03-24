@@ -32,6 +32,30 @@ Every discoverable source must be found. If a source type exists for the exchang
 
 ## Workflow
 
+### Step 0: Check Known Sources First (MANDATORY)
+
+Before probing ANY live URLs for a registered exchange, check what the registry already knows:
+
+```bash
+xdocs known-sources --exchange {exchange_id}
+```
+
+**If the exchange exists in the registry:**
+- Use returned URLs directly. **Do not guess domain variants.**
+- Check `confirmed_absent` — do not re-probe source types already confirmed absent.
+- Only probe live for source types NOT in `known_sources` AND NOT in `confirmed_absent`.
+
+**If the exchange is NOT in the registry:**
+- This is a new exchange. Proceed to Step 1.
+
+**After discovering new sources** (new exchange or audit):
+1. Add discovered URLs to `known_sources` in `data/exchanges.yaml`.
+2. Validate before committing: `xdocs validate-known-sources --exchange {id}`
+3. Only commit URLs that pass content-aware validation (SPA shells, format mismatches caught automatically).
+4. Add source types that returned 404 or invalid content to `confirmed_absent`.
+
+**VIOLATION**: Probing live URL variants (e.g., `docs.dydx.exchange`, `dydxprotocol.github.io`) for a registered exchange without first running `known-sources` is a workflow error. The registry is the source of truth.
+
 ### Step 1: Gather Input
 
 Collect from user or infer:
