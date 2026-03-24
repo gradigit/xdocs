@@ -52,12 +52,44 @@ class ExchangeSection:
     render_options: RenderOptions = field(default_factory=RenderOptions)
 
 
+_KNOWN_SOURCES_URL_FIELDS = (
+    "llms_txt", "llms_full_txt", "github_org", "status_page",
+    "changelog", "rss_feed", "fix_docs", "websocket_docs",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class KnownSources:
+    """Exchange-level discovery sources.  Section-level specs stay in doc_sources."""
+
+    llms_txt: str | None = None
+    llms_full_txt: str | None = None
+    github_org: str | None = None
+    status_page: str | None = None
+    changelog: str | None = None
+    rss_feed: str | None = None
+    fix_docs: str | None = None
+    websocket_docs: str | None = None
+    confirmed_absent: list[str] = field(default_factory=list)
+    last_verified: str | None = None  # ISO date of last validate-known-sources run
+
+    def all_urls(self) -> dict[str, str]:
+        """Return all non-None scalar URL fields as {field_name: url}."""
+        out: dict[str, str] = {}
+        for name in _KNOWN_SOURCES_URL_FIELDS:
+            val = getattr(self, name)
+            if val is not None:
+                out[name] = val
+        return out
+
+
 @dataclass(frozen=True, slots=True)
 class Exchange:
     exchange_id: str
     display_name: str
     allowed_domains: list[str]
     sections: list[ExchangeSection]
+    known_sources: KnownSources = field(default_factory=KnownSources)
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,12 +188,32 @@ def load_registry(registry_path: Path) -> Registry:
                     render_options=render_opts,
                 )
             )
+        # Parse exchange-level known_sources.
+        ks_raw = ex.get("known_sources") or {}
+        if not isinstance(ks_raw, dict):
+            ks_raw = {}
+        ks_kwargs: dict[str, Any] = {}
+        for fname in _KNOWN_SOURCES_URL_FIELDS:
+            val = ks_raw.get(fname)
+            if isinstance(val, str) and val.strip():
+                ks_kwargs[fname] = val.strip()
+            else:
+                ks_kwargs[fname] = None
+        ks_kwargs["confirmed_absent"] = [
+            str(x) for x in (ks_raw.get("confirmed_absent") or []) if x
+        ]
+        ks_kwargs["last_verified"] = (
+            str(ks_raw["last_verified"]).strip() if ks_raw.get("last_verified") else None
+        )
+        known_sources = KnownSources(**ks_kwargs)
+
         exchanges.append(
             Exchange(
                 exchange_id=str(ex.get("exchange_id", "")),
                 display_name=str(ex.get("display_name", "")),
                 allowed_domains=list(ex.get("allowed_domains", []) or []),
                 sections=sections,
+                known_sources=known_sources,
             )
         )
 

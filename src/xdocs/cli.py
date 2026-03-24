@@ -284,6 +284,14 @@ def main(argv: list[str] | None = None) -> None:
     vbu.add_argument("--timeout-s", type=float, default=10.0)
     vbu.add_argument("--retries", type=int, default=1)
 
+    ks_p = sub.add_parser("known-sources", help="List known source URLs for an exchange from the registry (no network)", parents=[common])
+    ks_p.add_argument("--exchange", required=True, help="Exchange id from data/exchanges.yaml")
+    ks_p.add_argument("--source-type", default=None, help="Filter to a specific source type (e.g., llms_txt, github_org)")
+
+    vks = sub.add_parser("validate-known-sources", help="Probe known_sources URLs with content-aware validation (networked)", parents=[common])
+    vks.add_argument("--exchange", default=None, help="Exchange id to validate (default: all)")
+    vks.add_argument("--timeout-s", type=float, default=15.0)
+
     sub.add_parser("quality-check", help="Check stored pages for empty/thin content or tiny HTML (JS rendering failures)", parents=[common])
 
     ec = sub.add_parser("extract-changelogs", help="Extract dated changelog entries from stored changelog pages into changelog_entries table", parents=[common])
@@ -793,6 +801,47 @@ def main(argv: list[str] | None = None) -> None:
                 retries=int(args.retries),
             )
             _print_json({"ok": True, "schema_version": "v1", "result": r})
+            return
+
+        if args.cmd == "known-sources":
+            repo_root = Path(__file__).resolve().parents[2]
+            from .registry import load_registry
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            ex = reg.get_exchange(args.exchange)
+            ks = ex.known_sources
+            all_urls = ks.all_urls()
+            # Merge with section-level doc_sources and seed_urls for completeness.
+            doc_source_urls: dict[str, list[str]] = {}
+            seed_urls: list[str] = []
+            for sec in ex.sections:
+                for ds in sec.doc_sources:
+                    doc_source_urls.setdefault(f"doc_source_{ds.kind}", []).append(ds.url)
+                seed_urls.extend(sec.seed_urls)
+            sources: dict[str, Any] = {}
+            for k, v in all_urls.items():
+                sources[k] = v
+            sources["confirmed_absent"] = ks.confirmed_absent
+            sources["last_verified"] = ks.last_verified
+            sources["allowed_domains"] = ex.allowed_domains
+            sources["seed_urls"] = list(dict.fromkeys(seed_urls))
+            sources.update(doc_source_urls)
+            if args.source_type:
+                val = sources.get(args.source_type)
+                _print_json({"ok": True, "schema_version": "v1", "exchange_id": args.exchange, "source_type": args.source_type, "value": val})
+            else:
+                _print_json({"ok": True, "schema_version": "v1", "exchange_id": args.exchange, "display_name": ex.display_name, "sources": sources})
+            return
+
+        if args.cmd == "validate-known-sources":
+            repo_root = Path(__file__).resolve().parents[2]
+            from .known_sources import validate_known_sources
+            from .registry import load_registry
+            reg = load_registry(repo_root / "data" / "exchanges.yaml")
+            r = validate_known_sources(registry=reg, exchange_id=args.exchange, timeout_s=float(args.timeout_s))
+            _print_json({"ok": r["ok"], "schema_version": "v1", "result": r})
+            if not r["ok"]:
+                import sys
+                sys.exit(1)
             return
 
         if args.cmd == "quality-check":
