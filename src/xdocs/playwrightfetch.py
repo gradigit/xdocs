@@ -82,7 +82,7 @@ class PlaywrightFetcher:
     """
 
     allowed_domains: set[str]
-    headless: bool = True
+    headless: bool = True  # Headless for server environments; headed mode requires display server (xvfb or native)
 
     _sync_playwright: Any = field(init=False, default=None, repr=False)
     _PlaywrightError: Any = field(init=False, default=None, repr=False)

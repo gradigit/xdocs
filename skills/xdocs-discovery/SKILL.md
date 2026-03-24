@@ -101,6 +101,18 @@ for path in /llms.txt /llms-full.txt; do
   echo "$code ${DOMAIN}${path}"
 done
 
+# Raw markdown endpoints (Docsify/GitBook/Vocs sites serve .md files directly)
+for path in /_sidebar.md /Manual.md /README.md /SUMMARY.md; do
+  code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "${DOMAIN}${path}" 2>/dev/null)
+  [ "$code" = "200" ] && echo "$code ${DOMAIN}${path} ← RAW MARKDOWN SOURCE"
+done
+
+# ReadMe.io API registry (for sites using ReadMe.io — check if OAS specs are publicly accessible)
+# ReadMe.io pages often have oasPublicUrl in their HTML source
+if curl -sL "${DOMAIN}" | grep -q 'readme.io\|oasPublicUrl'; then
+  echo "ReadMe.io detected — check for OpenAPI specs in page source (search for oasPublicUrl)"
+fi
+
 # Spec files (docs domain)
 for path in /openapi.json /openapi.yaml /swagger.json /swagger.yaml /api-docs /api-docs.json; do
   code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 10 "${DOMAIN}${path}" 2>/dev/null)
@@ -170,6 +182,25 @@ Search for official org. Common patterns:
 - `github.com/{exchange}com`
 
 Record: organization URL, repo count, notable repos.
+
+**ALSO search for:**
+- `github.com/{exchange}-API` (BingX uses `BingX-API`)
+- Alternative doc domains: `{exchange}.com/api`, `developer.{exchange}.com`, `docs.{exchange}.com`
+
+#### 3b-1. Search for AI skill repos and raw documentation repos
+
+Many exchanges now maintain AI-readable documentation:
+```bash
+# Search for API skill repos (like BingX's api-ai-skills with 56K words of docs)
+gh search repos "{exchange} api skills" --json name,url,description --limit 5
+gh search repos "{exchange} api docs" --json name,url,description --limit 5
+
+# Check for raw doc repos (markdown source for docs sites)
+gh search repos "org:{org} docs" --json name,url --limit 10
+gh search repos "org:{org} documentation" --json name,url --limit 10
+```
+
+If found, check: does the repo contain `.md` files with actual API endpoint documentation (parameters, request/response examples, error codes)? If yes, this is an **alternative content source** — ingest it but flag as `source: github_repo` (not ground truth without cross-reference against official docs).
 
 #### 3b. Search for spec files in repos
 
@@ -275,13 +306,24 @@ Visit the main docs URL and identify the platform:
 Test the main docs URL with ALL four methods:
 
 ```bash
-# Method 1: requests
+# Method 1: curl-cffi (primary — TLS fingerprint impersonation bypasses WAFs)
 python3 -c "
-import requests
-r = requests.get('DOCS_URL', timeout=30, headers={'User-Agent': 'Mozilla/5.0 (compatible)'})
-print(f'requests: status={r.status_code}, length={len(r.text)}, words={len(r.text.split())}')"
+from curl_cffi import requests
+s = requests.Session(impersonate='chrome')
+r = s.get('DOCS_URL', timeout=30)
+from html2text import HTML2Text
+h = HTML2Text(); h.body_width = 0; h.ignore_links = True
+md = h.handle(r.text)
+words = len(md.split())
+has_api = 'GET ' in md or 'POST ' in md or 'endpoint' in md.lower()
+has_code = '\`\`\`' in md or 'curl' in md.lower()
+prose = sum(1 for l in md.split(chr(10)) if len(l.strip()) > 50)
+nav = sum(1 for l in md.split(chr(10)) if len(l.strip()) < 40 and l.strip().startswith(('*','-','[')))
+print(f'curl-cffi: status={r.status_code}, words={words}, api_content={has_api}, code={has_code}, prose={prose}, nav={nav}')
+if nav > prose:
+    print('  WARNING: more nav lines than prose — possible SPA shell or nav-only page')"
 
-# Method 2: crawl4ai (primary validation tool)
+# Method 2: crawl4ai (stealth browser — for JS-rendered SPAs)
 python3 -c "
 import asyncio
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig

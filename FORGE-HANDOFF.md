@@ -1,42 +1,41 @@
-# Forge Handoff — 2026-03-13T12:00:00+09:00
+# Forge Handoff — 2026-03-24
 
 ## Bootstrap
-CLAUDE.md is already loaded (survives compaction). Re-read the mutable state files:
-1. This file (session-level context snapshot)
-2. FORGE-STATUS.md (milestone/phase state)
-3. TODO.md (task checklist)
-4. FORGE-MEMORY.md (cross-session learnings)
-
-After reading, verify: current milestone matches FORGE-STATUS.md, current step matches TODO.md. If mismatch, trust FORGE-STATUS.md.
+1. Read this file
+2. Read FORGE-STATUS.md
+3. Read memory/session_2026_03_24_crawl_audit.md
+4. Read memory/pending_work_m39.md
+5. Read CLAUDE.md
 
 ## What's Complete
-- Read all state files (FORGE-STATUS.md, TODO.md, FORGE-MEMORY.md, SUGGESTIONS.md, HUMAN-INPUT.md, MISSION-CONTROL.md)
-- Verified 559 tests pass, clean working tree
-- Evaluated previous agent's runtime QA environment analysis (valid concern, not a blocker)
-- Defined 4 milestones for this run
+- M29-M38 all committed and pushed
+- curl-cffi integrated as default HTTP client
+- Full crawl gap analysis: 230 real gaps identified with specific fixes per exchange
+- Security audit: cloudscraper removed, Playwright CVE noted, litellm lazy-safe
+- Skills: xdocs-bugreport + xdocs-triage created and reviewed
+- Parallel sync working (4 concurrent exchanges)
+- Semantic index complete (11,447 pages indexed)
 
 ## What's In Progress
-M25: Runtime Import Guard — starting research phase
-
-## What's Next
-- M25: Build import guard preflight in runtime smoke test
-- M26-M28: Bug fixes with A/B testing per change
-
-## Baseline Metrics (pre-changes)
-- Tests: 559 pass (557 unit + 2 canary)
-- Pipeline: MRR=0.644, nDCG@5=1.343, PFX=77.8%, URL=65.1%
-
-## Blockers / Open Questions
-- None
+**M39: Discovery + Validation + Documentation Overhaul**
+Starting Phase 1: Discovery skill audit
+- Need to add checks for: llms.txt, ReadMe.io API registries, raw markdown endpoints, GitHub repos, alternative doc domains, OpenAPI spec URLs
+- Then Phase 2: execute all gap fixes
+- Then Phase 3: source validation framework (source_confidence, nav-chrome detection, SPA shell detection)
+- Then Phase 4: CLAUDE.md audit and optimization
+- Then Phase 5: publish data release
 
 ## Key Context
-- User explicitly requested: import guard FIRST, then bug fixes with clinical A/B testing
-- Every change must be independently A/B benchmarked against 206-query golden QA
-- No powering through — research first, plan, build, review
+- The user emphasized: alternative sources (llms-full.txt, GitHub repos, raw markdown) are NOT ground truth. Must cross-reference. CLAUDE.md says "cross-reference all sources, flag conflicts"
+- The user wants source_confidence concept added (spec_only < spec+page < page_verified)
+- The user wants the discovery skill hardened to find ALL sources
+- The user wants CLAUDE.md optimized for effectiveness
+- Store: 17,264 pages, 4,963 endpoints, 660 tests, MRR 0.6434
+
+## Blockers
+- None
 
 ## Health
-- last_updated: 2026-03-13T12:00:00+09:00
-- steps_since_last_checkpoint: 0
+- last_updated: 2026-03-24
 - compaction_count: 0
 - stuck_indicator: false
-- consecutive_failures: 0
