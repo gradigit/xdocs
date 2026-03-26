@@ -344,7 +344,7 @@ xdocs coverage-gaps --docs-dir ./cex-docs
 xdocs store-report --docs-dir ./cex-docs
 ```
 
-Spot-check 5% of pages with `crawl4ai`. If content differs >20% from stored markdown, flag the exchange for re-crawl with `--render auto`.
+Spot-check 5% of pages with Playwright headless. If content differs >20% from stored markdown, flag the exchange for re-crawl with `--render auto`.
 
 #### Phase 5: Update Documentation
 
@@ -382,19 +382,26 @@ Default is `auto`. Use `--render http` only when you know all target pages are s
 
 `requests` fails on ~40% of exchanges (SPAs, Cloudflare, WAF). After sync, validate output:
 
-1. **`crawl4ai`** (primary validation) — works on ~95% of sites, returns LLM-ready markdown, handles JS + anti-bot
+1. **Playwright headless** (primary validation) — handles JS rendering, works on ~95% of sites
 2. **Headed browser** (`headless=False`) — CAPTCHA solving, headless detection bypass
 3. **Agent Browser** — login-gated, infinite scroll, complex interaction
 
 ```bash
-# Test with crawl4ai
+# Test with Playwright
 python3 -c "
 import asyncio
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+from playwright.async_api import async_playwright
+from html2text import HTML2Text
 async def test():
-    async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as c:
-        r = await c.arun(url='URL', config=CrawlerRunConfig())
-        print(f'Success: {r.success}, Length: {len(r.markdown or \"\")}')
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto('URL', wait_until='networkidle', timeout=30000)
+        html = await page.content()
+        await browser.close()
+        h = HTML2Text(); h.body_width = 0
+        md = h.handle(html)
+        print(f'Words: {len(md.split())}')
 asyncio.run(test())
 "
 ```
@@ -471,7 +478,7 @@ xdocs validate-base-urls
 
 If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drift:
 
-1. Try `crawl4ai` (default — handles JS rendering, anti-bot, returns clean markdown)
+1. Try Playwright headless (handles JS rendering)
 2. Try headed browser (`headless=False`) for CAPTCHA or headless detection
 3. Use Agent Browser for login-gated or interactive sites
 
@@ -479,8 +486,7 @@ If `validate-registry` or `sync` fails due to UA-dependent 403s or doc host drif
 
 | Tool | Install | Use Case |
 |------|---------|----------|
-| `crawl4ai` | `uv pip install crawl4ai && crawl4ai-setup` | Browser + AI markdown, best all-around |
-| Playwright | `uv pip install playwright && playwright install chromium` | JS rendering |
+| Playwright | `uv pip install -e ".[playwright]" && playwright install chromium` | JS rendering, primary validation |
 | Agent Browser | `.claude/skills/agent-browser/` | Interactive crawling |
 
 ## Find Sources

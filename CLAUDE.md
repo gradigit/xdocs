@@ -234,7 +234,7 @@ The pipeline has a linear progression:
 
 **The goal is 100% exhaustive coverage. No exceptions.**
 
-- **No pages missing.** Every documented page for every registered exchange must be in the store. If a crawl method fails, escalate through the cascade until it works: `--render auto` → Playwright → crawl4ai → headed browser → Agent Browser. A 0-page section is a bug, not an acceptable state.
+- **No pages missing.** Every documented page for every registered exchange must be in the store. If a crawl method fails, escalate through the cascade until it works: `--render auto` (curl-cffi + Playwright headless) → Playwright headed → Agent Browser. A 0-page section is a bug, not an acceptable state.
 - **No content missing.** If a page renders in a browser but our stored markdown is empty/thin, the crawl method is wrong. Fix it. Single-page SPAs (OKX, Gate.io, HTX) must be crawled with browser rendering. Swagger UIs (MercadoBitcoin) must have their specs imported. Localize.js sites (Bithumb EN) must use Playwright to get translated content.
 - **No endpoints missing.** Every available spec (OpenAPI, Postman, AsyncAPI) must be imported. Every CCXT endpoint gap must be investigated. If an exchange has 200 CCXT endpoints and we have 0, that's a failure.
 - **No inaccurate data.** Cross-reference all sources. Specs drift from docs. Postman collections go stale. CCXT metadata is community-maintained. Official API doc pages are closest to ground truth. Flag conflicts, never silently accept one source.

@@ -26,7 +26,7 @@ Every discoverable source must be found. If a source type exists for the exchang
 
 - Active Python venv with `xdocs` installed
 - Web access for URL probing and search
-- `crawl4ai`, Playwright installed for crawl testing
+- Playwright installed for crawl testing (`uv pip install -e ".[playwright]"`)
 - CCXT installed for cross-reference (`uv pip install ccxt`)
 - Read `docs/crawl-targets-bible.md` in full before starting — check if the exchange already has a bible entry or is listed in Section 6 (Missing Exchanges) or Section 11 (Confirmed Non-Existent Sources)
 
@@ -347,30 +347,35 @@ print(f'curl-cffi: status={r.status_code}, words={words}, api_content={has_api},
 if nav > prose:
     print('  WARNING: more nav lines than prose — possible SPA shell or nav-only page')"
 
-# Method 2: crawl4ai (stealth browser — for JS-rendered SPAs)
+# Method 2: Playwright headless (for JS-rendered SPAs)
 python3 -c "
 import asyncio
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
+from playwright.async_api import async_playwright
+from html2text import HTML2Text
 async def test():
-    async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as c:
-        r = await c.arun(url='DOCS_URL', config=CrawlerRunConfig())
-        md = r.markdown or ''
-        print(f'crawl4ai: success={r.success}, md_length={len(md)}, words={len(md.split())}')
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto('DOCS_URL', wait_until='networkidle', timeout=30000)
+        html = await page.content()
+        await browser.close()
+        h = HTML2Text(); h.body_width = 0
+        md = h.handle(html)
+        print(f'playwright: words={len(md.split())}')
 asyncio.run(test())"
 ```
 
 Compare results:
-- If `requests` word count is >80% of `crawl4ai` → `render_mode: http` (static site)
-- If `requests` is thin but `crawl4ai` gets full content → `render_mode: auto`
-- If only Playwright/crawl4ai works → `render_mode: auto` or `playwright`
+- If curl-cffi word count is >80% of Playwright → `render_mode: http` (static site)
+- If curl-cffi is thin but Playwright gets full content → `render_mode: auto`
 - If nothing works (CAPTCHA, login-gated) → document and escalate
 
 #### 5c. Record crawl method matrix
 
 | Method | Status | Content Length | Words | Usable? |
 |--------|--------|---------------|-------|---------|
-| requests | ___ | ___ | ___ | ___ |
-| crawl4ai | ___ | ___ | ___ | ___ |
+| curl-cffi | ___ | ___ | ___ | ___ |
+| Playwright | ___ | ___ | ___ | ___ |
 
 ### Step 6: CCXT Cross-Reference
 
@@ -606,7 +611,7 @@ Include comments explaining any non-obvious choices (scope_priority, render_mode
 - [ ] Platform detected → ___
 - [ ] `requests` test → status: ___, words: ___
 - [ ] 
-- [ ] `crawl4ai` test → success: ___, words: ___
+- [ ] Playwright headless test → words: ___
 - [ ] Render mode determined → ___
 
 ### CCXT
