@@ -508,6 +508,14 @@ def main(argv: list[str] | None = None) -> None:
     le.add_argument("--section", default=None, help="Section ID (optional)")
     le.add_argument("--limit", type=int, default=0, help="Max endpoints to resolve (0 = all)")
 
+    sc = sub.add_parser("scan-endpoints", help="Scan crawled docs for endpoint candidates (regex-based)", parents=[common])
+    sc.add_argument("--exchange", required=True, help="Exchange ID")
+    sc.add_argument("--section", required=True, help="Section ID")
+    sc.add_argument("--dry-run", action="store_true", help="Show candidates without saving")
+    sc.add_argument("--skip-existing", action="store_true", default=True, help="Skip endpoints already in DB (default)")
+    sc.add_argument("--no-skip-existing", dest="skip_existing", action="store_false", help="Don't skip existing endpoints")
+    sc.add_argument("--continue-on-error", action="store_true", default=True)
+
     args = parser.parse_args(argv)
 
     try:
@@ -1453,6 +1461,20 @@ def main(argv: list[str] | None = None) -> None:
                 _print_json({"ok": True, "schema_version": "v1", **result})
             finally:
                 conn.close()
+            return
+
+        if args.cmd == "scan-endpoints":
+            from .endpoint_extract import scan_endpoints
+            result = scan_endpoints(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=args.lock_timeout_s,
+                exchange=args.exchange,
+                section=args.section,
+                dry_run=args.dry_run,
+                skip_existing=args.skip_existing,
+                continue_on_error=args.continue_on_error,
+            )
+            _print_json({"ok": True, "schema_version": "v1", **result})
             return
 
         _print_json({"ok": False, "schema_version": "v1", "error": {"code": "EBADCLI", "message": "unknown command"}})

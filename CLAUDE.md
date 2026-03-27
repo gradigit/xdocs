@@ -24,6 +24,7 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 | `xdocs-qa` | QA gap finder (iterative testing loop) |
 | `xdocs-bugreport` | Structured bug report generation (environment, reproduction, root cause classification) |
 | `xdocs-triage` | Bug report triage and fix (independent reproduction, severity challenge, A/B validated fix) |
+| `xdocs-extract` | Endpoint extraction from crawled docs (regex scan + agent-curated save) |
 
 When creating, updating, or maintaining skills, edit the canonical file in `skills/<name>/SKILL.md`. The symlinks ensure both Claude Code and Codex CLI discover them automatically. All SKILL.md files must include YAML frontmatter (`name` + `description`) for Codex progressive disclosure.
 
@@ -197,6 +198,10 @@ xdocs validate-retrieval --qa-file tests/golden_qa.jsonl --limit 5 --docs-dir ./
 # Resolve docs_url for spec-imported endpoints
 xdocs link-endpoints --docs-dir ./cex-docs
 
+# Scan crawled docs for endpoint candidates (regex-based, high recall)
+xdocs scan-endpoints --exchange phemex --section api --docs-dir ./cex-docs --dry-run
+xdocs scan-endpoints --exchange phemex --section api --docs-dir ./cex-docs
+
 # Validate registry/base URLs
 xdocs validate-registry
 xdocs validate-base-urls
@@ -367,6 +372,7 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `src/xdocs/validate.py` Golden QA retrieval validation (exact/prefix/domain matching)
 - `src/xdocs/registry.py` Registry loader (parses data/exchanges.yaml into typed objects, includes KnownSources)
 - `src/xdocs/known_sources.py` Content-aware validation of known_sources URLs (SPA shell detection, format checks)
+- `src/xdocs/endpoint_extract.py` Regex-based endpoint extraction from crawled docs (scan + save helper for xdocs-extract skill)
 - `src/xdocs/page_store.py` Page storage operations (upsert, markdown extraction, word count)
 - `skills/xdocs-maintain/SKILL.md` Maintainer workflow skill (full sync, spec imports, validation, doc updates)
 - `skills/xdocs-query/SKILL.md` Query/answer agent skill (classification → search → cite-only answer)
@@ -374,6 +380,7 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 - `skills/xdocs-qa/SKILL.md` QA gap finder skill (iterative testing loop, runtime repo)
 - `skills/xdocs-bugreport/SKILL.md` Bug report generation skill (structured, objective, shareable)
 - `skills/xdocs-triage/SKILL.md` Bug report triage and fix skill (reproduce, challenge, implement)
+- `skills/xdocs-extract/SKILL.md` Endpoint extraction from crawled docs (regex scan + agent review)
 
 ## Gotchas
 
