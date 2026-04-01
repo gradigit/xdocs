@@ -358,5 +358,30 @@ class TestClassifyEdgeCases(unittest.TestCase):
         self.assertNotEqual(result.input_type, "endpoint_path")
 
 
+class TestBug15NumericLiteralsInCode(unittest.TestCase):
+    """BUG-15: Numeric literals like 30000 in create_order() should not
+    misclassify as error_message."""
+
+    def test_create_order_with_price(self) -> None:
+        result = classify_input(
+            'exchange.create_order("BTC/USDT", "limit", "buy", 0.001, 30000)'
+        )
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_submit_order_with_price(self) -> None:
+        result = classify_input(
+            'RestClientV5.submitOrder(symbol="BTCUSDT", price=30000, qty=0.001)'
+        )
+        self.assertEqual(result.input_type, "code_snippet")
+
+    def test_real_error_code_still_works(self) -> None:
+        result = classify_input("-1002")
+        self.assertEqual(result.input_type, "error_message")
+
+    def test_okx_error_code_still_works(self) -> None:
+        result = classify_input("50004")
+        self.assertEqual(result.input_type, "error_message")
+
+
 if __name__ == "__main__":
     unittest.main()

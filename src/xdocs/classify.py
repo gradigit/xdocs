@@ -119,6 +119,10 @@ _CODE_INDICATORS: list[re.Pattern[str]] = [
     re.compile(r"^\s*\w+\s*=\s*\{['\"]", re.MULTILINE),
     # .encode() calls (common in signing code).
     re.compile(r"\.encode\s*\(['\"]"),
+    # SDK method calls: exchange.create_order(), client.submitOrder() etc. (BUG-15).
+    re.compile(r"\.\b(?:create_order|cancel_order|fetch_balance|fetch_ticker|fetch_order_book|submitOrder|getOrderbook|getWalletBalance|placeOrder|cancelOrder)\s*\("),
+    # RestClientV5, SpotClient, FuturesClient etc.
+    re.compile(r"\b\w+Client(?:V\d+)?\.\w+\s*\("),
 ]
 
 
@@ -351,6 +355,18 @@ def classify_input(text: str) -> InputClassification:
             signals["code_methods"] = code_ctx["code_methods"]
         if code_ctx.get("api_path"):
             signals["api_path"] = code_ctx["api_path"]
+
+    # --- BUG-15 fix: suppress generic numeric error score when code signals present ---
+    # Prices like 30000 in create_order() match the generic \d{5,6} pattern,
+    # inflating error_message score. If code_snippet detected AND the only error
+    # matches are generic/http (no exchange-specific codes), subtract the generic
+    # contribution so code_snippet wins.
+    if code_hits > 0 and error_codes:
+        has_specific = any(c["exchange_hint"] not in ("generic", "http") for c in error_codes)
+        if not has_specific:
+            generic_count = sum(1 for c in error_codes if c["exchange_hint"] == "generic")
+            scores["error_message"] -= generic_count * 0.4
+            scores["error_message"] = max(scores["error_message"], 0.0)
 
     # --- Exchange hint detection (skip if already set by payload/code detection) ---
     if "exchange_hint" not in signals:
