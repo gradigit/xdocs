@@ -820,7 +820,12 @@ def _generic_search_answer(
 
         text = f"[{ep['exchange']}:{ep['section']}] {ep.get('method', '')} {ep.get('path', '')} — {ep_desc}{rate_limit_note}"
         citation_url = _resolve_endpoint_citation_url(conn, ep=ep, exchange=exchange)
-        citations = [{"url": citation_url}] if citation_url else []
+        if citation_url:
+            ep_search = f"{ep.get('method', '')} {ep.get('path', '')} {ep_desc}"
+            ep_cit = _build_full_citation(conn, citation_url, ep_search)
+            citations = [ep_cit] if ep_cit.get("url") else []
+        else:
+            citations = []
         claims.append({
             "id": f"c{c}",
             "kind": "ENDPOINT",
@@ -1734,6 +1739,30 @@ def answer_question(
                             _conn.close()
                     else:
                         _conn.close()
+                except Exception:
+                    pass
+
+    # Fallback for code_snippet/request_payload without exchange: use the topic
+    # from code methods or infer from payload keys, search the top 3 exchanges by
+    # endpoint count as a broad net.
+    if not matched and classification.input_type in ("code_snippet", "request_payload"):
+        code_methods = classification.signals.get("code_methods", [])
+        topic = code_methods[0]["topic"] if code_methods else ""
+        if not topic:
+            payload_keys = classification.signals.get("payload_keys", [])
+            if payload_keys:
+                topic = " ".join(payload_keys[:4])
+        if topic:
+            # Search the top exchanges by endpoint count
+            _db = Path(docs_dir) / "db" / "docs.db"
+            if _db.exists():
+                try:
+                    _conn = open_db(_db)
+                    top_exchanges = _conn.execute(
+                        "SELECT exchange, COUNT(*) as c FROM endpoints GROUP BY exchange ORDER BY c DESC LIMIT 3"
+                    ).fetchall()
+                    matched = [ex for ex in reg.exchanges if ex.exchange_id in [r[0] for r in top_exchanges]]
+                    _conn.close()
                 except Exception:
                     pass
 

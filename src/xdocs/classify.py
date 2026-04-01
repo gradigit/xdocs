@@ -171,9 +171,13 @@ def _detect_exchange_from_payload(payload: dict) -> str | None:
         for sig in signatures:
             if sig.issubset(keys):
                 return exchange
-    # Default: if has "symbol" + common trading fields, likely Binance
+    # Default: if has "symbol" + common trading fields, likely Binance.
+    # Broaden to catch minimal order payloads (symbol + side + type/quantity).
     if "symbol" in keys and keys & {"timeInForce", "recvWindow", "timestamp"}:
         return "binance"
+    if "symbol" in keys and keys & {"side", "type", "quantity", "price"}:
+        if len(keys & {"side", "type", "quantity", "price"}) >= 2:
+            return "binance"
     return None
 
 
