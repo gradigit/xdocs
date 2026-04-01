@@ -1046,10 +1046,10 @@ Priority order:
 1. ~~BUG-10 (Skill search-error `--` misuse)~~ — **FIXED** (2026-03-10, commit 85a6a87)
 2. ~~BUG-11 (Skill no WebSocket routing)~~ — **FIXED** (2026-03-10, commit 85a6a87)
 3. ~~BUG-13 (Answer cites wrong section)~~ — **FIXED** (2026-03-19, section-aware promotion in `_generic_search_answer` + Binance perm search order)
-4. BUG-8 (Blend score overrides reranker) — medium, A/B tested (50/50 weights) → REVERTED (-3.4% endpoint_path MRR). Needs query-type-aware weights.
-5. BUG-9 (Chunk heading context lost) — medium, requires index rebuild (~100 min GPU). Deferred.
+4. ~~BUG-8 (Blend score overrides reranker)~~ — **FIXED** (2026-04-01, query-type-aware weights: code_snippet/request_payload use reranker-heavy 55/45 schedule, commit f887f9e)
+5. ~~BUG-9 (Chunk heading context lost)~~ — **FIXED** (2026-03-27, semantic index rebuilt with 357K chunks from 11,613 pages)
 6. ~~BUG-14 (Code snippet detection gap)~~ — **FIXED** (2026-03-19, added dict assignment + .encode() patterns)
-7. BUG-7 (Snippet depth too narrow) — medium, affects multi-detail queries
+7. BUG-7 (Snippet depth too narrow) — medium, coverage test methodology issue (agent reads full page)
 8. BUG-12 (Korean text classification) — low, affects 4 Korean exchanges
 9. ~~BUG-1 (Deribit spec URL bypass)~~ — **FIXED** (2026-03-19, `_is_spec_url()` filter in endpoint citations + page candidates)
 10. BUG-2 (Binance order docs_url) — medium, affects endpoint citation quality
@@ -1058,19 +1058,8 @@ Priority order:
 13. BUG-3 (Breadcrumb artifacts) — low, cosmetic
 14. BUG-6 (Gate.io endpoint display) — low, cosmetic
 
-#### BUG-15: Numeric Literals in Code Snippets Misclassify as error_message
-**Severity**: High
-**Found**: 2026-03-12, gapfinder v1 run
-**Source**: qa-findings.jsonl finding #2
-
-Code snippets containing realistic prices/quantities (e.g., `30000` in `create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)`) trigger the generic error pattern `\b\d{5,6}\b` in classify.py, scoring error_message at 0.7 vs code_snippet at ~0.6. The downstream answer then returns error/rate-limit material instead of order docs.
-
-**Reproduction**:
-```python
-from xdocs.classify import classify_input
-classify_input("import ccxt\nexchange = ccxt.binance()\nexchange.create_order('BTC/USDT', 'limit', 'buy', 0.001, 30000)")
-# → input_type=error_message, confidence=0.7
-```
+#### BUG-15: Numeric Literals in Code Snippets Misclassify as error_message — **FIXED** (2026-04-01)
+**Status**: FIXED — commit f58d685. Suppress generic numeric error score when code_snippet signals present. Added SDK method call indicators (.create_order(), RestClientV5.*). A/B: code_snippet MRR +9.1%, PFX +11.1%. 4 regression tests.
 
 Also reproduces with Bybit `RestClientV5.submitOrder(...)` containing price=30000.
 
@@ -1080,9 +1069,8 @@ Also reproduces with Bybit `RestClientV5.submitOrder(...)` containing price=3000
 
 **Related**: Supersedes BUG-14 (same root cause area, more specific reproduction).
 
-#### BUG-16: Nav Chrome in Excerpts Despite _is_nav_region()
-**Severity**: High
-**Found**: 2026-03-12, gapfinder v1 run
+#### BUG-16: Nav Chrome in Excerpts Despite _is_nav_region() — **FIXED** (M34)
+**Status**: FIXED — threshold lowered to 40%, skip-link detection added, content fallback for all-nav matches. 5 regression tests pass.
 **Source**: qa-findings.jsonl finding #3
 
 Auth answer excerpts start with "Skip to main content", language switcher chrome, and sidebar nav links instead of substantive content. Confirmed for Binance, Gate.io, Upbit, and Coinone auth queries.
@@ -1103,9 +1091,8 @@ r = answer_question(docs_dir='./cex-docs', question='How do I authenticate to Bi
 
 **Related**: Extends BUG-5 (Coinbase nav sidebar FTS). BUG-5 is about FTS indexing nav text; this is about excerpt extraction.
 
-#### BUG-17: Path-Only Endpoint Queries Return Unknown
-**Severity**: Medium
-**Found**: 2026-03-12, gapfinder v1 run
+#### BUG-17: Path-Only Endpoint Queries Return Unknown — **FIXED** (2026-04-01)
+**Status**: FIXED — commit f887f9e. Bare paths now query endpoint DB, try direct route for all matching exchanges, return combined results. A/B: 0.0% regression on golden QA. 2 regression tests.
 **Source**: qa-findings.jsonl finding #4
 
 Literal endpoint paths without exchange names return `status=unknown`, even when `lookup_endpoint_by_path()` finds a unique match. Adding the exchange name fixes it.
@@ -1125,7 +1112,7 @@ Same pattern for Binance `GET /api/v3/account` and Upbit `GET /v1/accounts`.
 
 **Fix**: In the endpoint_path routing, when no exchange is detected, try `lookup_endpoint_by_path()` without exchange filter. If exactly 1 exchange matches, use it. If multiple match, return results from all with disambiguation. ~20 LOC in answer.py.
 
-#### BUG-18: Direct-Routed Endpoint/Error Citations Missing Excerpts
+#### BUG-18: Direct-Routed Endpoint/Error Citations Missing Excerpts — **FIXED**
 **Severity**: High
 **Found**: 2026-03-12, gapfinder v2 run (blind mode)
 **Source**: qa-findings.jsonl finding #4
