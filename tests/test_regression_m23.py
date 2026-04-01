@@ -309,5 +309,83 @@ class TestClassificationNonRegression(unittest.TestCase):
         self.assertEqual(r.input_type, "code_snippet")
 
 
+# ===================================================================
+# BUG-8 regression: blend weights are query-type-aware
+# ===================================================================
+
+class TestBug8BlendWeights(unittest.TestCase):
+    """Guard: code_snippet and request_payload queries should use
+    reranker-heavy blend weights (BUG-8)."""
+
+    def test_code_snippet_narrows_gap_between_items(self):
+        from xdocs.fts_util import position_aware_blend
+        # "a" has better rrf, "b" has better rerank.
+        # With reranker-heavy weights, the gap between them should shrink
+        # (reranker signal for "b" carries more weight).
+        items = [
+            {"url": "a", "rrf_score": 0.50, "rerank_score": 0.1},
+            {"url": "b", "rrf_score": 0.45, "rerank_score": 0.9},
+        ]
+        default = position_aware_blend(items, query_type_hint="question")
+        code = position_aware_blend(items, query_type_hint="code_snippet")
+        a_def = next(r["blended_score"] for r in default if r["url"] == "a")
+        b_def = next(r["blended_score"] for r in default if r["url"] == "b")
+        a_code = next(r["blended_score"] for r in code if r["url"] == "a")
+        b_code = next(r["blended_score"] for r in code if r["url"] == "b")
+        gap_default = a_def - b_def
+        gap_code = a_code - b_code
+        self.assertLess(gap_code, gap_default,
+                       "code_snippet should narrow the gap (reranker gets more weight)")
+
+    def test_default_weights_unchanged_for_question(self):
+        from xdocs.fts_util import position_aware_blend
+        items = [
+            {"url": "a", "rrf_score": 1.0, "rerank_score": 0.5},
+            {"url": "b", "rrf_score": 0.5, "rerank_score": 0.8},
+        ]
+        result = position_aware_blend(items, query_type_hint="question")
+        # With default weights (75/25 at rank 1), high-rrf item "a" should still win
+        self.assertEqual(result[0]["url"], "a")
+
+    def test_request_payload_narrows_gap_between_items(self):
+        from xdocs.fts_util import position_aware_blend
+        items = [
+            {"url": "a", "rrf_score": 0.50, "rerank_score": 0.1},
+            {"url": "b", "rrf_score": 0.45, "rerank_score": 0.9},
+        ]
+        default = position_aware_blend(items, query_type_hint="question")
+        payload = position_aware_blend(items, query_type_hint="request_payload")
+        a_def = next(r["blended_score"] for r in default if r["url"] == "a")
+        b_def = next(r["blended_score"] for r in default if r["url"] == "b")
+        a_pay = next(r["blended_score"] for r in payload if r["url"] == "a")
+        b_pay = next(r["blended_score"] for r in payload if r["url"] == "b")
+        gap_default = a_def - b_def
+        gap_payload = a_pay - b_pay
+        self.assertLess(gap_payload, gap_default,
+                       "request_payload should narrow the gap (reranker gets more weight)")
+
+
+# ===================================================================
+# BUG-17 regression: path-only queries find endpoints
+# ===================================================================
+
+class TestBug17PathOnlyQueries(unittest.TestCase):
+    """Guard: bare endpoint paths without exchange name should return
+    results by looking up the path in the endpoint DB."""
+
+    def test_okx_unique_path(self):
+        """OKX has a unique /api/v5/ prefix — should auto-detect."""
+        from xdocs.classify import classify_input
+        r = classify_input("GET /api/v5/account/balance")
+        self.assertEqual(r.input_type, "endpoint_path")
+        self.assertIn("path", r.signals)
+
+    def test_classification_detects_bare_path(self):
+        """Bare paths without method should still classify as endpoint_path."""
+        from xdocs.classify import classify_input
+        r = classify_input("/api/v3/ticker/price")
+        self.assertEqual(r.input_type, "endpoint_path")
+
+
 if __name__ == "__main__":
     unittest.main()

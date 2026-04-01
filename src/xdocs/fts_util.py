@@ -320,10 +320,9 @@ def position_aware_blend(
     - Ranks 4-10: 60% retrieval, 40% reranker
     - Ranks 11+: 40% retrieval, 60% reranker
 
-    The query_type_hint parameter is accepted but currently unused —
-    A/B testing (M29, M30) showed both global and per-type weight changes
-    regressed endpoint_path MRR. The default schedule works best across
-    all query types.
+    The ``query_type_hint`` parameter selects weight schedules that give
+    the reranker more influence for query types where BM25/vector retrieval
+    alone produces noisy results (code_snippet, request_payload).
 
     Both RRF and reranker scores are normalized to [0,1] before blending
     to ensure the weight schedule has its intended effect. RRF scores are
@@ -331,6 +330,16 @@ def position_aware_blend(
     """
     if not results:
         return []
+
+    # Query-type-aware weight schedules.
+    # Default: positions 1-3 favour retrieval (75/25), deeper positions
+    # shift toward reranker. For code/payload queries, reranker gets more
+    # influence throughout because FTS terms are noisy (BUG-8).
+    _DEFAULT_SCHEDULE = ((3, 0.75, 0.25), (10, 0.60, 0.40), (999, 0.40, 0.60))
+    _RERANKER_HEAVY = ((3, 0.55, 0.45), (10, 0.40, 0.60), (999, 0.30, 0.70))
+    schedule = _DEFAULT_SCHEDULE
+    if query_type_hint in ("code_snippet", "request_payload"):
+        schedule = _RERANKER_HEAVY
 
     # Max-normalize RRF scores to [0, 1] so they're on the same scale as
     # sigmoid-normalized reranker scores.
@@ -346,12 +355,11 @@ def position_aware_blend(
         if rerank_raw is not None:
             rerank_norm = sigmoid(rerank_raw)
             rank_1based = i + 1
-            if rank_1based <= 3:
-                w_ret, w_rer = 0.75, 0.25
-            elif rank_1based <= 10:
-                w_ret, w_rer = 0.60, 0.40
-            else:
-                w_ret, w_rer = 0.40, 0.60
+            w_ret, w_rer = schedule[-1][1], schedule[-1][2]
+            for max_rank, wr, wk in schedule:
+                if rank_1based <= max_rank:
+                    w_ret, w_rer = wr, wk
+                    break
             entry["blended_score"] = w_ret * rrf_norm + w_rer * rerank_norm
         else:
             entry["blended_score"] = rrf_norm

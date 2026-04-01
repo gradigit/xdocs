@@ -1687,6 +1687,8 @@ def answer_question(
 
     # BUG-17: For bare endpoint paths (no exchange name), try to detect the
     # exchange from the path itself by querying the endpoint DB.
+    # If exactly 1 exchange matches → use it directly.
+    # If multiple match → search all and return combined results.
     if not matched and classification.input_type == "endpoint_path":
         path = classification.signals.get("path", "")
         if path:
@@ -1696,13 +1698,42 @@ def answer_question(
                     _conn = open_db(_db)
                     clean = re.sub(r"^\{\{\w+\}\}", "", path).split("?", 1)[0]
                     rows = _conn.execute(
-                        "SELECT DISTINCT exchange FROM endpoints WHERE path LIKE ? LIMIT 5;",
+                        "SELECT DISTINCT exchange FROM endpoints WHERE path LIKE ? LIMIT 10;",
                         (f"%{clean}%",),
                     ).fetchall()
-                    _conn.close()
                     if rows:
                         ex_ids = [r[0] for r in rows]
                         matched = [ex for ex in reg.exchanges if ex.exchange_id in ex_ids]
+                        # If multiple exchanges match the path, try direct route
+                        # for each and combine results (don't ask for clarification).
+                        if len(matched) > 1:
+                            all_claims: list[dict[str, Any]] = []
+                            for ex in matched:
+                                sub = _direct_route(
+                                    _conn, classification=classification,
+                                    exchange=ex, docs_dir=docs_dir,
+                                    question=question, norm=norm,
+                                )
+                                if sub and sub.get("claims"):
+                                    all_claims.extend(sub["claims"])
+                            _conn.close()
+                            if all_claims:
+                                for i, cl in enumerate(all_claims, 1):
+                                    cl["id"] = f"c{i}"
+                                return {
+                                    "ok": True,
+                                    "schema_version": "v1",
+                                    "status": "ok",
+                                    "question": question,
+                                    "normalized_question": norm,
+                                    "clarification": None,
+                                    "claims": all_claims[:10],
+                                    "notes": [f"Path matches {len(matched)} exchanges: {', '.join(ex_ids)}"],
+                                }
+                        else:
+                            _conn.close()
+                    else:
+                        _conn.close()
                 except Exception:
                     pass
 
