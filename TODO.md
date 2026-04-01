@@ -1006,36 +1006,20 @@ Dependency: None (can run parallel with M22). This is a long-term architectural 
 
 Postman collections especially can drift from official docs. Example: Binance Spot Postman collection (imported 2026-02-10) missed 3 peg* parameters that exist in the official docs page. The ideal architecture extracts structure directly from crawled pages.
 
-**Phase 1: Research & Design**
-- [ ] 23.1a. Survey HTML table extraction approaches for API doc pages (readability heuristics, table header detection, nested list parsing)
-- [ ] 23.1b. Analyze format diversity across 46 exchanges — how many distinct table/list formats exist for parameter documentation?
-- [ ] 23.1c. Sample 10 diverse exchanges manually: extract parameter tables from stored markdown, categorize extraction difficulty
-- [ ] 23.1d. Design schema for extracted data: parameter name, type, required/optional, description, enum values, source page URL + byte offset (provenance)
-- [ ] 23.1e. Evaluate LLM-assisted extraction vs heuristic extraction vs hybrid (considering cite-only constraint)
+**Phase 1: Method+Path Extraction — COMPLETE (2026-03-27)**
+- [x] 23.1. `endpoint_extract.py` — regex scan (5 patterns, re.MULTILINE), path normalization, citation construction, record building, dedup, save orchestrator (~310 lines)
+- [x] 23.2. `scan-endpoints` CLI command with --dry-run for agent review
+- [x] 23.3. `xdocs-extract` skill — agent workflow for false positive filtering
+- [x] 23.4. 35 new tests (737 total, zero regressions)
+- [x] 23.5. Extracted 972 endpoints across 9 exchanges: aevo 110, bitbank 389, phemex 120, coinex 134, woo 73, cryptocom 73, apex 37, aster 21, gains 15
+- [x] 23.6. Semantic index rebuilt (357K chunks, 2.6 GB compacted)
+- [x] 23.7. Pipeline eval: MRR=0.6396, PFX=78.31% (stable vs M35 baseline)
 
-**Phase 2: Build Core Extractor**
-- [ ] 23.2a. Build `endpoint_extract.py` — extracts structured parameter data from markdown tables/lists
-- [ ] 23.2b. Handle common formats: markdown tables (`| Name | Type | Required |`), definition lists, bullet point lists with inline types
-- [ ] 23.2c. Extract enum values from inline lists (e.g., "LIMIT, MARKET, STOP_LOSS") and code blocks
-- [ ] 23.2d. Required/optional detection from column headers, keywords ("required", "mandatory", "optional"), and asterisk markers
-
-**Phase 3: Integration & Validation**
-- [ ] 23.3a. Cross-reference extracted data against existing spec-imported endpoint records
-- [ ] 23.3b. Measure extraction accuracy: precision/recall against known-good endpoint schemas (Binance OpenAPI as ground truth)
-- [ ] 23.3c. Integration: populate `endpoint_params` table or augment existing endpoint JSON with extraction-sourced params
-- [ ] 23.3d. Provenance tagging: each extracted field cites source page URL + byte offset
-
-**Phase 4: Spec Import Reconciliation**
-- [ ] 23.4a. Where extraction succeeds, prefer crawled-docs data over spec imports (closer to ground truth)
-- [ ] 23.4b. Where extraction fails (e.g., SPA pages, login-gated content), retain spec imports as fallback
-- [ ] 23.4c. Drift detection: compare extracted params against stored spec-imported params, flag divergences
-
-**Acceptance criteria**:
-1. Extraction pipeline produces structured endpoint records from crawled markdown for at least 5 exchanges
-2. Precision >= 90% against known-good OpenAPI endpoint schemas (Binance, Deribit, Orderly)
-3. Coverage >= 70% of parameters in tested endpoints
-4. Provenance: every extracted field cites source page and byte offset
-5. Integration: extracted data queryable via existing `get-endpoint` / `lookup-endpoint` CLI commands
+**Phase 2: Parameter Table Extraction (future)**
+- [ ] 23.P2a. Parse markdown tables near method+path matches (`| Name | Type | Required |` variants)
+- [ ] 23.P2b. Extract enum values from inline lists and code blocks
+- [ ] 23.P2c. Store as `request_schema.parameters[]` with table character offsets
+- [ ] 23.P2d. Cross-reference against spec-imported parameter data
 
 ---
 
