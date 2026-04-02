@@ -604,8 +604,9 @@ def semantic_search(
 
     if _hybrid_post_filter:
         # Over-fetch to ensure enough exchange-matching results after post-filter.
-        # With 35 exchanges, a single exchange may be <5% of results — need ~20x.
-        fetch_limit = max(fetch_limit * 10, 200)
+        # Small exchanges (<1% of chunks) need a high multiplier. 500 is enough
+        # for exchanges with >=0.2% of the index (~700 chunks out of 357K).
+        fetch_limit = max(fetch_limit * 20, 500)
 
     search = _with_exchange_filter(_build_search(query_type))
     try:
@@ -668,6 +669,33 @@ def semantic_search(
     # Post-filter for hybrid mode (LanceDB WHERE bug workaround).
     if _hybrid_post_filter:
         raw_results = [r for r in raw_results if r["exchange"] == exchange]
+        # Fallback: if post-filter eliminated everything, retry with FTS-only
+        # which supports proper WHERE clause.
+        if not raw_results:
+            try:
+                fts_search = _build_search("fts")
+                safe = _sanitize_exchange_filter(exchange)
+                fts_search = fts_search.where(f"exchange = '{safe}'")
+                fts_arrow = fts_search.to_arrow()
+                for i in range(fts_arrow.num_rows):
+                    result = {
+                        "page_id": int(fts_arrow.column("page_id")[i].as_py()),
+                        "url": str(fts_arrow.column("url")[i].as_py()),
+                        "title": str(fts_arrow.column("title")[i].as_py()),
+                        "exchange": str(fts_arrow.column("exchange")[i].as_py()),
+                        "word_count": int(fts_arrow.column("word_count")[i].as_py()),
+                        "score": float(fts_arrow.column("_relevance_score")[i].as_py()) if "_relevance_score" in fts_arrow.column_names else 0.0,
+                        "score_kind": "relevance",
+                    }
+                    if "chunk_index" in fts_arrow.column_names:
+                        result["chunk_index"] = int(fts_arrow.column("chunk_index")[i].as_py())
+                    if "heading" in fts_arrow.column_names:
+                        result["heading"] = str(fts_arrow.column("heading")[i].as_py())
+                    if "text" in fts_arrow.column_names:
+                        result["text"] = str(fts_arrow.column("text")[i].as_py())
+                    raw_results.append(result)
+            except Exception:
+                pass  # FTS fallback failed, return empty
 
     rerank_applied = False
     rerank_reason = "policy_never"
