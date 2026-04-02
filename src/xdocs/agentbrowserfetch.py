@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html as _html_mod
 import random
 import shutil
 import subprocess
@@ -10,6 +11,30 @@ from typing import Any
 from .errors import XDocsError
 from .httpfetch import FetchResult, _host_allowed, _is_http_url
 from .urlutil import url_host as _host
+
+
+def _escape_html(text: str) -> str:
+    """Escape text for embedding in HTML."""
+    return _html_mod.escape(text, quote=False)
+
+
+def _nav_line_ratio(text: str) -> float:
+    """Estimate the fraction of lines that are navigation (links, bullets, short items)."""
+    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    if len(lines) < 4:
+        return 0.0
+    nav = 0
+    for ln in lines:
+        # Short bullet/list items are usually nav
+        if (ln.startswith("*") or ln.startswith("-") or ln.startswith("+")) and len(ln) < 100:
+            nav += 1
+        # Link-only lines
+        elif ln.startswith("[") and "](" in ln and ln.endswith(")"):
+            nav += 1
+        # Very short lines (menu items, labels) — exclude table rows and headings
+        elif len(ln) < 30 and not any(c in ln for c in ".,:;!?|#"):
+            nav += 1
+    return nav / len(lines)
 
 
 def _run(
@@ -327,6 +352,42 @@ class AgentBrowserFetcher:
                 )
 
         body = html_result.stdout.encode("utf-8", errors="replace")
+
+        # 6a. Content-selector fallback for SPA sites (ReadMe.io, KuCoin).
+        # If the outerHTML is mostly nav/SPA shell, try extracting innerText
+        # from known content selectors and wrap it as minimal HTML.
+        # This ensures the markdown converter gets actual endpoint content
+        # instead of sidebar navigation links.
+        if len(body) > 50_000:  # Large HTML likely has SPA shell noise
+            content_js = """
+            (function(){
+                var selectors = ['.markdown-body', '[class*="content"]', 'article', '[role="main"]', 'main'];
+                for (var s = 0; s < selectors.length; s++) {
+                    var els = document.querySelectorAll(selectors[s]);
+                    for (var i = 0; i < els.length; i++) {
+                        var t = (els[i].innerText || '').trim();
+                        if (t.length > 500) return t;
+                    }
+                }
+                return '';
+            })()
+            """.strip()
+            content_result = _run(
+                [self._bin, "eval", content_js],
+                timeout=subprocess_timeout,
+                check=False,
+            )
+            content_text = (content_result.stdout or "").strip()
+            if len(content_text) > 500:
+                # Wrap as minimal HTML so the markdown converter processes it.
+                wrapped = f"<html><body><pre>{_escape_html(content_text)}</pre></body></html>"
+                content_body = wrapped.encode("utf-8", errors="replace")
+                # Use the content-selector body if it has more substantive text
+                # (fewer nav-like lines) than the full outerHTML.
+                nav_ratio_full = _nav_line_ratio(body.decode("utf-8", errors="replace"))
+                nav_ratio_content = _nav_line_ratio(content_text)
+                if nav_ratio_content < nav_ratio_full:
+                    body = content_body
 
         # 7. Enforce max_bytes.
         if len(body) > max_bytes:
