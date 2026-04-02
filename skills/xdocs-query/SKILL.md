@@ -156,6 +156,16 @@ xdocs search-pages "X-MBX-APIKEY -1021 recvWindow" --limit 5
 xdocs search-pages "withdrawal history" --exchange bitget --limit 5  # filter by exchange
 ```
 
+### Drill-Down: get-page
+
+`get-page` takes a **URL**, not a page ID. Use the `url` field from semantic-search or search-pages results:
+
+```bash
+xdocs get-page "https://developers.binance.com/docs/wallet/capital/withdraw-history"
+```
+
+The `page_id` field in semantic-search results is a LanceDB internal row ID — do NOT pass it to `get-page`.
+
 ### Retrieval Budget (Efficiency Guardrail)
 
 For one user query, stay within this default budget unless user asks for exhaustive mode:
