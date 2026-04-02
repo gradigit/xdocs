@@ -249,7 +249,8 @@ class TestSanitizeExchangeFilter(unittest.TestCase):
 
     def test_valid_with_underscores(self) -> None:
         from xdocs.semantic import _sanitize_exchange_filter
-        self.assertEqual(_sanitize_exchange_filter("crypto_com"), "crypto_com")
+        # crypto_com is aliased to cryptocom
+        self.assertEqual(_sanitize_exchange_filter("crypto_com"), "cryptocom")
 
     def test_valid_with_digits(self) -> None:
         from xdocs.semantic import _sanitize_exchange_filter
@@ -265,10 +266,10 @@ class TestSanitizeExchangeFilter(unittest.TestCase):
         with self.assertRaises(ValueError):
             _sanitize_exchange_filter("bin;DROP TABLE")
 
-    def test_rejects_uppercase(self) -> None:
+    def test_normalizes_uppercase(self) -> None:
         from xdocs.semantic import _sanitize_exchange_filter
-        with self.assertRaises(ValueError):
-            _sanitize_exchange_filter("Binance")
+        # Uppercase is now lowercased, not rejected
+        self.assertEqual(_sanitize_exchange_filter("Binance"), "binance")
 
     def test_rejects_empty(self) -> None:
         from xdocs.semantic import _sanitize_exchange_filter

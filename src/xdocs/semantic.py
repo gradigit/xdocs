@@ -30,12 +30,25 @@ _AUTO_RERANK_TOPK_SPREAD = float(os.getenv("CEX_RERANK_AUTO_TOPK_SPREAD", "0.02"
 
 _EXCHANGE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 
+# User-facing names → internal exchange IDs.
+_EXCHANGE_ALIASES: dict[str, str] = {
+    "crypto.com": "cryptocom",
+    "crypto_com": "cryptocom",
+    "gate.io": "gateio",
+    "huobi": "htx",
+    "mercado bitcoin": "mercadobitcoin",
+    "perpetual protocol": "perp",
+    "gains network": "gains",
+    "woo x": "woo",
+}
+
 
 def _sanitize_exchange_filter(exchange: str) -> str:
-    """Validate exchange name to prevent filter injection in LanceDB WHERE clauses."""
-    if not _EXCHANGE_NAME_RE.match(exchange):
+    """Validate and normalize exchange name for LanceDB WHERE clauses."""
+    normed = _EXCHANGE_ALIASES.get(exchange.lower(), exchange.lower())
+    if not _EXCHANGE_NAME_RE.match(normed):
         raise ValueError(f"Invalid exchange name: {exchange!r}")
-    return exchange
+    return normed
 
 
 def _require_lancedb():

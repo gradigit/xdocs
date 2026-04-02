@@ -99,6 +99,7 @@ def main(argv: list[str] | None = None) -> None:
 
     sp = sub.add_parser("search-pages", help="Full-text search crawled pages", parents=[common])
     sp.add_argument("query")
+    sp.add_argument("--exchange", default=None, help="Filter by exchange (uses domain from registry)")
     sp.add_argument("--limit", type=int, default=10)
 
     gp = sub.add_parser("get-page", help="Get stored page (meta + markdown)", parents=[common])
@@ -588,7 +589,18 @@ def main(argv: list[str] | None = None) -> None:
             return
 
         if args.cmd == "search-pages":
-            matches = search_pages(docs_dir=args.docs_dir, query=args.query, limit=int(args.limit))
+            fetch_limit = int(args.limit)
+            if args.exchange:
+                fetch_limit = max(fetch_limit * 20, 200)  # Over-fetch, then filter
+            matches = search_pages(docs_dir=args.docs_dir, query=args.query, limit=fetch_limit)
+            if args.exchange:
+                from .registry import load_registry as _load_reg
+                repo_root = Path(__file__).resolve().parents[2]
+                reg = _load_reg(repo_root / "data" / "exchanges.yaml")
+                ex = reg.get_exchange(args.exchange)
+                domains = set(ex.allowed_domains)
+                matches = [m for m in matches if any(d in m.get("canonical_url", "") for d in domains)]
+                matches = matches[:int(args.limit)]
             _print_json({"ok": True, "schema_version": "v1", "result": {"matches": matches}})
             return
 
