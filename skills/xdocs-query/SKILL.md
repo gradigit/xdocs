@@ -140,7 +140,8 @@ The full endpoint JSON contains:
 - `description` — what the endpoint does
 - `request_schema.parameters` — parameters with name, type, required, enum values
 - `response_schema.responses` — response structure with examples
-- `rate_limit`, `required_permissions`, `error_codes` — if documented (check `field_status`)
+- `rate_limit` — extracted for OKX, WOO, Bitget endpoints (400+ endpoints have this). Contains `{text, requests, period_seconds}`. Check `field_status.rate_limit == "documented"`.
+- `required_permissions`, `error_codes` — if documented (check `field_status`)
 - `sources` — citation URLs back to original doc pages
 
 ## Step 4: Search Pages

@@ -98,11 +98,15 @@ Spot-check 5-10 endpoints: verify method, path, and description match the source
 | Exchange | Section | Key Notes |
 |----------|---------|-----------|
 | phemex | `api` | Slate monolith (53K words). Endpoints in code blocks after `> Request`. Same paths in multiple sub-sections (COIN-M, Spot). First-wins dedup. |
-| woo | `api` | SPA monolith (20K words). Backtick-wrapped + code blocks. Large changelog section with endpoint references (not definitions). |
+| woo | `api` | SPA monolith (20K words). Backtick-wrapped + code blocks. Rate limits extracted inline ("Limit: N requests per 1 second"). |
 | coinex | `api` | Docusaurus (489 pages). Rate limit page lists endpoints as references. Auth page shows endpoints in code examples. |
 | aevo | `api` | ReadMe.io (144 per-endpoint pages). Corrupted markdown links: `[GET /assets get](url)`. Index page has link references. |
 | bitbank | `rest` | Clean GitHub markdown (175 pages). Dual base_urls: private (`api.bitbank.cc/v1`) vs public (`public.bitbank.cc`). |
 | apex | `api` | ReadMe.io (5 pages, 3 dupes). Language-toggle duplicates handled by dedup. |
+| bybit | `v5` | Per-endpoint Docusaurus pages (392). 304 endpoints extracted from crawled docs (replaces sparse Postman import). |
+| okx | `rest` | Single-page SPA (227K words). 353 endpoints with inline rate limits ("Rate Limit: N requests per M seconds"). |
+| coinone | `rest` | ReadMe.io Korean docs. Non-standard format: `post\nhttps://api.coinone.co.kr/path`. 40 endpoints extracted agentically. |
+| cryptocom | `exchange` | JSON-RPC style API. Endpoints as `public/method-name` and `private/method-name` headings. 73 extracted agentically. |
 
 ## Dual Base URL Handling
 
@@ -113,9 +117,16 @@ For exchanges with multiple base_urls (e.g., bitbank), each candidate dict can i
 {"method": "GET", "path": "/{pair}/ticker", "base_url": "https://public.bitbank.cc", ...}
 ```
 
-## What This Skill Does NOT Do
+## What's Extracted
 
-- Parameter table extraction (Phase 2, not yet implemented)
-- Rate limit extraction (Phase 3, not yet implemented)
-- Overwrite spec-imported endpoints (`skip_existing=True` by default)
+- **Method + path** (all exchanges) — 5 regex patterns + agentic for non-standard formats
+- **Description** — from heading text near the endpoint
+- **Rate limit** — extracted inline where available (OKX, WOO, Bitget patterns). 400 endpoints have rate_limit data.
+- **docs_url** — set to source page URL automatically
+
+## What This Skill Does NOT Do (yet)
+
+- Parameter table extraction (Phase 2: parse `| Name | Type | Required |` tables)
+- Permission extraction (Phase 2: "Permission: Read" patterns)
+- Overwrite spec-imported endpoints (`skip_existing=True` by default, use `--no-skip-existing` to replace)
 - Require any LLM or external API calls

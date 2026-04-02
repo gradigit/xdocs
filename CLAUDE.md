@@ -409,11 +409,11 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,428 pages, 18.1M words, 6,039 structured endpoints**. Store is at `cex-docs/`. Pipeline: **MRR=0.6428, PFX=78.84%, 778 tests**. Schema: v7.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,428 pages, 18.1M words, 6,406 structured endpoints** (400 with rate_limit). Store is at `cex-docs/`. Pipeline: **MRR=0.6428, PFX=78.84%, 778 tests**. Schema: v7.
 
 Latest:
 
-- **M23 endpoint extraction from crawled docs (2026-03-27)** — `scan-endpoints` CLI + `xdocs-extract` skill. Regex-based candidate scanning (5 patterns) with agent-driven false positive filtering. +972 endpoints across 9 exchanges (aevo 110, bitbank 389, phemex 120, coinex 134, woo 73, cryptocom 73, apex 37, aster 21, gains 15). Total: 6,039 endpoints, 39/46 exchanges covered. Semantic index rebuilt (357K chunks, compacted). Pipeline: MRR=0.6428, PFX=78.84%, 778 tests.
+- **M23 endpoint extraction from crawled docs (2026-03-27)** — `scan-endpoints` CLI + `xdocs-extract` skill. Regex-based candidate scanning (5 patterns) with agent-driven false positive filtering. +972 endpoints across 9 exchanges (aevo 110, bitbank 389, phemex 120, coinex 134, woo 73, cryptocom 73, apex 37, aster 21, gains 15). Total: 6,406 endpoints (1,648 extracted, 400 with rate_limit), 39/46 exchanges covered. Semantic index rebuilt (357K chunks, compacted). Pipeline: MRR=0.6428, PFX=78.84%, 778 tests.
 - **M39 gap fixes + source validation (2026-03-24)** — Gemini 71 endpoints (rest.yaml), BingX 47 AI skill pages, CCXT 110 raw markdown files (665K words), Bluefin 40 reference pages, Bitstamp WebSocket docs, Bitget 7/8 thin pages fixed, Kraken thin 30→11, Paradex 404 cleaned. Schema v7 adds `source_type` and `content_flags` columns.
 - **M36-M38 pipeline health (2026-03-22)** — curl-cffi as default HTTP client (TLS fingerprint bypass), parallel sync (4 concurrent), changelog intelligence (18 exchanges, 1,255 entries), stale lock cleanup, review queue auto-resolve.
 

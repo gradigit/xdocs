@@ -1011,11 +1011,14 @@ Postman collections especially can drift from official docs. Example: Binance Sp
 - [x] 23.2. `scan-endpoints` CLI command with --dry-run for agent review
 - [x] 23.3. `xdocs-extract` skill — agent workflow for false positive filtering
 - [x] 23.4. 35 new tests (737 total, zero regressions)
-- [x] 23.5. Extracted 972 endpoints across 9 exchanges: aevo 110, bitbank 389, phemex 120, coinex 134, woo 73, cryptocom 73, apex 37, aster 21, gains 15
+- [x] 23.5. Extracted 1,648 endpoints across 13 exchanges (incl. Bybit 304, OKX 353, WOO 73, Coinone 40, Crypto.com 73)
 - [x] 23.6. Semantic index rebuilt (357K chunks, 2.6 GB compacted)
-- [x] 23.7. Pipeline eval: MRR=0.6396, PFX=78.31% (stable vs M35 baseline)
+- [x] 23.7. Pipeline eval: MRR=0.6428, PFX=78.84% (stable vs M35 baseline)
+- [x] 23.8. Rate limit extraction — 400 endpoints with `rate_limit` data (OKX, WOO, Bitget patterns)
+- [x] 23.9. Bybit: replaced Postman import (129 sparse) with crawled doc extraction (304 rich)
+- [x] 23.10. docs_url resolver improved — specificity scoring, 249 endpoints re-resolved
 
-**Phase 2: Parameter Table Extraction (future)**
+**Phase 2: Parameter Table + Permission Extraction (future)**
 - [ ] 23.P2a. Parse markdown tables near method+path matches (`| Name | Type | Required |` variants)
 - [ ] 23.P2b. Extract enum values from inline lists and code blocks
 - [ ] 23.P2c. Store as `request_schema.parameters[]` with table character offsets
