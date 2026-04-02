@@ -23,7 +23,6 @@ from .lock import acquire_write_lock
 from .markdown import extract_block_metadata
 from .registry import load_registry
 from .store import require_store_db
-from .timeutil import now_iso_utc
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +144,7 @@ def _line_to_char(offsets: list[int], line: int) -> int:
     """Convert a 1-based line number to a character offset."""
     if 1 <= line < len(offsets):
         return offsets[line]
-    return len(offsets) - 1 if offsets else 0
+    return offsets[-1] if offsets else 0
 
 
 # ---------------------------------------------------------------------------
