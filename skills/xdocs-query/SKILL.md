@@ -153,6 +153,7 @@ xdocs semantic-search "how to calculate signature" --exchange binance --mode hyb
 
 # Use FTS5 only for literal anchors (exact error code/path/header string):
 xdocs search-pages "X-MBX-APIKEY -1021 recvWindow" --limit 5
+xdocs search-pages "withdrawal history" --exchange bitget --limit 5  # filter by exchange
 ```
 
 ### Retrieval Budget (Efficiency Guardrail)

@@ -430,8 +430,8 @@ These are known characteristics of the system. Do NOT skip testing them — veri
 - 17 negative test cases exist in the maintainer's golden QA — the system should return "unknown"/"undocumented" for them
 - First semantic search query is slow (14-17s cold start for embedding model load)
 - The reranker auto-selects: macOS uses Jina v3 MLX, Linux uses Jina v3 or FlashRank fallback
-- Code snippets with numeric literals (prices like 30000, quantities like 50000) can misclassify as error_message — the generic `\d{5,6}` error pattern captures these. Test with realistic SDK code.
-- Some exchange internal IDs differ from user-facing names: `crypto_com` = "Crypto.com", `mercadobitcoin` = "Mercado Bitcoin", `woo` = "WOO X". The answer pipeline must handle both forms.
+- Code snippets with numeric literals (prices like 30000) previously misclassified as error_message — **FIXED** (BUG-15). Test to verify the fix holds.
+- Exchange aliases are normalized: "crypto.com"→"cryptocom", "gate.io"→"gateio", "Binance"→"binance" in semantic search. Both user-facing names and internal IDs work. `search-pages` now supports `--exchange` flag.
 - Stored page markdown often starts with navigation chrome ("Skip to main content", sidebar links, language toggles). The `_is_nav_region()` function is supposed to skip these but has known gaps — verify excerpts don't begin with nav text.
 - Many exchanges have endpoints with no `docs_url` (Hyperliquid 100%, Lighter 100%, Mercado Bitcoin 100%). This limits citation quality for endpoint answers.
 

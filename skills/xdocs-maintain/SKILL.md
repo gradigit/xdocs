@@ -311,9 +311,13 @@ xdocs import-openapi --exchange coinbase --section exchange \
 
 # Link imported endpoints to doc pages
 xdocs link-endpoints --docs-dir ./cex-docs
+
+# Extract endpoints from crawled docs (for exchanges without specs)
+xdocs scan-endpoints --exchange phemex --section api --docs-dir ./cex-docs --dry-run  # preview
+xdocs scan-endpoints --exchange phemex --section api --docs-dir ./cex-docs            # save
 ```
 
-After each import, verify endpoint count matches bible expectations. If count is significantly lower, check for `--continue-on-error` output for parsing failures.
+After each import, verify endpoint count matches bible expectations. If count is significantly lower, check for `--continue-on-error` output for parsing failures. For exchanges without OpenAPI/Postman specs, use `scan-endpoints` to extract endpoints from crawled markdown (see `xdocs-extract` skill for the full workflow).
 
 #### Phase 4: Post-Sync Validation
 
