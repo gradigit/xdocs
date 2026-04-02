@@ -78,6 +78,53 @@ _P5 = re.compile(
 # Path normalization
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Rate limit extraction
+# ---------------------------------------------------------------------------
+
+_RATE_LIMIT_PATTERNS = [
+    # "Rate Limit: 20 requests per 2 seconds"
+    re.compile(r"Rate\s*Limit[:\s]+(\d+)\s*(?:requests?|times?|calls?)\s*(?:per|/)\s*(\d*)\s*(second|sec|s|minute|min|m|hour|h)", re.IGNORECASE),
+    # "Limit: 10 requests per 1 second"
+    re.compile(r"\bLimit[:\s]+(\d+)\s*(?:requests?)\s*(?:per|/)\s*(\d*)\s*(second|sec|s|minute|min|m)", re.IGNORECASE),
+    # "10 times/1s" (Bitget style)
+    re.compile(r"(\d+)\s*(?:times?|次)\s*/\s*(\d*)\s*(s|秒|sec|min|m)", re.IGNORECASE),
+]
+
+
+def extract_rate_limit_near(md: str, char_pos: int, window: int = 500) -> dict[str, Any] | None:
+    """Extract rate limit text near a character position in markdown.
+
+    Searches a window around ``char_pos`` for rate limit patterns.
+    Returns ``{"text": "20 requests per 2 seconds", "requests": 20, "period_seconds": 2}``
+    or None if no pattern found.
+    """
+    start = max(0, char_pos - window)
+    end = min(len(md), char_pos + window)
+    region = md[start:end]
+
+    for pat in _RATE_LIMIT_PATTERNS:
+        m = pat.search(region)
+        if m:
+            count = int(m.group(1))
+            period_num = int(m.group(2)) if m.group(2) else 1
+            period_unit = m.group(3).lower()
+            if period_unit in ("s", "sec", "second", "秒"):
+                period_seconds = period_num
+            elif period_unit in ("m", "min", "minute"):
+                period_seconds = period_num * 60
+            elif period_unit in ("h", "hour"):
+                period_seconds = period_num * 3600
+            else:
+                period_seconds = period_num
+            return {
+                "text": m.group(0).strip(),
+                "requests": count,
+                "period_seconds": period_seconds,
+            }
+    return None
+
+
 _ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\ufeff\u00ad]")
 _PARAM_ANGLE = re.compile(r"<([^>]+)>")
 _PARAM_COLON = re.compile(r":([A-Za-z_]\w*)")
@@ -393,6 +440,20 @@ def _build_endpoint_record(
         field_name="http.path",
     )
 
+    # Try to extract rate limit near the endpoint definition.
+    rate_limit_data = extract_rate_limit_near(md, candidate.char_start)
+    if rate_limit_data:
+        field_status["rate_limit"] = "documented"
+        rl_citation = _build_citation(
+            page_url=candidate.page_url,
+            crawled_at=crawled_at,
+            content_hash=content_hash,
+            path_hash=path_hash,
+            md=md,
+            char_start=max(0, candidate.char_start - 500),
+            field_name="rate_limit",
+        )
+
     record: dict[str, Any] = {
         "exchange": exchange,
         "section": section,
@@ -407,9 +468,9 @@ def _build_endpoint_record(
         "request_schema": None,
         "response_schema": None,
         "required_permissions": None,
-        "rate_limit": None,
+        "rate_limit": rate_limit_data,
         "error_codes": None,
-        "sources": [citation_method, citation_path],
+        "sources": [citation_method, citation_path] + ([rl_citation] if rate_limit_data else []),
         "field_status": field_status,
         "extraction": {
             "model": "extract-markdown",
