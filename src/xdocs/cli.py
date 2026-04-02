@@ -848,8 +848,7 @@ def main(argv: list[str] | None = None) -> None:
             r = validate_known_sources(registry=reg, exchange_id=args.exchange, timeout_s=float(args.timeout_s))
             _print_json({"ok": r["ok"], "schema_version": "v1", "result": r})
             if not r["ok"]:
-                import sys
-                sys.exit(1)
+                raise SystemExit(1)
             return
 
         if args.cmd == "quality-check":
