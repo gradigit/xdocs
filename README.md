@@ -161,11 +161,13 @@ xdocs semantic-search "how to sign okx request" --exchange okx --mode hybrid
 xdocs answer "Explain Upbit private account auth requirements with citations"
 ```
 
-### Endpoint import
+### Endpoint import & extraction
 
 ```bash
 xdocs import-openapi --exchange kucoin --section spot --url <spec-url> --base-url https://api.kucoin.com --continue-on-error
 xdocs import-postman --exchange bitmart --section spot --url <collection-url> --continue-on-error
+xdocs scan-endpoints --exchange phemex --section api --dry-run   # extract from crawled docs
+xdocs scan-endpoints --exchange phemex --section api             # save extracted endpoints
 xdocs link-endpoints         # resolve docs_url for imported endpoints
 xdocs ccxt-xref              # cross-reference against CCXT
 ```
@@ -238,11 +240,12 @@ git pull && uv tool install -e ".[semantic-query]" --force && ./scripts/bootstra
 
 ## Project structure
 
-- `src/xdocs/cli.py` — CLI entrypoint (51 subcommands)
+- `src/xdocs/cli.py` — CLI entrypoint (52 subcommands)
 - `src/xdocs/sync.py` — inventory + fetch orchestration (cron-friendly)
 - `src/xdocs/inventory.py` — doc URL enumeration (sitemaps + link-follow)
 - `src/xdocs/inventory_fetch.py` — page fetching (--resume, --concurrency, --render auto)
 - `src/xdocs/endpoints.py` — endpoint CRUD, FTS search, review queue
+- `src/xdocs/endpoint_extract.py` — regex-based endpoint extraction from crawled docs
 - `src/xdocs/openapi_import.py` — OpenAPI/Swagger spec import
 - `src/xdocs/postman_import.py` — Postman collection import
 - `src/xdocs/semantic.py` — vector/fts/hybrid retrieval + rerank policy
@@ -257,14 +260,15 @@ git pull && uv tool install -e ".[semantic-query]" --force && ./scripts/bootstra
 - `src/xdocs/validate.py` — golden QA retrieval evaluation
 - `src/xdocs/embeddings.py` — embedding backend selection (Jina MLX / SentenceTransformers)
 - `scripts/sync_runtime_repo.py` — data release publisher (`--publish`)
-- `schema/schema.sql` — SQLite schema (v6)
-- `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections)
-- `.claude/skills/xdocs-maintain/SKILL.md` — maintainer workflow skill
-- `.claude/skills/xdocs-query/SKILL.md` — query/answer agent skill
-- `.claude/skills/xdocs-discovery/SKILL.md` — exhaustive crawl target discovery skill
-- `.claude/skills/xdocs-qa/SKILL.md` — QA gap finder skill
-- `.claude/skills/xdocs-bugreport/SKILL.md` — structured bug report generation
-- `.claude/skills/xdocs-triage/SKILL.md` — bug report triage and fix (maintainer)
+- `schema/schema.sql` — SQLite schema (v7)
+- `data/exchanges.yaml` — exchange registry (46 exchanges, 78 sections, known_sources)
+- `skills/xdocs-maintain/SKILL.md` — maintainer workflow skill
+- `skills/xdocs-query/SKILL.md` — query/answer agent skill
+- `skills/xdocs-discovery/SKILL.md` — exhaustive crawl target discovery skill
+- `skills/xdocs-extract/SKILL.md` — endpoint extraction from crawled docs
+- `skills/xdocs-qa/SKILL.md` — QA gap finder skill
+- `skills/xdocs-bugreport/SKILL.md` — structured bug report generation
+- `skills/xdocs-triage/SKILL.md` — bug report triage and fix (maintainer)
 
 ---
 

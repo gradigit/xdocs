@@ -21,6 +21,7 @@ Skills are agent-agnostic. Canonical source is `skills/` at the repo root. Platf
 | `xdocs-maintain` | Maintainer workflow (sync, spec imports, validation, doc updates) |
 | `xdocs-query` | Query/answer (classification → search → cite-only answer) |
 | `xdocs-discovery` | Exhaustive crawl target discovery (new exchange onboarding) |
+| `xdocs-extract` | Endpoint extraction from crawled docs (regex scan + agent-curated save) |
 | `xdocs-qa` | QA gap finder (iterative testing loop) |
 | `xdocs-bugreport` | Structured bug report generation (environment, reproduction, root cause classification) |
 | `xdocs-triage` | Bug report triage and fix (independent reproduction, severity challenge, A/B validated fix) |
@@ -325,7 +326,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **10,727 pages, 16.75M words, 4,963 structured endpoints**. Store is at `cex-docs/`.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,428 pages, 18.1M words, 6,039 structured endpoints**. Store is at `cex-docs/`. Pipeline: **MRR=0.6428, PFX=78.84%, 778 tests**. Schema: v7.
 
 Latest:
 
