@@ -1,1006 +1,1473 @@
 exchanges:
-  - exchange_id: binance
-    display_name: Binance
-    allowed_domains:
-      - developers.binance.com
-    sections:
-      - section_id: spot
-        base_urls: ["https://api.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/binance-spot-api-docs/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: futures_usdm
-        base_urls: ["https://fapi.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/derivatives/usds-margined-futures/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: futures_coinm
-        base_urls: ["https://dapi.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/derivatives/coin-margined-futures/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: portfolio_margin
-        base_urls: ["https://papi.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: options
-        base_urls: ["https://eapi.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/derivatives/options-trading/general-info"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: margin_trading
-        base_urls: ["https://api.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/margin_trading/Introduction"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: wallet
-        base_urls: ["https://api.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/wallet"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-      - section_id: copy_trading
-        base_urls: ["https://api.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/copy_trading"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 50
-          scope_prefixes:
-            - "https://developers.binance.com/docs/copy_trading"
-      - section_id: portfolio_margin_pro
-        base_urls: ["https://papi.binance.com"]
-        seed_urls: ["https://developers.binance.com/docs/derivatives/portfolio-margin-pro/general-info"]
-        doc_sources:
-          - kind: sitemap
-            url: https://developers.binance.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 50
-          scope_prefixes:
-            - "https://developers.binance.com/docs/derivatives/portfolio-margin-pro/"
-
-  - exchange_id: okx
-    display_name: OKX
-    allowed_domains:
-      - www.okx.com
-    sections:
-      - section_id: rest
-        base_urls: ["https://www.okx.com"]
-        seed_urls: ["https://www.okx.com/docs-v5/en/"]
-        # OKX docs is a single-page SPA (224K words). No sitemap needed —
-        # www.okx.com/sitemap.xml has 5M+ entries (entire site, all languages)
-        # and caused OOM during parallel sync (65GB VM). Seed URL is sufficient.
-        inventory_policy:
-          mode: link_follow
-          max_pages: 10
-      - section_id: websocket
-        base_urls: ["wss://ws.okx.com:8443/ws/v5/public", "wss://ws.okx.com:8443/ws/v5/private", "wss://ws.okx.com:8443/ws/v5/business"]
-        seed_urls: ["https://www.okx.com/docs-v5/en/#websocket-api"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 10
-      - section_id: broker
-        base_urls: ["https://www.okx.com"]
-        seed_urls: ["https://www.okx.com/docs-v5/broker_en/"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-      - section_id: changelog
-        base_urls: ["https://www.okx.com"]
-        seed_urls: ["https://www.okx.com/docs-v5/log_en/"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-
-  - exchange_id: bybit
-    display_name: Bybit
-    allowed_domains:
-      - bybit-exchange.github.io
-    sections:
-      - section_id: v5
-        base_urls: ["https://api.bybit.com"]
-        seed_urls: ["https://bybit-exchange.github.io/docs/v5/intro"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://bybit-exchange.github.io/docs/v5/"
-        doc_sources:
-          - kind: sitemap
-            url: https://bybit-exchange.github.io/docs/sitemap.xml
-      - section_id: websocket
-        base_urls: ["wss://stream.bybit.com/v5/public", "wss://stream.bybit.com/v5/private"]
-        seed_urls: ["https://bybit-exchange.github.io/docs/v5/ws/connect"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://bybit-exchange.github.io/docs/v5/ws/"
-            - "https://bybit-exchange.github.io/docs/v5/websocket/"
-        doc_sources:
-          - kind: sitemap
-            url: https://bybit-exchange.github.io/docs/sitemap.xml
-      - section_id: p2p
-        base_urls: ["https://api.bybit.com"]
-        seed_urls: ["https://bybit-exchange.github.io/docs/p2p/guide"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://bybit-exchange.github.io/docs/p2p/"
-        doc_sources:
-          - kind: sitemap
-            url: https://bybit-exchange.github.io/docs/sitemap.xml
-      - section_id: tax
-        base_urls: ["https://api.bybit.com"]
-        seed_urls: ["https://bybit-exchange.github.io/docs/tax/report"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://bybit-exchange.github.io/docs/tax/"
-        doc_sources:
-          - kind: sitemap
-            url: https://bybit-exchange.github.io/docs/sitemap.xml
-      - section_id: pay
-        base_urls: ["https://api.bybit.com"]
-        seed_urls: ["https://bybit-exchange.github.io/pay-docs/"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://bybit-exchange.github.io/pay-docs/"
-        doc_sources:
-          - kind: sitemap
-            url: https://bybit-exchange.github.io/pay-docs/sitemap.xml
-
-  - exchange_id: bitget
-    display_name: Bitget
-    allowed_domains:
-      - www.bitget.com
-    sections:
-      - section_id: v2
-        base_urls: ["https://api.bitget.com"]
-        seed_urls:
-          - "https://www.bitget.com/api-doc/common/intro"
-          - "https://www.bitget.com/api-doc/spot/market/Get-Tickers"
-          - "https://www.bitget.com/api-doc/contract/market/Get-All-Symbol-Ticker"
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 500
-          scope_prefixes:
-            - "https://www.bitget.com/api-doc/"
-        doc_sources:
-          - kind: sitemap
-            url: https://www.bitget.com/sitemap.xml
-      - section_id: copy_trading
-        base_urls: ["https://api.bitget.com"]
-        seed_urls: ["https://www.bitget.com/api-doc/copytrading/intro"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.bitget.com/sitemap.xml
-      - section_id: margin
-        base_urls: ["https://api.bitget.com"]
-        seed_urls: ["https://www.bitget.com/api-doc/margin/intro"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.bitget.com/sitemap.xml
-      - section_id: earn
-        base_urls: ["https://api.bitget.com"]
-        seed_urls: ["https://www.bitget.com/api-doc/earn/intro"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.bitget.com/sitemap.xml
-      - section_id: broker
-        base_urls: ["https://api.bitget.com"]
-        seed_urls: ["https://www.bitget.com/api-doc/broker/intro"]
-        doc_sources:
-          - kind: sitemap
-            url: https://www.bitget.com/sitemap.xml
-
-  - exchange_id: gateio
-    display_name: Gate.io
-    allowed_domains:
-      - www.gate.com
-    sections:
-      - section_id: v4
-        base_urls: ["https://api.gateio.ws/api/v4"]
-        seed_urls: ["https://www.gate.com/docs/developers/apiv4/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 2000
-
-  - exchange_id: kucoin
-    display_name: KuCoin
-    allowed_domains:
-      - www.kucoin.com
-    sections:
-      # NOTE: KuCoin uses opaque URL IDs (/docs-new/338210m0) — spot and futures
-      # docs are interleaved in one URL tree. All content is crawled here.
-      - section_id: spot
-        base_urls: ["https://api.kucoin.com", "https://api-futures.kucoin.com"]
-        seed_urls:
-          - "https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order"
-          - "https://www.kucoin.com/docs/rest/futures-trading/orders/place-order"
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 5000
-          scope_prefixes:
-            - "https://www.kucoin.com/docs-new/"
-
-  - exchange_id: htx
-    display_name: HTX
-    allowed_domains:
-      - huobiapi.github.io
-    sections:
-      - section_id: spot
-        base_urls: ["https://api.huobi.pro"]
-        seed_urls: ["https://huobiapi.github.io/docs/spot/v1/en/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 5000
-      - section_id: derivatives
-        base_urls: ["https://api.hbdm.com"]
-        seed_urls: ["https://huobiapi.github.io/docs/dm/v1/en/"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-      - section_id: coin_margined_swap
-        base_urls: ["https://api.hbdm.com"]
-        seed_urls: ["https://huobiapi.github.io/docs/coin_margined_swap/v1/en/"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-      - section_id: usdt_swap
-        base_urls: ["https://api.hbdm.com"]
-        seed_urls: ["https://huobiapi.github.io/docs/usdt_swap/v1/en/"]
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-
-  - exchange_id: cryptocom
-    display_name: Crypto.com
-    allowed_domains:
-      - exchange-docs.crypto.com
-    sections:
-      - section_id: exchange
-        base_urls: ["https://api.crypto.com/exchange/v1"]
-        seed_urls: ["https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 2000
-
-  - exchange_id: bitstamp
-    display_name: Bitstamp
-    allowed_domains:
-      - www.bitstamp.net
-    sections:
-      - section_id: rest
-        base_urls: ["https://www.bitstamp.net/api"]
-        seed_urls: ["https://www.bitstamp.net/api/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 2000
-      - section_id: fix
-        base_urls: ["https://www.bitstamp.net"]
-        seed_urls: ["https://www.bitstamp.net/fix/v2/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 100
-          scope_prefixes:
-            - "https://www.bitstamp.net/fix/"
-      - section_id: websocket
-        base_urls: ["wss://ws.bitstamp.net"]
-        seed_urls: ["https://www.bitstamp.net/websocket/v2/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 100
-          scope_prefixes:
-            - "https://www.bitstamp.net/websocket/"
-
-  - exchange_id: bitfinex
-    display_name: Bitfinex
-    allowed_domains:
-      - docs.bitfinex.com
-    sections:
-      - section_id: v2
-        base_urls: ["https://api-pub.bitfinex.com/v2"]
-        seed_urls: ["https://docs.bitfinex.com/reference/rest-public-platform-status"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-
-  - exchange_id: dydx
-    display_name: dYdX
-    allowed_domains:
-      - docs.dydx.exchange
-      - docs.dydx.xyz
-    sections:
-      - section_id: docs
-        base_urls: ["https://indexer.dydx.trade/v4"]
-        seed_urls: ["https://docs.dydx.xyz/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 500
-
-  - exchange_id: hyperliquid
-    display_name: Hyperliquid
-    allowed_domains:
-      - hyperliquid.gitbook.io
-    sections:
-      - section_id: api
-        base_urls: ["https://api.hyperliquid.xyz"]
-        seed_urls: ["https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/"
-            - "https://hyperliquid.gitbook.io/hyperliquid-docs/builder-tools/"
-        doc_sources:
-          - kind: sitemap
-            url: https://hyperliquid.gitbook.io/hyperliquid-docs/sitemap.xml
-
-  - exchange_id: gmx
-    display_name: GMX
-    allowed_domains:
-      - docs.gmx.io
-      - gmx-docs.io
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.gmx.io"]
-        seed_urls: ["https://docs.gmx.io/docs/intro/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 400
-          scope_prefixes:
-            - "https://docs.gmx.io/"
-            - "https://gmx-docs.io/"
-
-  - exchange_id: drift
-    display_name: Drift
-    allowed_domains:
-      - docs.drift.trade
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.drift.trade"]
-        seed_urls: ["https://docs.drift.trade/developers"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 1000
-          scope_prefixes:
-            - "https://docs.drift.trade/"
-
-  - exchange_id: aevo
-    display_name: Aevo
-    allowed_domains:
-      - api-docs.aevo.xyz
-      - docs.aevo.xyz
-    sections:
-      - section_id: api
-        base_urls: ["https://api.aevo.xyz"]
-        seed_urls: ["https://api-docs.aevo.xyz/reference/overview"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 1500
-          scope_prefixes:
-            - "https://api-docs.aevo.xyz/reference/"
-            - "https://api-docs.aevo.xyz/docs/"
-            - "https://api-docs.aevo.xyz/changelog/"
-
-  - exchange_id: perp
-    display_name: Perpetual Protocol
-    status: defunct  # DNS dead (NXDOMAIN), token delisted, protocol abandoned
-    allowed_domains:
-      - docs.perp.com
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.perp.com"]
-        seed_urls: ["https://docs.perp.com/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.perp.com/sitemap.xml
-
-  - exchange_id: gains
-    display_name: Gains Network
-    allowed_domains:
-      - docs.gains.trade
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.gains.trade"]
-        seed_urls: ["https://docs.gains.trade/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 800
-          scope_prefixes:
-            - "https://docs.gains.trade/"
-
-  - exchange_id: kwenta
-    display_name: Kwenta
-    allowed_domains:
-      - docs.kwenta.io
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.kwenta.io"]
-        seed_urls: ["https://docs.kwenta.io/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 800
-          scope_prefixes:
-            - "https://docs.kwenta.io/"
-
-  - exchange_id: lighter
-    display_name: Lighter
-    allowed_domains:
-      - docs.lighter.xyz
-      - lighter.gitbook.io
-    sections:
-      - section_id: docs
-        base_urls: ["https://docs.lighter.xyz"]
-        seed_urls: ["https://docs.lighter.xyz/trading/api"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 800
-          scope_prefixes:
-            - "https://docs.lighter.xyz/"
-
-  - exchange_id: ccxt
-    display_name: CCXT
-    allowed_domains:
-      - docs.ccxt.com
-      - github.com
-      - raw.githubusercontent.com
-    sections:
-      - section_id: manual
-        base_urls: ["https://docs.ccxt.com"]
-        seed_urls:
-          - "https://github.com/ccxt/ccxt/wiki"
-          - "https://github.com/ccxt/ccxt/wiki/Manual"
-          - "https://github.com/ccxt/ccxt/wiki/Exchange-Markets"
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 2000
-          scope_prefixes:
-            - "https://docs.ccxt.com/"
-            - "https://github.com/ccxt/ccxt/wiki/"
-            - "https://raw.githubusercontent.com/wiki/ccxt/ccxt/"
-
-  - exchange_id: upbit
-    display_name: Upbit
-    allowed_domains:
-      - docs.upbit.com
-      - global-docs.upbit.com
-    sections:
-      - section_id: rest_en
-        base_urls: ["https://api.upbit.com/v1"]
-        seed_urls: ["https://global-docs.upbit.com/reference"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-          scope_prefixes:
-            - "https://global-docs.upbit.com/reference/"
-            - "https://global-docs.upbit.com/docs/"
-      - section_id: rest_ko
-        base_urls: ["https://api.upbit.com/v1"]
-        seed_urls: ["https://docs.upbit.com/ko/reference"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-          scope_priority: 50
-          scope_prefixes:
-            - "https://docs.upbit.com/ko/reference/"
-            - "https://docs.upbit.com/kr/reference/"
-
-  - exchange_id: bithumb
-    display_name: Bithumb
-    allowed_domains:
-      - apidocs.bithumb.com
-    sections:
-      - section_id: rest
-        base_urls: ["https://api.bithumb.com"]
-        seed_urls: ["https://apidocs.bithumb.com/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-      - section_id: rest_en
-        base_urls: ["https://api.bithumb.com"]
-        seed_urls: ["https://apidocs.bithumb.com/reference"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: playwright
-          max_pages: 300
-
-  - exchange_id: coinone
-    display_name: Coinone
-    allowed_domains:
-      - docs.coinone.co.kr
-    sections:
-      - section_id: rest
-        base_urls: ["https://api.coinone.co.kr"]
-        seed_urls: ["https://docs.coinone.co.kr/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-
-  - exchange_id: korbit
-    display_name: Korbit
-    allowed_domains:
-      - docs.korbit.co.kr
-    sections:
-      - section_id: rest
-        base_urls: ["https://api.korbit.co.kr/v1"]
-        seed_urls: ["https://docs.korbit.co.kr/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 5000
-
-  - exchange_id: kraken
-    display_name: Kraken
-    allowed_domains:
-      - docs.kraken.com
-    sections:
-      - section_id: spot
-        base_urls: ["https://api.kraken.com"]
-        seed_urls:
-          - "https://docs.kraken.com/api/docs/guides/global-intro"
-          - "https://docs.kraken.com/api/docs/rest-api/get-server-time"
-        inventory_policy:
-          scope_prefixes:
-            - "https://docs.kraken.com/api/docs/guides/"
-            - "https://docs.kraken.com/api/docs/rest-api/"
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.kraken.com/sitemap.xml
-      - section_id: futures
-        base_urls: ["https://futures.kraken.com"]
-        seed_urls: ["https://docs.kraken.com/api/docs/futures-api/trading/send-order"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://docs.kraken.com/api/docs/futures-api/"
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.kraken.com/sitemap.xml
-      - section_id: websocket
-        base_urls: ["wss://ws.kraken.com", "wss://ws-auth.kraken.com"]
-        seed_urls: ["https://docs.kraken.com/api/docs/websocket-v2/add_order"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://docs.kraken.com/api/docs/websocket-v1/"
-            - "https://docs.kraken.com/api/docs/websocket-v2/"
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.kraken.com/sitemap.xml
-      - section_id: fix
-        base_urls: ["https://api.kraken.com"]
-        seed_urls: ["https://docs.kraken.com/api/docs/fix-api/overview"]
-        inventory_policy:
-          scope_prefixes:
-            - "https://docs.kraken.com/api/docs/fix-api/"
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.kraken.com/sitemap.xml
-
-  - exchange_id: coinbase
-    display_name: Coinbase
-    allowed_domains:
-      - docs.cdp.coinbase.com
-    sections:
-      - section_id: advanced_trade
-        base_urls: ["https://api.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/accounts/list-accounts"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 10
-          render_mode: auto
-          max_pages: 500
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/"
-      - section_id: exchange
-        base_urls: ["https://api.exchange.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/accounts/get-all-account-profile"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 20
-          render_mode: auto
-          max_pages: 500
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/api-reference/exchange-api/"
-            - "https://docs.cdp.coinbase.com/exchange/fix-api/"
-      - section_id: intx
-        base_urls: ["https://api.international.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/international-exchange-api/rest-api/assets/get-supported-networks"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 30
-          render_mode: auto
-          max_pages: 500
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/api-reference/international-exchange-api/"
-            - "https://docs.cdp.coinbase.com/international-exchange/fix-api/"
-      - section_id: prime
-        base_urls: ["https://api.prime.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/prime-api/rest-api/activities/list-activities"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 40
-          render_mode: auto
-          max_pages: 500
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/api-reference/prime-api/"
-            - "https://docs.cdp.coinbase.com/prime/fix-api/"
-      - section_id: derivatives
-        base_urls: ["https://api.international.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/api-reference/derivatives-api/rest-api/authentication"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 45
-          render_mode: auto
-          max_pages: 200
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/api-reference/derivatives-api/"
-      - section_id: derivatives_fix
-        base_urls: ["https://api.international.coinbase.com"]
-        seed_urls: ["https://docs.cdp.coinbase.com/derivatives/fix/overview"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.cdp.coinbase.com/sitemap.xml
-        inventory_policy:
-          scope_priority: 50
-          render_mode: auto
-          max_pages: 100
-          scope_prefixes:
-            - "https://docs.cdp.coinbase.com/derivatives/fix/"
-
-  - exchange_id: bitmex
-    display_name: BitMEX
-    allowed_domains:
-      - docs.bitmex.com
-      - www.bitmex.com
-    sections:
-      - section_id: rest
-        base_urls: ["https://www.bitmex.com/api/v1"]
-        seed_urls: ["https://docs.bitmex.com/api-explorer"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.bitmex.com/sitemap.xml
-
-  - exchange_id: bitmart
-    display_name: BitMart
-    allowed_domains:
-      - developer-pro.bitmart.com
-    sections:
-      - section_id: spot
-        base_urls: ["https://api-cloud.bitmart.com"]
-        seed_urls: ["https://developer-pro.bitmart.com/en/spot/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-      - section_id: futures
-        base_urls: ["https://api-cloud-v2.bitmart.com"]
-        seed_urls: ["https://developer-pro.bitmart.com/en/futuresv2/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-
-  - exchange_id: whitebit
-    display_name: WhiteBIT
-    allowed_domains:
-      - docs.whitebit.com
-    sections:
-      - section_id: v4
-        base_urls: ["https://whitebit.com"]
-        seed_urls: ["https://docs.whitebit.com/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.whitebit.com/sitemap.xml
-
-  - exchange_id: bitbank
-    display_name: Bitbank
-    allowed_domains:
-      - github.com
-      - raw.githubusercontent.com
-    sections:
-      - section_id: rest
-        base_urls: ["https://api.bitbank.cc/v1", "https://public.bitbank.cc"]
-        seed_urls:
-          - "https://github.com/bitbankinc/bitbank-api-docs"
-          - "https://github.com/bitbankinc/bitbank-api-docs/blob/master/rest-api.md"
-          - "https://github.com/bitbankinc/bitbank-api-docs/blob/master/public-api.md"
-        inventory_policy:
-          mode: link_follow
-          max_pages: 50
-          scope_prefixes:
-            - "https://github.com/bitbankinc/bitbank-api-docs/"
-            - "https://raw.githubusercontent.com/bitbankinc/bitbank-api-docs/"
-
-  - exchange_id: mercadobitcoin
-    display_name: MercadoBitcoin
-    allowed_domains:
-      - api.mercadobitcoin.net
-      - ws.mercadobitcoin.net
-    sections:
-      - section_id: v4
-        base_urls: ["https://api.mercadobitcoin.net/api/v4"]
-        seed_urls: ["https://api.mercadobitcoin.net/api/v4/docs"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: playwright
-          max_pages: 100
-
-  - exchange_id: aster
-    display_name: Aster
-    allowed_domains:
-      - docs.asterdex.com
-    sections:
-      - section_id: api
-        base_urls: ["https://fapi.asterdex.com", "https://sapi.asterdex.com"]
-        seed_urls: ["https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 200
-          scope_prefixes:
-            - "https://docs.asterdex.com/"
-
-  - exchange_id: apex
-    display_name: ApeX Pro
-    allowed_domains:
-      - api-docs.pro.apex.exchange
-    sections:
-      - section_id: api
-        base_urls: ["https://pro.apex.exchange/api/v1"]
-        seed_urls: ["https://api-docs.pro.apex.exchange/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 300
-
-  - exchange_id: grvt
-    display_name: GRVT
-    allowed_domains:
-      - github.com
-      - raw.githubusercontent.com
-    sections:
-      - section_id: api
-        base_urls: ["https://trades.grvt.io", "https://market-data.grvt.io"]
-        seed_urls:
-          - "https://github.com/gravity-technologies/api-spec"
-          - "https://github.com/gravity-technologies/api-spec/blob/main/artifacts/apidocs/trading_api.md"
-          - "https://github.com/gravity-technologies/api-spec/blob/main/artifacts/apidocs/market_data_api.md"
-        inventory_policy:
-          mode: link_follow
-          max_pages: 100
-          scope_prefixes:
-            - "https://github.com/gravity-technologies/api-spec/"
-
-  - exchange_id: paradex
-    display_name: Paradex
-    allowed_domains:
-      - docs.paradex.trade
-    sections:
-      - section_id: api
-        base_urls: ["https://api.prod.paradex.trade/v1"]
-        seed_urls: ["https://docs.paradex.trade/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 400
-          scope_prefixes:
-            - "https://docs.paradex.trade/"
-
-  - exchange_id: mexc
-    display_name: "MEXC Global"
-    allowed_domains:
-      - www.mexc.com
-    sections:
-      - section_id: spot
-        base_urls: ["https://api.mexc.com"]
-        seed_urls: ["https://www.mexc.com/api-docs/spot-v3/introduction"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto  # Akamai WAF blocks requests; needs Playwright
-          max_pages: 50
-          scope_prefixes:
-            - "https://www.mexc.com/api-docs/spot-v3/"
-      - section_id: futures
-        base_urls: ["https://contract.mexc.com"]
-        seed_urls: ["https://www.mexc.com/api-docs/futures/integration-guide"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 50
-          scope_prefixes:
-            - "https://www.mexc.com/api-docs/futures/"
-      - section_id: broker
-        base_urls: ["https://api.mexc.com"]
-        seed_urls: ["https://www.mexc.com/api-docs/broker/mexc-broker-introduction"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto
-          max_pages: 10
-          scope_prefixes:
-            - "https://www.mexc.com/api-docs/broker/"
-
-  - exchange_id: bingx
-    display_name: BingX
-    allowed_domains:
-      - bingx-api.github.io
-    sections:
-      - section_id: api
-        base_urls: ["https://open-api.bingx.com"]
-        seed_urls: ["https://bingx-api.github.io/docs-v3/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: playwright  # Vue.js SPA, all content in JS bundle
-          max_pages: 10  # Single-page SPA, expect 1-2 pages
-
-  - exchange_id: deribit
-    display_name: Deribit
-    allowed_domains:
-      - docs.deribit.com
-    sections:
-      - section_id: api
-        base_urls: ["https://www.deribit.com/api/v2"]
-        seed_urls: ["https://docs.deribit.com/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.deribit.com/sitemap.xml
-        inventory_policy:
-          mode: inventory
-          render_mode: auto  # Mintlify platform
-          max_pages: 1100
-          scope_prefixes:
-            - "https://docs.deribit.com/"
-
-  - exchange_id: backpack
-    display_name: Backpack
-    allowed_domains:
-      - docs.backpack.exchange
-    sections:
-      - section_id: api
-        base_urls: ["https://api.backpack.exchange"]
-        seed_urls: ["https://docs.backpack.exchange/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: playwright  # Redocly SPA
-          max_pages: 10  # Single-page SPA
-
-  - exchange_id: coinex
-    display_name: CoinEx
-    allowed_domains:
-      - docs.coinex.com
-    sections:
-      - section_id: api
-        base_urls: ["https://api.coinex.com/v2"]
-        seed_urls: ["https://docs.coinex.com/api/v2/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: http  # Docusaurus, multi-page static
-          max_pages: 200
-          scope_prefixes:
-            - "https://docs.coinex.com/api/"
-
-  - exchange_id: woo
-    display_name: "WOO X"
-    allowed_domains:
-      - docs.woox.io
-    sections:
-      - section_id: api
-        base_urls: ["https://api.woox.io"]
-        seed_urls: ["https://docs.woox.io/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: auto  # Single-page SPA
-          max_pages: 10
-
-  - exchange_id: phemex
-    display_name: Phemex
-    allowed_domains:
-      - phemex-docs.github.io
-    sections:
-      - section_id: api
-        base_urls: ["https://api.phemex.com"]
-        seed_urls: ["https://phemex-docs.github.io/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: http  # Slate static HTML, single-page
-          max_pages: 10
-
-  - exchange_id: gemini
-    display_name: Gemini
-    allowed_domains:
-      - docs.gemini.com
-    sections:
-      - section_id: api
-        base_urls: ["https://api.gemini.com"]
-        seed_urls: ["https://docs.gemini.com/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.gemini.com/sitemap.xml
-        inventory_policy:
-          mode: inventory
-          render_mode: auto  # Mintlify-like, JS redirect
-          max_pages: 200
-          scope_prefixes:
-            - "https://docs.gemini.com/"
-
-  - exchange_id: orderly
-    display_name: Orderly Network
-    allowed_domains:
-      - orderly.network
-    sections:
-      - section_id: docs
-        base_urls: ["https://api.orderly.org"]
-        seed_urls: ["https://orderly.network/docs/introduction"]
-        doc_sources:
-          - kind: sitemap
-            url: https://orderly.network/docs/sitemap.xml
-        inventory_policy:
-          mode: inventory
-          render_mode: http
-          max_pages: 900
-          scope_prefixes:
-            - "https://orderly.network/docs/"
-
-  - exchange_id: bluefin
-    display_name: Bluefin
-    allowed_domains:
-      - bluefin-exchange.readme.io
-    sections:
-      - section_id: api
-        base_urls: ["https://trade.bluefin.io"]
-        seed_urls: ["https://bluefin-exchange.readme.io/"]
-        inventory_policy:
-          mode: link_follow
-          render_mode: http  # ReadMe.io
-          max_pages: 100
-          scope_prefixes:
-            - "https://bluefin-exchange.readme.io/"
-
-  - exchange_id: nado
-    display_name: Nado
-    allowed_domains:
-      - docs.nado.xyz
-    sections:
-      - section_id: docs
-        base_urls: ["https://api.nado.xyz"]
-        seed_urls: ["https://docs.nado.xyz/"]
-        doc_sources:
-          - kind: sitemap
-            url: https://docs.nado.xyz/sitemap-pages.xml
-        inventory_policy:
-          mode: inventory
-          render_mode: http  # GitBook
-          max_pages: 250
-          scope_prefixes:
-            - "https://docs.nado.xyz/"
+- exchange_id: binance
+  display_name: Binance
+  allowed_domains:
+  - developers.binance.com
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/binance-spot-api-docs/
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: futures_usdm
+    base_urls:
+    - https://fapi.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/derivatives/usds-margined-futures/
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: futures_coinm
+    base_urls:
+    - https://dapi.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/derivatives/coin-margined-futures/
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: portfolio_margin
+    base_urls:
+    - https://papi.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/derivatives/portfolio-margin/
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: options
+    base_urls:
+    - https://eapi.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/derivatives/options-trading/general-info
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: margin_trading
+    base_urls:
+    - https://api.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/margin_trading/Introduction
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: wallet
+    base_urls:
+    - https://api.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/wallet
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+  - section_id: copy_trading
+    base_urls:
+    - https://api.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/copy_trading
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 50
+      scope_prefixes:
+      - https://developers.binance.com/docs/copy_trading
+  - section_id: portfolio_margin_pro
+    base_urls:
+    - https://papi.binance.com
+    seed_urls:
+    - https://developers.binance.com/docs/derivatives/portfolio-margin-pro/general-info
+    doc_sources:
+    - kind: sitemap
+      url: https://developers.binance.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 50
+      scope_prefixes:
+      - https://developers.binance.com/docs/derivatives/portfolio-margin-pro/
+  known_sources:
+    github_org: https://github.com/binance
+    changelog: https://developers.binance.com/docs/binance-spot-api-docs/CHANGELOG
+    websocket_docs: https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: okx
+  display_name: OKX
+  allowed_domains:
+  - www.okx.com
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://www.okx.com
+    seed_urls:
+    - https://www.okx.com/docs-v5/en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 10
+  - section_id: websocket
+    base_urls:
+    - wss://ws.okx.com:8443/ws/v5/public
+    - wss://ws.okx.com:8443/ws/v5/private
+    - wss://ws.okx.com:8443/ws/v5/business
+    seed_urls:
+    - https://www.okx.com/docs-v5/en/#websocket-api
+    inventory_policy:
+      mode: link_follow
+      max_pages: 10
+  - section_id: broker
+    base_urls:
+    - https://www.okx.com
+    seed_urls:
+    - https://www.okx.com/docs-v5/broker_en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+  - section_id: changelog
+    base_urls:
+    - https://www.okx.com
+    seed_urls:
+    - https://www.okx.com/docs-v5/log_en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+  known_sources:
+    github_org: https://github.com/okx
+    status_page: https://www.okx.com/status
+    changelog: https://www.okx.com/docs-v5/log_en/
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: bybit
+  display_name: Bybit
+  allowed_domains:
+  - bybit-exchange.github.io
+  sections:
+  - section_id: v5
+    base_urls:
+    - https://api.bybit.com
+    seed_urls:
+    - https://bybit-exchange.github.io/docs/v5/intro
+    inventory_policy:
+      scope_prefixes:
+      - https://bybit-exchange.github.io/docs/v5/
+    doc_sources:
+    - kind: sitemap
+      url: https://bybit-exchange.github.io/docs/sitemap.xml
+  - section_id: websocket
+    base_urls:
+    - wss://stream.bybit.com/v5/public
+    - wss://stream.bybit.com/v5/private
+    seed_urls:
+    - https://bybit-exchange.github.io/docs/v5/ws/connect
+    inventory_policy:
+      scope_prefixes:
+      - https://bybit-exchange.github.io/docs/v5/ws/
+      - https://bybit-exchange.github.io/docs/v5/websocket/
+    doc_sources:
+    - kind: sitemap
+      url: https://bybit-exchange.github.io/docs/sitemap.xml
+  - section_id: p2p
+    base_urls:
+    - https://api.bybit.com
+    seed_urls:
+    - https://bybit-exchange.github.io/docs/p2p/guide
+    inventory_policy:
+      scope_prefixes:
+      - https://bybit-exchange.github.io/docs/p2p/
+    doc_sources:
+    - kind: sitemap
+      url: https://bybit-exchange.github.io/docs/sitemap.xml
+  - section_id: tax
+    base_urls:
+    - https://api.bybit.com
+    seed_urls:
+    - https://bybit-exchange.github.io/docs/tax/report
+    inventory_policy:
+      scope_prefixes:
+      - https://bybit-exchange.github.io/docs/tax/
+    doc_sources:
+    - kind: sitemap
+      url: https://bybit-exchange.github.io/docs/sitemap.xml
+  - section_id: pay
+    base_urls:
+    - https://api.bybit.com
+    seed_urls:
+    - https://bybit-exchange.github.io/pay-docs/
+    inventory_policy:
+      scope_prefixes:
+      - https://bybit-exchange.github.io/pay-docs/
+    doc_sources:
+    - kind: sitemap
+      url: https://bybit-exchange.github.io/pay-docs/sitemap.xml
+  known_sources:
+    github_org: https://github.com/bybit-exchange
+    changelog: https://bybit-exchange.github.io/docs/changelog/v5
+    websocket_docs: https://bybit-exchange.github.io/docs/v5/ws/connect
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: bitget
+  display_name: Bitget
+  allowed_domains:
+  - www.bitget.com
+  sections:
+  - section_id: v2
+    base_urls:
+    - https://api.bitget.com
+    seed_urls:
+    - https://www.bitget.com/api-doc/common/intro
+    - https://www.bitget.com/api-doc/spot/market/Get-Tickers
+    - https://www.bitget.com/api-doc/contract/market/Get-All-Symbol-Ticker
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 500
+      scope_prefixes:
+      - https://www.bitget.com/api-doc/
+    doc_sources:
+    - kind: sitemap
+      url: https://www.bitget.com/sitemap.xml
+  - section_id: copy_trading
+    base_urls:
+    - https://api.bitget.com
+    seed_urls:
+    - https://www.bitget.com/api-doc/copytrading/intro
+    doc_sources:
+    - kind: sitemap
+      url: https://www.bitget.com/sitemap.xml
+  - section_id: margin
+    base_urls:
+    - https://api.bitget.com
+    seed_urls:
+    - https://www.bitget.com/api-doc/margin/intro
+    doc_sources:
+    - kind: sitemap
+      url: https://www.bitget.com/sitemap.xml
+  - section_id: earn
+    base_urls:
+    - https://api.bitget.com
+    seed_urls:
+    - https://www.bitget.com/api-doc/earn/intro
+    doc_sources:
+    - kind: sitemap
+      url: https://www.bitget.com/sitemap.xml
+  - section_id: broker
+    base_urls:
+    - https://api.bitget.com
+    seed_urls:
+    - https://www.bitget.com/api-doc/broker/intro
+    doc_sources:
+    - kind: sitemap
+      url: https://www.bitget.com/sitemap.xml
+  known_sources:
+    github_org: https://github.com/BitgetLimited
+    status_page: https://www.bitget.com/pagestatus
+    changelog: https://www.bitget.com/api-doc/common/changelog
+    websocket_docs: https://www.bitget.com/api-doc/common/websocket-intro
+    confirmed_absent: []
+    last_verified: '2026-04-02'
+- exchange_id: gateio
+  display_name: Gate.io
+  allowed_domains:
+  - www.gate.com
+  sections:
+  - section_id: v4
+    base_urls:
+    - https://api.gateio.ws/api/v4
+    seed_urls:
+    - https://www.gate.com/docs/developers/apiv4/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 2000
+  known_sources:
+    github_org: https://github.com/gateio
+    changelog: https://www.gate.com/docs/developers/apiv4/en/
+    websocket_docs: https://www.gate.com/docs/developers/apiv4/ws/en/
+    confirmed_absent:
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: kucoin
+  display_name: KuCoin
+  allowed_domains:
+  - www.kucoin.com
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api.kucoin.com
+    - https://api-futures.kucoin.com
+    seed_urls:
+    - https://www.kucoin.com/docs/rest/spot-trading/spot-hf-trade-pro-account/place-hf-order
+    - https://www.kucoin.com/docs/rest/futures-trading/orders/place-order
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 5000
+      scope_prefixes:
+      - https://www.kucoin.com/docs-new/
+  known_sources:
+    llms_txt: https://www.kucoin.com/docs-new/llms.txt
+    github_org: https://github.com/Kucoin
+    changelog: https://www.kucoin.com/docs-new/change-log
+    websocket_docs: https://www.kucoin.com/docs/websocket/introduction
+    confirmed_absent:
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: htx
+  display_name: HTX
+  allowed_domains:
+  - huobiapi.github.io
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api.huobi.pro
+    seed_urls:
+    - https://huobiapi.github.io/docs/spot/v1/en/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 5000
+  - section_id: derivatives
+    base_urls:
+    - https://api.hbdm.com
+    seed_urls:
+    - https://huobiapi.github.io/docs/dm/v1/en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+  - section_id: coin_margined_swap
+    base_urls:
+    - https://api.hbdm.com
+    seed_urls:
+    - https://huobiapi.github.io/docs/coin_margined_swap/v1/en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+  - section_id: usdt_swap
+    base_urls:
+    - https://api.hbdm.com
+    seed_urls:
+    - https://huobiapi.github.io/docs/usdt_swap/v1/en/
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+  known_sources:
+    github_org: https://github.com/huobiapi
+    changelog: https://huobiapi.github.io/docs/spot/v1/en/#change-log
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: cryptocom
+  display_name: Crypto.com
+  allowed_domains:
+  - exchange-docs.crypto.com
+  sections:
+  - section_id: exchange
+    base_urls:
+    - https://api.crypto.com/exchange/v1
+    seed_urls:
+    - https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 2000
+  known_sources:
+    github_org: https://github.com/crypto-com
+    status_page: https://status.crypto.com
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: bitstamp
+  display_name: Bitstamp
+  allowed_domains:
+  - www.bitstamp.net
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://www.bitstamp.net/api
+    seed_urls:
+    - https://www.bitstamp.net/api/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 2000
+  - section_id: fix
+    base_urls:
+    - https://www.bitstamp.net
+    seed_urls:
+    - https://www.bitstamp.net/fix/v2/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 100
+      scope_prefixes:
+      - https://www.bitstamp.net/fix/
+  - section_id: websocket
+    base_urls:
+    - wss://ws.bitstamp.net
+    seed_urls:
+    - https://www.bitstamp.net/websocket/v2/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 100
+      scope_prefixes:
+      - https://www.bitstamp.net/websocket/
+  known_sources:
+    github_org: https://github.com/bitstamp
+    status_page: https://status.bitstamp.net
+    websocket_docs: https://www.bitstamp.net/websocket/v2/
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - changelog
+    last_verified: '2026-04-02'
+- exchange_id: bitfinex
+  display_name: Bitfinex
+  allowed_domains:
+  - docs.bitfinex.com
+  sections:
+  - section_id: v2
+    base_urls:
+    - https://api-pub.bitfinex.com/v2
+    seed_urls:
+    - https://docs.bitfinex.com/reference/rest-public-platform-status
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  known_sources:
+    llms_txt: https://docs.bitfinex.com/llms.txt
+    github_org: https://github.com/bitfinexcom
+    status_page: https://bitfinex.statuspage.io
+    changelog: https://docs.bitfinex.com/docs/changelog
+    websocket_docs: https://docs.bitfinex.com/docs/ws-general
+    confirmed_absent:
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: dydx
+  display_name: dYdX
+  allowed_domains:
+  - docs.dydx.exchange
+  - docs.dydx.xyz
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://indexer.dydx.trade/v4
+    seed_urls:
+    - https://docs.dydx.xyz/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 500
+  known_sources:
+    llms_full_txt: https://docs.dydx.xyz/llms-full.txt
+    github_org: https://github.com/dydxprotocol
+    confirmed_absent: []
+    last_verified: '2026-04-02'
+- exchange_id: hyperliquid
+  display_name: Hyperliquid
+  allowed_domains:
+  - hyperliquid.gitbook.io
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.hyperliquid.xyz
+    seed_urls:
+    - https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api
+    inventory_policy:
+      scope_prefixes:
+      - https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/
+      - https://hyperliquid.gitbook.io/hyperliquid-docs/builder-tools/
+    doc_sources:
+    - kind: sitemap
+      url: https://hyperliquid.gitbook.io/hyperliquid-docs/sitemap.xml
+  known_sources:
+    github_org: https://github.com/hyperliquid-dex
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: gmx
+  display_name: GMX
+  allowed_domains:
+  - docs.gmx.io
+  - gmx-docs.io
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.gmx.io
+    seed_urls:
+    - https://docs.gmx.io/docs/intro/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 400
+      scope_prefixes:
+      - https://docs.gmx.io/
+      - https://gmx-docs.io/
+  known_sources:
+    github_org: https://github.com/gmx-io
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: drift
+  display_name: Drift
+  allowed_domains:
+  - docs.drift.trade
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.drift.trade
+    seed_urls:
+    - https://docs.drift.trade/developers
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 1000
+      scope_prefixes:
+      - https://docs.drift.trade/
+  known_sources:
+    github_org: https://github.com/drift-labs
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: aevo
+  display_name: Aevo
+  allowed_domains:
+  - api-docs.aevo.xyz
+  - docs.aevo.xyz
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.aevo.xyz
+    seed_urls:
+    - https://api-docs.aevo.xyz/reference/overview
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 1500
+      scope_prefixes:
+      - https://api-docs.aevo.xyz/reference/
+      - https://api-docs.aevo.xyz/docs/
+      - https://api-docs.aevo.xyz/changelog/
+  known_sources:
+    github_org: https://github.com/aevo-xyz
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: perp
+  display_name: Perpetual Protocol
+  status: defunct
+  allowed_domains:
+  - docs.perp.com
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.perp.com
+    seed_urls:
+    - https://docs.perp.com/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.perp.com/sitemap.xml
+  known_sources:
+    github_org: https://github.com/perpetual-protocol
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: gains
+  display_name: Gains Network
+  allowed_domains:
+  - docs.gains.trade
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.gains.trade
+    seed_urls:
+    - https://docs.gains.trade/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 800
+      scope_prefixes:
+      - https://docs.gains.trade/
+  known_sources:
+    github_org: https://github.com/GainsNetwork
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: kwenta
+  display_name: Kwenta
+  allowed_domains:
+  - docs.kwenta.io
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.kwenta.io
+    seed_urls:
+    - https://docs.kwenta.io/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 800
+      scope_prefixes:
+      - https://docs.kwenta.io/
+  known_sources:
+    github_org: https://github.com/Kwenta
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: lighter
+  display_name: Lighter
+  allowed_domains:
+  - docs.lighter.xyz
+  - lighter.gitbook.io
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://docs.lighter.xyz
+    seed_urls:
+    - https://docs.lighter.xyz/trading/api
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 800
+      scope_prefixes:
+      - https://docs.lighter.xyz/
+  known_sources:
+    github_org: https://github.com/elliottech
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: ccxt
+  display_name: CCXT
+  allowed_domains:
+  - docs.ccxt.com
+  - github.com
+  - raw.githubusercontent.com
+  sections:
+  - section_id: manual
+    base_urls:
+    - https://docs.ccxt.com
+    seed_urls:
+    - https://github.com/ccxt/ccxt/wiki
+    - https://github.com/ccxt/ccxt/wiki/Manual
+    - https://github.com/ccxt/ccxt/wiki/Exchange-Markets
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 2000
+      scope_prefixes:
+      - https://docs.ccxt.com/
+      - https://github.com/ccxt/ccxt/wiki/
+      - https://raw.githubusercontent.com/wiki/ccxt/ccxt/
+  known_sources:
+    llms_txt: https://docs.ccxt.com/llms.txt
+    github_org: https://github.com/ccxt
+    confirmed_absent:
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: upbit
+  display_name: Upbit
+  allowed_domains:
+  - docs.upbit.com
+  - global-docs.upbit.com
+  sections:
+  - section_id: rest_en
+    base_urls:
+    - https://api.upbit.com/v1
+    seed_urls:
+    - https://global-docs.upbit.com/reference
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+      scope_prefixes:
+      - https://global-docs.upbit.com/reference/
+      - https://global-docs.upbit.com/docs/
+  - section_id: rest_ko
+    base_urls:
+    - https://api.upbit.com/v1
+    seed_urls:
+    - https://docs.upbit.com/ko/reference
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+      scope_priority: 50
+      scope_prefixes:
+      - https://docs.upbit.com/ko/reference/
+      - https://docs.upbit.com/kr/reference/
+  known_sources:
+    github_org: https://github.com/upbit-exchange
+    changelog: https://global-docs.upbit.com/changelog
+    websocket_docs: https://global-docs.upbit.com/reference/websocket-guide
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: bithumb
+  display_name: Bithumb
+  allowed_domains:
+  - apidocs.bithumb.com
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://api.bithumb.com
+    seed_urls:
+    - https://apidocs.bithumb.com/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  - section_id: rest_en
+    base_urls:
+    - https://api.bithumb.com
+    seed_urls:
+    - https://apidocs.bithumb.com/reference
+    inventory_policy:
+      mode: link_follow
+      render_mode: playwright
+      max_pages: 300
+  known_sources:
+    github_org: https://github.com/nicehash-bithumb
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: coinone
+  display_name: Coinone
+  allowed_domains:
+  - docs.coinone.co.kr
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://api.coinone.co.kr
+    seed_urls:
+    - https://docs.coinone.co.kr/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  known_sources:
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - github_org
+    last_verified: '2026-04-02'
+- exchange_id: korbit
+  display_name: Korbit
+  allowed_domains:
+  - docs.korbit.co.kr
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://api.korbit.co.kr/v1
+    seed_urls:
+    - https://docs.korbit.co.kr/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 5000
+  known_sources:
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - github_org
+    last_verified: '2026-04-02'
+- exchange_id: kraken
+  display_name: Kraken
+  allowed_domains:
+  - docs.kraken.com
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api.kraken.com
+    seed_urls:
+    - https://docs.kraken.com/api/docs/guides/global-intro
+    - https://docs.kraken.com/api/docs/rest-api/get-server-time
+    inventory_policy:
+      scope_prefixes:
+      - https://docs.kraken.com/api/docs/guides/
+      - https://docs.kraken.com/api/docs/rest-api/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.kraken.com/sitemap.xml
+  - section_id: futures
+    base_urls:
+    - https://futures.kraken.com
+    seed_urls:
+    - https://docs.kraken.com/api/docs/futures-api/trading/send-order
+    inventory_policy:
+      scope_prefixes:
+      - https://docs.kraken.com/api/docs/futures-api/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.kraken.com/sitemap.xml
+  - section_id: websocket
+    base_urls:
+    - wss://ws.kraken.com
+    - wss://ws-auth.kraken.com
+    seed_urls:
+    - https://docs.kraken.com/api/docs/websocket-v2/add_order
+    inventory_policy:
+      scope_prefixes:
+      - https://docs.kraken.com/api/docs/websocket-v1/
+      - https://docs.kraken.com/api/docs/websocket-v2/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.kraken.com/sitemap.xml
+  - section_id: fix
+    base_urls:
+    - https://api.kraken.com
+    seed_urls:
+    - https://docs.kraken.com/api/docs/fix-api/overview
+    inventory_policy:
+      scope_prefixes:
+      - https://docs.kraken.com/api/docs/fix-api/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.kraken.com/sitemap.xml
+  known_sources:
+    github_org: https://github.com/krakenfx
+    status_page: https://status.kraken.com/
+    changelog: https://docs.kraken.com/api/docs/change-log/
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: coinbase
+  display_name: Coinbase
+  allowed_domains:
+  - docs.cdp.coinbase.com
+  sections:
+  - section_id: advanced_trade
+    base_urls:
+    - https://api.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/accounts/list-accounts
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 10
+      render_mode: auto
+      max_pages: 500
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/
+  - section_id: exchange
+    base_urls:
+    - https://api.exchange.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/accounts/get-all-account-profile
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 20
+      render_mode: auto
+      max_pages: 500
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/api-reference/exchange-api/
+      - https://docs.cdp.coinbase.com/exchange/fix-api/
+  - section_id: intx
+    base_urls:
+    - https://api.international.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/api-reference/international-exchange-api/rest-api/assets/get-supported-networks
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 30
+      render_mode: auto
+      max_pages: 500
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/api-reference/international-exchange-api/
+      - https://docs.cdp.coinbase.com/international-exchange/fix-api/
+  - section_id: prime
+    base_urls:
+    - https://api.prime.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/api-reference/prime-api/rest-api/activities/list-activities
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 40
+      render_mode: auto
+      max_pages: 500
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/api-reference/prime-api/
+      - https://docs.cdp.coinbase.com/prime/fix-api/
+  - section_id: derivatives
+    base_urls:
+    - https://api.international.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/api-reference/derivatives-api/rest-api/authentication
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 45
+      render_mode: auto
+      max_pages: 200
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/api-reference/derivatives-api/
+  - section_id: derivatives_fix
+    base_urls:
+    - https://api.international.coinbase.com
+    seed_urls:
+    - https://docs.cdp.coinbase.com/derivatives/fix/overview
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.cdp.coinbase.com/sitemap.xml
+    inventory_policy:
+      scope_priority: 50
+      render_mode: auto
+      max_pages: 100
+      scope_prefixes:
+      - https://docs.cdp.coinbase.com/derivatives/fix/
+  known_sources:
+    llms_txt: https://docs.cdp.coinbase.com/llms.txt
+    llms_full_txt: https://docs.cdp.coinbase.com/llms-full.txt
+    github_org: https://github.com/coinbase
+    status_page: https://status.coinbase.com/
+    changelog: https://docs.cdp.coinbase.com/exchange/changes/changelog
+    websocket_docs: https://docs.cdp.coinbase.com/coinbase-app/advanced-trade-apis/websocket/websocket-overview
+    confirmed_absent: []
+    last_verified: '2026-04-02'
+- exchange_id: bitmex
+  display_name: BitMEX
+  allowed_domains:
+  - docs.bitmex.com
+  - www.bitmex.com
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://www.bitmex.com/api/v1
+    seed_urls:
+    - https://docs.bitmex.com/api-explorer
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.bitmex.com/sitemap.xml
+  known_sources:
+    llms_txt: https://www.bitmex.com/llms.txt
+    github_org: https://github.com/BitMEX
+    status_page: https://status.bitmex.com
+    changelog: https://www.bitmex.com/app/apiChangelog
+    websocket_docs: https://www.bitmex.com/app/wsAPI
+    rss_feed: https://blog.bitmex.com/api_announcement/feed/
+    confirmed_absent:
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: bitmart
+  display_name: BitMart
+  allowed_domains:
+  - developer-pro.bitmart.com
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api-cloud.bitmart.com
+    seed_urls:
+    - https://developer-pro.bitmart.com/en/spot/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  - section_id: futures
+    base_urls:
+    - https://api-cloud-v2.bitmart.com
+    seed_urls:
+    - https://developer-pro.bitmart.com/en/futuresv2/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  known_sources:
+    github_org: https://github.com/bitmartexchange
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - changelog
+    last_verified: '2026-04-02'
+- exchange_id: whitebit
+  display_name: WhiteBIT
+  allowed_domains:
+  - docs.whitebit.com
+  sections:
+  - section_id: v4
+    base_urls:
+    - https://whitebit.com
+    seed_urls:
+    - https://docs.whitebit.com/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.whitebit.com/sitemap.xml
+  known_sources:
+    github_org: https://github.com/whitebit-exchange
+    changelog: https://docs.whitebit.com/changelog
+    websocket_docs: https://docs.whitebit.com/public/websocket/
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: bitbank
+  display_name: Bitbank
+  allowed_domains:
+  - github.com
+  - raw.githubusercontent.com
+  sections:
+  - section_id: rest
+    base_urls:
+    - https://api.bitbank.cc/v1
+    - https://public.bitbank.cc
+    seed_urls:
+    - https://github.com/bitbankinc/bitbank-api-docs
+    - https://github.com/bitbankinc/bitbank-api-docs/blob/master/rest-api.md
+    - https://github.com/bitbankinc/bitbank-api-docs/blob/master/public-api.md
+    inventory_policy:
+      mode: link_follow
+      max_pages: 50
+      scope_prefixes:
+      - https://github.com/bitbankinc/bitbank-api-docs/
+      - https://raw.githubusercontent.com/bitbankinc/bitbank-api-docs/
+  known_sources:
+    github_org: https://github.com/bitbankinc
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: mercadobitcoin
+  display_name: MercadoBitcoin
+  allowed_domains:
+  - api.mercadobitcoin.net
+  - ws.mercadobitcoin.net
+  sections:
+  - section_id: v4
+    base_urls:
+    - https://api.mercadobitcoin.net/api/v4
+    seed_urls:
+    - https://api.mercadobitcoin.net/api/v4/docs
+    inventory_policy:
+      mode: link_follow
+      render_mode: playwright
+      max_pages: 100
+  known_sources:
+    github_org: https://github.com/mercadobitcoin
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: aster
+  display_name: Aster
+  allowed_domains:
+  - docs.asterdex.com
+  sections:
+  - section_id: api
+    base_urls:
+    - https://fapi.asterdex.com
+    - https://sapi.asterdex.com
+    seed_urls:
+    - https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 200
+      scope_prefixes:
+      - https://docs.asterdex.com/
+  known_sources:
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - github_org
+    last_verified: '2026-04-02'
+- exchange_id: apex
+  display_name: ApeX Pro
+  allowed_domains:
+  - api-docs.pro.apex.exchange
+  sections:
+  - section_id: api
+    base_urls:
+    - https://pro.apex.exchange/api/v1
+    seed_urls:
+    - https://api-docs.pro.apex.exchange/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 300
+  known_sources:
+    github_org: https://github.com/ApeX-Protocol
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: grvt
+  display_name: GRVT
+  allowed_domains:
+  - github.com
+  - raw.githubusercontent.com
+  sections:
+  - section_id: api
+    base_urls:
+    - https://trades.grvt.io
+    - https://market-data.grvt.io
+    seed_urls:
+    - https://github.com/gravity-technologies/api-spec
+    - https://github.com/gravity-technologies/api-spec/blob/main/artifacts/apidocs/trading_api.md
+    - https://github.com/gravity-technologies/api-spec/blob/main/artifacts/apidocs/market_data_api.md
+    inventory_policy:
+      mode: link_follow
+      max_pages: 100
+      scope_prefixes:
+      - https://github.com/gravity-technologies/api-spec/
+  known_sources:
+    github_org: https://github.com/gravity-technologies
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: paradex
+  display_name: Paradex
+  allowed_domains:
+  - docs.paradex.trade
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.prod.paradex.trade/v1
+    seed_urls:
+    - https://docs.paradex.trade/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 400
+      scope_prefixes:
+      - https://docs.paradex.trade/
+  known_sources:
+    github_org: https://github.com/tradeparadex
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: mexc
+  display_name: MEXC Global
+  allowed_domains:
+  - www.mexc.com
+  sections:
+  - section_id: spot
+    base_urls:
+    - https://api.mexc.com
+    seed_urls:
+    - https://www.mexc.com/api-docs/spot-v3/introduction
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 50
+      scope_prefixes:
+      - https://www.mexc.com/api-docs/spot-v3/
+  - section_id: futures
+    base_urls:
+    - https://contract.mexc.com
+    seed_urls:
+    - https://www.mexc.com/api-docs/futures/integration-guide
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 50
+      scope_prefixes:
+      - https://www.mexc.com/api-docs/futures/
+  - section_id: broker
+    base_urls:
+    - https://api.mexc.com
+    seed_urls:
+    - https://www.mexc.com/api-docs/broker/mexc-broker-introduction
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 10
+      scope_prefixes:
+      - https://www.mexc.com/api-docs/broker/
+  known_sources:
+    github_org: https://github.com/mexcdevelop
+    changelog: https://www.mexc.com/api-docs/spot-v3/change-log
+    websocket_docs: https://www.mexc.com/api-docs/spot-v3/websocket-market-streams
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: bingx
+  display_name: BingX
+  allowed_domains:
+  - bingx-api.github.io
+  sections:
+  - section_id: api
+    base_urls:
+    - https://open-api.bingx.com
+    seed_urls:
+    - https://bingx-api.github.io/docs-v3/
+    inventory_policy:
+      mode: link_follow
+      render_mode: playwright
+      max_pages: 10
+  known_sources:
+    github_org: https://github.com/BingX-API
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: deribit
+  display_name: Deribit
+  allowed_domains:
+  - docs.deribit.com
+  sections:
+  - section_id: api
+    base_urls:
+    - https://www.deribit.com/api/v2
+    seed_urls:
+    - https://docs.deribit.com/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.deribit.com/sitemap.xml
+    inventory_policy:
+      mode: inventory
+      render_mode: auto
+      max_pages: 1100
+      scope_prefixes:
+      - https://docs.deribit.com/
+  known_sources:
+    llms_txt: https://docs.deribit.com/llms.txt
+    llms_full_txt: https://docs.deribit.com/llms-full.txt
+    github_org: https://github.com/deribit
+    status_page: https://status.deribit.com
+    changelog: https://www.deribit.com/pages/information/Releases
+    confirmed_absent: []
+    last_verified: '2026-04-02'
+- exchange_id: backpack
+  display_name: Backpack
+  allowed_domains:
+  - docs.backpack.exchange
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.backpack.exchange
+    seed_urls:
+    - https://docs.backpack.exchange/
+    inventory_policy:
+      mode: link_follow
+      render_mode: playwright
+      max_pages: 10
+  known_sources:
+    github_org: https://github.com/backpack-exchange
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: coinex
+  display_name: CoinEx
+  allowed_domains:
+  - docs.coinex.com
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.coinex.com/v2
+    seed_urls:
+    - https://docs.coinex.com/api/v2/
+    inventory_policy:
+      mode: link_follow
+      render_mode: http
+      max_pages: 200
+      scope_prefixes:
+      - https://docs.coinex.com/api/
+  known_sources:
+    github_org: https://github.com/coinexcom
+    changelog: https://docs.coinex.com/api/v2/changelog
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: woo
+  display_name: WOO X
+  allowed_domains:
+  - docs.woox.io
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.woox.io
+    seed_urls:
+    - https://docs.woox.io/
+    inventory_policy:
+      mode: link_follow
+      render_mode: auto
+      max_pages: 10
+  known_sources:
+    github_org: https://github.com/woo-network
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: phemex
+  display_name: Phemex
+  allowed_domains:
+  - phemex-docs.github.io
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.phemex.com
+    seed_urls:
+    - https://phemex-docs.github.io/
+    inventory_policy:
+      mode: link_follow
+      render_mode: http
+      max_pages: 10
+  known_sources:
+    github_org: https://github.com/phemex
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - changelog
+    last_verified: '2026-04-02'
+- exchange_id: gemini
+  display_name: Gemini
+  allowed_domains:
+  - docs.gemini.com
+  sections:
+  - section_id: api
+    base_urls:
+    - https://api.gemini.com
+    seed_urls:
+    - https://docs.gemini.com/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.gemini.com/sitemap.xml
+    inventory_policy:
+      mode: inventory
+      render_mode: auto
+      max_pages: 200
+      scope_prefixes:
+      - https://docs.gemini.com/
+  known_sources:
+    llms_txt: https://docs.gemini.com/llms.txt
+    github_org: https://github.com/gemini
+    status_page: https://status.gemini.com/
+    changelog: https://docs.gemini.com/changelog/revision-history
+    websocket_docs: https://docs.gemini.com/websocket-api/
+    confirmed_absent:
+    - llms_full_txt
+    last_verified: '2026-04-02'
+- exchange_id: orderly
+  display_name: Orderly Network
+  allowed_domains:
+  - orderly.network
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://api.orderly.org
+    seed_urls:
+    - https://orderly.network/docs/introduction
+    doc_sources:
+    - kind: sitemap
+      url: https://orderly.network/docs/sitemap.xml
+    inventory_policy:
+      mode: inventory
+      render_mode: http
+      max_pages: 900
+      scope_prefixes:
+      - https://orderly.network/docs/
+  known_sources:
+    github_org: https://github.com/OrderlyNetwork
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: bluefin
+  display_name: Bluefin
+  allowed_domains:
+  - bluefin-exchange.readme.io
+  sections:
+  - section_id: api
+    base_urls:
+    - https://trade.bluefin.io
+    seed_urls:
+    - https://bluefin-exchange.readme.io/
+    inventory_policy:
+      mode: link_follow
+      render_mode: http
+      max_pages: 100
+      scope_prefixes:
+      - https://bluefin-exchange.readme.io/
+  known_sources:
+    github_org: https://github.com/fireflyprotocol
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    last_verified: '2026-04-02'
+- exchange_id: nado
+  display_name: Nado
+  allowed_domains:
+  - docs.nado.xyz
+  sections:
+  - section_id: docs
+    base_urls:
+    - https://api.nado.xyz
+    seed_urls:
+    - https://docs.nado.xyz/
+    doc_sources:
+    - kind: sitemap
+      url: https://docs.nado.xyz/sitemap-pages.xml
+    inventory_policy:
+      mode: inventory
+      render_mode: http
+      max_pages: 250
+      scope_prefixes:
+      - https://docs.nado.xyz/
+  known_sources:
+    confirmed_absent:
+    - llms_txt
+    - llms_full_txt
+    - status_page
+    - github_org
+    last_verified: '2026-04-02'
