@@ -40,6 +40,7 @@ class InventoryPolicy:
 class RenderOptions:
     scroll_full_page: bool = False
     expand_accordions: bool = False
+    wait_for_text_min: int = 100  # Min chars of visible text before accepting render
 
 
 @dataclass(frozen=True, slots=True)
