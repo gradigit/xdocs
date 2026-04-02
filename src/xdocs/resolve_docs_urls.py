@@ -164,6 +164,15 @@ def resolve_docs_url(
                 for seg in segments:
                     if seg.lower() in url_lower:
                         score += 10
+                # Specificity: prefer pages where the endpoint path is rare.
+                # A page mentioning this path once is more specific than one
+                # listing 50 endpoints including this one.
+                path_count = md.count(clean)
+                total_endpoint_refs = len(re.findall(r"(?:GET|POST|PUT|DELETE|PATCH)\s+/", md))
+                if path_count <= 2 and total_endpoint_refs < 10:
+                    score += 30  # Focused page
+                elif total_endpoint_refs > 30:
+                    score -= 15  # Index/overview page listing many endpoints
                 # Deprioritize non-English, demo, testnet pages.
                 if any(ind in url_lower for ind in _DEPRIORITIZE_INDICATORS):
                     score -= 20
