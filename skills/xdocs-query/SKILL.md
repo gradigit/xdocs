@@ -359,6 +359,25 @@ Some API access requires out-of-band steps not captured in the endpoint record:
 - **OKX Travel Rule (58237)**: withdrawal requires rcvrInfo for certain jurisdictions
 - Reference `data/error_code_patterns.yaml` for quick error code classification
 
+## Step 7: Offer Live Verification
+
+After presenting the answer, always ask whether the user wants to verify against the live documentation:
+
+> The above is from the local doc store (crawled [date from `crawled_at`]). Want me to fetch the latest version of these pages directly from the exchange to verify nothing has changed?
+
+If the user says yes:
+1. Use `WebFetch` to retrieve each cited URL
+2. Compare the key facts (endpoint path, parameters, rate limits, permissions) against the stored version
+3. Report any differences: "Live docs match stored version" or "DRIFT DETECTED: [specific change]"
+4. If drift is found, present the live version as authoritative and note the stored version may need a re-sync
+
+This step is **optional** — only execute if the user confirms. It exists because:
+- Exchange docs change frequently (endpoint deprecation, parameter additions, rate limit adjustments)
+- The local store may be days or weeks behind
+- For production decisions, users need confidence the data is current
+
+If the user declines or doesn't respond, skip this step. The local store answer stands as the cite-only response.
+
 ## What's In The Store
 
 Run `xdocs store-report` for current page/endpoint counts. The pre-check already does this on first query.
