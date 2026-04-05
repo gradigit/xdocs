@@ -34,6 +34,19 @@ def _get_exchange_names() -> list[str]:
         # Add legacy names.
         if "htx" in names and "huobi" not in names:
             names.append("huobi")
+        # Add Korean exchange names (한국어 거래소 이름).
+        korean_names = {
+            "바이낸스": "binance", "바이빗": "bybit", "오케이엑스": "okx",
+            "비트겟": "bitget", "쿠코인": "kucoin", "게이트": "gateio",
+            "크라켄": "kraken", "코인베이스": "coinbase", "비트맥스": "bitmex",
+            "업비트": "upbit", "빗썸": "bithumb", "코인원": "coinone",
+            "코빗": "korbit", "비트스탬프": "bitstamp", "비트파이넥스": "bitfinex",
+            "데리빗": "deribit", "제미니": "gemini", "멕시": "mexc",
+            "바이비트": "bybit",  # alternate spelling
+        }
+        for kr_name in korean_names:
+            if kr_name not in names:
+                names.append(kr_name)
         _exchange_names = names
         return _exchange_names
     except Exception:
@@ -384,6 +397,14 @@ def classify_input(text: str) -> InputClassification:
                     "crypto.com": "cryptocom", "crypto_com": "cryptocom",
                     "mercado bitcoin": "mercadobitcoin",
                     "perpetual protocol": "perp", "gains network": "gains",
+                    # Korean names (한국어)
+                    "바이낸스": "binance", "바이빗": "bybit", "바이비트": "bybit",
+                    "오케이엑스": "okx", "비트겟": "bitget", "쿠코인": "kucoin",
+                    "게이트": "gateio", "크라켄": "kraken", "코인베이스": "coinbase",
+                    "비트맥스": "bitmex", "업비트": "upbit", "빗썸": "bithumb",
+                    "코인원": "coinone", "코빗": "korbit", "비트스탬프": "bitstamp",
+                    "비트파이넥스": "bitfinex", "데리빗": "deribit", "제미니": "gemini",
+                    "멕시": "mexc",
                 }
                 signals["exchange_hint"] = alias_to_id.get(hint, hint)
                 break
