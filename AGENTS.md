@@ -326,7 +326,7 @@ The crawl cascade exists precisely so that nothing falls through the cracks. "Th
 
 ## Current Phase
 
-Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,428 pages, 18.1M words, 6,406 structured endpoints** (400 with rate_limit). Store is at `cex-docs/`. Pipeline: **MRR=0.6428, PFX=78.84%, 778 tests**. Schema: v7.
+Phase: API Assistant Tool v2. 46 exchanges (29 CEX, 16 DEX, 1 ref), 78 sections in registry. Synced: **17,428 pages, 18.1M words, 6,406 structured endpoints** (400 with rate_limit). Store is at `cex-docs/`. Pipeline: **MRR=0.6409, PFX=79.37%, 778 tests**. Schema: v7.
 
 Latest:
 
