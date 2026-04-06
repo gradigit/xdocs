@@ -39,9 +39,9 @@ CANARY_QUERIES = [
     # error_message
     {"query": "Binance error -1002 unauthorized", "expected_exchange": "binance", "classification": "error_message", "min_claims": 1},
     {"query": "Bybit error 10001 parameter error", "expected_exchange": "bybit", "classification": "error_message", "min_claims": 1},
-    # negative — should produce 0 claims or unknown status
-    {"query": "What is the FTX API endpoint for placing orders", "expected_exchange": None, "classification": "question", "min_claims": 0, "expected_status": "unknown"},
-    {"query": "What is the weather forecast for tomorrow", "expected_exchange": None, "classification": "question", "min_claims": 0, "expected_status": "unknown"},
+    # negative — should produce 0 claims and needs_clarification (no exchange detected)
+    {"query": "What is the FTX API endpoint for placing orders", "expected_exchange": None, "classification": "question", "min_claims": 0, "expected_status": "needs_clarification"},
+    {"query": "What is the weather forecast for tomorrow", "expected_exchange": None, "classification": "question", "min_claims": 0, "expected_status": "needs_clarification"},
 ]
 
 

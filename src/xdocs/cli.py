@@ -517,6 +517,10 @@ def main(argv: list[str] | None = None) -> None:
     sc.add_argument("--no-skip-existing", dest="skip_existing", action="store_false", help="Don't skip existing endpoints")
     sc.add_argument("--continue-on-error", action="store_true", default=True)
 
+    sc = sub.add_parser("backfill-params", help="Backfill request_schema for endpoints missing parameters", parents=[common])
+    sc.add_argument("--exchange", help="Limit to specific exchange (default: all)")
+    sc.add_argument("--dry-run", action="store_true", help="Show what would be updated without writing")
+
     args = parser.parse_args(argv)
 
     try:
@@ -1484,6 +1488,17 @@ def main(argv: list[str] | None = None) -> None:
                 dry_run=args.dry_run,
                 skip_existing=args.skip_existing,
                 continue_on_error=args.continue_on_error,
+            )
+            _print_json({"ok": True, "schema_version": "v1", **result})
+            return
+
+        if args.cmd == "backfill-params":
+            from .endpoint_extract import backfill_params
+            result = backfill_params(
+                docs_dir=args.docs_dir,
+                lock_timeout_s=args.lock_timeout_s,
+                exchange=getattr(args, "exchange", None),
+                dry_run=args.dry_run,
             )
             _print_json({"ok": True, "schema_version": "v1", **result})
             return

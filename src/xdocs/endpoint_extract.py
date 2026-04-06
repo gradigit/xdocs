@@ -125,6 +125,305 @@ def extract_rate_limit_near(md: str, char_pos: int, window: int = 500) -> dict[s
     return None
 
 
+# ---------------------------------------------------------------------------
+# Parameter table extraction
+# ---------------------------------------------------------------------------
+
+# Heading patterns that precede request parameter tables.
+_PARAM_HEADING_RE = re.compile(
+    r"(?:^|\n)"
+    r'["\s]*'  # tolerate leading quotes/whitespace (Coinone wraps in quotes)
+    r"(?:#{1,4}\s+)?"  # optional markdown heading
+    r"(?:"
+    r"Request\s+(?:Param(?:eter)?s?|Body|Fields?|Header)"
+    r"|Param(?:eter)?s?"
+    r"|Query\s+Param(?:eter)?s?"
+    r"|Body\s+Param(?:eter)?s?"
+    r"|Headers?"
+    r")\b",
+    re.IGNORECASE,
+)
+
+# Column header keywords (case-insensitive).
+_NAME_KEYWORDS = {"name", "field", "parameter", "param", "필드", "key"}
+_TYPE_KEYWORDS = {"type", "유형", "타입"}
+_REQUIRED_KEYWORDS = {"required", "mandatory", "optional", "required/optional", "필수"}
+_DESC_KEYWORDS = {"description", "comment", "comments", "desc", "설명", "possible values"}
+
+# Pipe table separator: `---|---|---` (with optional leading/trailing pipe).
+_PIPE_SEP_RE = re.compile(r"^\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*$")
+
+# Required field normalization.
+_REQUIRED_TRUE = {"true", "yes", "y", "required", "mandatory", "o", "true (mandatory)"}
+_REQUIRED_FALSE = {"false", "no", "n", "optional", "x", ""}
+
+
+def _detect_column_map(cells: list[str]) -> dict[str, int]:
+    """Map column semantics to positions from a header row."""
+    result: dict[str, int] = {}
+    for i, cell in enumerate(cells):
+        low = cell.strip().lower()
+        if low in _NAME_KEYWORDS and "name" not in result:
+            result["name"] = i
+        elif low in _TYPE_KEYWORDS and "type" not in result:
+            result["type"] = i
+        elif low in _REQUIRED_KEYWORDS and "required" not in result:
+            result["required"] = i
+        elif low in _DESC_KEYWORDS and "description" not in result:
+            result["description"] = i
+    return result
+
+
+def _parse_required(val: str) -> bool | str:
+    """Normalize a required field value to bool or pass through as string."""
+    low = val.strip().lower()
+    if low in _REQUIRED_TRUE:
+        return True
+    if low in _REQUIRED_FALSE:
+        return False
+    return val.strip()
+
+
+def _split_pipe_row(line: str) -> list[str]:
+    """Split a pipe-delimited table row, stripping outer pipes."""
+    s = line.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|"):
+        s = s[:-1]
+    return [c.strip() for c in s.split("|")]
+
+
+def _unescape_coinone(md: str) -> str:
+    r"""Pre-process Coinone-style content with literal escape sequences.
+
+    Coinone pages store content with literal two-char sequences: ``\n`` (backslash+n),
+    ``\t`` (backslash+t), and ``\"`` (backslash+quote). These are NOT Python escape
+    sequences — they are the actual characters stored in the .md file.
+    """
+    # Detect: if literal \n count exceeds real newline count, this is Coinone format.
+    literal_bs_n = md.count("\\n")
+    real_newlines = md.count("\n")
+    if literal_bs_n > real_newlines:
+        md = md.replace("\\t", "\t")
+        md = md.replace("\\n", "\n")
+    if '\\"' in md:
+        md = md.replace('\\"', '"')
+    return md
+
+
+def extract_params_near(
+    md: str,
+    char_pos: int,
+    method: str = "POST",
+    *,
+    forward_window: int = 3000,
+    backward_window: int = 500,
+) -> list[dict[str, Any]]:
+    """Extract parameter records from a table near ``char_pos`` in markdown.
+
+    Searches forward (then backward) from ``char_pos`` for a "Request
+    Parameters" heading, detects pipe or tab tables, and parses rows into
+    structured parameter dicts.
+
+    Returns an empty list when no parameter table is found.
+    """
+    # Pre-process for Coinone literal \n content.
+    md_proc = _unescape_coinone(md)
+
+    # Search forward first, then backward.
+    search_start = char_pos
+    search_end = min(len(md_proc), char_pos + forward_window)
+    region = md_proc[search_start:search_end]
+
+    heading_match = _PARAM_HEADING_RE.search(region)
+    if not heading_match:
+        # Try backward.
+        back_start = max(0, char_pos - backward_window)
+        region = md_proc[back_start:char_pos]
+        heading_match = _PARAM_HEADING_RE.search(region)
+        if not heading_match:
+            return []
+        table_search_start = back_start + heading_match.end()
+    else:
+        table_search_start = search_start + heading_match.end()
+
+    # Grab the region after the heading to parse.
+    table_region = md_proc[table_search_start:min(len(md_proc), table_search_start + 2000)]
+
+    lines = table_region.split("\n")
+
+    # Detect format: pipe or tab.
+    params = _try_parse_pipe_table(lines, method)
+    if not params:
+        params = _try_parse_tab_table(lines, method)
+
+    return params
+
+
+def _try_parse_pipe_table(
+    lines: list[str], method: str,
+) -> list[dict[str, Any]]:
+    """Try to parse a pipe-delimited parameter table."""
+    # Find separator row (---|---|---).
+    sep_idx = -1
+    for i, line in enumerate(lines[:15]):  # look within first 15 lines
+        if _PIPE_SEP_RE.match(line.strip()):
+            sep_idx = i
+            break
+    if sep_idx < 1:
+        return []
+
+    # Header is the line before separator.
+    header_cells = _split_pipe_row(lines[sep_idx - 1])
+    col_map = _detect_column_map(header_cells)
+
+    if "name" not in col_map:
+        return []
+
+    # Parse data rows after separator.
+    params: list[dict[str, Any]] = []
+    last_parent: str | None = None
+    in_param = method.upper() in ("GET", "DELETE", "HEAD")
+
+    for line in lines[sep_idx + 1:]:
+        stripped = line.strip()
+        if not stripped:
+            break
+        # Stop on next heading.
+        if stripped.startswith("#"):
+            break
+        # Must contain a pipe to be a table row.
+        if "|" not in stripped:
+            break
+
+        cells = _split_pipe_row(stripped)
+        if len(cells) < 2:
+            continue
+
+        name_raw = cells[col_map["name"]].strip() if col_map["name"] < len(cells) else ""
+        if not name_raw or name_raw.startswith("---"):
+            continue
+
+        # Detect nesting: dash-prefix.
+        parent = None
+        if name_raw.startswith("- "):
+            name_raw = name_raw[2:].strip()
+            parent = last_parent
+        elif name_raw.startswith("-"):
+            name_raw = name_raw[1:].strip()
+            parent = last_parent
+        else:
+            last_parent = name_raw
+
+        # Strip backticks from name.
+        name_raw = name_raw.strip("`")
+
+        param: dict[str, Any] = {
+            "name": name_raw,
+            "in": "query" if in_param else "body",
+        }
+
+        if "type" in col_map and col_map["type"] < len(cells):
+            param["type"] = cells[col_map["type"]].strip()
+
+        if "required" in col_map and col_map["required"] < len(cells):
+            param["required"] = _parse_required(cells[col_map["required"]])
+
+        if "description" in col_map and col_map["description"] < len(cells):
+            desc = cells[col_map["description"]].strip()
+            if desc:
+                param["description"] = desc
+
+        if parent is not None:
+            param["parent"] = parent
+
+        params.append(param)
+
+    return params
+
+
+def _try_parse_tab_table(
+    lines: list[str], method: str,
+) -> list[dict[str, Any]]:
+    """Try to parse a tab-delimited parameter table (Coinone, Aster)."""
+    # Find a line with tabs that looks like a header.
+    header_idx = -1
+    for i, line in enumerate(lines[:10]):
+        if "\t" in line:
+            cells = [c.strip() for c in line.split("\t")]
+            col_map = _detect_column_map(cells)
+            if "name" in col_map:
+                header_idx = i
+                break
+
+    if header_idx < 0:
+        return []
+
+    header_cells = [c.strip() for c in lines[header_idx].split("\t")]
+    col_map = _detect_column_map(header_cells)
+    in_param = method.upper() in ("GET", "DELETE", "HEAD")
+
+    params: list[dict[str, Any]] = []
+    last_parent: str | None = None
+
+    for line in lines[header_idx + 1:]:
+        stripped = line.strip()
+        if not stripped:
+            break
+        if stripped.startswith("#"):
+            break
+        if "\t" not in stripped:
+            # Allow continuation lines starting with - (nested params).
+            if stripped.startswith("- ") and params:
+                continue
+            break
+
+        cells = [c.strip() for c in stripped.split("\t")]
+        if len(cells) < 2:
+            continue
+
+        name_raw = cells[col_map["name"]].strip() if col_map["name"] < len(cells) else ""
+        if not name_raw:
+            continue
+
+        # Detect nesting.
+        parent = None
+        if name_raw.startswith("- "):
+            name_raw = name_raw[2:].strip()
+            parent = last_parent
+        elif name_raw.startswith("-"):
+            name_raw = name_raw[1:].strip()
+            parent = last_parent
+        else:
+            last_parent = name_raw
+
+        name_raw = name_raw.strip("`")
+
+        param: dict[str, Any] = {
+            "name": name_raw,
+            "in": "query" if in_param else "body",
+        }
+
+        if "type" in col_map and col_map["type"] < len(cells):
+            param["type"] = cells[col_map["type"]].strip()
+
+        if "required" in col_map and col_map["required"] < len(cells):
+            param["required"] = _parse_required(cells[col_map["required"]])
+
+        if "description" in col_map and col_map["description"] < len(cells):
+            desc = cells[col_map["description"]].strip()
+            if desc:
+                param["description"] = desc
+
+        if parent is not None:
+            param["parent"] = parent
+
+        params.append(param)
+
+    return params
+
+
 _ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\ufeff\u00ad]")
 _PARAM_ANGLE = re.compile(r"<([^>]+)>")
 _PARAM_COLON = re.compile(r":([A-Za-z_]\w*)")
@@ -454,6 +753,13 @@ def _build_endpoint_record(
             field_name="rate_limit",
         )
 
+    # Try to extract request parameters from nearby table.
+    params = extract_params_near(md, candidate.char_start, method=method)
+    request_schema: dict[str, Any] | None = None
+    if params:
+        request_schema = {"parameters": params}
+        field_status["request_schema"] = "documented"
+
     record: dict[str, Any] = {
         "exchange": exchange,
         "section": section,
@@ -465,7 +771,7 @@ def _build_endpoint_record(
             "api_version": api_version,
         },
         "description": description,
-        "request_schema": None,
+        "request_schema": request_schema,
         "response_schema": None,
         "required_permissions": None,
         "rate_limit": rate_limit_data,
@@ -731,4 +1037,165 @@ def scan_endpoints(
     result["pages_scanned"] = pages_scanned
     result["candidates_raw"] = len(all_candidates)
     result["after_dedup"] = len(deduped)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Backfill: add request_schema to existing endpoints
+# ---------------------------------------------------------------------------
+
+def backfill_params(
+    *,
+    docs_dir: str,
+    lock_timeout_s: float,
+    exchange: str | None = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Backfill request_schema for existing endpoints that have None.
+
+    Finds endpoints with null request_schema, loads their source page,
+    searches for parameter tables near the endpoint position, and updates
+    the record.
+    """
+    import json as _json
+
+    db_path = require_store_db(docs_dir)
+    conn = open_db(db_path)
+
+    try:
+        # Find endpoints with null request_schema.
+        if exchange:
+            rows = conn.execute(
+                "SELECT endpoint_id, json FROM endpoints "
+                "WHERE json_extract(json, '$.request_schema') IS NULL "
+                "AND json_extract(json, '$.exchange') = ?",
+                (exchange,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT endpoint_id, json FROM endpoints "
+                "WHERE json_extract(json, '$.request_schema') IS NULL",
+            ).fetchall()
+    finally:
+        conn.close()
+
+    updated = 0
+    skipped = 0
+    no_table = 0
+    no_page = 0
+    details: list[dict[str, str]] = []
+
+    for row in rows:
+        ep_id = row[0]
+        rec = _json.loads(row[1])
+        method = rec.get("http", {}).get("method", "GET")
+        path = rec.get("http", {}).get("path", "")
+        ep_exchange = rec.get("exchange", "")
+
+        # Find the source page URL from citations.
+        sources = rec.get("sources", [])
+        page_url = None
+        char_start = None
+        for src in sources:
+            url = src.get("url") or src.get("page_url", "")
+            if url:
+                page_url = url
+                char_start = src.get("excerpt_start", 0)
+                break
+
+        if not page_url:
+            # Try docs_url fallback.
+            page_url = rec.get("docs_url")
+            char_start = 0
+
+        if not page_url:
+            no_page += 1
+            continue
+
+        # Load page markdown.
+        conn2 = open_db(db_path)
+        try:
+            page_row = conn2.execute(
+                "SELECT markdown_path FROM pages WHERE url = ? OR canonical_url = ?",
+                (page_url, page_url),
+            ).fetchone()
+        finally:
+            conn2.close()
+
+        if not page_row or not page_row[0]:
+            no_page += 1
+            continue
+
+        md_path = Path(page_row[0])
+        if not md_path.exists():
+            no_page += 1
+            continue
+
+        md = md_path.read_text(encoding="utf-8")
+
+        # If we don't have a char_start from citations, search for the endpoint.
+        if char_start is None or char_start == 0:
+            # Search for METHOD /path in the markdown.
+            pattern = re.compile(
+                rf"\b{re.escape(method)}\b\s+[`]?{re.escape(path)}",
+                re.IGNORECASE,
+            )
+            m = pattern.search(md)
+            if m:
+                char_start = m.start()
+            else:
+                # Try just the path.
+                idx = md.find(path)
+                if idx >= 0:
+                    char_start = idx
+                else:
+                    no_table += 1
+                    continue
+
+        # Extract params.
+        params = extract_params_near(md, char_start, method=method)
+        if not params:
+            no_table += 1
+            continue
+
+        if dry_run:
+            details.append({
+                "exchange": ep_exchange,
+                "method": method,
+                "path": path,
+                "params_found": len(params),
+            })
+            updated += 1
+            continue
+
+        # Update the endpoint record.
+        rec["request_schema"] = {"parameters": params}
+        fs = rec.get("field_status", {})
+        fs["request_schema"] = "documented"
+        rec["field_status"] = fs
+
+        conn3 = open_db(db_path)
+        try:
+            lock_path = Path(docs_dir) / "db" / ".write.lock"
+            with acquire_write_lock(lock_path, lock_timeout_s):
+                conn3.execute(
+                    "UPDATE endpoints SET json = ? WHERE endpoint_id = ?",
+                    (_json.dumps(rec, ensure_ascii=False), ep_id),
+                )
+                conn3.commit()
+            updated += 1
+        finally:
+            conn3.close()
+
+    result: dict[str, Any] = {
+        "cmd": "backfill-params",
+        "total_candidates": len(rows),
+        "updated": updated,
+        "no_table": no_table,
+        "no_page": no_page,
+        "skipped": skipped,
+    }
+    if dry_run:
+        result["dry_run"] = True
+        result["details"] = details
     return result

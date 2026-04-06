@@ -369,5 +369,25 @@ INSERT INTO pages (
             self.assertTrue(any(c.get("citations") and c["citations"][0].get("field_name") == "required_permissions" for c in out.get("claims", [])))
 
 
+    def test_no_exchange_returns_needs_clarification(self) -> None:
+        """When no exchange is detected, return needs_clarification with top exchanges."""
+        with tempfile.TemporaryDirectory() as tmp:
+            docs_dir = Path(tmp) / "cex-docs"
+            init_store(docs_dir=str(docs_dir), schema_sql_path=REPO_ROOT / "schema" / "schema.sql", lock_timeout_s=1.0)
+
+            # Query with no exchange name at all
+            out = answer_question(docs_dir=str(docs_dir), question="how do I place an order?")
+            self.assertEqual(out["status"], "needs_clarification")
+            self.assertIsNotNone(out["clarification"])
+            self.assertEqual(out["clarification"]["prompt"], "Which exchange is this question about?")
+            self.assertIsInstance(out["clarification"]["options"], list)
+            self.assertGreater(len(out["clarification"]["options"]), 0)
+            # Each option should have id, label, exchange
+            opt = out["clarification"]["options"][0]
+            self.assertIn("id", opt)
+            self.assertIn("label", opt)
+            self.assertIn("exchange", opt)
+
+
 if __name__ == "__main__":
     unittest.main()

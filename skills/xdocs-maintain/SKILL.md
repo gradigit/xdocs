@@ -110,7 +110,12 @@ xdocs list-changelogs --since YYYY-MM-DD --docs-dir ./cex-docs
 # 3. Incremental semantic index — embeds only new/changed pages
 xdocs build-index --incremental --docs-dir ./cex-docs
 xdocs compact-index --docs-dir ./cex-docs   # merge fragments after large additions
+
+# 4. Backfill parameters for endpoints missing request_schema
+xdocs backfill-params --docs-dir ./cex-docs
 ```
+
+**After any sync that changes page/endpoint counts:** follow the "Updating Skills & Documentation" checklist below (all 7 files). This is mandatory, not optional.
 
 ### Periodic Maintenance
 

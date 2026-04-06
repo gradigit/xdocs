@@ -439,6 +439,16 @@ WHERE scope_group = ?;
                 return True
             return False
 
+        def _stored_page_is_empty(canonical_url: str) -> bool:
+            """Check if an existing stored page has 0 words (needs re-render)."""
+            row = conn.execute(
+                "SELECT word_count, render_mode FROM pages WHERE canonical_url = ?",
+                (canonical_url,),
+            ).fetchone()
+            if row is None:
+                return False
+            return int(row[0]) == 0 and str(row[1]) != "playwright"
+
         def _store_result(
             ent_id: int, url: str, fr: FetchResult, used_render: str,
             title: str | None, md_norm: str, wc: int,
@@ -767,18 +777,25 @@ WHERE id = ?;
                             )
                             rate_limiter.note_fetch_result_locked(domain, fr)
                         if int(fr.http_status) == 304:
-                            _record_revalidated_unchanged(ent_id, fr, canonical_url=url)
-                            continue
-                        trunc = _check_truncation(fr, max_bytes=cfg.max_bytes)
-                        if trunc:
-                            truncation_warnings += 1
-                            log.warning("Truncation detected for %s: %s", url, trunc["message"])
-                        used_render = "http"
-                        _html, title, md_norm, wc = extract_page_markdown(fr=fr)
-                        eq = verify_extraction(_html, md_norm)
-                        if eq.warnings:
-                            extraction_quality_warnings += 1
-                            log.warning("Extraction quality issues for %s: %s", url, "; ".join(eq.warnings))
+                            # Don't skip if the stored page is empty — it needs
+                            # Playwright re-render even though HTTP content is unchanged.
+                            if cfg.render_mode == "auto" and _stored_page_is_empty(url):
+                                log.info("304 but stored page empty — forcing Playwright for %s", url)
+                                wc = 0  # ensure _needs_playwright triggers
+                            else:
+                                _record_revalidated_unchanged(ent_id, fr, canonical_url=url)
+                                continue
+                        else:
+                            trunc = _check_truncation(fr, max_bytes=cfg.max_bytes)
+                            if trunc:
+                                truncation_warnings += 1
+                                log.warning("Truncation detected for %s: %s", url, trunc["message"])
+                            used_render = "http"
+                            _html, title, md_norm, wc = extract_page_markdown(fr=fr)
+                            eq = verify_extraction(_html, md_norm)
+                            if eq.warnings:
+                                extraction_quality_warnings += 1
+                                log.warning("Extraction quality issues for %s: %s", url, "; ".join(eq.warnings))
 
                     if cfg.render_mode in ("playwright", "auto"):
                         do_pw = cfg.render_mode == "playwright"
@@ -883,6 +900,11 @@ WHERE id = ?;
                         try:
                             fr, title, md_norm, wc = future.result()
                             if int(fr.http_status) == 304:
+                                # Don't skip if stored page is empty — needs Playwright.
+                                if cfg.render_mode == "auto" and _stored_page_is_empty(url):
+                                    log.info("304 but stored page empty — queueing Playwright for %s", url)
+                                    pw_queue.append({"ent": ent, "http_fr": fr, "http_title": None, "http_md": "", "http_wc": 0})
+                                    continue
                                 _record_revalidated_unchanged(ent_id, fr, canonical_url=url)
                                 continue
                             # Check if Playwright fallback needed (auto mode).

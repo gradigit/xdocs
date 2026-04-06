@@ -14,6 +14,7 @@ from xdocs.endpoint_extract import (
     _clean_heading_for_description,
     _normalize_path,
     _normalize_path_for_dedup,
+    extract_params_near,
     scan_endpoints_from_page,
 )
 from xdocs.endpoints import HARD_MAX_EXCERPT_CHARS, REQUIRED_HTTP_FIELD_STATUS_KEYS
@@ -324,6 +325,274 @@ class TestDedupSamePage(unittest.TestCase):
         cands = _scan(md)
         matches = [c for c in cands if c.norm_path == "/api/v1/order"]
         self.assertEqual(len(matches), 1, "Duplicate should be deduped")
+
+
+# ---------------------------------------------------------------------------
+# Parameter table extraction tests
+# ---------------------------------------------------------------------------
+
+class TestExtractParamsNearPipeTable(unittest.TestCase):
+    """Pipe-delimited parameter tables (cryptocom, bybit, apex, etc.)."""
+
+    def test_basic_cryptocom_format(self) -> None:
+        md = (
+            "## public/get-announcements\n\n"
+            "POST `/v1/public/get-announcements`\n\n"
+            "### Request Params\n\n"
+            "Name | Type | Required | Description\n"
+            "---|---|---|---\n"
+            "category | string | N | filter by category\n"
+            "product_type | string | N | filter by product type\n\n"
+            "### Response Attributes\n"
+        )
+        params = extract_params_near(md, md.index("POST"), method="POST")
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "category")
+        self.assertEqual(params[0]["type"], "string")
+        self.assertEqual(params[0]["required"], False)
+        self.assertEqual(params[0]["description"], "filter by category")
+        self.assertEqual(params[0]["in"], "body")
+
+    def test_bybit_3col_format(self) -> None:
+        md = (
+            "## Get Orderbook\n\n"
+            "GET `/v5/market/orderbook`\n\n"
+            "### Request Parameters\n\n"
+            "| Parameter | Type | Comments |\n"
+            "|---|---|---|\n"
+            "| category | string | Product type |\n"
+            "| symbol | string | Symbol name |\n"
+            "| limit | integer | Limit size |\n"
+        )
+        params = extract_params_near(md, md.index("GET"), method="GET")
+        self.assertEqual(len(params), 3)
+        self.assertEqual(params[0]["name"], "category")
+        self.assertEqual(params[0]["in"], "query")  # GET → query
+        self.assertEqual(params[2]["name"], "limit")
+
+    def test_nested_params_dash_prefix(self) -> None:
+        md = (
+            "## Place Order\n\n"
+            "POST `/v1/private/create-order`\n\n"
+            "### Request Params\n\n"
+            "Name | Type | Required | Description\n"
+            "---|---|---|---\n"
+            "instrument_name | string | Y | e.g. BTC_USDT\n"
+            "side | string | Y | BUY or SELL\n"
+            "order_info | object | Y | Order details\n"
+            "- price | string | N | Limit price\n"
+            "- quantity | string | Y | Order amount\n"
+            "time_in_force | string | N | GTC or IOC\n"
+        )
+        params = extract_params_near(md, md.index("POST"), method="POST")
+        self.assertEqual(len(params), 6)
+        # Check nested params
+        price = next(p for p in params if p["name"] == "price")
+        self.assertEqual(price["parent"], "order_info")
+        qty = next(p for p in params if p["name"] == "quantity")
+        self.assertEqual(qty["parent"], "order_info")
+        # Non-nested after nested
+        tif = next(p for p in params if p["name"] == "time_in_force")
+        self.assertNotIn("parent", tif)
+
+    def test_apex_5col_format(self) -> None:
+        md = (
+            "## Create Order\n\n"
+            "POST `/api/v3/order`\n\n"
+            "### Request Parameters\n\n"
+            "| Parameter | Position | Type | Type | Comment |\n"
+            "|---|---|---|---|---|\n"
+            "| symbol | body | string | true | Trading pair |\n"
+            "| side | body | string | true | BUY/SELL |\n"
+        )
+        params = extract_params_near(md, md.index("POST"), method="POST")
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "symbol")
+
+    def test_no_table_returns_empty(self) -> None:
+        md = "## Get Time\n\nGET `/public/time`\n\nReturns server time.\n"
+        params = extract_params_near(md, md.index("GET"), method="GET")
+        self.assertEqual(params, [])
+
+    def test_non_param_table_skipped(self) -> None:
+        """A table without name/type columns should be skipped."""
+        md = (
+            "## Order Types\n\n"
+            "POST `/orders`\n\n"
+            "### Common Fields\n\n"
+            "Order Type | Description\n"
+            "---|---\n"
+            "Limit | Limit order\n"
+            "Market | Market order\n"
+        )
+        params = extract_params_near(md, md.index("POST"), method="POST")
+        self.assertEqual(params, [])
+
+    def test_required_normalization(self) -> None:
+        md = (
+            "POST `/api/test`\n\n"
+            "### Request Body\n\n"
+            "Name | Type | Required | Description\n"
+            "---|---|---|---\n"
+            "a | string | Y | field a\n"
+            "b | string | true | field b\n"
+            "c | string | optional | field c\n"
+            "d | string | N | field d\n"
+            "e | string | conditional | field e\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertIs(params[0]["required"], True)   # Y
+        self.assertIs(params[1]["required"], True)   # true
+        self.assertIs(params[2]["required"], False)   # optional
+        self.assertIs(params[3]["required"], False)   # N
+        self.assertEqual(params[4]["required"], "conditional")  # pass-through
+
+    def test_outer_pipes_optional(self) -> None:
+        """Tables with leading/trailing pipes should work."""
+        md = (
+            "POST `/test`\n\n"
+            "### Request Parameters\n\n"
+            "| Name | Type | Required |\n"
+            "| --- | --- | --- |\n"
+            "| symbol | string | Y |\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0]["name"], "symbol")
+
+    def test_stops_at_next_heading(self) -> None:
+        md = (
+            "POST `/test`\n\n"
+            "### Request Params\n\n"
+            "Name | Type | Required | Description\n"
+            "---|---|---|---\n"
+            "symbol | string | Y | pair\n\n"
+            "### Response Attributes\n\n"
+            "Name | Type | Description\n"
+            "---|---|---\n"
+            "id | string | order id\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0]["name"], "symbol")
+
+
+class TestExtractParamsNearTabTable(unittest.TestCase):
+    """Tab-delimited parameter tables (Coinone, Aster)."""
+
+    def test_coinone_korean_headers(self) -> None:
+        # Simulate Coinone's literal \n format after unescaping.
+        md = (
+            "POST https://api.coinone.co.kr/v2.1/order/cancel\n\n"
+            "Request Body\n"
+            "필드\t유형\t필수\t설명\n"
+            "access_token\tString\ttrue\t사용자의 액세스 토큰\n"
+            "nonce\tString\ttrue\tUUID nonce\n"
+            "order_id\tString\ttrue\t주문 식별 ID\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 3)
+        self.assertEqual(params[0]["name"], "access_token")
+        self.assertEqual(params[0]["type"], "String")
+        self.assertIs(params[0]["required"], True)
+        self.assertEqual(params[0]["description"], "사용자의 액세스 토큰")
+
+    def test_coinone_literal_backslash_n(self) -> None:
+        """Coinone stores content with literal \\n and \\t — extract_params_near should handle it."""
+        # Simulate stored format: literal two-char sequences (backslash+n, backslash+t).
+        # In the .md file: `\n` is two chars, `\t` is two chars. Very few real newlines.
+        md = (
+            '"주문 취소\\nPOST https://api.coinone.co.kr/v2.1/order/cancel"'
+            "\n\n"  # only real newlines are between JSON strings
+            '"Request Body\\n필드\\t유형\\t필수\\t설명\\n'
+            'access_token\\tString\\ttrue\\t토큰\\n'
+            'nonce\\tString\\ttrue\\tUUID"'
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["name"], "access_token")
+
+    def test_coinone_english_headers(self) -> None:
+        md = (
+            "GET /v2/account/balance\n\n"
+            "Request Body\n"
+            "Key\tType\tDescription\n"
+            "access_token\tString\t토큰\n"
+            "nonce\tString\tUUID\n"
+        )
+        params = extract_params_near(md, 0, method="GET")
+        self.assertEqual(len(params), 2)
+        self.assertEqual(params[0]["in"], "query")
+
+    def test_tab_nested_params(self) -> None:
+        md = (
+            "POST /api/order\n\n"
+            "Request Parameters\n"
+            "필드\t타입\t설명\n"
+            "range_price_units\tArray[Object]\t가격 단위 정보\n"
+            "- range_min\tinteger\t최소 가격\n"
+            "- price_unit\tdouble\t호가 단위\n"
+            "side\tString\t매수/매도\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 4)
+        self.assertEqual(params[1]["name"], "range_min")
+        self.assertEqual(params[1]["parent"], "range_price_units")
+        self.assertNotIn("parent", params[3])
+
+
+class TestExtractParamsEdgeCases(unittest.TestCase):
+    """Edge cases and boundary conditions."""
+
+    def test_backward_search_finds_table(self) -> None:
+        """When the endpoint definition comes AFTER the param table."""
+        md = (
+            "### Request Parameters\n\n"
+            "Name | Type | Required\n"
+            "---|---|---\n"
+            "symbol | string | Y\n\n"
+            "POST `/api/order`\n"
+        )
+        # Point char_pos at the POST line (after the table).
+        pos = md.index("POST")
+        params = extract_params_near(md, pos, method="POST")
+        self.assertEqual(len(params), 1)
+
+    def test_delete_method_uses_query(self) -> None:
+        md = (
+            "DELETE `/api/order`\n\n"
+            "### Request Parameters\n\n"
+            "Name | Type | Required\n"
+            "---|---|---\n"
+            "order_id | string | Y\n"
+        )
+        params = extract_params_near(md, 0, method="DELETE")
+        self.assertEqual(params[0]["in"], "query")
+
+    def test_missing_required_column(self) -> None:
+        """Tables without a required column should still parse."""
+        md = (
+            "POST `/test`\n\n"
+            "### Parameters\n\n"
+            "Field | Type | Description\n"
+            "---|---|---\n"
+            "symbol | string | Trading pair\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0]["name"], "symbol")
+        self.assertNotIn("required", params[0])
+
+    def test_backtick_stripped_from_name(self) -> None:
+        md = (
+            "POST `/test`\n\n"
+            "### Request Params\n\n"
+            "Name | Type | Required\n"
+            "---|---|---\n"
+            "`symbol` | string | Y\n"
+        )
+        params = extract_params_near(md, 0, method="POST")
+        self.assertEqual(params[0]["name"], "symbol")
 
 
 if __name__ == "__main__":

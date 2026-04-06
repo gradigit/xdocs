@@ -1767,20 +1767,48 @@ def answer_question(
                     pass
 
     if not matched:
-        available = sorted(ex.exchange_id for ex in reg.exchanges)
+        # Return needs_clarification with top exchanges ranked by endpoint
+        # count so the agent can present an interactive selector.
+        db_path = Path(docs_dir) / "db" / "docs.db"
+        top_exchanges: list[dict[str, str]] = []
+        if db_path.exists():
+            try:
+                _conn = open_db(db_path)
+                try:
+                    rows = _conn.execute(
+                        "SELECT exchange, COUNT(*) as c FROM endpoints "
+                        "GROUP BY exchange ORDER BY c DESC LIMIT 15"
+                    ).fetchall()
+                    ex_map = {ex.exchange_id: ex for ex in reg.exchanges}
+                    for ex_id, _cnt in rows:
+                        ex = ex_map.get(ex_id)
+                        if ex:
+                            top_exchanges.append({
+                                "id": ex.exchange_id,
+                                "label": ex.display_name,
+                                "exchange": ex.exchange_id,
+                            })
+                finally:
+                    _conn.close()
+            except Exception:
+                pass
+        if not top_exchanges:
+            top_exchanges = [
+                {"id": ex.exchange_id, "label": ex.display_name, "exchange": ex.exchange_id}
+                for ex in sorted(reg.exchanges, key=lambda e: e.exchange_id)[:15]
+            ]
         return {
             "ok": True,
             "schema_version": "v1",
-            "status": "unknown",
+            "status": "needs_clarification",
             "question": question,
             "normalized_question": norm,
-            "clarification": None,
+            "clarification": {
+                "prompt": "Which exchange is this question about?",
+                "options": top_exchanges,
+            },
             "claims": [],
-            "notes": [
-                "Could not determine exchange from question. "
-                f"Available exchanges: {', '.join(available)}. "
-                "Include the exchange name in your question."
-            ],
+            "notes": ["No exchange detected in query. Re-run with `--clarification <exchange_id>`."],
         }
 
     if len(matched) > 1:
