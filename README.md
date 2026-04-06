@@ -6,13 +6,16 @@ curl -fsSL https://raw.githubusercontent.com/gradigit/xdocs/main/install.sh | ba
 
 Local-first, cite-only knowledge base for exchange API documentation (CEX + DEX).
 
+**46 exchanges · 6,406 endpoints · 17,429 pages · 18.1M words**
+
 Ask natural-language questions like:
 
-- “What permission does this private endpoint need?”
-- “Why is this auth request failing on OKX/Bybit/Bitget?”
-- “What is the safest rollout plan across exchanges?”
+- “What permissions are needed for Bybit withdrawal?”
+- “Compare Binance and OKX order rate limits”
+- “What Kraken endpoints aren't covered by CCXT?”
+- Paste an error like `-1021 Timestamp ahead of server time` and get the fix
 
-…and get answers backed by local sources, with citations.
+…and get answers backed by local sources, with citations. No LLM guessing.
 
 ---
 

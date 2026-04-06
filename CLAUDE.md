@@ -406,6 +406,7 @@ All eval reports go in `reports/` with naming convention `<milestone>-<variant>.
   - **Bithumb**: Korean docs (`apidocs.bithumb.com`, `rest`) are the default. English (`rest_en`) uses Localize.js client-side translation (1,723 entries) and **requires Playwright** to render. Coverage may be partial since translations lag Korean updates.
   - **Coinone**: Korean-only (`docs.coinone.co.kr`). No English version exists. Endpoint paths and parameter names are in English and searchable via FTS5.
   - **Korbit**: Already in English (`docs.korbit.co.kr`). No language issue.
+- **Korean exchange name detection**: The classifier recognizes 18 Korean exchange names (바이낸스→binance, 바이빗→bybit, 오케이엑스→okx, 비트겟→bitget, 쿠코인→kucoin, 크라켄→kraken, 업비트→upbit, 빗썸→bithumb, 코인원→coinone, 코빗→korbit, etc.) and maps them to internal IDs. Korean-language queries work natively.
 
 ## Current Phase
 

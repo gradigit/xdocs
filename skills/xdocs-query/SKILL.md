@@ -393,7 +393,7 @@ The store covers 46 exchanges (CEX, perp DEX, CCXT reference) with:
 
 - **CLI auto-discovers data:** `--docs-dir` is resolved from the package install location. No flags or env vars needed if installed via `uv tool install -e .` or `uv sync`.
 - `{{url}}`** in paths:** Some Postman-imported endpoints have `{{url}}/sapi/v1/...` paths. `lookup-endpoint` handles this automatically.
-- **Korean exchanges:** Upbit, Bithumb, Coinone docs are partially/fully in Korean. Korbit is in English. Endpoint paths and parameter names are in English and searchable via FTS5. Upbit English docs lag Korean by ~3 minor versions.
+- **Korean language support:** The classifier recognizes 18 Korean exchange names (바이낸스→binance, 바이빗→bybit, 오케이엑스→okx, etc.). Users can query in Korean natively. Korean exchange docs (Upbit, Bithumb, Coinone) are partially/fully in Korean; endpoint paths and parameter names are in English and searchable via FTS5.
 - **Unresolved **`$ref`**:** OpenAPI-imported request/response schemas may contain `$ref` pointers. If you need the referenced definition, search for the component name in the source page.
 - **Negative error codes:** Use `--` before negative numbers in CLI args: `search-error -- -1002`. Do NOT use `--` for positive codes like `search-error 60029` — it breaks flag parsing.
 - **Semantic search requires **`[semantic]`** extra:** If `semantic-search` fails with ImportError, fall back to FTS5.
