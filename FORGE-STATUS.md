@@ -1,45 +1,39 @@
 ---
-milestone: M23
-phase: phase1-complete
-updated: 2026-03-27T11:30:00+09:00
-run_id: m23-extract-2026-03-27
+milestone: M23-Phase2
+phase: planning
+updated: 2026-04-06T18:00:00+09:00
+run_id: m23p2-2026-04-06
 ---
 ## Current State
-M23 Phase 1 complete. Endpoint extraction from crawled docs is operational.
+M23 Phase 1 complete. Phase 2 (parameter table extraction) in planning stage.
 
-## Results
-- **+863 new endpoints** extracted from 6 exchanges (5,067 → 5,930 total)
-- All endpoints have `docs_url` set to source page
-- All citations pass `_verify_citation_against_store()` (enforced by save pipeline)
-- 35 new tests, 737 total passing, zero regressions
+## Phase 1 Deliverables (complete)
+- endpoint_extract.py: 5 regex patterns, rate limit extraction, save orchestrator
+- scan-endpoints CLI with --dry-run
+- xdocs-extract skill
+- 1,648 endpoints extracted, 400 with rate_limit
+- agent-browser content-selector fallback for SPAs
+- Korean exchange name detection (18 names)
+- Coinone: 62 pages re-ingested, 41 endpoints with bilingual descriptions
 
-## Per-Exchange Breakdown
-| Exchange | Section | Extracted | Pattern | Notes |
-|----------|---------|-----------|---------|-------|
-| aevo | api | 110 | P4 | Per-endpoint ReadMe.io pages, clean |
-| phemex | api | 120 | P3+P2 | Slate monolith, code blocks after `> Request` |
-| coinex | api | 134 | P1 | Docusaurus, dedup 660→134 |
-| bitbank | rest | 389 | P2 | GitHub markdown, includes ccxt_ref pages |
-| woo | api | 73 | P5+P2 | SPA monolith, backtick + code block |
-| apex | api | 37 | P5 | ReadMe.io, dedup 113→37 (3 lang dupes) |
-
-## Deliverables
-- `src/xdocs/endpoint_extract.py` — regex scan + record construction (~310 lines)
-- `skills/xdocs-extract/SKILL.md` — extraction skill
-- `tests/test_endpoint_extract.py` — 35 tests
-- CLI: `xdocs scan-endpoints --exchange X --section Y [--dry-run]`
-- CLAUDE.md updated
+## Phase 2 Plan
+See `architect/m23-phase2-plan.md` — needs iteration before building.
 
 ## Store Stats
-- Pages: 17,422
-- Endpoints: 5,930 (+863 from extraction)
-- Tests: 737
+- Pages: 17,429
+- Endpoints: 6,406
+- With rate_limit: 400
+- Tests: 778
+- Pipeline: MRR=0.6409, PFX=79.37%
+- Semantic index: 339,179 chunks + 218 Coinone incremental, 2.5 GB
 
-## Next
-- Commit M23 changes
-- Phase 2 (follow-up): parameter table extraction, rate limits
+## Decisions Made
+- Translation: Option B — rely on cross-language search (proven working), no translation layer
+- Parameter extraction: Build now (Phase 2), not defer
+- Coinone: Korean-only documented in skills, search works cross-language
+- Skills: update after every data change (add to maintenance checklist)
 
 ## Active Agents
 - None
 
-## Last Update: 2026-03-27T11:30:00+09:00
+## Last Update: 2026-04-06T18:00:00+09:00
