@@ -33,7 +33,7 @@ semantic-query = [
   "tokenizers>=0.20; sys_platform == 'darwin'",
   "sentence-transformers>=3.0; sys_platform == 'linux'",
   "peft>=0.15.2; sys_platform == 'linux'",
-  "transformers>=4.40; sys_platform == 'linux'",
+  "transformers>=4.40",
   "huggingface-hub>=0.24",
 ]
 semantic = [
