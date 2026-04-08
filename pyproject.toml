@@ -33,6 +33,7 @@ semantic-query = [
   "tokenizers>=0.20; sys_platform == 'darwin'",
   "sentence-transformers>=3.0; sys_platform == 'linux'",
   "peft>=0.15.2; sys_platform == 'linux'",
+  "transformers>=4.40",
   "huggingface-hub>=0.24",
   "mistune>=3.0",
 ]
@@ -44,6 +45,7 @@ semantic = [
   "huggingface-hub>=0.24",
   "sentence-transformers>=3.0",
   "peft>=0.15.2",
+  "transformers>=4.40",
   "mistune>=3.0",
 ]
 ccxt = [
