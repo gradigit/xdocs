@@ -140,17 +140,13 @@ def rerank(
     """Rerank search results using Jina Reranker v3.
 
     Returns reranked list (top_n), each augmented with ``rerank_score``.
-    Auto-detects MLX on macOS, falls back to PyTorch.
+    macOS: MLX backend (no PyTorch fallback — fix the MLX path if it breaks).
+    Linux: PyTorch backend via transformers.
     """
     if not results:
         return []
 
-    use_mlx = _is_mlx_available()
-
-    try:
-        if use_mlx:
-            return _rerank_jina_v3(query, results, top_n=top_n, text_key=text_key, use_mlx=True)
-    except (ImportError, Exception) as exc:
-        logger.info("Jina v3 MLX unavailable (%s), falling back to PyTorch", exc)
+    if _is_mlx_available():
+        return _rerank_jina_v3(query, results, top_n=top_n, text_key=text_key, use_mlx=True)
 
     return _rerank_jina_v3(query, results, top_n=top_n, text_key=text_key)
